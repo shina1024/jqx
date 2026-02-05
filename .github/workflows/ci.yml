@@ -39,6 +39,9 @@ jobs:
       - name: MoonBit Version
         run: moon version --all
 
+      - name: Test (JS)
+        run: moon test --target js --package js
+
       - name: Test (Linux/macOS)
         if: runner.os != 'Windows'
         run: |

@@ -97,6 +97,7 @@ This is a [MoonBit](https://docs.moonbitlang.com) project.
 - `core/` にJSONパーサー等のコア実装を置く（CLI/JS/TS共通）
 - `cmd/jqx` は `shina1024/jqx/core` を参照
 - ルートパッケージは core への薄いラッパーにし、実装は core に集約する
+- `js/` は JS/TS 向けの最小 API を提供する
 - CLI はネイティブターゲット想定（stdin対応のため）
 
 ## Number Semantics (JS-first)

@@ -1,0 +1,8 @@
+{
+  "import": [
+    {
+      "path": "shina1024/jqx/core",
+      "alias": "core"
+    }
+  ]
+}

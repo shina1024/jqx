@@ -63,6 +63,22 @@ moon run --target native cmd/jqx -- -n "."
 - Arithmetic: `+`, `-`, `*`, `/`
 - Control: `if ... then ... else ... end`, `empty`, `//`
 
+## JS/TS (Minimal API)
+
+This package exposes a small, stable API for JS/TS usage. Build with the JS
+target and import the generated bundle.
+
+Functions:
+- `parseJson(text)` -> Json
+- `parseFilter(text)` -> Filter
+- `eval(filter, json)` -> Json[]
+- `evalToJsonStrings(filter, jsonText)` -> string[] (JSON strings)
+
+Build:
+```bash
+moon build --target js js
+```
+
 Build executable:
 ```bash
 moon build --target native cmd/jqx

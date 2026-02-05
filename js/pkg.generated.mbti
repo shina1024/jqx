@@ -1,0 +1,24 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "shina1024/jqx/js"
+
+import {
+  "shina1024/jqx/core",
+}
+
+// Values
+pub fn eval(@core.Filter, @core.Json) -> Array[@core.Json] raise @core.EvalError
+
+pub fn evalToJsonStrings(String, String) -> Result[Array[String], String]
+
+pub fn parseFilter(String) -> @core.Filter raise @core.FilterError
+
+pub fn parseJson(String) -> @core.Json raise @core.ParseError
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+
