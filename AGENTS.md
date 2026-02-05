@@ -122,6 +122,7 @@ This is a [MoonBit](https://docs.moonbitlang.com) project.
 - `?` のオプショナルアクセスは `.foo?`, `.[0]?`, `.[]?` に対応
 - `expr?` はエラーを empty に変換する最小実装
 - `try expr catch expr` は最小実装（エラー時に handler を評価）
+- `reduce`/`foreach` は最小実装（初期値は先頭のみ、更新/抽出も先頭優先）
 - `as` と `$var` を最小実装（`.expr as $x | ...` で束縛）
 - 非有限数（Infinity/NaN）の扱いは未整理（現状は `Double` 依存）
 - `contains`/`startswith`/`endswith` は文字列/配列の最小実装

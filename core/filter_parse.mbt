@@ -412,6 +412,37 @@ fn FilterCursor::parse_dot_expr(ctx : FilterCursor) -> Filter raise FilterError 
 ///|
 fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
   ctx.skip_ws()
+  fn parse_reduce_like(is_foreach : Bool) -> Filter raise FilterError {
+    let source = ctx.parse_comma(allow_as=false)
+    ctx.skip_ws()
+    guard ctx.try_keyword("as") else { ctx.invalid_char() }
+    ctx.skip_ws()
+    match ctx.read_char() {
+      Some('$') => ()
+      Some(_) => ctx.invalid_char(shift=-1)
+      None => raise InvalidEof
+    }
+    let name = ctx.parse_identifier()
+    ctx.skip_ws()
+    ctx.expect_char('(')
+    let init = ctx.parse_comma()
+    ctx.skip_ws()
+    ctx.expect_char(';')
+    let update = ctx.parse_comma()
+    if is_foreach {
+      ctx.skip_ws()
+      ctx.expect_char(';')
+      let extract = ctx.parse_comma()
+      ctx.skip_ws()
+      ctx.expect_char(')')
+      Filter::foreach(source, name, init, update, extract)
+    } else {
+      ctx.skip_ws()
+      ctx.expect_char(')')
+      Filter::reduce(source, name, init, update)
+    }
+  }
+
   let base = match ctx.peek_char() {
     Some('.') => ctx.parse_dot_expr()
     Some('[') => ctx.parse_array_literal()
@@ -440,6 +471,8 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
     Some('f') =>
       if ctx.try_keyword("false") {
         Filter::literal(Json::boolean(false))
+      } else if ctx.try_keyword("foreach") {
+        parse_reduce_like(true)
       } else {
         ctx.parse_identifier_or_call()
       }
@@ -454,6 +487,12 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
     Some('e') =>
       if ctx.try_keyword("empty") {
         Filter::empty()
+      } else {
+        ctx.parse_identifier_or_call()
+      }
+    Some('r') =>
+      if ctx.try_keyword("reduce") {
+        parse_reduce_like(false)
       } else {
         ctx.parse_identifier_or_call()
       }
@@ -647,11 +686,14 @@ fn FilterCursor::parse_add(ctx : FilterCursor) -> Filter raise FilterError {
 }
 
 ///|
-fn FilterCursor::parse_pipe(ctx : FilterCursor) -> Filter raise FilterError {
+fn FilterCursor::parse_pipe(
+  ctx : FilterCursor,
+  allow_as? : Bool = true,
+) -> Filter raise FilterError {
   let mut left = ctx.parse_add()
   for {
     ctx.skip_ws()
-    if ctx.try_keyword("as") {
+    if allow_as && ctx.try_keyword("as") {
       ctx.skip_ws()
       match ctx.read_char() {
         Some('$') => {
@@ -678,8 +720,11 @@ fn FilterCursor::parse_pipe(ctx : FilterCursor) -> Filter raise FilterError {
 }
 
 ///|
-fn FilterCursor::parse_compare(ctx : FilterCursor) -> Filter raise FilterError {
-  let mut left = ctx.parse_pipe()
+fn FilterCursor::parse_compare(
+  ctx : FilterCursor,
+  allow_as? : Bool = true,
+) -> Filter raise FilterError {
+  let mut left = ctx.parse_pipe(allow_as~)
   for {
     ctx.skip_ws()
     match ctx.peek_char() {
@@ -687,7 +732,7 @@ fn FilterCursor::parse_compare(ctx : FilterCursor) -> Filter raise FilterError {
         ctx.read_char() |> ignore
         match ctx.read_char() {
           Some('=') => {
-            let right = ctx.parse_pipe()
+            let right = ctx.parse_pipe(allow_as~)
             left = Filter::eq(left, right)
           }
           Some(_) => ctx.invalid_char(shift=-1)
@@ -698,7 +743,7 @@ fn FilterCursor::parse_compare(ctx : FilterCursor) -> Filter raise FilterError {
         ctx.read_char() |> ignore
         match ctx.read_char() {
           Some('=') => {
-            let right = ctx.parse_pipe()
+            let right = ctx.parse_pipe(allow_as~)
             left = Filter::neq(left, right)
           }
           Some(_) => ctx.invalid_char(shift=-1)
@@ -710,11 +755,11 @@ fn FilterCursor::parse_compare(ctx : FilterCursor) -> Filter raise FilterError {
         match ctx.peek_char() {
           Some('=') => {
             ctx.read_char() |> ignore
-            let right = ctx.parse_pipe()
+            let right = ctx.parse_pipe(allow_as~)
             left = Filter::lte(left, right)
           }
           _ => {
-            let right = ctx.parse_pipe()
+            let right = ctx.parse_pipe(allow_as~)
             left = Filter::lt(left, right)
           }
         }
@@ -724,11 +769,11 @@ fn FilterCursor::parse_compare(ctx : FilterCursor) -> Filter raise FilterError {
         match ctx.peek_char() {
           Some('=') => {
             ctx.read_char() |> ignore
-            let right = ctx.parse_pipe()
+            let right = ctx.parse_pipe(allow_as~)
             left = Filter::gte(left, right)
           }
           _ => {
-            let right = ctx.parse_pipe()
+            let right = ctx.parse_pipe(allow_as~)
             left = Filter::gt(left, right)
           }
         }
@@ -740,12 +785,15 @@ fn FilterCursor::parse_compare(ctx : FilterCursor) -> Filter raise FilterError {
 }
 
 ///|
-fn FilterCursor::parse_and(ctx : FilterCursor) -> Filter raise FilterError {
-  let mut left = ctx.parse_compare()
+fn FilterCursor::parse_and(
+  ctx : FilterCursor,
+  allow_as? : Bool = true,
+) -> Filter raise FilterError {
+  let mut left = ctx.parse_compare(allow_as~)
   for {
     ctx.skip_ws()
     if ctx.try_keyword("and") {
-      let right = ctx.parse_compare()
+      let right = ctx.parse_compare(allow_as~)
       left = Filter::and_(left, right)
     } else {
       break
@@ -755,12 +803,15 @@ fn FilterCursor::parse_and(ctx : FilterCursor) -> Filter raise FilterError {
 }
 
 ///|
-fn FilterCursor::parse_or(ctx : FilterCursor) -> Filter raise FilterError {
-  let mut left = ctx.parse_and()
+fn FilterCursor::parse_or(
+  ctx : FilterCursor,
+  allow_as? : Bool = true,
+) -> Filter raise FilterError {
+  let mut left = ctx.parse_and(allow_as~)
   for {
     ctx.skip_ws()
     if ctx.try_keyword("or") {
-      let right = ctx.parse_and()
+      let right = ctx.parse_and(allow_as~)
       left = Filter::or_(left, right)
     } else {
       break
@@ -770,8 +821,11 @@ fn FilterCursor::parse_or(ctx : FilterCursor) -> Filter raise FilterError {
 }
 
 ///|
-fn FilterCursor::parse_fallback(ctx : FilterCursor) -> Filter raise FilterError {
-  let mut left = ctx.parse_or()
+fn FilterCursor::parse_fallback(
+  ctx : FilterCursor,
+  allow_as? : Bool = true,
+) -> Filter raise FilterError {
+  let mut left = ctx.parse_or(allow_as~)
   for {
     ctx.skip_ws()
     match ctx.peek_char() {
@@ -780,7 +834,7 @@ fn FilterCursor::parse_fallback(ctx : FilterCursor) -> Filter raise FilterError 
         match ctx.peek_char() {
           Some('/') => {
             ctx.read_char() |> ignore
-            let right = ctx.parse_or()
+            let right = ctx.parse_or(allow_as~)
             left = Filter::fallback(left, right)
           }
           _ => {
@@ -796,14 +850,17 @@ fn FilterCursor::parse_fallback(ctx : FilterCursor) -> Filter raise FilterError 
 }
 
 ///|
-fn FilterCursor::parse_comma(ctx : FilterCursor) -> Filter raise FilterError {
-  let mut left = ctx.parse_fallback()
+fn FilterCursor::parse_comma(
+  ctx : FilterCursor,
+  allow_as? : Bool = true,
+) -> Filter raise FilterError {
+  let mut left = ctx.parse_fallback(allow_as~)
   for {
     ctx.skip_ws()
     match ctx.peek_char() {
       Some(',') => {
         ctx.read_char() |> ignore
-        let right = ctx.parse_fallback()
+        let right = ctx.parse_fallback(allow_as~)
         left = Filter::comma(left, right)
       }
       _ => break

@@ -32,6 +32,8 @@ pub enum Filter {
   As(Filter, String, Filter)
   Try(Filter)
   TryCatch(Filter, Filter)
+  Reduce(Filter, String, Filter, Filter)
+  Foreach(Filter, String, Filter, Filter, Filter)
   Eq(Filter, Filter)
   Neq(Filter, Filter)
   Lt(Filter, Filter)
@@ -128,6 +130,27 @@ pub fn Filter::try_(inner : Filter) -> Filter {
 ///|
 pub fn Filter::try_catch(inner : Filter, handler : Filter) -> Filter {
   TryCatch(inner, handler)
+}
+
+///|
+pub fn Filter::reduce(
+  source : Filter,
+  name : String,
+  init : Filter,
+  update : Filter,
+) -> Filter {
+  Reduce(source, name, init, update)
+}
+
+///|
+pub fn Filter::foreach(
+  source : Filter,
+  name : String,
+  init : Filter,
+  update : Filter,
+  extract : Filter,
+) -> Filter {
+  Foreach(source, name, init, update, extract)
 }
 
 ///|

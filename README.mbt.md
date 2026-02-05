@@ -49,6 +49,7 @@ moon run --target native cmd/jqx -- -r ".foo" '{"foo": "bar"}'
 - Optional: `.foo?`, `.[0]?`, `.[]?`
 - Try: `expr?` (errors produce empty output)
 - Try/Catch: `try expr catch expr` (errors run handler)
+- Reduce/Foreach: `reduce <expr> as $x (init; update)`, `foreach <expr> as $x (init; update; extract)`
 - Literals: numbers, strings, `true/false/null`, arrays `[ ... ]`, objects `{ ... }`
 - Pipe/comma: `|`, `,`
 - Builtins: `length`, `type`, `keys`

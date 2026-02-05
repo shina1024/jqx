@@ -56,6 +56,8 @@ pub enum Filter {
   As(Filter, String, Filter)
   Try(Filter)
   TryCatch(Filter, Filter)
+  Reduce(Filter, String, Filter, Filter)
+  Foreach(Filter, String, Filter, Filter, Filter)
   Eq(Filter, Filter)
   Neq(Filter, Filter)
   Lt(Filter, Filter)
@@ -85,6 +87,7 @@ pub fn Filter::eq(Self, Self) -> Self
 pub fn Filter::fallback(Self, Self) -> Self
 pub fn Filter::field(String) -> Self
 pub fn Filter::field_opt(String) -> Self
+pub fn Filter::foreach(Self, String, Self, Self, Self) -> Self
 pub fn Filter::gt(Self, Self) -> Self
 pub fn Filter::gte(Self, Self) -> Self
 pub fn Filter::identity() -> Self
@@ -101,6 +104,7 @@ pub fn Filter::neq(Self, Self) -> Self
 pub fn Filter::not(Self) -> Self
 pub fn Filter::or_(Self, Self) -> Self
 pub fn Filter::pipe(Self, Self) -> Self
+pub fn Filter::reduce(Self, String, Self, Self) -> Self
 pub fn Filter::sub(Self, Self) -> Self
 pub fn Filter::try_(Self) -> Self
 pub fn Filter::try_catch(Self, Self) -> Self

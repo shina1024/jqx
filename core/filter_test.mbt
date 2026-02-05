@@ -54,6 +54,18 @@ test "parse try/catch" {
 }
 
 ///|
+test "parse reduce/foreach" {
+  inspect(
+    parse_filter("reduce .[] as $x (0; . + $x)"),
+    content="Reduce(Pipe(Identity, Iter), \"x\", Literal(Number(0)), Add(Identity, Var(\"x\")))",
+  )
+  inspect(
+    parse_filter("foreach .[] as $x (0; . + $x; .)"),
+    content="Foreach(Pipe(Identity, Iter), \"x\", Literal(Number(0)), Add(Identity, Var(\"x\")), Identity)",
+  )
+}
+
+///|
 test "parse string key index" {
   inspect(parse_filter(".[\"foo\"]"), content="Pipe(Identity, Field(\"foo\"))")
 }

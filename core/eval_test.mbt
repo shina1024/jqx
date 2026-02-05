@@ -178,6 +178,19 @@ test "eval try/catch" {
 }
 
 ///|
+test "eval reduce/foreach" {
+  let j = must_parse("[1,2,3]")
+  assert_eq(must_eval(parse_filter("reduce .[] as $x (0; . + $x)"), j), [
+    Json::number(6.0),
+  ])
+  assert_eq(must_eval(parse_filter("foreach .[] as $x (0; . + $x; .)"), j), [
+    Json::number(1.0),
+    Json::number(3.0),
+    Json::number(6.0),
+  ])
+}
+
+///|
 test "eval if-then-else" {
   let j = must_parse("{\"a\":true,\"b\":1,\"c\":2}")
   assert_eq(must_eval(parse_filter("if .a then .b else .c end"), j), [

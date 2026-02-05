@@ -150,6 +150,43 @@ fn eval_with_env(
       } noraise {
         values => values
       }
+    Reduce(source, name, init, update) => {
+      let init_vals = eval_with_env(init, input, env)
+      let mut acc = if init_vals.length() > 0 {
+        init_vals[0]
+      } else {
+        Json::null()
+      }
+      let items = eval_with_env(source, input, env)
+      for item in items {
+        let next_env = env.copy()
+        next_env[name] = item
+        let upd_vals = eval_with_env(update, acc, next_env)
+        acc = if upd_vals.length() > 0 { upd_vals[0] } else { Json::null() }
+      }
+      [acc]
+    }
+    Foreach(source, name, init, update, extract) => {
+      let init_vals = eval_with_env(init, input, env)
+      let mut acc = if init_vals.length() > 0 {
+        init_vals[0]
+      } else {
+        Json::null()
+      }
+      let items = eval_with_env(source, input, env)
+      let out = []
+      for item in items {
+        let next_env = env.copy()
+        next_env[name] = item
+        let upd_vals = eval_with_env(update, acc, next_env)
+        acc = if upd_vals.length() > 0 { upd_vals[0] } else { Json::null() }
+        let extract_vals = eval_with_env(extract, acc, next_env)
+        for v in extract_vals {
+          out.push(v)
+        }
+      }
+      out
+    }
     Pipe(left, right) => {
       let out = []
       for v in eval_with_env(left, input, env) {
