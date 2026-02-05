@@ -9,9 +9,7 @@
 pub suberror FilterError {
   InvalidChar(Position, Char)
   InvalidEof
-  Expected(String, Position)
   InvalidNumber(Position, String)
-  UnsupportedLiteral(Position)
 } derive(Eq)
 
 ///|
@@ -26,25 +24,11 @@ pub impl Show for FilterError with output(self, logger) {
       ..write_string(", column ")
       ..write_object(column)
     InvalidEof => logger.write_string("Unexpected end of file")
-    Expected(msg, { line, column }) =>
-      logger
-      ..write_string("Expected ")
-      ..write_string(msg)
-      ..write_string(" at line ")
-      ..write_object(line)
-      ..write_string(", column ")
-      ..write_object(column)
     InvalidNumber({ line, column }, s) =>
       logger
       ..write_string("Invalid number ")
       ..write_string(s)
       ..write_string(" at line ")
-      ..write_object(line)
-      ..write_string(", column ")
-      ..write_object(column)
-    UnsupportedLiteral({ line, column }) =>
-      logger
-      ..write_string("Unsupported literal at line ")
       ..write_object(line)
       ..write_string(", column ")
       ..write_object(column)

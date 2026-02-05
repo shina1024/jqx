@@ -23,9 +23,7 @@ pub impl Show for EvalError
 pub suberror FilterError {
   InvalidChar(Position, Char)
   InvalidEof
-  Expected(String, Position)
   InvalidNumber(Position, String)
-  UnsupportedLiteral(Position)
 }
 pub impl Eq for FilterError
 pub impl Show for FilterError
