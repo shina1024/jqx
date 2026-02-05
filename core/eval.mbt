@@ -13,12 +13,15 @@
 ///|
 pub suberror EvalError {
   TypeError(String)
+  UnknownFunction(String)
 } derive(Eq)
 
 ///|
 pub impl Show for EvalError with output(self, logger) {
   match self {
     TypeError(msg) => logger.write_string(msg)
+    UnknownFunction(name) =>
+      logger.write_string("Unknown function: " + name)
   }
 }
 
@@ -100,7 +103,192 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
       }
       out
     }
-    Array(_) | Object(_) =>
-      raise TypeError("Unsupported filter (array/object literal)")
+    Array(items) => {
+      let out = []
+      for f in items {
+        for v in eval(f, input) {
+          out.push(v)
+        }
+      }
+      [Json::array(out)]
+    }
+    Object(items) => {
+      let map = Map::new()
+      for kv in items {
+        let key = kv.0
+        let f = kv.1
+        let vals = eval(f, input)
+        if vals.length() > 0 {
+          map[key] = vals[0]
+        } else {
+          map[key] = Json::null()
+        }
+      }
+      [Json::object(map)]
+    }
+    Builtin(name) => eval_builtin(name, input)
+    Call(name, args) => eval_call(name, args, input)
+    Eq(left, right) => {
+      let l = eval(left, input)
+      let r = eval(right, input)
+      if l.length() == 0 || r.length() == 0 {
+        [Json::boolean(false)]
+      } else {
+        [Json::boolean(l[0] == r[0])]
+      }
+    }
+    Neq(left, right) => {
+      let l = eval(left, input)
+      let r = eval(right, input)
+      if l.length() == 0 || r.length() == 0 {
+        [Json::boolean(true)]
+      } else {
+        [Json::boolean(l[0] != r[0])]
+      }
+    }
+    Lt(left, right) => eval_compare("<", left, right, input)
+    Lte(left, right) => eval_compare("<=", left, right, input)
+    Gt(left, right) => eval_compare(">", left, right, input)
+    Gte(left, right) => eval_compare(">=", left, right, input)
+    And(left, right) => {
+      let l = eval_to_bool(left, input)
+      if l {
+        [Json::boolean(eval_to_bool(right, input))]
+      } else {
+        [Json::boolean(false)]
+      }
+    }
+    Or(left, right) => {
+      let l = eval_to_bool(left, input)
+      if l {
+        [Json::boolean(true)]
+      } else {
+        [Json::boolean(eval_to_bool(right, input))]
+      }
+    }
+    Not(inner) => [Json::boolean(!eval_to_bool(inner, input))]
+  }
+}
+
+///|
+fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
+  match name {
+    "length" => {
+      match input {
+        Array(a) => [Json::number(a.length().to_double())]
+        Object(o) => [Json::number(o.length().to_double())]
+        String(s) => [Json::number(s.length().to_double())]
+        _ =>
+          raise TypeError(
+            "Cannot get length of " + json_type_with_value(input),
+          )
+      }
+    }
+    "type" => [Json::string(json_type_name(input))]
+    "keys" =>
+      match input {
+        Object(o) => {
+          let keys = Array::from_iter(o.keys())
+          keys.sort()
+          let out = []
+          for k in keys {
+            out.push(Json::string(k))
+          }
+          [Json::array(out)]
+        }
+        _ =>
+          raise TypeError(
+            "Cannot get keys of " + json_type_with_value(input),
+          )
+      }
+    _ => raise UnknownFunction(name)
+  }
+}
+
+///|
+fn is_truthy(j : Json) -> Bool {
+  match j {
+    JNull => false
+    JFalse => false
+    _ => true
+  }
+}
+
+///|
+fn eval_to_bool(filter : Filter, input : Json) -> Bool raise EvalError {
+  let results = eval(filter, input)
+  for v in results {
+    if is_truthy(v) {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn eval_call(
+  name : String,
+  args : Array[Filter],
+  input : Json,
+) -> Array[Json] raise EvalError {
+  match name {
+    "select" =>
+      if args.length() != 1 {
+        raise UnknownFunction("select")
+      } else {
+        let cond = args[0]
+        let results = eval(cond, input)
+        let mut ok = false
+        for v in results {
+          if is_truthy(v) {
+            ok = true
+            break
+          }
+        }
+        if ok { [input] } else { [] }
+      }
+    _ => raise UnknownFunction(name)
+  }
+}
+
+///|
+fn eval_compare(
+  op : String,
+  left : Filter,
+  right : Filter,
+  input : Json,
+) -> Array[Json] raise EvalError {
+  let l = eval(left, input)
+  let r = eval(right, input)
+  if l.length() == 0 || r.length() == 0 {
+    return [Json::boolean(false)]
+  }
+  let a = l[0]
+  let b = r[0]
+  match (a, b) {
+    (Number(x, _), Number(y, _)) => {
+      let ok = match op {
+        "<" => x < y
+        "<=" => x <= y
+        ">" => x > y
+        _ => x >= y
+      }
+      [Json::boolean(ok)]
+    }
+    (String(x), String(y)) => {
+      let cmp = x.compare(y)
+      let ok = match op {
+        "<" => cmp < 0
+        "<=" => cmp <= 0
+        ">" => cmp > 0
+        _ => cmp >= 0
+      }
+      [Json::boolean(ok)]
+    }
+    _ =>
+      raise TypeError(
+        "Cannot compare " + json_type_with_value(a) + " and " +
+        json_type_with_value(b),
+      )
   }
 }

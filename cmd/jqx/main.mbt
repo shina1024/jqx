@@ -2,23 +2,49 @@
 fn main {
   let args = @env.args()
   if args.length() < 2 {
-    println("Usage: moon run --target native cmd/jqx -- \"<filter>\" [\"<json>\"]")
+    println("Usage: moon run --target native cmd/jqx -- [options] \"<filter>\" [\"<json>\"]")
     println(
       "Example (stdin): echo '{\"foo\": 1}' | moon run --target native cmd/jqx -- \".foo\"",
     )
     println(
       "Example (arg):   moon run --target native cmd/jqx -- \".foo\" '{\"foo\": 1}'",
     )
+    println("Options: -r (raw strings), -c (compact; default)")
     return
   }
-  let filter = args[1]
-  let input = if args.length() >= 3 { args[2] } else { read_stdin_all() }
+  let mut raw = false
+  let mut idx = 1
+  while idx < args.length() {
+    let a = args[idx]
+    if a == "-r" {
+      raw = true
+      idx += 1
+      continue
+    }
+    if a == "-c" {
+      idx += 1
+      continue
+    }
+    break
+  }
+  if idx >= args.length() {
+    println("jqx: error: missing filter")
+    println("Usage: moon run --target native cmd/jqx -- [options] \"<filter>\" [\"<json>\"]")
+    return
+  }
+  let filter = args[idx]
+  idx += 1
+  let input = if idx < args.length() { args[idx] } else { read_stdin_all() }
   try {
     let f = @lib.parse_filter(filter)
     let j = @lib.parse(input)
     let outputs = @lib.eval(f, j)
     for v in outputs {
-      println(v.to_json_string())
+      if raw && v is @lib.Json::String(s) {
+        println(s)
+      } else {
+        println(v.to_json_string())
+      }
     }
   } catch {
     err => {

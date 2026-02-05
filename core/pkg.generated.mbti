@@ -14,6 +14,7 @@ pub fn valid(StringView) -> Bool
 // Errors
 pub suberror EvalError {
   TypeError(String)
+  UnknownFunction(String)
 }
 pub impl Eq for EvalError
 pub impl Show for EvalError
@@ -45,15 +46,37 @@ pub enum Filter {
   Index(Int)
   Iter
   Literal(Json)
-  Array(Filter)
+  Array(Array[Filter])
   Object(Array[(String, Filter)])
+  Builtin(String)
+  Call(String, Array[Filter])
+  Eq(Filter, Filter)
+  Neq(Filter, Filter)
+  Lt(Filter, Filter)
+  Lte(Filter, Filter)
+  Gt(Filter, Filter)
+  Gte(Filter, Filter)
+  And(Filter, Filter)
+  Or(Filter, Filter)
+  Not(Filter)
 }
+pub fn Filter::and_(Self, Self) -> Self
+pub fn Filter::builtin(String) -> Self
+pub fn Filter::call(String, Array[Self]) -> Self
 pub fn Filter::comma(Self, Self) -> Self
+pub fn Filter::eq(Self, Self) -> Self
 pub fn Filter::field(String) -> Self
+pub fn Filter::gt(Self, Self) -> Self
+pub fn Filter::gte(Self, Self) -> Self
 pub fn Filter::identity() -> Self
 pub fn Filter::index(Int) -> Self
 pub fn Filter::iter() -> Self
 pub fn Filter::literal(Json) -> Self
+pub fn Filter::lt(Self, Self) -> Self
+pub fn Filter::lte(Self, Self) -> Self
+pub fn Filter::neq(Self, Self) -> Self
+pub fn Filter::not(Self) -> Self
+pub fn Filter::or_(Self, Self) -> Self
 pub fn Filter::pipe(Self, Self) -> Self
 pub impl Eq for Filter
 pub impl Show for Filter

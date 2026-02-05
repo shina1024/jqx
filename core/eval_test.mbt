@@ -59,6 +59,69 @@ test "eval literal" {
 }
 
 ///|
+test "eval array and object literals" {
+  let j = must_parse("{\"a\":1,\"b\":2}")
+  let f1 = parse_filter("[.a, .b]")
+  let f2 = parse_filter("{\"x\": .a, y: .b}")
+  assert_eq(
+    must_eval(f1, j),
+    [Json::array([Json::number(1.0), Json::number(2.0)])],
+  )
+  assert_eq(
+    must_eval(f2, j),
+    [
+      Json::object({
+        "x": Json::number(1.0),
+        "y": Json::number(2.0),
+      }),
+    ],
+  )
+}
+
+///|
+test "eval builtins" {
+  let j1 = must_parse("[1,2,3]")
+  let j2 = must_parse("{\"a\":1,\"b\":2}")
+  let j3 = must_parse("\"hi\"")
+  assert_eq(must_eval(parse_filter("length"), j1), [Json::number(3.0)])
+  assert_eq(must_eval(parse_filter("length"), j2), [Json::number(2.0)])
+  assert_eq(must_eval(parse_filter("length"), j3), [Json::number(2.0)])
+  assert_eq(must_eval(parse_filter("type"), j2), [Json::string("object")])
+  assert_eq(
+    must_eval(parse_filter("keys"), j2),
+    [Json::array([Json::string("a"), Json::string("b")])],
+  )
+}
+
+///|
+test "eval select" {
+  let j = must_parse("{\"a\":1,\"b\":null}")
+  let f1 = parse_filter("select(.a)")
+  let f2 = parse_filter("select(.b)")
+  assert_eq(must_eval(f1, j), [j])
+  assert_eq(must_eval(f2, j), [])
+}
+
+///|
+test "eval compare" {
+  let j = must_parse("{\"a\":1,\"b\":2}")
+  let f1 = parse_filter(".a == 1")
+  let f2 = parse_filter(".a != .b")
+  assert_eq(must_eval(f1, j), [Json::boolean(true)])
+  assert_eq(must_eval(f2, j), [Json::boolean(true)])
+}
+
+///|
+test "eval compare order and logical" {
+  let j = must_parse("{\"a\":1,\"b\":2}")
+  assert_eq(must_eval(parse_filter(".a < .b"), j), [Json::boolean(true)])
+  assert_eq(must_eval(parse_filter(".a >= .b"), j), [Json::boolean(false)])
+  assert_eq(must_eval(parse_filter(".a and .b"), j), [Json::boolean(true)])
+  assert_eq(must_eval(parse_filter("not .b"), j), [Json::boolean(false)])
+  assert_eq(must_eval(parse_filter(".a or .b"), j), [Json::boolean(true)])
+}
+
+///|
 test "eval iter non-array errors" {
   let j = must_parse("1")
   let f = parse_filter(".[]")

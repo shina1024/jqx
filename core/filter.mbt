@@ -21,8 +21,19 @@ pub enum Filter {
   Index(Int)
   Iter
   Literal(Json)
-  Array(Filter)
+  Array(Array[Filter])
   Object(Array[(String, Filter)])
+  Builtin(String)
+  Call(String, Array[Filter])
+  Eq(Filter, Filter)
+  Neq(Filter, Filter)
+  Lt(Filter, Filter)
+  Lte(Filter, Filter)
+  Gt(Filter, Filter)
+  Gte(Filter, Filter)
+  And(Filter, Filter)
+  Or(Filter, Filter)
+  Not(Filter)
 } derive(Eq, Show)
 
 ///|
@@ -58,4 +69,59 @@ pub fn Filter::pipe(left : Filter, right : Filter) -> Filter {
 ///|
 pub fn Filter::comma(left : Filter, right : Filter) -> Filter {
   Comma(left, right)
+}
+
+///|
+pub fn Filter::builtin(name : String) -> Filter {
+  Builtin(name)
+}
+
+///|
+pub fn Filter::call(name : String, args : Array[Filter]) -> Filter {
+  Call(name, args)
+}
+
+///|
+pub fn Filter::eq(left : Filter, right : Filter) -> Filter {
+  Eq(left, right)
+}
+
+///|
+pub fn Filter::neq(left : Filter, right : Filter) -> Filter {
+  Neq(left, right)
+}
+
+///|
+pub fn Filter::lt(left : Filter, right : Filter) -> Filter {
+  Lt(left, right)
+}
+
+///|
+pub fn Filter::lte(left : Filter, right : Filter) -> Filter {
+  Lte(left, right)
+}
+
+///|
+pub fn Filter::gt(left : Filter, right : Filter) -> Filter {
+  Gt(left, right)
+}
+
+///|
+pub fn Filter::gte(left : Filter, right : Filter) -> Filter {
+  Gte(left, right)
+}
+
+///|
+pub fn Filter::and_(left : Filter, right : Filter) -> Filter {
+  And(left, right)
+}
+
+///|
+pub fn Filter::or_(left : Filter, right : Filter) -> Filter {
+  Or(left, right)
+}
+
+///|
+pub fn Filter::not(inner : Filter) -> Filter {
+  Not(inner)
 }

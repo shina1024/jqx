@@ -37,6 +37,12 @@ moon test --target native --package core
 moon run --target native cmd/jqx -- ".foo" '{"foo": 1}'
 ```
 
+Options:
+```bash
+# Raw string output (no JSON quotes)
+moon run --target native cmd/jqx -- -r ".foo" '{"foo": "bar"}'
+```
+
 Build executable:
 ```bash
 moon build --target native cmd/jqx

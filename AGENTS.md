@@ -110,6 +110,8 @@ This is a [MoonBit](https://docs.moonbitlang.com) project.
 - 実行例:
   - `echo '{"foo": 1}' | moon run --target native cmd/jqx -- ".foo"`
   - `moon run --target native cmd/jqx -- ".foo" '{"foo": 1}'`
+- オプション:
+  - `-r` は文字列を raw 出力（`"..."` を外す）
 
 ## Build (Native)
 
