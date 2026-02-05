@@ -11,15 +11,21 @@ fn main {
     println(
       "Example (arg):   moon run --target native cmd/jqx -- \".foo\" '{\"foo\": 1}'",
     )
-    println("Options: -r (raw strings), -c (compact; default)")
+    println("Options: -r (raw strings), -c (compact; default), -n (null input)")
     return
   }
   let mut raw = false
+  let mut no_input = false
   let mut idx = 1
   while idx < args.length() {
     let a = args[idx]
     if a == "-r" {
       raw = true
+      idx += 1
+      continue
+    }
+    if a == "-n" {
+      no_input = true
       idx += 1
       continue
     }
@@ -38,10 +44,19 @@ fn main {
   }
   let filter = args[idx]
   idx += 1
-  let input = if idx < args.length() { args[idx] } else { read_stdin_all() }
+  let input = if no_input {
+    None
+  } else if idx < args.length() {
+    Some(args[idx])
+  } else {
+    Some(read_stdin_all())
+  }
   try {
     let f = @lib.parse_filter(filter)
-    let j = @lib.parse(input)
+    let j = match input {
+      Some(text) => @lib.parse(text)
+      None => @lib.Json::null()
+    }
     let outputs = @lib.eval(f, j)
     for v in outputs {
       println(format_output(raw, v))

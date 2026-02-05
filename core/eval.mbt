@@ -151,39 +151,40 @@ fn eval_with_env(
         values => values
       }
     Reduce(source, name, init, update) => {
-      let init_vals = eval_with_env(init, input, env)
-      let mut acc = if init_vals.length() > 0 {
-        init_vals[0]
-      } else {
-        Json::null()
-      }
+      let mut accs = eval_with_env(init, input, env)
       let items = eval_with_env(source, input, env)
       for item in items {
         let next_env = env.copy()
         next_env[name] = item
-        let upd_vals = eval_with_env(update, acc, next_env)
-        acc = if upd_vals.length() > 0 { upd_vals[0] } else { Json::null() }
+        let next_accs = []
+        for acc in accs {
+          for v in eval_with_env(update, acc, next_env) {
+            next_accs.push(v)
+          }
+        }
+        accs = next_accs
       }
-      [acc]
+      accs
     }
     Foreach(source, name, init, update, extract) => {
-      let init_vals = eval_with_env(init, input, env)
-      let mut acc = if init_vals.length() > 0 {
-        init_vals[0]
-      } else {
-        Json::null()
-      }
+      let mut accs = eval_with_env(init, input, env)
       let items = eval_with_env(source, input, env)
       let out = []
       for item in items {
         let next_env = env.copy()
         next_env[name] = item
-        let upd_vals = eval_with_env(update, acc, next_env)
-        acc = if upd_vals.length() > 0 { upd_vals[0] } else { Json::null() }
-        let extract_vals = eval_with_env(extract, acc, next_env)
-        for v in extract_vals {
-          out.push(v)
+        let next_accs = []
+        for acc in accs {
+          for v in eval_with_env(update, acc, next_env) {
+            next_accs.push(v)
+          }
         }
+        for acc in next_accs {
+          for v in eval_with_env(extract, acc, next_env) {
+            out.push(v)
+          }
+        }
+        accs = next_accs
       }
       out
     }

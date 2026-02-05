@@ -41,6 +41,9 @@ Options:
 ```bash
 # Raw string output (no JSON quotes)
 moon run --target native cmd/jqx -- -r ".foo" '{"foo": "bar"}'
+
+# Null input (ignore stdin/arg)
+moon run --target native cmd/jqx -- -n "."
 ```
 
 ## Filters (Current)
