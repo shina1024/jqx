@@ -55,7 +55,26 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
           }
         _ => [Json::null()]
       }
+    FieldOpt(name) =>
+      match input {
+        Object(o) =>
+          match o.get(name) {
+            Some(v) => [v]
+            None => [Json::null()]
+          }
+        _ => [Json::null()]
+      }
     Index(i) =>
+      match input {
+        Array(a) =>
+          if i >= 0 && i < a.length() {
+            [a[i]]
+          } else {
+            [Json::null()]
+          }
+        _ => [Json::null()]
+      }
+    IndexOpt(i) =>
       match input {
         Array(a) =>
           if i >= 0 && i < a.length() {
@@ -77,6 +96,18 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
         }
         _ =>
           raise TypeError("Cannot iterate over " + json_type_with_value(input))
+      }
+    IterOpt =>
+      match input {
+        Array(a) => a
+        Object(o) => {
+          let out = []
+          for kv in o.iter() {
+            out.push(kv.1)
+          }
+          out
+        }
+        _ => []
       }
     Pipe(left, right) => {
       let out = []

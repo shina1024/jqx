@@ -74,12 +74,11 @@ fn format_error_message(msg : String) -> String {
           let parsed_col = try? @strconv.parse_int(col_part)
           match (parsed_line, parsed_col) {
             (Ok(line), Ok(col)) => {
-              let jq_col = col + 1
               let base = msg.view(start_offset=0, end_offset=i).to_string()
               return "jqx: error (at <stdin>:" +
                 line.to_string() +
                 ":" +
-                jq_col.to_string() +
+                col.to_string() +
                 "): " +
                 base
             }

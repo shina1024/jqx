@@ -46,7 +46,7 @@ pub fn Json::object(o : Map[String, Json]) -> Json {
 ///|
 pub struct Position {
   line : Int // 1-based
-  column : Int // 0-based
+  column : Int // 1-based
 } derive(Eq)
 
 ///|
@@ -337,11 +337,11 @@ fn ParseContext::parse_array(ctx : ParseContext) -> Json raise ParseError {
 ///|
 fn offset_to_position(input : StringView, offset : Int) -> Position {
   let mut line = 1
-  let mut column = 0
+  let mut column = 1
   for i in 0..<offset {
     if input.unsafe_get(i) == '\n' {
       line += 1
-      column = 0
+      column = 1
     } else {
       column += 1
     }

@@ -27,6 +27,13 @@ test "parse iter" {
 }
 
 ///|
+test "parse optional access" {
+  inspect(parse_filter(".foo?"), content="Pipe(Identity, FieldOpt(\"foo\"))")
+  inspect(parse_filter(".[0]?"), content="Pipe(Identity, IndexOpt(0))")
+  inspect(parse_filter(".[]?"), content="Pipe(Identity, IterOpt)")
+}
+
+///|
 test "parse string key index" {
   inspect(parse_filter(".[\"foo\"]"), content="Pipe(Identity, Field(\"foo\"))")
 }

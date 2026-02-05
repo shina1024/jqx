@@ -46,6 +46,7 @@ moon run --target native cmd/jqx -- -r ".foo" '{"foo": "bar"}'
 ## Filters (Current)
 
 - Basic: `.`, `.foo`, `.[0]`, `.[]`
+- Optional: `.foo?`, `.[0]?`, `.[]?`
 - Literals: numbers, strings, `true/false/null`, arrays `[ ... ]`, objects `{ ... }`
 - Pipe/comma: `|`, `,`
 - Builtins: `length`, `type`, `keys`
@@ -84,3 +85,5 @@ and run it directly.
 
 - The CLI is native-only because stdin is implemented via native `getchar`.
 - JS/TS usage will be added as a separate library entry point.
+- Library users should import `shina1024/jqx/core` directly; the root package is
+  a thin wrapper around core.

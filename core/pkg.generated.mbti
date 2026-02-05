@@ -43,8 +43,11 @@ pub enum Filter {
   Pipe(Filter, Filter)
   Comma(Filter, Filter)
   Field(String)
+  FieldOpt(String)
   Index(Int)
+  IndexOpt(Int)
   Iter
+  IterOpt
   Literal(Json)
   Array(Array[Filter])
   Object(Array[(String, Filter)])
@@ -77,12 +80,15 @@ pub fn Filter::empty() -> Self
 pub fn Filter::eq(Self, Self) -> Self
 pub fn Filter::fallback(Self, Self) -> Self
 pub fn Filter::field(String) -> Self
+pub fn Filter::field_opt(String) -> Self
 pub fn Filter::gt(Self, Self) -> Self
 pub fn Filter::gte(Self, Self) -> Self
 pub fn Filter::identity() -> Self
 pub fn Filter::if_else(Self, Self, Self) -> Self
 pub fn Filter::index(Int) -> Self
+pub fn Filter::index_opt(Int) -> Self
 pub fn Filter::iter() -> Self
+pub fn Filter::iter_opt() -> Self
 pub fn Filter::literal(Json) -> Self
 pub fn Filter::lt(Self, Self) -> Self
 pub fn Filter::lte(Self, Self) -> Self

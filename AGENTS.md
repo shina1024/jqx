@@ -96,6 +96,7 @@ This is a [MoonBit](https://docs.moonbitlang.com) project.
 
 - `core/` にJSONパーサー等のコア実装を置く（CLI/JS/TS共通）
 - `cmd/jqx` は `shina1024/jqx/core` を参照
+- ルートパッケージは core への薄いラッパーにし、実装は core に集約する
 - CLI はネイティブターゲット想定（stdin対応のため）
 
 ## Number Semantics (JS-first)
@@ -118,6 +119,7 @@ This is a [MoonBit](https://docs.moonbitlang.com) project.
 - `Object` のキー順は `Map` 依存で未保証（順序保持が必要なら改善予定）
 - `Array`/`Object` リテラルや比較/算術は **最初の出力のみ**を使う簡略化実装
 - `+` は数値/文字列/配列/オブジェクトに対応（オブジェクトは右優先でマージ）
+- `?` のオプショナルアクセスは `.foo?`, `.[0]?`, `.[]?` に対応
 - 非有限数（Infinity/NaN）の扱いは未整理（現状は `Double` 依存）
 - `contains`/`startswith`/`endswith` は文字列/配列の最小実装
 - `empty` と `//` は最小実装（出力が空かどうかでフォールバック）

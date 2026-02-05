@@ -66,11 +66,11 @@ fn FilterCursor::make(input : StringView) -> FilterCursor {
 ///|
 fn filter_offset_to_position(input : StringView, offset : Int) -> Position {
   let mut line = 1
-  let mut column = 0
+  let mut column = 1
   for i in 0..<offset {
     if input.unsafe_get(i) == '\n' {
       line += 1
-      column = 0
+      column = 1
     } else {
       column += 1
     }
@@ -351,7 +351,7 @@ fn FilterCursor::parse_dot_suffix(
   ctx : FilterCursor,
 ) -> Filter raise FilterError {
   ctx.skip_ws()
-  match ctx.peek_char() {
+  let base = match ctx.peek_char() {
     Some('[') => {
       ctx.read_char() |> ignore
       ctx.skip_ws()
@@ -381,6 +381,19 @@ fn FilterCursor::parse_dot_suffix(
       Filter::identity()
     }
     _ => Filter::identity()
+  }
+  ctx.skip_ws()
+  match ctx.peek_char() {
+    Some('?') => {
+      ctx.read_char() |> ignore
+      match base {
+        Field(name) => Filter::field_opt(name)
+        Index(i) => Filter::index_opt(i)
+        Iter => Filter::iter_opt()
+        _ => base
+      }
+    }
+    _ => base
   }
 }
 

@@ -43,6 +43,20 @@ test "eval index and iter" {
 }
 
 ///|
+test "eval optional access" {
+  let j = must_parse("[1,2,3]")
+  assert_eq(must_eval(parse_filter(".[]?"), j), [
+    Json::number(1.0),
+    Json::number(2.0),
+    Json::number(3.0),
+  ])
+  let j2 = must_parse("1")
+  assert_eq(must_eval(parse_filter(".[]?"), j2), [])
+  assert_eq(must_eval(parse_filter(".foo?"), j2), [Json::null()])
+  assert_eq(must_eval(parse_filter(".[0]?"), j2), [Json::null()])
+}
+
+///|
 test "eval pipe and comma" {
   let j = must_parse("{\"a\":{\"b\":2},\"c\":3}")
   let f = parse_filter(".a | .b, .c")

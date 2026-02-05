@@ -18,8 +18,11 @@ pub enum Filter {
   Pipe(Filter, Filter)
   Comma(Filter, Filter)
   Field(String)
+  FieldOpt(String)
   Index(Int)
+  IndexOpt(Int)
   Iter
+  IterOpt
   Literal(Json)
   Array(Array[Filter])
   Object(Array[(String, Filter)])
@@ -54,13 +57,28 @@ pub fn Filter::field(name : String) -> Filter {
 }
 
 ///|
+pub fn Filter::field_opt(name : String) -> Filter {
+  FieldOpt(name)
+}
+
+///|
 pub fn Filter::index(i : Int) -> Filter {
   Index(i)
 }
 
 ///|
+pub fn Filter::index_opt(i : Int) -> Filter {
+  IndexOpt(i)
+}
+
+///|
 pub fn Filter::iter() -> Filter {
   Iter
+}
+
+///|
+pub fn Filter::iter_opt() -> Filter {
+  IterOpt
 }
 
 ///|
