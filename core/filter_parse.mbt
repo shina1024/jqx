@@ -555,14 +555,58 @@ fn FilterCursor::parse_object_literal(
 }
 
 ///|
-fn FilterCursor::parse_pipe(ctx : FilterCursor) -> Filter raise FilterError {
+fn FilterCursor::parse_mul(ctx : FilterCursor) -> Filter raise FilterError {
   let mut left = ctx.parse_primary()
+  for {
+    ctx.skip_ws()
+    match ctx.peek_char() {
+      Some('*') => {
+        ctx.read_char() |> ignore
+        let right = ctx.parse_primary()
+        left = Filter::mul(left, right)
+      }
+      Some('/') => {
+        ctx.read_char() |> ignore
+        let right = ctx.parse_primary()
+        left = Filter::div(left, right)
+      }
+      _ => break
+    }
+  }
+  left
+}
+
+///|
+fn FilterCursor::parse_add(ctx : FilterCursor) -> Filter raise FilterError {
+  let mut left = ctx.parse_mul()
+  for {
+    ctx.skip_ws()
+    match ctx.peek_char() {
+      Some('+') => {
+        ctx.read_char() |> ignore
+        let right = ctx.parse_mul()
+        left = Filter::add(left, right)
+      }
+      Some('-') => {
+        ctx.read_char() |> ignore
+        let right = ctx.parse_mul()
+        left = Filter::sub(left, right)
+      }
+      _ => break
+    }
+  }
+  left
+}
+
+///|
+fn FilterCursor::parse_pipe(ctx : FilterCursor) -> Filter raise FilterError {
+  let mut left = ctx.parse_add()
   for {
     ctx.skip_ws()
     match ctx.peek_char() {
       Some('|') => {
         ctx.read_char() |> ignore
-        let right = ctx.parse_primary()
+        let right = ctx.parse_add()
         left = Filter::pipe(left, right)
       }
       _ => break

@@ -108,6 +108,18 @@ test "parse logical" {
 }
 
 ///|
+test "parse arithmetic" {
+  inspect(
+    parse_filter(".a + .b * .c"),
+    content="Add(Pipe(Identity, Field(\"a\")), Mul(Pipe(Identity, Field(\"b\")), Pipe(Identity, Field(\"c\"))))",
+  )
+  inspect(
+    parse_filter("(.a - .b) / 2"),
+    content="Div(Sub(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\"))), Literal(Number(2)))",
+  )
+}
+
+///|
 test "parse array and object literals" {
   inspect(parse_filter("[.a, .b]"), content="Array([Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\"))])")
   inspect(parse_filter("{\"a\": .b, c: .d}"), content="Object([(\"a\", Pipe(Identity, Field(\"b\"))), (\"c\", Pipe(Identity, Field(\"d\")))])")

@@ -40,17 +40,13 @@ fn main {
     let j = @lib.parse(input)
     let outputs = @lib.eval(f, j)
     for v in outputs {
-      if raw && v is @lib.Json::String(s) {
-        println(s)
-      } else {
-        println(v.to_json_string())
-      }
+      println(format_output(raw, v))
     }
   } catch {
     err => {
       let msg = format_error_message(err.to_string())
       println(msg)
-      exit(1)
+      jqx_exit(1)
     }
   }
 }

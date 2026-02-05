@@ -59,11 +59,17 @@ pub enum Filter {
   And(Filter, Filter)
   Or(Filter, Filter)
   Not(Filter)
+  Add(Filter, Filter)
+  Sub(Filter, Filter)
+  Mul(Filter, Filter)
+  Div(Filter, Filter)
 }
+pub fn Filter::add(Self, Self) -> Self
 pub fn Filter::and_(Self, Self) -> Self
 pub fn Filter::builtin(String) -> Self
 pub fn Filter::call(String, Array[Self]) -> Self
 pub fn Filter::comma(Self, Self) -> Self
+pub fn Filter::div(Self, Self) -> Self
 pub fn Filter::eq(Self, Self) -> Self
 pub fn Filter::field(String) -> Self
 pub fn Filter::gt(Self, Self) -> Self
@@ -74,10 +80,12 @@ pub fn Filter::iter() -> Self
 pub fn Filter::literal(Json) -> Self
 pub fn Filter::lt(Self, Self) -> Self
 pub fn Filter::lte(Self, Self) -> Self
+pub fn Filter::mul(Self, Self) -> Self
 pub fn Filter::neq(Self, Self) -> Self
 pub fn Filter::not(Self) -> Self
 pub fn Filter::or_(Self, Self) -> Self
 pub fn Filter::pipe(Self, Self) -> Self
+pub fn Filter::sub(Self, Self) -> Self
 pub impl Eq for Filter
 pub impl Show for Filter
 

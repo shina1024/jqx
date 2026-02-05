@@ -43,6 +43,17 @@ Options:
 moon run --target native cmd/jqx -- -r ".foo" '{"foo": "bar"}'
 ```
 
+## Filters (Current)
+
+- Basic: `.`, `.foo`, `.[0]`, `.[]`
+- Literals: numbers, strings, `true/false/null`, arrays `[ ... ]`, objects `{ ... }`
+- Pipe/comma: `|`, `,`
+- Builtins: `length`, `type`, `keys`
+- Logic: `and`, `or`, `not`
+- Compare: `==`, `!=`, `<`, `<=`, `>`, `>=`
+- Select: `select(expr)`
+- Arithmetic: `+`, `-`, `*`, `/`
+
 Build executable:
 ```bash
 moon build --target native cmd/jqx

@@ -122,6 +122,28 @@ test "eval compare order and logical" {
 }
 
 ///|
+test "eval arithmetic" {
+  let j = must_parse("{\"a\":1,\"b\":2,\"c\":3}")
+  assert_eq(must_eval(parse_filter(".a + .b"), j), [Json::number(3.0)])
+  assert_eq(must_eval(parse_filter(".c - .a"), j), [Json::number(2.0)])
+  assert_eq(must_eval(parse_filter(".a * .b"), j), [Json::number(2.0)])
+  assert_eq(must_eval(parse_filter(".c / .a"), j), [Json::number(3.0)])
+}
+
+///|
+test "eval add arrays and objects" {
+  let j = must_parse("{\"a\":[1],\"b\":[2],\"x\":{\"k\":1},\"y\":{\"k\":2}}")
+  assert_eq(
+    must_eval(parse_filter(".a + .b"), j),
+    [Json::array([Json::number(1.0), Json::number(2.0)])],
+  )
+  assert_eq(
+    must_eval(parse_filter(".x + .y"), j),
+    [Json::object({ "k": Json::number(2.0) })],
+  )
+}
+
+///|
 test "eval iter non-array errors" {
   let j = must_parse("1")
   let f = parse_filter(".[]")

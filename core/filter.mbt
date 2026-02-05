@@ -34,6 +34,10 @@ pub enum Filter {
   And(Filter, Filter)
   Or(Filter, Filter)
   Not(Filter)
+  Add(Filter, Filter)
+  Sub(Filter, Filter)
+  Mul(Filter, Filter)
+  Div(Filter, Filter)
 } derive(Eq, Show)
 
 ///|
@@ -124,4 +128,24 @@ pub fn Filter::or_(left : Filter, right : Filter) -> Filter {
 ///|
 pub fn Filter::not(inner : Filter) -> Filter {
   Not(inner)
+}
+
+///|
+pub fn Filter::add(left : Filter, right : Filter) -> Filter {
+  Add(left, right)
+}
+
+///|
+pub fn Filter::sub(left : Filter, right : Filter) -> Filter {
+  Sub(left, right)
+}
+
+///|
+pub fn Filter::mul(left : Filter, right : Filter) -> Filter {
+  Mul(left, right)
+}
+
+///|
+pub fn Filter::div(left : Filter, right : Filter) -> Filter {
+  Div(left, right)
 }

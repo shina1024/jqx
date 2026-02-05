@@ -167,6 +167,10 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
       }
     }
     Not(inner) => [Json::boolean(!eval_to_bool(inner, input))]
+    Add(left, right) => eval_add(left, right, input)
+    Sub(left, right) => eval_arith("-", left, right, input)
+    Mul(left, right) => eval_arith("*", left, right, input)
+    Div(left, right) => eval_arith("/", left, right, input)
   }
 }
 
@@ -288,6 +292,78 @@ fn eval_compare(
     _ =>
       raise TypeError(
         "Cannot compare " + json_type_with_value(a) + " and " +
+        json_type_with_value(b),
+      )
+  }
+}
+
+///|
+fn eval_arith(
+  op : String,
+  left : Filter,
+  right : Filter,
+  input : Json,
+) -> Array[Json] raise EvalError {
+  let l = eval(left, input)
+  let r = eval(right, input)
+  if l.length() == 0 || r.length() == 0 {
+    return [Json::null()]
+  }
+  let a = l[0]
+  let b = r[0]
+  match (a, b) {
+    (Number(x, _), Number(y, _)) => {
+      let v = match op {
+        "-" => x - y
+        "*" => x * y
+        _ => x / y
+      }
+      [Json::number(v)]
+    }
+    _ =>
+      raise TypeError(
+        "Cannot apply " + op + " to " + json_type_with_value(a) +
+        " and " + json_type_with_value(b),
+      )
+  }
+}
+
+///|
+fn eval_add(
+  left : Filter,
+  right : Filter,
+  input : Json,
+) -> Array[Json] raise EvalError {
+  let l = eval(left, input)
+  let r = eval(right, input)
+  if l.length() == 0 || r.length() == 0 {
+    return [Json::null()]
+  }
+  let a = l[0]
+  let b = r[0]
+  match (a, b) {
+    (Number(x, _), Number(y, _)) => [Json::number(x + y)]
+    (String(x), String(y)) => [Json::string(x + y)]
+    (Array(x), Array(y)) => {
+      let out = x.copy()
+      for v in y {
+        out.push(v)
+      }
+      [Json::array(out)]
+    }
+    (Object(x), Object(y)) => {
+      let out = Map::new()
+      for kv in x.iter() {
+        out[kv.0] = kv.1
+      }
+      for kv in y.iter() {
+        out[kv.0] = kv.1
+      }
+      [Json::object(out)]
+    }
+    _ =>
+      raise TypeError(
+        "Cannot apply + to " + json_type_with_value(a) + " and " +
         json_type_with_value(b),
       )
   }
