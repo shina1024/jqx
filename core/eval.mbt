@@ -277,6 +277,30 @@ fn eval_call(
           _ => raise TypeError("Cannot map over " + json_type_with_value(input))
         }
       }
+    "map_values" =>
+      if args.length() != 1 {
+        raise UnknownFunction("map_values")
+      } else {
+        match input {
+          Object(o) => {
+            let out = Map::new()
+            let f = args[0]
+            for kv in o.iter() {
+              let vals = eval(f, kv.1)
+              if vals.length() > 0 {
+                out[kv.0] = vals[0]
+              } else {
+                out[kv.0] = Json::null()
+              }
+            }
+            [Json::object(out)]
+          }
+          _ =>
+            raise TypeError(
+              "Cannot map_values over " + json_type_with_value(input),
+            )
+        }
+      }
     "contains" =>
       if args.length() != 1 {
         raise UnknownFunction("contains")

@@ -464,32 +464,12 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
         ctx.parse_identifier_or_call()
       }
     Some('-') | Some('0'..='9') => Filter::literal(ctx.parse_number_literal())
-    Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') => {
-      let name = ctx.parse_identifier()
-      ctx.skip_ws()
-      match ctx.peek_char() {
-        Some('(') => {
-          ctx.read_char() |> ignore
-          ctx.skip_ws()
-          if ctx.peek_char() is Some(')') {
-            ctx.read_char() |> ignore
-            Filter::call(name, [])
-          } else {
-            let inner = ctx.parse_comma()
-            ctx.skip_ws()
-            ctx.expect_char(')')
-            Filter::call(name, [inner])
-          }
-        }
-        _ => Filter::builtin(name)
-      }
-    }
+    Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') =>
+      ctx.parse_identifier_or_call()
     Some(_) => ctx.invalid_char()
     None => raise InvalidEof
   }
 }
-
-///|
 
 ///|
 fn FilterCursor::parse_identifier_or_call(
