@@ -10,11 +10,19 @@ pub fn format_output(Bool, @core.Json) -> String
 
 pub fn jqx_exit(Int) -> Unit
 
+pub fn parse_cli_args(Array[String]) -> Result[CliArgs, String]
+
 pub fn read_stdin_all() -> String
 
 // Errors
 
 // Types and methods
+pub struct CliArgs {
+  raw : Bool
+  no_input : Bool
+  filter : String
+  input : String?
+}
 
 // Type aliases
 

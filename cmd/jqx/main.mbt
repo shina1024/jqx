@@ -14,42 +14,23 @@ fn main {
     println("Options: -r (raw strings), -c (compact; default), -n (null input)")
     return
   }
-  let mut raw = false
-  let mut no_input = false
-  let mut idx = 1
-  while idx < args.length() {
-    let a = args[idx]
-    if a == "-r" {
-      raw = true
-      idx += 1
-      continue
-    }
-    if a == "-n" {
-      no_input = true
-      idx += 1
-      continue
-    }
-    if a == "-c" {
-      idx += 1
-      continue
-    }
-    break
-  }
-  if idx >= args.length() {
+  let parsed = parse_cli_args(args)
+  guard parsed is Ok(cfg) else {
     println("jqx: error: missing filter")
     println(
       "Usage: moon run --target native cmd/jqx -- [options] \"<filter>\" [\"<json>\"]",
     )
     return
   }
-  let filter = args[idx]
-  idx += 1
-  let input = if no_input {
+  let raw = cfg.raw
+  let filter = cfg.filter
+  let input = if cfg.no_input {
     None
-  } else if idx < args.length() {
-    Some(args[idx])
   } else {
-    Some(read_stdin_all())
+    match cfg.input {
+      Some(text) => Some(text)
+      None => Some(read_stdin_all())
+    }
   }
   try {
     let f = @lib.parse_filter(filter)
