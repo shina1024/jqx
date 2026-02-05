@@ -71,6 +71,15 @@ test "parse call" {
 }
 
 ///|
+test "parse variables and as" {
+  inspect(parse_filter("$x"), content="Var(\"x\")")
+  inspect(
+    parse_filter(".a as $x | $x"),
+    content="As(Pipe(Identity, Field(\"a\")), \"x\", Var(\"x\"))",
+  )
+}
+
+///|
 test "parse compare" {
   inspect(
     parse_filter(".a == .b"),

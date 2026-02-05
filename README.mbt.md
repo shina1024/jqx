@@ -51,6 +51,7 @@ moon run --target native cmd/jqx -- -r ".foo" '{"foo": "bar"}'
 - Pipe/comma: `|`, `,`
 - Builtins: `length`, `type`, `keys`
 - Functions: `select(expr)`, `map(expr)`, `contains(x)`, `startswith(x)`, `endswith(x)`
+- Variables: `.expr as $x | ...`, `$x`
 - Logic: `and`, `or`, `not`
 - Compare: `==`, `!=`, `<`, `<=`, `>`, `>=`
 - Arithmetic: `+`, `-`, `*`, `/`

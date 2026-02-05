@@ -15,6 +15,7 @@ pub fn valid(StringView) -> Bool
 pub suberror EvalError {
   TypeError(String)
   UnknownFunction(String)
+  UnknownVariable(String)
 }
 pub impl Eq for EvalError
 pub impl Show for EvalError
@@ -53,6 +54,8 @@ pub enum Filter {
   Object(Array[(String, Filter)])
   Builtin(String)
   Call(String, Array[Filter])
+  Var(String)
+  As(Filter, String, Filter)
   Eq(Filter, Filter)
   Neq(Filter, Filter)
   Lt(Filter, Filter)
@@ -72,6 +75,7 @@ pub enum Filter {
 }
 pub fn Filter::add(Self, Self) -> Self
 pub fn Filter::and_(Self, Self) -> Self
+pub fn Filter::as_(Self, String, Self) -> Self
 pub fn Filter::builtin(String) -> Self
 pub fn Filter::call(String, Array[Self]) -> Self
 pub fn Filter::comma(Self, Self) -> Self
@@ -98,6 +102,7 @@ pub fn Filter::not(Self) -> Self
 pub fn Filter::or_(Self, Self) -> Self
 pub fn Filter::pipe(Self, Self) -> Self
 pub fn Filter::sub(Self, Self) -> Self
+pub fn Filter::var_(String) -> Self
 pub impl Eq for Filter
 pub impl Show for Filter
 

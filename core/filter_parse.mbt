@@ -433,6 +433,10 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
     Some('[') => ctx.parse_array_literal()
     Some('{') => ctx.parse_object_literal()
     Some('(') => ctx.parse_paren_expr()
+    Some('$') => {
+      ctx.read_char() |> ignore
+      Filter::var_(ctx.parse_identifier())
+    }
     Some('\"') => Filter::literal(Json::string(ctx.parse_string_literal()))
     Some('t') =>
       if ctx.try_keyword("true") {
@@ -646,6 +650,20 @@ fn FilterCursor::parse_pipe(ctx : FilterCursor) -> Filter raise FilterError {
   let mut left = ctx.parse_add()
   for {
     ctx.skip_ws()
+    if ctx.try_keyword("as") {
+      ctx.skip_ws()
+      match ctx.read_char() {
+        Some('$') => {
+          let name = ctx.parse_identifier()
+          ctx.skip_ws()
+          ctx.expect_char('|')
+          let right = ctx.parse_pipe()
+          return Filter::as_(left, name, right)
+        }
+        Some(_) => ctx.invalid_char(shift=-1)
+        None => raise InvalidEof
+      }
+    }
     match ctx.peek_char() {
       Some('|') => {
         ctx.read_char() |> ignore

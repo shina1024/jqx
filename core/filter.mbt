@@ -28,6 +28,8 @@ pub enum Filter {
   Object(Array[(String, Filter)])
   Builtin(String)
   Call(String, Array[Filter])
+  Var(String)
+  As(Filter, String, Filter)
   Eq(Filter, Filter)
   Neq(Filter, Filter)
   Lt(Filter, Filter)
@@ -104,6 +106,16 @@ pub fn Filter::builtin(name : String) -> Filter {
 ///|
 pub fn Filter::call(name : String, args : Array[Filter]) -> Filter {
   Call(name, args)
+}
+
+///|
+pub fn Filter::var_(name : String) -> Filter {
+  Var(name)
+}
+
+///|
+pub fn Filter::as_(value : Filter, name : String, body : Filter) -> Filter {
+  As(value, name, body)
 }
 
 ///|

@@ -14,6 +14,7 @@
 pub suberror EvalError {
   TypeError(String)
   UnknownFunction(String)
+  UnknownVariable(String)
 } derive(Eq)
 
 ///|
@@ -21,6 +22,7 @@ pub impl Show for EvalError with output(self, logger) {
   match self {
     TypeError(msg) => logger.write_string(msg)
     UnknownFunction(name) => logger.write_string("Unknown function: " + name)
+    UnknownVariable(name) => logger.write_string("Unknown variable: $" + name)
   }
 }
 
@@ -43,6 +45,16 @@ fn json_type_with_value(j : Json) -> String {
 
 ///|
 pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
+  let env = Map::new()
+  eval_with_env(filter, input, env)
+}
+
+///|
+fn eval_with_env(
+  filter : Filter,
+  input : Json,
+  env : Map[String, Json],
+) -> Array[Json] raise EvalError {
   match filter {
     Identity => [input]
     Literal(v) => [v]
@@ -109,10 +121,27 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
         }
         _ => []
       }
+    Var(name) =>
+      match env.get(name) {
+        Some(v) => [v]
+        None => raise UnknownVariable(name)
+      }
+    As(value, name, body) => {
+      let out = []
+      let values = eval_with_env(value, input, env)
+      for v in values {
+        let next_env = env.copy()
+        next_env[name] = v
+        for v2 in eval_with_env(body, input, next_env) {
+          out.push(v2)
+        }
+      }
+      out
+    }
     Pipe(left, right) => {
       let out = []
-      for v in eval(left, input) {
-        for v2 in eval(right, v) {
+      for v in eval_with_env(left, input, env) {
+        for v2 in eval_with_env(right, v, env) {
           out.push(v2)
         }
       }
@@ -120,10 +149,10 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
     }
     Comma(left, right) => {
       let out = []
-      for v in eval(left, input) {
+      for v in eval_with_env(left, input, env) {
         out.push(v)
       }
-      for v in eval(right, input) {
+      for v in eval_with_env(right, input, env) {
         out.push(v)
       }
       out
@@ -131,7 +160,7 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
     Array(items) => {
       let out = []
       for f in items {
-        for v in eval(f, input) {
+        for v in eval_with_env(f, input, env) {
           out.push(v)
         }
       }
@@ -142,7 +171,7 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
       for kv in items {
         let key = kv.0
         let f = kv.1
-        let vals = eval(f, input)
+        let vals = eval_with_env(f, input, env)
         if vals.length() > 0 {
           map[key] = vals[0]
         } else {
@@ -152,10 +181,10 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
       [Json::object(map)]
     }
     Builtin(name) => eval_builtin(name, input)
-    Call(name, args) => eval_call(name, args, input)
+    Call(name, args) => eval_call(name, args, input, env)
     Eq(left, right) => {
-      let l = eval(left, input)
-      let r = eval(right, input)
+      let l = eval_with_env(left, input, env)
+      let r = eval_with_env(right, input, env)
       if l.length() == 0 || r.length() == 0 {
         [Json::boolean(false)]
       } else {
@@ -163,51 +192,51 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
       }
     }
     Neq(left, right) => {
-      let l = eval(left, input)
-      let r = eval(right, input)
+      let l = eval_with_env(left, input, env)
+      let r = eval_with_env(right, input, env)
       if l.length() == 0 || r.length() == 0 {
         [Json::boolean(true)]
       } else {
         [Json::boolean(l[0] != r[0])]
       }
     }
-    Lt(left, right) => eval_compare("<", left, right, input)
-    Lte(left, right) => eval_compare("<=", left, right, input)
-    Gt(left, right) => eval_compare(">", left, right, input)
-    Gte(left, right) => eval_compare(">=", left, right, input)
+    Lt(left, right) => eval_compare("<", left, right, input, env)
+    Lte(left, right) => eval_compare("<=", left, right, input, env)
+    Gt(left, right) => eval_compare(">", left, right, input, env)
+    Gte(left, right) => eval_compare(">=", left, right, input, env)
     And(left, right) => {
-      let l = eval_to_bool(left, input)
+      let l = eval_to_bool(left, input, env)
       if l {
-        [Json::boolean(eval_to_bool(right, input))]
+        [Json::boolean(eval_to_bool(right, input, env))]
       } else {
         [Json::boolean(false)]
       }
     }
     Or(left, right) => {
-      let l = eval_to_bool(left, input)
+      let l = eval_to_bool(left, input, env)
       if l {
         [Json::boolean(true)]
       } else {
-        [Json::boolean(eval_to_bool(right, input))]
+        [Json::boolean(eval_to_bool(right, input, env))]
       }
     }
-    Not(inner) => [Json::boolean(!eval_to_bool(inner, input))]
-    Add(left, right) => eval_add(left, right, input)
-    Sub(left, right) => eval_arith("-", left, right, input)
-    Mul(left, right) => eval_arith("*", left, right, input)
-    Div(left, right) => eval_arith("/", left, right, input)
+    Not(inner) => [Json::boolean(!eval_to_bool(inner, input, env))]
+    Add(left, right) => eval_add(left, right, input, env)
+    Sub(left, right) => eval_arith("-", left, right, input, env)
+    Mul(left, right) => eval_arith("*", left, right, input, env)
+    Div(left, right) => eval_arith("/", left, right, input, env)
     IfElse(cond, then_branch, else_branch) =>
-      if eval_to_bool(cond, input) {
-        eval(then_branch, input)
+      if eval_to_bool(cond, input, env) {
+        eval_with_env(then_branch, input, env)
       } else {
-        eval(else_branch, input)
+        eval_with_env(else_branch, input, env)
       }
     Fallback(left, right) => {
-      let l = eval(left, input)
+      let l = eval_with_env(left, input, env)
       if l.length() > 0 {
         l
       } else {
-        eval(right, input)
+        eval_with_env(right, input, env)
       }
     }
     Empty => []
@@ -254,8 +283,12 @@ fn is_truthy(j : Json) -> Bool {
 }
 
 ///|
-fn eval_to_bool(filter : Filter, input : Json) -> Bool raise EvalError {
-  let results = eval(filter, input)
+fn eval_to_bool(
+  filter : Filter,
+  input : Json,
+  env : Map[String, Json],
+) -> Bool raise EvalError {
+  let results = eval_with_env(filter, input, env)
   for v in results {
     if is_truthy(v) {
       return true
@@ -269,6 +302,7 @@ fn eval_call(
   name : String,
   args : Array[Filter],
   input : Json,
+  env : Map[String, Json],
 ) -> Array[Json] raise EvalError {
   match name {
     "select" =>
@@ -276,7 +310,7 @@ fn eval_call(
         raise UnknownFunction("select")
       } else {
         let cond = args[0]
-        let results = eval(cond, input)
+        let results = eval_with_env(cond, input, env)
         let mut ok = false
         for v in results {
           if is_truthy(v) {
@@ -299,7 +333,7 @@ fn eval_call(
             let out = []
             let f = args[0]
             for v in a {
-              for v2 in eval(f, v) {
+              for v2 in eval_with_env(f, v, env) {
                 out.push(v2)
               }
             }
@@ -317,7 +351,7 @@ fn eval_call(
             let out = Map::new()
             let f = args[0]
             for kv in o.iter() {
-              let vals = eval(f, kv.1)
+              let vals = eval_with_env(f, kv.1, env)
               if vals.length() > 0 {
                 out[kv.0] = vals[0]
               } else {
@@ -337,7 +371,7 @@ fn eval_call(
         raise UnknownFunction("contains")
       } else {
         let target = args[0]
-        let vals = eval(target, input)
+        let vals = eval_with_env(target, input, env)
         if vals.length() == 0 {
           [Json::boolean(false)]
         } else {
@@ -369,7 +403,7 @@ fn eval_call(
         raise UnknownFunction("startswith")
       } else {
         let target = args[0]
-        let vals = eval(target, input)
+        let vals = eval_with_env(target, input, env)
         if vals.length() == 0 {
           [Json::boolean(false)]
         } else {
@@ -391,7 +425,7 @@ fn eval_call(
         raise UnknownFunction("endswith")
       } else {
         let target = args[0]
-        let vals = eval(target, input)
+        let vals = eval_with_env(target, input, env)
         if vals.length() == 0 {
           [Json::boolean(false)]
         } else {
@@ -418,9 +452,10 @@ fn eval_compare(
   left : Filter,
   right : Filter,
   input : Json,
+  env : Map[String, Json],
 ) -> Array[Json] raise EvalError {
-  let l = eval(left, input)
-  let r = eval(right, input)
+  let l = eval_with_env(left, input, env)
+  let r = eval_with_env(right, input, env)
   if l.length() == 0 || r.length() == 0 {
     return [Json::boolean(false)]
   }
@@ -462,9 +497,10 @@ fn eval_arith(
   left : Filter,
   right : Filter,
   input : Json,
+  env : Map[String, Json],
 ) -> Array[Json] raise EvalError {
-  let l = eval(left, input)
-  let r = eval(right, input)
+  let l = eval_with_env(left, input, env)
+  let r = eval_with_env(right, input, env)
   if l.length() == 0 || r.length() == 0 {
     return [Json::null()]
   }
@@ -496,9 +532,10 @@ fn eval_add(
   left : Filter,
   right : Filter,
   input : Json,
+  env : Map[String, Json],
 ) -> Array[Json] raise EvalError {
-  let l = eval(left, input)
-  let r = eval(right, input)
+  let l = eval_with_env(left, input, env)
+  let r = eval_with_env(right, input, env)
   if l.length() == 0 || r.length() == 0 {
     return [Json::null()]
   }

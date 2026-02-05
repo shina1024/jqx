@@ -154,6 +154,14 @@ test "eval map" {
 }
 
 ///|
+test "eval as and variable" {
+  let j = must_parse("{\"a\":1,\"b\":2}")
+  assert_eq(must_eval(parse_filter(".a as $x | $x"), j), [Json::number(1.0)])
+  assert_eq(must_eval(parse_filter(".a as $x | .b"), j), [Json::number(2.0)])
+  assert_eq(must_eval(parse_filter(".a as $x | $x + 1"), j), [Json::number(2.0)])
+}
+
+///|
 test "eval if-then-else" {
   let j = must_parse("{\"a\":true,\"b\":1,\"c\":2}")
   assert_eq(must_eval(parse_filter("if .a then .b else .c end"), j), [
