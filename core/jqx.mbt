@@ -109,6 +109,92 @@ pub impl Show for Json with output(self, logger) {
 }
 
 ///|
+/// Encode Json as a compact JSON string (jq-style output).
+pub fn Json::to_json_string(self : Json) -> String {
+  let buf = StringBuilder::new()
+  fn write_escaped(s : String) {
+    buf.write_char('"')
+    for ch in s {
+      match ch {
+        '"' => buf.write_string("\\\"")
+        '\\' => buf.write_string("\\\\")
+        '\b' => buf.write_string("\\b")
+        '\u{0C}' => buf.write_string("\\f")
+        '\n' => buf.write_string("\\n")
+        '\r' => buf.write_string("\\r")
+        '\t' => buf.write_string("\\t")
+        _ =>
+          if ch.to_int() < 32 {
+            let code = ch.to_int()
+            buf.write_string("\\u00")
+            let hi = (code >> 4) & 0xF
+            let lo = code & 0xF
+            fn hex(d : Int) -> Char {
+              if d < 10 {
+                (d + '0'.to_int()).unsafe_to_char()
+              } else {
+                (d - 10 + 'a'.to_int()).unsafe_to_char()
+              }
+            }
+            buf.write_char(hex(hi))
+            buf.write_char(hex(lo))
+          } else {
+            buf.write_char(ch)
+          }
+      }
+    }
+    buf.write_char('"')
+  }
+
+  fn write_value(j : Json) {
+    match j {
+      JNull => buf.write_string("null")
+      JTrue => buf.write_string("true")
+      JFalse => buf.write_string("false")
+      Number(n, repr) =>
+        match repr {
+          Some(s) => buf.write_string(s)
+          None => buf.write_string(n.to_string())
+        }
+      String(s) => write_escaped(s)
+      Array(a) => {
+        buf.write_char('[')
+        let mut first = true
+        for v in a {
+          if first {
+            first = false
+          } else {
+            buf.write_char(',')
+          }
+          write_value(v)
+        }
+        buf.write_char(']')
+      }
+      Object(o) => {
+        buf.write_char('{')
+        let mut first = true
+        for kv in o.iter() {
+          let k = kv.0
+          let v = kv.1
+          if first {
+            first = false
+          } else {
+            buf.write_char(',')
+          }
+          write_escaped(k)
+          buf.write_char(':')
+          write_value(v)
+        }
+        buf.write_char('}')
+      }
+    }
+  }
+
+  write_value(self)
+  buf.to_string()
+}
+
+///|
 priv struct ParseContext {
   mut offset : Int
   input : StringView
@@ -678,14 +764,25 @@ fn ParseContext::lex_number_end(
   if !s.contains(".") && !s.contains("e") && !s.contains("E") {
     let parsed_int = try? @strconv.parse_int64(s)
     match parsed_int {
-      Ok(i) if i <= 9007199254740991 && i >= -9007199254740991 =>
-        return (i.to_double(), None)
-      _ =>
-        return if s is ['-', ..] {
-          (@double.neg_infinity, Some(s))
-        } else {
-          (@double.infinity, Some(s))
+      Ok(i) => {
+        let d = i.to_double()
+        if i <= 9007199254740991 && i >= -9007199254740991 {
+          return (d, None)
         }
+        return (d, Some(s))
+      }
+      Err(_) => {
+        let parsed_double = try? @strconv.parse_double(s)
+        match parsed_double {
+          Ok(d) => (d, Some(s))
+          Err(_) =>
+            if s is ['-', ..] {
+              (@double.neg_infinity, Some(s))
+            } else {
+              (@double.infinity, Some(s))
+            }
+        }
+      }
     }
   } else {
     let parsed_double = try? @strconv.parse_double(s)

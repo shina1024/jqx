@@ -49,3 +49,96 @@ This is a [MoonBit](https://docs.moonbitlang.com) project.
 
 - agent-todo.md has some small tasks that are easy for AI to pick up, agent is
   welcome to finish the tasks and check the box when you are done
+
+## JSON Parser First: Design Notes
+
+- 最優先はJSONパーサー。jq互換ツール/JS・TSライブラリとして共通に使える
+  「純粋コア」を最初に固める。
+- CLI/JS/TSから同一のパーサーAPIを使えるようにする。
+
+### Core Data Model
+
+- jq互換を見据え、JSON値は以下の最小型で表現する。
+  - `Null`, `Bool`, `Number`, `String`, `Array`, `Object`
+- `Number`はjq互換を優先して整数/浮動の区別を保持する方針
+  (将来: `Int`/`Float`または`Decimal`相当の拡張を検討)
+
+### Parser API (Core)
+
+- 文字列入力のパースを最初に提供する。
+  - `parse_json(text: String) -> Result[Json, JsonError]`
+- 位置情報を含むエラー型を用意する。
+  - `JsonError`には `line`, `column`, `offset`, `message`
+- 将来のストリーミングや大規模入力を見据えて
+  `Cursor`/`Reader` 抽象を準備しておく。
+
+### jq互換・評価器への接続
+
+- 解析結果は将来のjqフィルタ評価器でそのまま使える形にする。
+- Objectのキー順は入力順保持を基本とし、必要ならソートは別レイヤで扱う。
+
+### JS/TS対応の考慮
+
+- JS/TSライブラリ向けに、MoonBitのJSバックエンドで
+  直接利用できるAPIを設計する。
+- APIは小さく安定させ、後でTS定義を追加しやすい形にする。
+- 数値はJS互換（IEEE754 Double）を優先し、精度限界は仕様として明記する。
+
+### Implementation Steps (First Pass)
+
+1. JSON値型 `Json` を定義
+2. パーサー `parse_json` を実装
+3. エラー型 `JsonError` に位置情報を付与
+4. 代表的な単体テストを追加 (スナップショット中心)
+5. jq評価器側に接続しやすいAPIを維持する
+
+## Package Split
+
+- `core/` にJSONパーサー等のコア実装を置く（CLI/JS/TS共通）
+- `cmd/jqx` は `shina1024/jqx/core` を参照
+- CLI はネイティブターゲット想定（stdin対応のため）
+
+## Number Semantics (JS-first)
+
+- `Json::Number` は `Double` を基本とする（JS互換優先）
+- 巨大整数の厳密性は保証しない（JS制約）
+- stringify時は入力表現の保持を優先する設計を検討する（必要なら `repr` を保持）
+
+## CLI Notes
+
+- jq互換のCLIはネイティブ前提で動作確認する
+- 実行例:
+  - `echo '{"foo": 1}' | moon run --target native cmd/jqx -- ".foo"`
+  - `moon run --target native cmd/jqx -- ".foo" '{"foo": 1}'`
+
+## Build (Native)
+
+### Windows
+
+- Visual Studio Build Tools (C++ build tools) と Windows 10/11 SDK が必要
+- Developer Command Prompt for VS を使う（`INCLUDE`/`LIB`/`PATH` が通る）
+- 例:
+  - `moon test --target native --package core`
+  - `moon run --target native cmd/jqx -- ".foo" '{"foo": 1}'`
+  - `moon build --target native cmd/jqx`（ビルド後 `_build/native/release` から `jqx.exe` を実行）
+
+### macOS
+
+- Xcode Command Line Tools が必要
+- 例:
+  - `moon test --target native --package core`
+  - `moon run --target native cmd/jqx -- ".foo" '{"foo": 1}'`
+  - `moon build --target native cmd/jqx`（ビルド後 `_build/native/release` の `jqx` を実行）
+
+### Linux
+
+- gcc/clang などの C toolchain が必要
+- 例:
+  - `moon test --target native --package core`
+  - `moon run --target native cmd/jqx -- ".foo" '{"foo": 1}'`
+  - `moon build --target native cmd/jqx`（ビルド後 `_build/native/release` の `jqx` を実行）
+
+## CI
+
+- GitHub Actions で Windows/macOS/Linux の native テストを実行する
+- Windows は `vcvars64.bat` 経由で実行（`INCLUDE`/`LIB`/`PATH` を通す）

@@ -1,0 +1,11 @@
+{
+  "is-main": true,
+  "import": [
+    {
+      "path": "shina1024/jqx/core",
+      "alias": "lib"
+    },
+    "moonbitlang/core/env",
+    "moonbitlang/core/strconv"
+  ]
+}

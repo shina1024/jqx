@@ -1,0 +1,89 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "shina1024/jqx/core"
+
+// Values
+pub fn eval(Filter, Json) -> Array[Json] raise EvalError
+
+#label_migration(max_nesting_depth, fill=false)
+pub fn parse(StringView, max_nesting_depth? : Int) -> Json raise ParseError
+
+pub fn parse_filter(StringView) -> Filter raise FilterError
+
+pub fn valid(StringView) -> Bool
+
+// Errors
+pub suberror EvalError {
+  TypeError(String)
+}
+pub impl Eq for EvalError
+pub impl Show for EvalError
+
+pub suberror FilterError {
+  InvalidChar(Position, Char)
+  InvalidEof
+  Expected(String, Position)
+  InvalidNumber(Position, String)
+  UnsupportedLiteral(Position)
+}
+pub impl Eq for FilterError
+pub impl Show for FilterError
+
+pub suberror ParseError {
+  InvalidChar(Position, Char)
+  InvalidEof
+  DepthLimitExceeded
+}
+pub impl Eq for ParseError
+pub impl Show for ParseError
+
+// Types and methods
+pub enum Filter {
+  Identity
+  Pipe(Filter, Filter)
+  Comma(Filter, Filter)
+  Field(String)
+  Index(Int)
+  Iter
+  Literal(Json)
+  Array(Filter)
+  Object(Array[(String, Filter)])
+}
+pub fn Filter::comma(Self, Self) -> Self
+pub fn Filter::field(String) -> Self
+pub fn Filter::identity() -> Self
+pub fn Filter::index(Int) -> Self
+pub fn Filter::iter() -> Self
+pub fn Filter::literal(Json) -> Self
+pub fn Filter::pipe(Self, Self) -> Self
+pub impl Eq for Filter
+pub impl Show for Filter
+
+pub enum Json {
+  JNull
+  JTrue
+  JFalse
+  Number(Double, String?)
+  String(String)
+  Array(Array[Json])
+  Object(Map[String, Json])
+}
+pub fn Json::array(Array[Self]) -> Self
+pub fn Json::boolean(Bool) -> Self
+pub fn Json::null() -> Self
+pub fn Json::number(Double, repr? : String) -> Self
+pub fn Json::object(Map[String, Self]) -> Self
+pub fn Json::string(String) -> Self
+pub fn Json::to_json_string(Self) -> String
+pub impl Eq for Json
+pub impl Show for Json
+
+pub struct Position {
+  line : Int
+  column : Int
+}
+pub impl Eq for Position
+
+// Type aliases
+
+// Traits
+
