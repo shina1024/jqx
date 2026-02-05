@@ -63,6 +63,9 @@ pub enum Filter {
   Sub(Filter, Filter)
   Mul(Filter, Filter)
   Div(Filter, Filter)
+  IfElse(Filter, Filter, Filter)
+  Fallback(Filter, Filter)
+  Empty
 }
 pub fn Filter::add(Self, Self) -> Self
 pub fn Filter::and_(Self, Self) -> Self
@@ -70,11 +73,14 @@ pub fn Filter::builtin(String) -> Self
 pub fn Filter::call(String, Array[Self]) -> Self
 pub fn Filter::comma(Self, Self) -> Self
 pub fn Filter::div(Self, Self) -> Self
+pub fn Filter::empty() -> Self
 pub fn Filter::eq(Self, Self) -> Self
+pub fn Filter::fallback(Self, Self) -> Self
 pub fn Filter::field(String) -> Self
 pub fn Filter::gt(Self, Self) -> Self
 pub fn Filter::gte(Self, Self) -> Self
 pub fn Filter::identity() -> Self
+pub fn Filter::if_else(Self, Self, Self) -> Self
 pub fn Filter::index(Int) -> Self
 pub fn Filter::iter() -> Self
 pub fn Filter::literal(Json) -> Self

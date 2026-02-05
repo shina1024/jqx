@@ -49,10 +49,11 @@ moon run --target native cmd/jqx -- -r ".foo" '{"foo": "bar"}'
 - Literals: numbers, strings, `true/false/null`, arrays `[ ... ]`, objects `{ ... }`
 - Pipe/comma: `|`, `,`
 - Builtins: `length`, `type`, `keys`
+- Functions: `select(expr)`, `map(expr)`, `contains(x)`, `startswith(x)`, `endswith(x)`
 - Logic: `and`, `or`, `not`
 - Compare: `==`, `!=`, `<`, `<=`, `>`, `>=`
-- Select: `select(expr)`
 - Arithmetic: `+`, `-`, `*`, `/`
+- Control: `if ... then ... else ... end`, `empty`, `//`
 
 Build executable:
 ```bash

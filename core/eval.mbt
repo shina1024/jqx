@@ -20,8 +20,7 @@ pub suberror EvalError {
 pub impl Show for EvalError with output(self, logger) {
   match self {
     TypeError(msg) => logger.write_string(msg)
-    UnknownFunction(name) =>
-      logger.write_string("Unknown function: " + name)
+    UnknownFunction(name) => logger.write_string("Unknown function: " + name)
   }
 }
 
@@ -47,7 +46,7 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
   match filter {
     Identity => [input]
     Literal(v) => [v]
-    Field(name) => {
+    Field(name) =>
       match input {
         Object(o) =>
           match o.get(name) {
@@ -56,8 +55,7 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
           }
         _ => [Json::null()]
       }
-    }
-    Index(i) => {
+    Index(i) =>
       match input {
         Array(a) =>
           if i >= 0 && i < a.length() {
@@ -67,8 +65,7 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
           }
         _ => [Json::null()]
       }
-    }
-    Iter => {
+    Iter =>
       match input {
         Array(a) => a
         Object(o) => {
@@ -79,11 +76,8 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
           out
         }
         _ =>
-          raise TypeError(
-            "Cannot iterate over " + json_type_with_value(input),
-          )
+          raise TypeError("Cannot iterate over " + json_type_with_value(input))
       }
-    }
     Pipe(left, right) => {
       let out = []
       for v in eval(left, input) {
@@ -171,23 +165,35 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
     Sub(left, right) => eval_arith("-", left, right, input)
     Mul(left, right) => eval_arith("*", left, right, input)
     Div(left, right) => eval_arith("/", left, right, input)
+    IfElse(cond, then_branch, else_branch) =>
+      if eval_to_bool(cond, input) {
+        eval(then_branch, input)
+      } else {
+        eval(else_branch, input)
+      }
+    Fallback(left, right) => {
+      let l = eval(left, input)
+      if l.length() > 0 {
+        l
+      } else {
+        eval(right, input)
+      }
+    }
+    Empty => []
   }
 }
 
 ///|
 fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
   match name {
-    "length" => {
+    "length" =>
       match input {
         Array(a) => [Json::number(a.length().to_double())]
         Object(o) => [Json::number(o.length().to_double())]
         String(s) => [Json::number(s.length().to_double())]
         _ =>
-          raise TypeError(
-            "Cannot get length of " + json_type_with_value(input),
-          )
+          raise TypeError("Cannot get length of " + json_type_with_value(input))
       }
-    }
     "type" => [Json::string(json_type_name(input))]
     "keys" =>
       match input {
@@ -201,9 +207,7 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
           [Json::array(out)]
         }
         _ =>
-          raise TypeError(
-            "Cannot get keys of " + json_type_with_value(input),
-          )
+          raise TypeError("Cannot get keys of " + json_type_with_value(input))
       }
     _ => raise UnknownFunction(name)
   }
@@ -249,7 +253,105 @@ fn eval_call(
             break
           }
         }
-        if ok { [input] } else { [] }
+        if ok {
+          [input]
+        } else {
+          []
+        }
+      }
+    "map" =>
+      if args.length() != 1 {
+        raise UnknownFunction("map")
+      } else {
+        match input {
+          Array(a) => {
+            let out = []
+            let f = args[0]
+            for v in a {
+              for v2 in eval(f, v) {
+                out.push(v2)
+              }
+            }
+            [Json::array(out)]
+          }
+          _ => raise TypeError("Cannot map over " + json_type_with_value(input))
+        }
+      }
+    "contains" =>
+      if args.length() != 1 {
+        raise UnknownFunction("contains")
+      } else {
+        let target = args[0]
+        let vals = eval(target, input)
+        if vals.length() == 0 {
+          [Json::boolean(false)]
+        } else {
+          let needle = vals[0]
+          match (input, needle) {
+            (String(h), String(n)) => [Json::boolean(h.contains(n))]
+            (Array(h), _) => {
+              let mut found = false
+              for v in h {
+                if v == needle {
+                  found = true
+                  break
+                }
+              }
+              [Json::boolean(found)]
+            }
+            _ =>
+              raise TypeError(
+                "Cannot contains " +
+                json_type_with_value(input) +
+                " and " +
+                json_type_with_value(needle),
+              )
+          }
+        }
+      }
+    "startswith" =>
+      if args.length() != 1 {
+        raise UnknownFunction("startswith")
+      } else {
+        let target = args[0]
+        let vals = eval(target, input)
+        if vals.length() == 0 {
+          [Json::boolean(false)]
+        } else {
+          let needle = vals[0]
+          match (input, needle) {
+            (String(h), String(n)) => [Json::boolean(h.has_prefix(n))]
+            _ =>
+              raise TypeError(
+                "Cannot startswith " +
+                json_type_with_value(input) +
+                " and " +
+                json_type_with_value(needle),
+              )
+          }
+        }
+      }
+    "endswith" =>
+      if args.length() != 1 {
+        raise UnknownFunction("endswith")
+      } else {
+        let target = args[0]
+        let vals = eval(target, input)
+        if vals.length() == 0 {
+          [Json::boolean(false)]
+        } else {
+          let needle = vals[0]
+          match (input, needle) {
+            (String(h), String(n)) => [Json::boolean(h.has_suffix(n))]
+            _ =>
+              raise TypeError(
+                "Cannot endswith " +
+                json_type_with_value(input) +
+                " and " +
+                json_type_with_value(needle),
+              )
+          }
+        }
       }
     _ => raise UnknownFunction(name)
   }
@@ -291,7 +393,9 @@ fn eval_compare(
     }
     _ =>
       raise TypeError(
-        "Cannot compare " + json_type_with_value(a) + " and " +
+        "Cannot compare " +
+        json_type_with_value(a) +
+        " and " +
         json_type_with_value(b),
       )
   }
@@ -322,8 +426,12 @@ fn eval_arith(
     }
     _ =>
       raise TypeError(
-        "Cannot apply " + op + " to " + json_type_with_value(a) +
-        " and " + json_type_with_value(b),
+        "Cannot apply " +
+        op +
+        " to " +
+        json_type_with_value(a) +
+        " and " +
+        json_type_with_value(b),
       )
   }
 }
@@ -363,7 +471,9 @@ fn eval_add(
     }
     _ =>
       raise TypeError(
-        "Cannot apply + to " + json_type_with_value(a) + " and " +
+        "Cannot apply + to " +
+        json_type_with_value(a) +
+        " and " +
         json_type_with_value(b),
       )
   }

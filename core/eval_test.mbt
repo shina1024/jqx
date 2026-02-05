@@ -35,20 +35,18 @@ test "eval index and iter" {
   let f1 = parse_filter(".[1]")
   let f2 = parse_filter(".[]")
   assert_eq(must_eval(f1, j), [Json::number(2.0)])
-  assert_eq(
-    must_eval(f2, j),
-    [Json::number(1.0), Json::number(2.0), Json::number(3.0)],
-  )
+  assert_eq(must_eval(f2, j), [
+    Json::number(1.0),
+    Json::number(2.0),
+    Json::number(3.0),
+  ])
 }
 
 ///|
 test "eval pipe and comma" {
   let j = must_parse("{\"a\":{\"b\":2},\"c\":3}")
   let f = parse_filter(".a | .b, .c")
-  assert_eq(
-    must_eval(f, j),
-    [Json::number(2.0), Json::number(3.0)],
-  )
+  assert_eq(must_eval(f, j), [Json::number(2.0), Json::number(3.0)])
 }
 
 ///|
@@ -63,19 +61,12 @@ test "eval array and object literals" {
   let j = must_parse("{\"a\":1,\"b\":2}")
   let f1 = parse_filter("[.a, .b]")
   let f2 = parse_filter("{\"x\": .a, y: .b}")
-  assert_eq(
-    must_eval(f1, j),
-    [Json::array([Json::number(1.0), Json::number(2.0)])],
-  )
-  assert_eq(
-    must_eval(f2, j),
-    [
-      Json::object({
-        "x": Json::number(1.0),
-        "y": Json::number(2.0),
-      }),
-    ],
-  )
+  assert_eq(must_eval(f1, j), [
+    Json::array([Json::number(1.0), Json::number(2.0)]),
+  ])
+  assert_eq(must_eval(f2, j), [
+    Json::object({ "x": Json::number(1.0), "y": Json::number(2.0) }),
+  ])
 }
 
 ///|
@@ -87,10 +78,9 @@ test "eval builtins" {
   assert_eq(must_eval(parse_filter("length"), j2), [Json::number(2.0)])
   assert_eq(must_eval(parse_filter("length"), j3), [Json::number(2.0)])
   assert_eq(must_eval(parse_filter("type"), j2), [Json::string("object")])
-  assert_eq(
-    must_eval(parse_filter("keys"), j2),
-    [Json::array([Json::string("a"), Json::string("b")])],
-  )
+  assert_eq(must_eval(parse_filter("keys"), j2), [
+    Json::array([Json::string("a"), Json::string("b")]),
+  ])
 }
 
 ///|
@@ -133,14 +123,61 @@ test "eval arithmetic" {
 ///|
 test "eval add arrays and objects" {
   let j = must_parse("{\"a\":[1],\"b\":[2],\"x\":{\"k\":1},\"y\":{\"k\":2}}")
-  assert_eq(
-    must_eval(parse_filter(".a + .b"), j),
-    [Json::array([Json::number(1.0), Json::number(2.0)])],
-  )
-  assert_eq(
-    must_eval(parse_filter(".x + .y"), j),
-    [Json::object({ "k": Json::number(2.0) })],
-  )
+  assert_eq(must_eval(parse_filter(".a + .b"), j), [
+    Json::array([Json::number(1.0), Json::number(2.0)]),
+  ])
+  assert_eq(must_eval(parse_filter(".x + .y"), j), [
+    Json::object({ "k": Json::number(2.0) }),
+  ])
+}
+
+///|
+test "eval map" {
+  let j = must_parse("[1,2,3]")
+  assert_eq(must_eval(parse_filter("map(. + 1)"), j), [
+    Json::array([Json::number(2.0), Json::number(3.0), Json::number(4.0)]),
+  ])
+}
+
+///|
+test "eval if-then-else" {
+  let j = must_parse("{\"a\":true,\"b\":1,\"c\":2}")
+  assert_eq(must_eval(parse_filter("if .a then .b else .c end"), j), [
+    Json::number(1.0),
+  ])
+  let j2 = must_parse("{\"a\":null,\"b\":1,\"c\":2}")
+  assert_eq(must_eval(parse_filter("if .a then .b else .c end"), j2), [
+    Json::number(2.0),
+  ])
+}
+
+///|
+test "eval fallback and empty" {
+  let j = must_parse("{\"a\":1,\"b\":2}")
+  assert_eq(must_eval(parse_filter(".a // .b"), j), [Json::number(1.0)])
+  assert_eq(must_eval(parse_filter("empty // .b"), j), [Json::number(2.0)])
+  assert_eq(must_eval(parse_filter("empty"), j), [])
+}
+
+///|
+test "eval string contains/starts/ends" {
+  let j = must_parse("\"hello\"")
+  assert_eq(must_eval(parse_filter("contains(\"ell\")"), j), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("startswith(\"he\")"), j), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("endswith(\"lo\")"), j), [
+    Json::boolean(true),
+  ])
+}
+
+///|
+test "eval array contains" {
+  let j = must_parse("[1,2,3]")
+  assert_eq(must_eval(parse_filter("contains(2)"), j), [Json::boolean(true)])
+  assert_eq(must_eval(parse_filter("contains(9)"), j), [Json::boolean(false)])
 }
 
 ///|

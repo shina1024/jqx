@@ -38,6 +38,9 @@ pub enum Filter {
   Sub(Filter, Filter)
   Mul(Filter, Filter)
   Div(Filter, Filter)
+  IfElse(Filter, Filter, Filter)
+  Fallback(Filter, Filter)
+  Empty
 } derive(Eq, Show)
 
 ///|
@@ -148,4 +151,23 @@ pub fn Filter::mul(left : Filter, right : Filter) -> Filter {
 ///|
 pub fn Filter::div(left : Filter, right : Filter) -> Filter {
   Div(left, right)
+}
+
+///|
+pub fn Filter::if_else(
+  cond : Filter,
+  then_branch : Filter,
+  else_branch : Filter,
+) -> Filter {
+  IfElse(cond, then_branch, else_branch)
+}
+
+///|
+pub fn Filter::fallback(left : Filter, right : Filter) -> Filter {
+  Fallback(left, right)
+}
+
+///|
+pub fn Filter::empty() -> Filter {
+  Empty
 }

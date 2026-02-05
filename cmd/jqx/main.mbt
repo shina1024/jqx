@@ -2,7 +2,9 @@
 fn main {
   let args = @env.args()
   if args.length() < 2 {
-    println("Usage: moon run --target native cmd/jqx -- [options] \"<filter>\" [\"<json>\"]")
+    println(
+      "Usage: moon run --target native cmd/jqx -- [options] \"<filter>\" [\"<json>\"]",
+    )
     println(
       "Example (stdin): echo '{\"foo\": 1}' | moon run --target native cmd/jqx -- \".foo\"",
     )
@@ -29,7 +31,9 @@ fn main {
   }
   if idx >= args.length() {
     println("jqx: error: missing filter")
-    println("Usage: moon run --target native cmd/jqx -- [options] \"<filter>\" [\"<json>\"]")
+    println(
+      "Usage: moon run --target native cmd/jqx -- [options] \"<filter>\" [\"<json>\"]",
+    )
     return
   }
   let filter = args[idx]
@@ -61,7 +65,9 @@ fn format_error_message(msg : String) -> String {
       let rest = msg.view(start_offset=start_line)
       match rest.find(marker2) {
         Some(j) => {
-          let line_part = msg.view(start_offset=start_line, end_offset=start_line + j).to_string()
+          let line_part = msg
+            .view(start_offset=start_line, end_offset=start_line + j)
+            .to_string()
           let start_col = start_line + j + marker2.length()
           let col_part = msg.view(start_offset=start_col).to_string()
           let parsed_line = try? @strconv.parse_int(line_part)
@@ -70,7 +76,12 @@ fn format_error_message(msg : String) -> String {
             (Ok(line), Ok(col)) => {
               let jq_col = col + 1
               let base = msg.view(start_offset=0, end_offset=i).to_string()
-              return "jqx: error (at <stdin>:" + line.to_string() + ":" + jq_col.to_string() + "): " + base
+              return "jqx: error (at <stdin>:" +
+                line.to_string() +
+                ":" +
+                jq_col.to_string() +
+                "): " +
+                base
             }
             _ => ()
           }

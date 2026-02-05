@@ -101,10 +101,7 @@ test "parse logical" {
     parse_filter(".a or .b"),
     content="Or(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
   )
-  inspect(
-    parse_filter("not .a"),
-    content="Not(Pipe(Identity, Field(\"a\")))",
-  )
+  inspect(parse_filter("not .a"), content="Not(Pipe(Identity, Field(\"a\")))")
 }
 
 ///|
@@ -120,9 +117,32 @@ test "parse arithmetic" {
 }
 
 ///|
+test "parse if-then-else" {
+  inspect(
+    parse_filter("if .a then .b else .c end"),
+    content="IfElse(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")), Pipe(Identity, Field(\"c\")))",
+  )
+}
+
+///|
+test "parse fallback and empty" {
+  inspect(
+    parse_filter(".a // .b"),
+    content="Fallback(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
+  )
+  inspect(parse_filter("empty"), content="Empty")
+}
+
+///|
 test "parse array and object literals" {
-  inspect(parse_filter("[.a, .b]"), content="Array([Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\"))])")
-  inspect(parse_filter("{\"a\": .b, c: .d}"), content="Object([(\"a\", Pipe(Identity, Field(\"b\"))), (\"c\", Pipe(Identity, Field(\"d\")))])")
+  inspect(
+    parse_filter("[.a, .b]"),
+    content="Array([Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\"))])",
+  )
+  inspect(
+    parse_filter("{\"a\": .b, c: .d}"),
+    content="Object([(\"a\", Pipe(Identity, Field(\"b\"))), (\"c\", Pipe(Identity, Field(\"d\")))])",
+  )
 }
 
 ///|

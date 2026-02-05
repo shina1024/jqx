@@ -119,6 +119,8 @@ This is a [MoonBit](https://docs.moonbitlang.com) project.
 - `Array`/`Object` リテラルや比較/算術は **最初の出力のみ**を使う簡略化実装
 - `+` は数値/文字列/配列/オブジェクトに対応（オブジェクトは右優先でマージ）
 - 非有限数（Infinity/NaN）の扱いは未整理（現状は `Double` 依存）
+- `contains`/`startswith`/`endswith` は文字列/配列の最小実装
+- `empty` と `//` は最小実装（出力が空かどうかでフォールバック）
 
 ## Build (Native)
 

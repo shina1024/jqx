@@ -116,10 +116,7 @@ fn is_ident_continue(c : Char) -> Bool {
 }
 
 ///|
-fn FilterCursor::try_keyword(
-  ctx : FilterCursor,
-  kw : String,
-) -> Bool {
+fn FilterCursor::try_keyword(ctx : FilterCursor, kw : String) -> Bool {
   let saved = ctx.offset
   for ch in kw {
     match ctx.read_char() {
@@ -424,36 +421,75 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
     Some('{') => ctx.parse_object_literal()
     Some('(') => ctx.parse_paren_expr()
     Some('\"') => Filter::literal(Json::string(ctx.parse_string_literal()))
-    Some('t') => {
+    Some('t') =>
       if ctx.try_keyword("true") {
         Filter::literal(Json::boolean(true))
       } else {
-        Filter::builtin(ctx.parse_identifier())
+        ctx.parse_identifier_or_call()
       }
-    }
-    Some('f') => {
+    Some('f') =>
       if ctx.try_keyword("false") {
         Filter::literal(Json::boolean(false))
       } else {
-        Filter::builtin(ctx.parse_identifier())
+        ctx.parse_identifier_or_call()
       }
-    }
-    Some('n') => {
+    Some('n') =>
       if ctx.try_keyword("null") {
         Filter::literal(Json::null())
       } else if ctx.try_keyword("not") {
         Filter::not(ctx.parse_primary())
       } else {
-        Filter::builtin(ctx.parse_identifier())
+        ctx.parse_identifier_or_call()
+      }
+    Some('e') =>
+      if ctx.try_keyword("empty") {
+        Filter::empty()
+      } else {
+        ctx.parse_identifier_or_call()
+      }
+    Some('i') =>
+      if ctx.try_keyword("if") {
+        ctx.skip_ws()
+        let cond = ctx.parse_comma()
+        ctx.skip_ws()
+        guard ctx.try_keyword("then") else { ctx.invalid_char() }
+        let then_branch = ctx.parse_comma()
+        ctx.skip_ws()
+        guard ctx.try_keyword("else") else { ctx.invalid_char() }
+        let else_branch = ctx.parse_comma()
+        ctx.skip_ws()
+        guard ctx.try_keyword("end") else { ctx.invalid_char() }
+        Filter::if_else(cond, then_branch, else_branch)
+      } else {
+        ctx.parse_identifier_or_call()
+      }
+    Some('-') | Some('0'..='9') => Filter::literal(ctx.parse_number_literal())
+    Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') => {
+      let name = ctx.parse_identifier()
+      ctx.skip_ws()
+      match ctx.peek_char() {
+        Some('(') => {
+          ctx.read_char() |> ignore
+          ctx.skip_ws()
+          if ctx.peek_char() is Some(')') {
+            ctx.read_char() |> ignore
+            Filter::call(name, [])
+          } else {
+            let inner = ctx.parse_comma()
+            ctx.skip_ws()
+            ctx.expect_char(')')
+            Filter::call(name, [inner])
+          }
+        }
+        _ => Filter::builtin(name)
       }
     }
-    Some('-') | Some('0'..='9') => Filter::literal(ctx.parse_number_literal())
-    Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') =>
-      ctx.parse_identifier_or_call()
     Some(_) => ctx.invalid_char()
     None => raise InvalidEof
   }
 }
+
+///|
 
 ///|
 fn FilterCursor::parse_identifier_or_call(
@@ -464,10 +500,16 @@ fn FilterCursor::parse_identifier_or_call(
   match ctx.peek_char() {
     Some('(') => {
       ctx.read_char() |> ignore
-      let inner = ctx.parse_comma()
       ctx.skip_ws()
-      ctx.expect_char(')')
-      Filter::call(name, [inner])
+      if ctx.peek_char() is Some(')') {
+        ctx.read_char() |> ignore
+        Filter::call(name, [])
+      } else {
+        let inner = ctx.parse_comma()
+        ctx.skip_ws()
+        ctx.expect_char(')')
+        Filter::call(name, [inner])
+      }
     }
     _ => Filter::builtin(name)
   }
@@ -529,8 +571,7 @@ fn FilterCursor::parse_object_literal(
     ctx.skip_ws()
     let key = match ctx.peek_char() {
       Some('\"') => ctx.parse_string_literal()
-      Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') =>
-        ctx.parse_identifier()
+      Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') => ctx.parse_identifier()
       Some(_) => ctx.invalid_char()
       None => raise InvalidEof
     }
@@ -566,7 +607,16 @@ fn FilterCursor::parse_mul(ctx : FilterCursor) -> Filter raise FilterError {
         left = Filter::mul(left, right)
       }
       Some('/') => {
+        // Don't consume '//' here; it's handled by fallback.
+        let saved = ctx.offset
         ctx.read_char() |> ignore
+        match ctx.peek_char() {
+          Some('/') => {
+            ctx.offset = saved
+            break
+          }
+          _ => ()
+        }
         let right = ctx.parse_primary()
         left = Filter::div(left, right)
       }
@@ -616,9 +666,7 @@ fn FilterCursor::parse_pipe(ctx : FilterCursor) -> Filter raise FilterError {
 }
 
 ///|
-fn FilterCursor::parse_compare(
-  ctx : FilterCursor,
-) -> Filter raise FilterError {
+fn FilterCursor::parse_compare(ctx : FilterCursor) -> Filter raise FilterError {
   let mut left = ctx.parse_pipe()
   for {
     ctx.skip_ws()
@@ -710,14 +758,40 @@ fn FilterCursor::parse_or(ctx : FilterCursor) -> Filter raise FilterError {
 }
 
 ///|
-fn FilterCursor::parse_comma(ctx : FilterCursor) -> Filter raise FilterError {
+fn FilterCursor::parse_fallback(ctx : FilterCursor) -> Filter raise FilterError {
   let mut left = ctx.parse_or()
+  for {
+    ctx.skip_ws()
+    match ctx.peek_char() {
+      Some('/') => {
+        ctx.read_char() |> ignore
+        match ctx.peek_char() {
+          Some('/') => {
+            ctx.read_char() |> ignore
+            let right = ctx.parse_or()
+            left = Filter::fallback(left, right)
+          }
+          _ => {
+            ctx.offset -= 1
+            break
+          }
+        }
+      }
+      _ => break
+    }
+  }
+  left
+}
+
+///|
+fn FilterCursor::parse_comma(ctx : FilterCursor) -> Filter raise FilterError {
+  let mut left = ctx.parse_fallback()
   for {
     ctx.skip_ws()
     match ctx.peek_char() {
       Some(',') => {
         ctx.read_char() |> ignore
-        let right = ctx.parse_or()
+        let right = ctx.parse_fallback()
         left = Filter::comma(left, right)
       }
       _ => break

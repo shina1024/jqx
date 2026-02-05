@@ -136,6 +136,7 @@ pub fn Json::to_json_string(self : Json) -> String {
                 (d - 10 + 'a'.to_int()).unsafe_to_char()
               }
             }
+
             buf.write_char(hex(hi))
             buf.write_char(hex(lo))
           } else {
