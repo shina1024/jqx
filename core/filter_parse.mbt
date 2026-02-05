@@ -428,7 +428,7 @@ fn FilterCursor::parse_dot_expr(ctx : FilterCursor) -> Filter raise FilterError 
 ///|
 fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
   ctx.skip_ws()
-  match ctx.peek_char() {
+  let base = match ctx.peek_char() {
     Some('.') => ctx.parse_dot_expr()
     Some('[') => ctx.parse_array_literal()
     Some('{') => ctx.parse_object_literal()
@@ -441,6 +441,15 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
     Some('t') =>
       if ctx.try_keyword("true") {
         Filter::literal(Json::boolean(true))
+      } else if ctx.try_keyword("try") {
+        let inner = ctx.parse_comma()
+        ctx.skip_ws()
+        if ctx.try_keyword("catch") {
+          let handler = ctx.parse_comma()
+          Filter::try_catch(inner, handler)
+        } else {
+          Filter::try_catch(inner, Filter::empty())
+        }
       } else {
         ctx.parse_identifier_or_call()
       }
@@ -485,6 +494,14 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
       ctx.parse_identifier_or_call()
     Some(_) => ctx.invalid_char()
     None => raise InvalidEof
+  }
+  ctx.skip_ws()
+  match ctx.peek_char() {
+    Some('?') => {
+      ctx.read_char() |> ignore
+      Filter::try_(base)
+    }
+    _ => base
   }
 }
 

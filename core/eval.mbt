@@ -138,6 +138,18 @@ fn eval_with_env(
       }
       out
     }
+    Try(inner) =>
+      try eval_with_env(inner, input, env) catch {
+        _ => []
+      } noraise {
+        values => values
+      }
+    TryCatch(inner, handler) =>
+      try eval_with_env(inner, input, env) catch {
+        _ => eval_with_env(handler, input, env)
+      } noraise {
+        values => values
+      }
     Pipe(left, right) => {
       let out = []
       for v in eval_with_env(left, input, env) {

@@ -162,6 +162,22 @@ test "eval as and variable" {
 }
 
 ///|
+test "eval try" {
+  let j = must_parse("{\"a\":\"hi\"}")
+  assert_eq(must_eval(parse_filter("(.a + 1)?"), j), [])
+  assert_eq(must_eval(parse_filter("(.a | .b)?"), j), [Json::null()])
+}
+
+///|
+test "eval try/catch" {
+  let j = must_parse("{\"a\":\"hi\",\"b\":1}")
+  assert_eq(must_eval(parse_filter("try .a catch .b"), j), [Json::string("hi")])
+  assert_eq(must_eval(parse_filter("try (.a + 1) catch .b"), j), [
+    Json::number(1.0),
+  ])
+}
+
+///|
 test "eval if-then-else" {
   let j = must_parse("{\"a\":true,\"b\":1,\"c\":2}")
   assert_eq(must_eval(parse_filter("if .a then .b else .c end"), j), [

@@ -56,6 +56,8 @@ pub enum Filter {
   Call(String, Array[Filter])
   Var(String)
   As(Filter, String, Filter)
+  Try(Filter)
+  TryCatch(Filter, Filter)
   Eq(Filter, Filter)
   Neq(Filter, Filter)
   Lt(Filter, Filter)
@@ -102,6 +104,8 @@ pub fn Filter::not(Self) -> Self
 pub fn Filter::or_(Self, Self) -> Self
 pub fn Filter::pipe(Self, Self) -> Self
 pub fn Filter::sub(Self, Self) -> Self
+pub fn Filter::try_(Self) -> Self
+pub fn Filter::try_catch(Self, Self) -> Self
 pub fn Filter::var_(String) -> Self
 pub impl Eq for Filter
 pub impl Show for Filter

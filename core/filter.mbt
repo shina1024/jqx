@@ -30,6 +30,8 @@ pub enum Filter {
   Call(String, Array[Filter])
   Var(String)
   As(Filter, String, Filter)
+  Try(Filter)
+  TryCatch(Filter, Filter)
   Eq(Filter, Filter)
   Neq(Filter, Filter)
   Lt(Filter, Filter)
@@ -116,6 +118,16 @@ pub fn Filter::var_(name : String) -> Filter {
 ///|
 pub fn Filter::as_(value : Filter, name : String, body : Filter) -> Filter {
   As(value, name, body)
+}
+
+///|
+pub fn Filter::try_(inner : Filter) -> Filter {
+  Try(inner)
+}
+
+///|
+pub fn Filter::try_catch(inner : Filter, handler : Filter) -> Filter {
+  TryCatch(inner, handler)
 }
 
 ///|

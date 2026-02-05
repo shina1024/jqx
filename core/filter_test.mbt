@@ -34,6 +34,26 @@ test "parse optional access" {
 }
 
 ///|
+test "parse try" {
+  inspect(
+    parse_filter("(.a + 1)?"),
+    content="Try(Add(Pipe(Identity, Field(\"a\")), Literal(Number(1))))",
+  )
+}
+
+///|
+test "parse try/catch" {
+  inspect(
+    parse_filter("try .a catch .b"),
+    content="TryCatch(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
+  )
+  inspect(
+    parse_filter("try .a"),
+    content="TryCatch(Pipe(Identity, Field(\"a\")), Empty)",
+  )
+}
+
+///|
 test "parse string key index" {
   inspect(parse_filter(".[\"foo\"]"), content="Pipe(Identity, Field(\"foo\"))")
 }
