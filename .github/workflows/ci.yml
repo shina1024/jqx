@@ -39,13 +39,17 @@ jobs:
       - name: MoonBit Version
         run: moon version --all
 
+      - name: Check
+        run: moon check -d
+
       - name: Test (JS)
-        run: moon test --target js --package js
+        run: moon test --target js js
 
       - name: Test (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
-          moon test --target native --package core
+          moon test --target native core
+          moon test --target native cmd/jqx
 
       - name: Test (Windows)
         if: runner.os == 'Windows'
@@ -55,4 +59,4 @@ jobs:
           $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
           if (-not $vs) { throw "Visual Studio with C++ tools not found." }
           $vcvars = Join-Path $vs "VC\\Auxiliary\\Build\\vcvars64.bat"
-          cmd /c "`"$vcvars`" && moon test --target native --package core"
+          cmd /c "`"$vcvars`" && moon test --target native core && moon test --target native cmd/jqx"
