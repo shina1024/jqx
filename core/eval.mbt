@@ -233,6 +233,161 @@ fn getpath_on_input(input : Json, path : Json) -> Json raise EvalError {
 }
 
 ///|
+fn path_tail(path : Array[Json]) -> Array[Json] {
+  let out = []
+  for i in 1..<path.length() {
+    out.push(path[i])
+  }
+  out
+}
+
+///|
+fn add_object_path_group(
+  groups : Map[String, Array[Array[Json]]],
+  key : String,
+  rest : Array[Json],
+) -> Unit {
+  match groups.get(key) {
+    Some(paths) => {
+      let next = paths.copy()
+      next.push(rest)
+      groups[key] = next
+    }
+    None => groups[key] = [rest]
+  }
+}
+
+///|
+fn add_array_path_group(
+  groups : Map[Int, Array[Array[Json]]],
+  key : Int,
+  rest : Array[Json],
+) -> Unit {
+  match groups.get(key) {
+    Some(paths) => {
+      let next = paths.copy()
+      next.push(rest)
+      groups[key] = next
+    }
+    None => groups[key] = [rest]
+  }
+}
+
+///|
+fn has_empty_path(paths : Array[Array[Json]]) -> Bool {
+  for p in paths {
+    if p.length() == 0 {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn normalize_delpaths_arg(paths : Json) -> Array[Array[Json]] raise EvalError {
+  match paths {
+    Array(path_list) => {
+      let out = []
+      for p in path_list {
+        match p {
+          Array(parts) => out.push(parts)
+          _ =>
+            raise TypeError(
+              "Path must be specified as array, not " + json_type_name(p),
+            )
+        }
+      }
+      out
+    }
+    _ => raise TypeError("Paths must be specified as an array")
+  }
+}
+
+///|
+fn delpaths_on_input(
+  input : Json,
+  paths : Array[Array[Json]],
+) -> Json raise EvalError {
+  if has_empty_path(paths) {
+    return Json::null()
+  }
+  match input {
+    JNull => Json::null()
+    Object(o) => {
+      let groups = Map::new()
+      for path in paths {
+        if path.length() == 0 {
+          continue
+        }
+        let key = path[0]
+        let rest = path_tail(path)
+        match key {
+          String(name) => add_object_path_group(groups, name, rest)
+          _ =>
+            raise TypeError(
+              "Cannot delete " + json_type_name(key) + " field of object",
+            )
+        }
+      }
+      let out = Map::new()
+      for kv in o.iter() {
+        let name = kv.0
+        let value = kv.1
+        match groups.get(name) {
+          Some(subpaths) =>
+            if has_empty_path(subpaths) {
+              ()
+            } else {
+              out[name] = delpaths_on_input(value, subpaths)
+            }
+          None => out[name] = value
+        }
+      }
+      Json::object(out)
+    }
+    Array(a) => {
+      let groups = Map::new()
+      for path in paths {
+        if path.length() == 0 {
+          continue
+        }
+        let key = path[0]
+        let rest = path_tail(path)
+        match key {
+          Number(n, _) => {
+            let i = n.to_int()
+            let idx = if i < 0 { a.length() + i } else { i }
+            if idx >= 0 && idx < a.length() {
+              add_array_path_group(groups, idx, rest)
+            }
+          }
+          Object(_) =>
+            raise TypeError("Array/string slice indices must be integers")
+          _ =>
+            raise TypeError(
+              "Cannot delete " + json_type_name(key) + " element of array",
+            )
+        }
+      }
+      let out = []
+      for i in 0..<a.length() {
+        match groups.get(i) {
+          Some(subpaths) =>
+            if has_empty_path(subpaths) {
+              ()
+            } else {
+              out.push(delpaths_on_input(a[i], subpaths))
+            }
+          None => out.push(a[i])
+        }
+      }
+      Json::array(out)
+    }
+    _ => raise TypeError("Cannot delete fields from " + json_type_name(input))
+  }
+}
+
+///|
 fn collection_values(input : Json) -> Array[Json] raise EvalError {
   match input {
     Array(a) => a
@@ -1600,6 +1755,18 @@ fn eval_call(
         let out = []
         for path in paths {
           out.push(getpath_on_input(input, path))
+        }
+        out
+      }
+    "delpaths" =>
+      if args.length() != 1 {
+        raise UnknownFunction("delpaths")
+      } else {
+        let pathsets = eval_with_env(args[0], input, env)
+        let out = []
+        for pathset in pathsets {
+          let normalized = normalize_delpaths_arg(pathset)
+          out.push(delpaths_on_input(input, normalized))
         }
         out
       }

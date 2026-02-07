@@ -947,6 +947,160 @@ test "eval getpath errors" {
 }
 
 ///|
+test "eval delpaths compatibility" {
+  assert_eq(
+    must_eval(
+      parse_filter("delpaths([[\"a\"]])"),
+      must_parse("{\"a\":1,\"b\":2}"),
+    ),
+    [Json::object({ "b": Json::number(2.0) })],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("delpaths([[\"a\",\"b\"],[\"d\"]])"),
+      must_parse("{\"a\":{\"b\":1,\"c\":2},\"d\":3}"),
+    ),
+    [Json::object({ "a": Json::object({ "c": Json::number(2.0) }) })],
+  )
+  assert_eq(
+    must_eval(parse_filter("delpaths([[1]])"), must_parse("[10,20,30]")),
+    [Json::array([Json::number(10.0), Json::number(30.0)])],
+  )
+  assert_eq(
+    must_eval(parse_filter("delpaths([[1],[0]])"), must_parse("[10,20,30]")),
+    [Json::array([Json::number(30.0)])],
+  )
+  assert_eq(
+    must_eval(parse_filter("delpaths([[-1]])"), must_parse("[10,20,30]")),
+    [Json::array([Json::number(10.0), Json::number(20.0)])],
+  )
+  assert_eq(
+    must_eval(parse_filter("delpaths([[9]])"), must_parse("[10,20,30]")),
+    [Json::array([Json::number(10.0), Json::number(20.0), Json::number(30.0)])],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("delpaths([[\"a\"],[0],[true]])"),
+      must_parse("null"),
+    ),
+    [Json::null()],
+  )
+  assert_eq(
+    must_eval(parse_filter("delpaths([[]])"), must_parse("{\"a\":1}")),
+    [Json::null()],
+  )
+  assert_eq(must_eval(parse_filter("delpaths([[]])"), must_parse("1")), [
+    Json::null(),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("delpaths([[\"a\",\"x\"]])"),
+      must_parse("{\"a\":{\"b\":1}}"),
+    ),
+    [Json::object({ "a": Json::object({ "b": Json::number(1.0) }) })],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("delpaths([[\"a\",\"x\"]])"),
+      must_parse("{\"a\":null}"),
+    ),
+    [Json::object({ "a": Json::null() })],
+  )
+  assert_eq(
+    must_eval(parse_filter("delpaths(empty)"), must_parse("{\"a\":1}")),
+    [],
+  )
+  assert_eq(
+    must_eval(parse_filter("delpaths(([[\"a\"]],[]))"), must_parse("{\"a\":1}")),
+    [Json::object(Map::new()), Json::object({ "a": Json::number(1.0) })],
+  )
+}
+
+///|
+test "eval delpaths errors" {
+  guard (try? eval(parse_filter("delpaths(\"a\")"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Paths must be specified as an array" else {
+    fail("expected delpaths paths-array error")
+  }
+  guard (try? eval(parse_filter("delpaths([\"a\"])"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Path must be specified as array, not string" else {
+    fail("expected delpaths path type error")
+  }
+  guard (try? eval(parse_filter("delpaths([1])"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Path must be specified as array, not number" else {
+    fail("expected delpaths numeric path type error")
+  }
+  guard (try? eval(parse_filter("delpaths([[\"a\"]])"), must_parse("1")))
+    is Err(err) &&
+    err.to_string() == "Cannot delete fields from number" else {
+    fail("expected delpaths scalar delete error")
+  }
+  guard (try? eval(parse_filter("delpaths([[0]])"), must_parse("\"x\"")))
+    is Err(err) &&
+    err.to_string() == "Cannot delete fields from string" else {
+    fail("expected delpaths string delete error")
+  }
+  guard (try? eval(parse_filter("delpaths([[0]])"), must_parse("true")))
+    is Err(err) &&
+    err.to_string() == "Cannot delete fields from boolean" else {
+    fail("expected delpaths boolean delete error")
+  }
+  guard (try? eval(parse_filter("delpaths([[0]])"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Cannot delete number field of object" else {
+    fail("expected delpaths object number-field error")
+  }
+  guard (try? eval(parse_filter("delpaths([[true]])"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Cannot delete boolean field of object" else {
+    fail("expected delpaths object boolean-field error")
+  }
+  guard (try? eval(parse_filter("delpaths([[{}]])"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Cannot delete object field of object" else {
+    fail("expected delpaths object object-field error")
+  }
+  guard (try? eval(parse_filter("delpaths([[[]]])"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Cannot delete array field of object" else {
+    fail("expected delpaths object array-field error")
+  }
+  guard (try? eval(parse_filter("delpaths([[null]])"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Cannot delete null field of object" else {
+    fail("expected delpaths object null-field error")
+  }
+  guard (try? eval(parse_filter("delpaths([[\"a\"]])"), must_parse("[1,2]")))
+    is Err(err) &&
+    err.to_string() == "Cannot delete string element of array" else {
+    fail("expected delpaths array string-element error")
+  }
+  guard (try? eval(parse_filter("delpaths([[true]])"), must_parse("[1,2]")))
+    is Err(err) &&
+    err.to_string() == "Cannot delete boolean element of array" else {
+    fail("expected delpaths array boolean-element error")
+  }
+  guard (try? eval(parse_filter("delpaths([[null]])"), must_parse("[1,2]")))
+    is Err(err) &&
+    err.to_string() == "Cannot delete null element of array" else {
+    fail("expected delpaths array null-element error")
+  }
+  guard (try? eval(parse_filter("delpaths([[[]]])"), must_parse("[1,2]")))
+    is Err(err) &&
+    err.to_string() == "Cannot delete array element of array" else {
+    fail("expected delpaths array array-element error")
+  }
+  guard (try? eval(parse_filter("delpaths([[{}]])"), must_parse("[1,2]")))
+    is Err(err) &&
+    err.to_string() == "Array/string slice indices must be integers" else {
+    fail("expected delpaths array object-index error")
+  }
+}
+
+///|
 test "eval any/all compatibility" {
   assert_eq(must_eval(parse_filter("any"), must_parse("[true,false]")), [
     Json::boolean(true),
