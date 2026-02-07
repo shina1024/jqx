@@ -49,7 +49,7 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           moon test --target native core
-          moon test --target native cmd/jqx
+          moon test --target native cmd
 
       - name: Test (Windows)
         if: runner.os == 'Windows'
@@ -59,4 +59,4 @@ jobs:
           $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
           if (-not $vs) { throw "Visual Studio with C++ tools not found." }
           $vcvars = Join-Path $vs "VC\\Auxiliary\\Build\\vcvars64.bat"
-          cmd /c "`"$vcvars`" && moon test --target native core && moon test --target native cmd/jqx"
+          cmd /c "`"$vcvars`" && moon test --target native core && moon test --target native cmd"

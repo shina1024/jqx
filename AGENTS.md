@@ -95,7 +95,7 @@ This is a [MoonBit](https://docs.moonbitlang.com) project.
 ## Package Split
 
 - `core/` にJSONパーサー等のコア実装を置く（CLI/JS/TS共通）
-- `cmd/jqx` は `shina1024/jqx/core` を参照
+- `cmd` は `shina1024/jqx/core` を参照
 - ルートパッケージは core への薄いラッパーにし、実装は core に集約する
 - `js/` は JS/TS 向けの最小 API を提供する
 - CLI はネイティブターゲット想定（stdin対応のため）
@@ -110,8 +110,8 @@ This is a [MoonBit](https://docs.moonbitlang.com) project.
 
 - jq互換のCLIはネイティブ前提で動作確認する
 - 実行例:
-  - `echo '{"foo": 1}' | moon run --target native cmd/jqx -- ".foo"`
-  - `moon run --target native cmd/jqx -- ".foo" '{"foo": 1}'`
+  - `echo '{"foo": 1}' | moon run --target native cmd -- ".foo"`
+  - `moon run --target native cmd -- ".foo" '{"foo": 1}'`
 - オプション:
   - `-r` は文字列を raw 出力（`"..."` を外す）
   - `-n` は入力を無視して null を与える
@@ -138,24 +138,24 @@ This is a [MoonBit](https://docs.moonbitlang.com) project.
 - Developer PowerShell for VS を使う（`INCLUDE`/`LIB`/`PATH` が通る）
 - 例:
   - `moon test --target native --package core`
-  - `moon run --target native cmd/jqx -- ".foo" '{"foo": 1}'`
-  - `moon build --target native cmd/jqx`（ビルド後 `_build/native/release` から `jqx.exe` を実行）
+  - `moon run --target native cmd -- ".foo" '{"foo": 1}'`
+  - `moon build --target native cmd`（ビルド後 `_build/native/release` から `jqx.exe` を実行）
 
 ### macOS
 
 - Xcode Command Line Tools が必要
 - 例:
   - `moon test --target native --package core`
-  - `moon run --target native cmd/jqx -- ".foo" '{"foo": 1}'`
-  - `moon build --target native cmd/jqx`（ビルド後 `_build/native/release` の `jqx` を実行）
+  - `moon run --target native cmd -- ".foo" '{"foo": 1}'`
+  - `moon build --target native cmd`（ビルド後 `_build/native/release` の `jqx` を実行）
 
 ### Linux
 
 - gcc/clang などの C toolchain が必要
 - 例:
   - `moon test --target native --package core`
-  - `moon run --target native cmd/jqx -- ".foo" '{"foo": 1}'`
-  - `moon build --target native cmd/jqx`（ビルド後 `_build/native/release` の `jqx` を実行）
+  - `moon run --target native cmd -- ".foo" '{"foo": 1}'`
+  - `moon build --target native cmd`（ビルド後 `_build/native/release` の `jqx` を実行）
 
 ## CI
 

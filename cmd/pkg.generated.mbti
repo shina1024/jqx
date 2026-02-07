@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "shina1024/jqx/cmd/jqx"
+package "shina1024/jqx/cmd"
 
 import {
   "shina1024/jqx/core",

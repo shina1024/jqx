@@ -3,13 +3,13 @@ fn main {
   let args = @env.args()
   if args.length() < 2 {
     println(
-      "Usage: moon run --target native cmd/jqx -- [options] \"<filter>\" [\"<json>\"]",
+      "Usage: moon run --target native cmd -- [options] \"<filter>\" [\"<json>\"]",
     )
     println(
-      "Example (stdin): echo '{\"foo\": 1}' | moon run --target native cmd/jqx -- \".foo\"",
+      "Example (stdin): echo '{\"foo\": 1}' | moon run --target native cmd -- \".foo\"",
     )
     println(
-      "Example (arg):   moon run --target native cmd/jqx -- \".foo\" '{\"foo\": 1}'",
+      "Example (arg):   moon run --target native cmd -- \".foo\" '{\"foo\": 1}'",
     )
     println("Options: -r (raw strings), -c (compact; default), -n (null input)")
     return
@@ -18,7 +18,7 @@ fn main {
   guard parsed is Ok(cfg) else {
     println("jqx: error: missing filter")
     println(
-      "Usage: moon run --target native cmd/jqx -- [options] \"<filter>\" [\"<json>\"]",
+      "Usage: moon run --target native cmd -- [options] \"<filter>\" [\"<json>\"]",
     )
     return
   }

@@ -16,12 +16,12 @@ Recommended shell:
 Commands:
 ```powershell
 moon test --target native --package core
-moon run --target native cmd/jqx -- ".foo" '{"foo": 1}'
+moon run --target native cmd -- ".foo" '{"foo": 1}'
 ```
 
 Build executable:
 ```powershell
-moon build --target native cmd/jqx
+moon build --target native cmd
 ```
 The executable will be placed under `_build/native/release`. Look for `jqx.exe`
 (or the most recently updated `.exe`) and run it directly.
@@ -34,16 +34,16 @@ Prerequisites:
 Commands:
 ```bash
 moon test --target native --package core
-moon run --target native cmd/jqx -- ".foo" '{"foo": 1}'
+moon run --target native cmd -- ".foo" '{"foo": 1}'
 ```
 
 Options:
 ```bash
 # Raw string output (no JSON quotes)
-moon run --target native cmd/jqx -- -r ".foo" '{"foo": "bar"}'
+moon run --target native cmd -- -r ".foo" '{"foo": "bar"}'
 
 # Null input (ignore stdin/arg)
-moon run --target native cmd/jqx -- -n "."
+moon run --target native cmd -- -n "."
 ```
 
 ## Filters (Current)
@@ -81,7 +81,7 @@ moon build --target js js
 
 Build executable:
 ```bash
-moon build --target native cmd/jqx
+moon build --target native cmd
 ```
 The executable will be placed under `_build/native/release`. Look for `jqx`
 and run it directly.
@@ -94,12 +94,12 @@ Prerequisites:
 Commands:
 ```bash
 moon test --target native --package core
-moon run --target native cmd/jqx -- ".foo" '{"foo": 1}'
+moon run --target native cmd -- ".foo" '{"foo": 1}'
 ```
 
 Build executable:
 ```bash
-moon build --target native cmd/jqx
+moon build --target native cmd
 ```
 The executable will be placed under `_build/native/release`. Look for `jqx`
 and run it directly.
