@@ -387,6 +387,69 @@ test "eval explode/implode errors" {
 }
 
 ///|
+test "eval index/rindex/indices compatibility" {
+  assert_eq(must_eval(parse_filter("index(\"l\")"), must_parse("\"hello\"")), [
+    Json::number(2.0),
+  ])
+  assert_eq(must_eval(parse_filter("rindex(\"l\")"), must_parse("\"hello\"")), [
+    Json::number(3.0),
+  ])
+  assert_eq(
+    must_eval(parse_filter("indices(\"l\")"), must_parse("\"hello\"")),
+    [Json::array([Json::number(2.0), Json::number(3.0)])],
+  )
+  assert_eq(must_eval(parse_filter("index(\"z\")"), must_parse("\"hello\"")), [
+    Json::null(),
+  ])
+  assert_eq(
+    must_eval(parse_filter("indices(\"z\")"), must_parse("\"hello\"")),
+    [Json::array([])],
+  )
+  assert_eq(must_eval(parse_filter("indices(\"aa\")"), must_parse("\"aaa\"")), [
+    Json::array([Json::number(0.0), Json::number(1.0)]),
+  ])
+  assert_eq(
+    must_eval(parse_filter("index((\"l\",\"e\"))"), must_parse("\"hello\"")),
+    [Json::number(2.0), Json::number(1.0)],
+  )
+  assert_eq(must_eval(parse_filter("index(empty)"), must_parse("\"hello\"")), [])
+  let arr = must_parse("[1,2,1,3]")
+  assert_eq(must_eval(parse_filter("index(1)"), arr), [Json::number(0.0)])
+  assert_eq(must_eval(parse_filter("rindex(1)"), arr), [Json::number(2.0)])
+  assert_eq(must_eval(parse_filter("indices(1)"), arr), [
+    Json::array([Json::number(0.0), Json::number(2.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("index([1,3])"), arr), [Json::number(2.0)])
+  assert_eq(must_eval(parse_filter("indices([1,3])"), arr), [
+    Json::array([Json::number(2.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("index(\"1\")"), must_parse("[1,2]")), [
+    Json::null(),
+  ])
+  assert_eq(must_eval(parse_filter("indices([])"), must_parse("[1,2,3]")), [
+    Json::array([]),
+  ])
+}
+
+///|
+test "eval index/rindex/indices errors" {
+  guard (try? eval(parse_filter("index(1)"), must_parse("\"hello\"")))
+    is Err(err) &&
+    err.to_string() == "Cannot index string with number" else {
+    fail("expected string index(number) type error")
+  }
+  guard (try? eval(parse_filter("index(true)"), must_parse("\"hello\"")))
+    is Err(err) &&
+    err.to_string() == "Cannot index string with boolean" else {
+    fail("expected string index(boolean) type error")
+  }
+  guard (try? eval(parse_filter("index(\"a\")"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot index number with string \"a\"" else {
+    fail("expected number index(string) type error")
+  }
+}
+
+///|
 test "eval jq type-filter builtins" {
   assert_eq(must_eval(parse_filter("values"), must_parse("null")), [])
   assert_eq(must_eval(parse_filter("values"), must_parse("1")), [

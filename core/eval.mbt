@@ -140,6 +140,15 @@ fn has_key(collection : Json, key : Json) -> Bool raise EvalError {
 }
 
 ///|
+fn[T] index_type_error(input : Json, key : Json) -> T raise EvalError {
+  let key_desc = match key {
+    String(_) => "string " + key.to_json_string()
+    _ => json_type_name(key)
+  }
+  raise TypeError("Cannot index " + json_type_name(input) + " with " + key_desc)
+}
+
+///|
 pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
   let env = Map::new()
   eval_with_env(filter, input, env)
@@ -868,6 +877,78 @@ fn eval_call(
         }
         out
       }
+    "index" =>
+      if args.length() != 1 {
+        raise UnknownFunction("index")
+      } else {
+        let needles = eval_with_env(args[0], input, env)
+        let out = []
+        for needle in needles {
+          let indices = match input {
+            String(haystack) =>
+              match needle {
+                String(pattern) => find_string_indices(haystack, pattern)
+                _ => index_type_error(input, needle)
+              }
+            Array(haystack) => find_array_indices(haystack, needle)
+            _ => index_type_error(input, needle)
+          }
+          if indices.length() == 0 {
+            out.push(Json::null())
+          } else {
+            out.push(Json::number(indices[0].to_double()))
+          }
+        }
+        out
+      }
+    "rindex" =>
+      if args.length() != 1 {
+        raise UnknownFunction("rindex")
+      } else {
+        let needles = eval_with_env(args[0], input, env)
+        let out = []
+        for needle in needles {
+          let indices = match input {
+            String(haystack) =>
+              match needle {
+                String(pattern) => find_string_indices(haystack, pattern)
+                _ => index_type_error(input, needle)
+              }
+            Array(haystack) => find_array_indices(haystack, needle)
+            _ => index_type_error(input, needle)
+          }
+          if indices.length() == 0 {
+            out.push(Json::null())
+          } else {
+            out.push(Json::number(indices[indices.length() - 1].to_double()))
+          }
+        }
+        out
+      }
+    "indices" =>
+      if args.length() != 1 {
+        raise UnknownFunction("indices")
+      } else {
+        let needles = eval_with_env(args[0], input, env)
+        let out = []
+        for needle in needles {
+          let indices = match input {
+            String(haystack) =>
+              match needle {
+                String(pattern) => find_string_indices(haystack, pattern)
+                _ => index_type_error(input, needle)
+              }
+            Array(haystack) => find_array_indices(haystack, needle)
+            _ => index_type_error(input, needle)
+          }
+          let arr = []
+          for i in indices {
+            arr.push(Json::number(i.to_double()))
+          }
+          out.push(Json::array(arr))
+        }
+        out
+      }
     _ => raise UnknownFunction(name)
   }
 }
@@ -1147,6 +1228,62 @@ fn split_string(s : String, sep : String) -> Array[Json] {
         out.push(Json::string(s.view(start_offset=start).to_string()))
         return out
       }
+    }
+  }
+}
+
+///|
+fn find_string_indices(haystack : String, pattern : String) -> Array[Int] {
+  if pattern.length() == 0 {
+    return []
+  }
+  let out = []
+  let mut start = 0
+  for {
+    let rest = haystack.view(start_offset=start)
+    match rest.find(pattern) {
+      Some(i) => {
+        let found = start + i
+        out.push(found)
+        start = found + 1
+        continue
+      }
+      None => return out
+    }
+  }
+}
+
+///|
+fn find_array_indices(haystack : Array[Json], pattern : Json) -> Array[Int] {
+  match pattern {
+    Array(needle) => {
+      let n = needle.length()
+      if n == 0 || n > haystack.length() {
+        return []
+      }
+      let out = []
+      for i in 0..<(haystack.length() - n + 1) {
+        let mut matched = true
+        for j in 0..<n {
+          if haystack[i + j] != needle[j] {
+            matched = false
+            break
+          }
+        }
+        if matched {
+          out.push(i)
+        }
+      }
+      out
+    }
+    _ => {
+      let out = []
+      for i in 0..<haystack.length() {
+        if haystack[i] == pattern {
+          out.push(i)
+        }
+      }
+      out
     }
   }
 }
