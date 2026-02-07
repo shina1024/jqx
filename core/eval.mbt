@@ -602,6 +602,16 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
             json_type_with_value(input) + " cannot be parsed as a number",
           )
       }
+    "explode" =>
+      match input {
+        String(s) => [Json::array(explode_string(s))]
+        _ => raise TypeError("explode input must be a string")
+      }
+    "implode" =>
+      match input {
+        Array(a) => [Json::string(implode_array(a))]
+        _ => raise TypeError("implode input must be an array")
+      }
     "reverse" =>
       match input {
         Array(a) => {
@@ -843,6 +853,20 @@ fn eval_call(
               "Cannot iterate over " + json_type_with_value(input),
             )
         }
+      }
+    "split" =>
+      if args.length() != 1 {
+        raise UnknownFunction("split")
+      } else {
+        let seps = eval_with_env(args[0], input, env)
+        let out = []
+        for sep in seps {
+          match (input, sep) {
+            (String(s), String(d)) => out.push(Json::array(split_string(s, d)))
+            _ => raise TypeError("split input and separator must be strings")
+          }
+        }
+        out
       }
     _ => raise UnknownFunction(name)
   }
@@ -1090,6 +1114,86 @@ fn eval_join(a : Array[Json], sep : Json) -> Json raise EvalError {
     acc = json_add_pair(acc, join_item(a[i]))
   }
   acc
+}
+
+///|
+fn split_string(s : String, sep : String) -> Array[Json] {
+  if s.length() == 0 {
+    return []
+  }
+  if sep.length() == 0 {
+    let out = []
+    for ch in s {
+      out.push(Json::string(char_to_string(ch)))
+    }
+    return out
+  }
+  let out = []
+  let mut start = 0
+  let sep_len = sep.length()
+  for {
+    let rest = s.view(start_offset=start)
+    match rest.find(sep) {
+      Some(i) => {
+        out.push(
+          Json::string(
+            s.view(start_offset=start, end_offset=start + i).to_string(),
+          ),
+        )
+        start = start + i + sep_len
+        continue
+      }
+      None => {
+        out.push(Json::string(s.view(start_offset=start).to_string()))
+        return out
+      }
+    }
+  }
+}
+
+///|
+fn char_to_string(ch : Char) -> String {
+  let buf = StringBuilder::new()
+  buf.write_char(ch)
+  buf.to_string()
+}
+
+///|
+fn explode_string(s : String) -> Array[Json] {
+  let out = []
+  for ch in s {
+    out.push(Json::number(ch.to_int().to_double()))
+  }
+  out
+}
+
+///|
+fn implode_array(a : Array[Json]) -> String raise EvalError {
+  let buf = StringBuilder::new()
+  for v in a {
+    match v {
+      Number(n, _) => {
+        let code = n.to_int()
+        let ch = codepoint_or_replacement(code)
+        buf.write_char(ch)
+      }
+      _ =>
+        raise TypeError(
+          json_type_with_value(v) +
+          " can't be imploded, unicode codepoint needs to be numeric",
+        )
+    }
+  }
+  buf.to_string()
+}
+
+///|
+fn codepoint_or_replacement(code : Int) -> Char {
+  if code < 0 || code > 0x10FFFF || (code >= 0xD800 && code <= 0xDFFF) {
+    '\u{fffd}'
+  } else {
+    code.unsafe_to_char()
+  }
 }
 
 ///|

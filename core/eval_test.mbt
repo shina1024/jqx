@@ -306,6 +306,87 @@ test "eval join errors" {
 }
 
 ///|
+test "eval split compatibility" {
+  assert_eq(must_eval(parse_filter("split(\",\")"), must_parse("\"a,b,c\"")), [
+    Json::array([Json::string("a"), Json::string("b"), Json::string("c")]),
+  ])
+  assert_eq(must_eval(parse_filter("split(\"\")"), must_parse("\"abc\"")), [
+    Json::array([Json::string("a"), Json::string("b"), Json::string("c")]),
+  ])
+  assert_eq(must_eval(parse_filter("split(\"\")"), must_parse("\"\"")), [
+    Json::array([]),
+  ])
+  assert_eq(must_eval(parse_filter("split(\",\")"), must_parse("\"\"")), [
+    Json::array([]),
+  ])
+  assert_eq(
+    must_eval(parse_filter("split((\",\", \"\"))"), must_parse("\"abc\"")),
+    [
+      Json::array([Json::string("abc")]),
+      Json::array([Json::string("a"), Json::string("b"), Json::string("c")]),
+    ],
+  )
+  assert_eq(must_eval(parse_filter("split(\"a\")"), must_parse("\"aa\"")), [
+    Json::array([Json::string(""), Json::string(""), Json::string("")]),
+  ])
+  assert_eq(must_eval(parse_filter("split(empty)"), must_parse("\"a\"")), [])
+}
+
+///|
+test "eval split errors" {
+  guard (try? eval(parse_filter("split(\",\")"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "split input and separator must be strings" else {
+    fail("expected split input type error")
+  }
+  guard (try? eval(parse_filter("split(1)"), must_parse("\"a\""))) is Err(err) &&
+    err.to_string() == "split input and separator must be strings" else {
+    fail("expected split separator type error")
+  }
+}
+
+///|
+test "eval explode/implode compatibility" {
+  assert_eq(must_eval(parse_filter("explode"), must_parse("\"abc\"")), [
+    Json::array([Json::number(97.0), Json::number(98.0), Json::number(99.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("explode"), must_parse("\"あ\"")), [
+    Json::array([Json::number(12354.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("implode"), must_parse("[97,98,99]")), [
+    Json::string("abc"),
+  ])
+  assert_eq(must_eval(parse_filter("implode"), must_parse("[12354]")), [
+    Json::string("あ"),
+  ])
+  assert_eq(must_eval(parse_filter("implode"), must_parse("[]")), [
+    Json::string(""),
+  ])
+  assert_eq(must_eval(parse_filter("implode"), must_parse("[-1]")), [
+    Json::string("\u{fffd}"),
+  ])
+  assert_eq(must_eval(parse_filter("implode"), must_parse("[97.9]")), [
+    Json::string("a"),
+  ])
+}
+
+///|
+test "eval explode/implode errors" {
+  guard (try? eval(parse_filter("explode"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "explode input must be a string" else {
+    fail("expected explode input type error")
+  }
+  guard (try? eval(parse_filter("implode"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "implode input must be an array" else {
+    fail("expected implode input type error")
+  }
+  guard (try? eval(parse_filter("implode"), must_parse("[\"a\"]"))) is Err(err) &&
+    err.to_string() ==
+    "string (\"a\") can't be imploded, unicode codepoint needs to be numeric" else {
+    fail("expected implode element type error")
+  }
+}
+
+///|
 test "eval jq type-filter builtins" {
   assert_eq(must_eval(parse_filter("values"), must_parse("null")), [])
   assert_eq(must_eval(parse_filter("values"), must_parse("1")), [
