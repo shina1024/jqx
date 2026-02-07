@@ -1468,6 +1468,24 @@ fn eval_call(
             )
         }
       }
+    "bsearch" =>
+      if args.length() != 1 {
+        raise UnknownFunction("bsearch")
+      } else {
+        let needles = eval_with_env(args[0], input, env)
+        let out = []
+        for needle in needles {
+          match input {
+            Array(a) =>
+              out.push(Json::number(bsearch_json_array(a, needle).to_double()))
+            _ =>
+              raise TypeError(
+                json_type_with_value(input) + " cannot be searched from",
+              )
+          }
+        }
+        out
+      }
     "index" =>
       if args.length() != 1 {
         raise UnknownFunction("index")
@@ -2038,6 +2056,27 @@ fn sort_keyed_pairs(items : Array[(Json, Json)]) -> Array[(Json, Json)] {
     sorted = next
   }
   sorted
+}
+
+///|
+fn bsearch_json_array(a : Array[Json], needle : Json) -> Int {
+  let mut lo = 0
+  let mut hi = a.length()
+  for {
+    if lo >= hi {
+      break
+    }
+    let mid = (lo + hi) / 2
+    let cmp = compare_json(a[mid], needle)
+    if cmp < 0 {
+      lo = mid + 1
+    } else if cmp > 0 {
+      hi = mid
+    } else {
+      return mid
+    }
+  }
+  -(lo + 1)
 }
 
 ///|

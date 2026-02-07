@@ -740,6 +740,71 @@ test "eval index/rindex/indices errors" {
 }
 
 ///|
+test "eval bsearch compatibility" {
+  assert_eq(must_eval(parse_filter("bsearch(1)"), must_parse("[1,3,5]")), [
+    Json::number(0.0),
+  ])
+  assert_eq(must_eval(parse_filter("bsearch(2)"), must_parse("[1,3,5]")), [
+    Json::number(-2.0),
+  ])
+  assert_eq(must_eval(parse_filter("bsearch(5)"), must_parse("[1,3,5]")), [
+    Json::number(2.0),
+  ])
+  assert_eq(must_eval(parse_filter("bsearch(6)"), must_parse("[1,3,5]")), [
+    Json::number(-4.0),
+  ])
+  assert_eq(must_eval(parse_filter("bsearch(0)"), must_parse("[1,3,5]")), [
+    Json::number(-1.0),
+  ])
+  assert_eq(must_eval(parse_filter("bsearch(1)"), must_parse("[]")), [
+    Json::number(-1.0),
+  ])
+  assert_eq(must_eval(parse_filter("bsearch(1)"), must_parse("[1,1,1]")), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("bsearch((2,5))"), must_parse("[1,3,5]")), [
+    Json::number(-2.0),
+    Json::number(2.0),
+  ])
+  assert_eq(must_eval(parse_filter("bsearch(empty)"), must_parse("[1,3,5]")), [])
+  assert_eq(
+    must_eval(
+      parse_filter("bsearch(\"a\")"),
+      must_parse("[null,false,true,1,\"a\",[],{}]"),
+    ),
+    [Json::number(4.0)],
+  )
+  assert_eq(must_eval(parse_filter("bsearch([2])"), must_parse("[1,3,5]")), [
+    Json::number(-4.0),
+  ])
+}
+
+///|
+test "eval bsearch errors" {
+  guard (try? eval(parse_filter("bsearch(1)"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "number (1) cannot be searched from" else {
+    fail("expected bsearch number input error")
+  }
+  guard (try? eval(parse_filter("bsearch(1)"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "null (null) cannot be searched from" else {
+    fail("expected bsearch null input error")
+  }
+  guard (try? eval(parse_filter("bsearch(1)"), must_parse("\"a\""))) is Err(err) &&
+    err.to_string() == "string (\"a\") cannot be searched from" else {
+    fail("expected bsearch string input error")
+  }
+  guard (try? eval(parse_filter("bsearch(1)"), must_parse("{}"))) is Err(err) &&
+    err.to_string() == "object ({}) cannot be searched from" else {
+    fail("expected bsearch object input error")
+  }
+  guard (try? eval(parse_filter("bsearch(1)"), must_parse("true"))) is Err(err) &&
+    err.to_string() == "boolean (true) cannot be searched from" else {
+    fail("expected bsearch boolean input error")
+  }
+  assert_eq(must_eval(parse_filter("bsearch(empty)"), must_parse("1")), [])
+}
+
+///|
 test "eval any/all compatibility" {
   assert_eq(must_eval(parse_filter("any"), must_parse("[true,false]")), [
     Json::boolean(true),
