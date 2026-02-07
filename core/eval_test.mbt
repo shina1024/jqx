@@ -1009,6 +1009,65 @@ test "eval contains/startswith/endswith type errors" {
 }
 
 ///|
+test "eval inside jq semantics" {
+  assert_eq(must_eval(parse_filter("inside(1)"), must_parse("1")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("inside(2)"), must_parse("1")), [
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("inside([0,1,2,3])"), must_parse("[1,2]")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("inside([0,1,2,3])"), must_parse("[1,4]")), [
+    Json::boolean(false),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("inside({\"a\":1,\"b\":2})"),
+      must_parse("{\"a\":1}"),
+    ),
+    [Json::boolean(true)],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("inside({\"a\":1,\"b\":2})"),
+      must_parse("{\"a\":2}"),
+    ),
+    [Json::boolean(false)],
+  )
+  assert_eq(
+    must_eval(parse_filter("inside(\"hello\")"), must_parse("\"ell\"")),
+    [Json::boolean(true)],
+  )
+  assert_eq(must_eval(parse_filter("inside((1,2))"), must_parse("1")), [
+    Json::boolean(true),
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("inside(empty)"), must_parse("1")), [])
+}
+
+///|
+test "eval inside type errors" {
+  guard (try? eval(parse_filter("inside(false)"), must_parse("true")))
+    is Err(err) &&
+    err.to_string() ==
+    "boolean (false) and boolean (true) cannot have their containment checked" else {
+    fail("expected inside boolean mismatch error")
+  }
+  guard (try? eval(parse_filter("inside(1)"), must_parse("[1]"))) is Err(err) &&
+    err.to_string() ==
+    "number (1) and array ([1]) cannot have their containment checked" else {
+    fail("expected inside number/array mismatch error")
+  }
+  guard (try? eval(parse_filter("inside([1])"), must_parse("1"))) is Err(err) &&
+    err.to_string() ==
+    "array ([1]) and number (1) cannot have their containment checked" else {
+    fail("expected inside array/number mismatch error")
+  }
+}
+
+///|
 test "eval has jq semantics" {
   let obj = must_parse("{\"a\":1}")
   assert_eq(must_eval(parse_filter("has(\"a\")"), obj), [Json::boolean(true)])

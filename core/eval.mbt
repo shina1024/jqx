@@ -44,7 +44,7 @@ fn json_type_with_value(j : Json) -> String {
 }
 
 ///|
-fn contains_type_error(haystack : Json, needle : Json) -> Unit raise EvalError {
+fn[T] contains_type_error(haystack : Json, needle : Json) -> T raise EvalError {
   raise TypeError(
     json_type_with_value(haystack) +
     " and " +
@@ -91,6 +91,21 @@ fn contains_match(haystack : Json, needle : Json) -> Bool {
       true
     }
     _ => false
+  }
+}
+
+///|
+fn contains_checked(haystack : Json, needle : Json) -> Bool raise EvalError {
+  match (haystack, needle) {
+    (JTrue, JFalse) | (JFalse, JTrue) => contains_type_error(haystack, needle)
+    (JNull, JNull)
+    | (JTrue, JTrue)
+    | (JFalse, JFalse)
+    | (Number(_, _), Number(_, _))
+    | (String(_), String(_))
+    | (Array(_), Array(_))
+    | (Object(_), Object(_)) => contains_match(haystack, needle)
+    _ => contains_type_error(haystack, needle)
   }
 }
 
@@ -784,19 +799,19 @@ fn eval_call(
         let needles = eval_with_env(target, input, env)
         let out = []
         for needle in needles {
-          match (input, needle) {
-            (JTrue, JFalse) | (JFalse, JTrue) =>
-              contains_type_error(input, needle)
-            (JNull, JNull)
-            | (JTrue, JTrue)
-            | (JFalse, JFalse)
-            | (Number(_, _), Number(_, _))
-            | (String(_), String(_))
-            | (Array(_), Array(_))
-            | (Object(_), Object(_)) =>
-              out.push(Json::boolean(contains_match(input, needle)))
-            _ => contains_type_error(input, needle)
-          }
+          out.push(Json::boolean(contains_checked(input, needle)))
+        }
+        out
+      }
+    "inside" =>
+      if args.length() != 1 {
+        raise UnknownFunction("inside")
+      } else {
+        let target = args[0]
+        let haystacks = eval_with_env(target, input, env)
+        let out = []
+        for haystack in haystacks {
+          out.push(Json::boolean(contains_checked(haystack, input)))
         }
         out
       }
