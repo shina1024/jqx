@@ -10,6 +10,8 @@
   ],
   "targets": {
     "stdin_wasm.mbt": ["wasm", "wasm-gc"],
-    "stdin_native.mbt": ["native", "llvm"]
+    "stdin_native.mbt": ["native", "llvm"],
+    "exit_wasm.mbt": ["wasm", "wasm-gc"],
+    "exit_native.mbt": ["native", "llvm"]
   }
 }
