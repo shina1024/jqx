@@ -164,6 +164,31 @@ fn[T] index_type_error(input : Json, key : Json) -> T raise EvalError {
 }
 
 ///|
+fn nth_on_input(input : Json, key : Json) -> Json raise EvalError {
+  match input {
+    Array(a) =>
+      match key {
+        Number(n, _) => {
+          let i = n.to_int()
+          let idx = if i < 0 { a.length() + i } else { i }
+          if idx >= 0 && idx < a.length() {
+            a[idx]
+          } else {
+            Json::null()
+          }
+        }
+        _ => index_type_error(input, key)
+      }
+    JNull =>
+      match key {
+        Number(_, _) | String(_) => Json::null()
+        _ => index_type_error(input, key)
+      }
+    _ => index_type_error(input, key)
+  }
+}
+
+///|
 pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
   let env = Map::new()
   eval_with_env(filter, input, env)
@@ -215,18 +240,6 @@ fn eval_with_env(
             [Json::null()]
           }
         }
-        String(s) => {
-          let idx = if i < 0 { s.length() + i } else { i }
-          if idx >= 0 && idx < s.length() {
-            [
-              Json::string(
-                s.view(start_offset=idx, end_offset=idx + 1).to_string(),
-              ),
-            ]
-          } else {
-            [Json::null()]
-          }
-        }
         JNull => [Json::null()]
         _ =>
           raise TypeError(
@@ -239,18 +252,6 @@ fn eval_with_env(
           let idx = if i < 0 { a.length() + i } else { i }
           if idx >= 0 && idx < a.length() {
             [a[idx]]
-          } else {
-            [Json::null()]
-          }
-        }
-        String(s) => {
-          let idx = if i < 0 { s.length() + i } else { i }
-          if idx >= 0 && idx < s.length() {
-            [
-              Json::string(
-                s.view(start_offset=idx, end_offset=idx + 1).to_string(),
-              ),
-            ]
           } else {
             [Json::null()]
           }
@@ -626,6 +627,8 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
             json_type_with_value(input) + " cannot be parsed as a number",
           )
       }
+    "first" => [nth_on_input(input, Json::number(0.0))]
+    "last" => [nth_on_input(input, Json::number(-1.0))]
     "sort" =>
       match input {
         Array(a) => [Json::array(sort_json_array(a))]
@@ -830,6 +833,39 @@ fn eval_call(
               "Cannot iterate over " + json_type_with_value(input),
             )
         }
+      }
+    "first" =>
+      if args.length() != 1 {
+        raise UnknownFunction("first")
+      } else {
+        let values = eval_with_env(args[0], input, env)
+        if values.length() == 0 {
+          []
+        } else {
+          [values[0]]
+        }
+      }
+    "last" =>
+      if args.length() != 1 {
+        raise UnknownFunction("last")
+      } else {
+        let values = eval_with_env(args[0], input, env)
+        if values.length() == 0 {
+          []
+        } else {
+          [values[values.length() - 1]]
+        }
+      }
+    "nth" =>
+      if args.length() != 1 {
+        raise UnknownFunction("nth")
+      } else {
+        let keys = eval_with_env(args[0], input, env)
+        let out = []
+        for key in keys {
+          out.push(nth_on_input(input, key))
+        }
+        out
       }
     "contains" =>
       if args.length() != 1 {

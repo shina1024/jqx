@@ -75,12 +75,18 @@ test "eval index and iter" {
 }
 
 ///|
-test "eval string index compatibility" {
+test "eval string index jq compatibility" {
   let s = must_parse("\"abc\"")
-  assert_eq(must_eval(parse_filter(".[0]"), s), [Json::string("a")])
-  assert_eq(must_eval(parse_filter(".[-1]"), s), [Json::string("c")])
-  assert_eq(must_eval(parse_filter(".[3]"), s), [Json::null()])
-  assert_eq(must_eval(parse_filter(".[0]?"), s), [Json::string("a")])
+  guard (try? eval(parse_filter(".[0]"), s)) is Err(err) &&
+    err.to_string() == "Cannot index string with number" else {
+    fail("expected string index type error")
+  }
+  guard (try? eval(parse_filter(".[-1]"), s)) is Err(err) &&
+    err.to_string() == "Cannot index string with number" else {
+    fail("expected string negative index type error")
+  }
+  assert_eq(must_eval(parse_filter(".[0]?"), s), [])
+  assert_eq(must_eval(parse_filter(".[-1]?"), s), [])
 }
 
 ///|
@@ -136,6 +142,62 @@ test "eval builtins" {
   assert_eq(must_eval(parse_filter("keys"), j2), [
     Json::array([Json::string("a"), Json::string("b")]),
   ])
+}
+
+///|
+test "eval first/last/nth compatibility" {
+  let arr = must_parse("[1,2,3]")
+  assert_eq(must_eval(parse_filter("first"), arr), [Json::number(1.0)])
+  assert_eq(must_eval(parse_filter("last"), arr), [Json::number(3.0)])
+  assert_eq(must_eval(parse_filter("nth(0)"), arr), [Json::number(1.0)])
+  assert_eq(must_eval(parse_filter("nth(-1)"), arr), [Json::number(3.0)])
+  assert_eq(must_eval(parse_filter("nth(9)"), arr), [Json::null()])
+  assert_eq(must_eval(parse_filter("nth(1.9)"), arr), [Json::number(2.0)])
+  assert_eq(must_eval(parse_filter("nth((0,-1,9))"), arr), [
+    Json::number(1.0),
+    Json::number(3.0),
+    Json::null(),
+  ])
+  let empty_arr = must_parse("[]")
+  assert_eq(must_eval(parse_filter("first"), empty_arr), [Json::null()])
+  assert_eq(must_eval(parse_filter("last"), empty_arr), [Json::null()])
+  assert_eq(must_eval(parse_filter("nth(0)"), empty_arr), [Json::null()])
+  let null_json = must_parse("null")
+  assert_eq(must_eval(parse_filter("first"), null_json), [Json::null()])
+  assert_eq(must_eval(parse_filter("last"), null_json), [Json::null()])
+  assert_eq(must_eval(parse_filter("nth(0)"), null_json), [Json::null()])
+  assert_eq(must_eval(parse_filter("nth(\"a\")"), null_json), [Json::null()])
+  let scalar = must_parse("1")
+  assert_eq(must_eval(parse_filter("first(empty)"), scalar), [])
+  assert_eq(must_eval(parse_filter("last(empty)"), scalar), [])
+  assert_eq(must_eval(parse_filter("nth(empty)"), scalar), [])
+  assert_eq(must_eval(parse_filter("first((1,2,3))"), scalar), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("last((1,2,3))"), scalar), [
+    Json::number(3.0),
+  ])
+}
+
+///|
+test "eval first/last/nth errors" {
+  guard (try? eval(parse_filter("first"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot index number with number" else {
+    fail("expected first number index error")
+  }
+  guard (try? eval(parse_filter("last"), must_parse("{}"))) is Err(err) &&
+    err.to_string() == "Cannot index object with number" else {
+    fail("expected last object index error")
+  }
+  guard (try? eval(parse_filter("nth(\"a\")"), must_parse("[1,2,3]")))
+    is Err(err) &&
+    err.to_string() == "Cannot index array with string \"a\"" else {
+    fail("expected nth array string-key error")
+  }
+  guard (try? eval(parse_filter("nth(true)"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "Cannot index null with boolean" else {
+    fail("expected nth null boolean-key error")
+  }
 }
 
 ///|
