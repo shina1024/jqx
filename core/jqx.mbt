@@ -241,7 +241,6 @@ pub fn valid(input : StringView) -> Bool {
 }
 
 ///|
-#label_migration(max_nesting_depth, fill=false)
 pub fn parse(
   input : StringView,
   max_nesting_depth? : Int = 1024,

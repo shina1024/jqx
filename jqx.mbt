@@ -7,7 +7,7 @@ pub fn parse(
   input : StringView,
   max_nesting_depth? : Int = 1024,
 ) -> @core.Json raise @core.ParseError {
-  @core.parse(input, max_nesting_depth?)
+  @core.parse(input, max_nesting_depth~)
 }
 
 ///|
