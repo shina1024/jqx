@@ -626,6 +626,15 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
             json_type_with_value(input) + " cannot be parsed as a number",
           )
       }
+    "sort" =>
+      match input {
+        Array(a) => [Json::array(sort_json_array(a))]
+        _ =>
+          raise TypeError(
+            json_type_with_value(input) +
+            " cannot be sorted, as it is not an array",
+          )
+      }
     "explode" =>
       match input {
         String(s) => [Json::array(explode_string(s))]
@@ -947,6 +956,36 @@ fn eval_call(
           }
         }
         out
+      }
+    "sort_by" =>
+      if args.length() != 1 {
+        raise UnknownFunction("sort_by")
+      } else {
+        match input {
+          Array(a) => {
+            let keyed = []
+            let key_filter = args[0]
+            for v in a {
+              let key_values = eval_with_env(key_filter, v, env)
+              let key = if key_values.length() == 0 {
+                Json::null()
+              } else {
+                key_values[0]
+              }
+              keyed.push((key, v))
+            }
+            let sorted = sort_keyed_pairs(keyed)
+            let out = []
+            for kv in sorted {
+              out.push(kv.1)
+            }
+            [Json::array(out)]
+          }
+          _ =>
+            raise TypeError(
+              "Cannot iterate over " + json_type_with_value(input),
+            )
+        }
       }
     "index" =>
       if args.length() != 1 {
@@ -1301,6 +1340,145 @@ fn split_string(s : String, sep : String) -> Array[Json] {
       }
     }
   }
+}
+
+///|
+fn json_sort_rank(j : Json) -> Int {
+  match j {
+    JNull => 0
+    JFalse => 1
+    JTrue => 2
+    Number(_, _) => 3
+    String(_) => 4
+    Array(_) => 5
+    Object(_) => 6
+  }
+}
+
+///|
+fn compare_string_arrays(a : Array[String], b : Array[String]) -> Int {
+  let n = if a.length() < b.length() { a.length() } else { b.length() }
+  for i in 0..<n {
+    let c = a[i].compare(b[i])
+    if c != 0 {
+      return c
+    }
+  }
+  if a.length() < b.length() {
+    -1
+  } else if a.length() > b.length() {
+    1
+  } else {
+    0
+  }
+}
+
+///|
+fn compare_json(a : Json, b : Json) -> Int {
+  let ra = json_sort_rank(a)
+  let rb = json_sort_rank(b)
+  if ra < rb {
+    return -1
+  }
+  if ra > rb {
+    return 1
+  }
+  match (a, b) {
+    (JNull, JNull) | (JFalse, JFalse) | (JTrue, JTrue) => 0
+    (Number(x, _), Number(y, _)) =>
+      if x < y {
+        -1
+      } else if x > y {
+        1
+      } else {
+        0
+      }
+    (String(x), String(y)) => x.compare(y)
+    (Array(x), Array(y)) => {
+      let n = if x.length() < y.length() { x.length() } else { y.length() }
+      for i in 0..<n {
+        let c = compare_json(x[i], y[i])
+        if c != 0 {
+          return c
+        }
+      }
+      if x.length() < y.length() {
+        -1
+      } else if x.length() > y.length() {
+        1
+      } else {
+        0
+      }
+    }
+    (Object(x), Object(y)) => {
+      let kx = Array::from_iter(x.keys())
+      let ky = Array::from_iter(y.keys())
+      kx.sort()
+      ky.sort()
+      let key_cmp = compare_string_arrays(kx, ky)
+      if key_cmp != 0 {
+        return key_cmp
+      }
+      for key in kx {
+        let vx = match x.get(key) {
+          Some(v) => v
+          None => Json::null()
+        }
+        let vy = match y.get(key) {
+          Some(v) => v
+          None => Json::null()
+        }
+        let c = compare_json(vx, vy)
+        if c != 0 {
+          return c
+        }
+      }
+      0
+    }
+    _ => 0
+  }
+}
+
+///|
+fn sort_json_array(a : Array[Json]) -> Array[Json] {
+  let mut sorted = []
+  for v in a {
+    let mut inserted = false
+    let next = []
+    for cur in sorted {
+      if !inserted && compare_json(v, cur) < 0 {
+        next.push(v)
+        inserted = true
+      }
+      next.push(cur)
+    }
+    if !inserted {
+      next.push(v)
+    }
+    sorted = next
+  }
+  sorted
+}
+
+///|
+fn sort_keyed_pairs(items : Array[(Json, Json)]) -> Array[(Json, Json)] {
+  let mut sorted : Array[(Json, Json)] = []
+  for item in items {
+    let mut inserted = false
+    let next : Array[(Json, Json)] = []
+    for cur in sorted {
+      if !inserted && compare_json(item.0, cur.0) < 0 {
+        next.push(item)
+        inserted = true
+      }
+      next.push(cur)
+    }
+    if !inserted {
+      next.push(item)
+    }
+    sorted = next
+  }
+  sorted
 }
 
 ///|

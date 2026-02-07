@@ -532,6 +532,98 @@ test "eval add builtin errors" {
 }
 
 ///|
+test "eval sort compatibility" {
+  assert_eq(must_eval(parse_filter("sort"), must_parse("[3,1,2]")), [
+    Json::array([Json::number(1.0), Json::number(2.0), Json::number(3.0)]),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("sort"),
+      must_parse("[{},[],\"a\",0,true,false,null]"),
+    ),
+    [
+      Json::array([
+        Json::null(),
+        Json::boolean(false),
+        Json::boolean(true),
+        Json::number(0.0),
+        Json::string("a"),
+        Json::array([]),
+        Json::object(Map::new()),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_eval(parse_filter("sort"), must_parse("[[1,2],[1,1],[1],[]]")),
+    [
+      Json::array([
+        Json::array([]),
+        Json::array([Json::number(1.0)]),
+        Json::array([Json::number(1.0), Json::number(1.0)]),
+        Json::array([Json::number(1.0), Json::number(2.0)]),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_eval(parse_filter("sort"), must_parse("[{\"a\":2},{\"a\":1}]")),
+    [
+      Json::array([
+        Json::object({ "a": Json::number(1.0) }),
+        Json::object({ "a": Json::number(2.0) }),
+      ]),
+    ],
+  )
+}
+
+///|
+test "eval sort errors" {
+  guard (try? eval(parse_filter("sort"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "number (1) cannot be sorted, as it is not an array" else {
+    fail("expected sort non-array type error")
+  }
+  guard (try? eval(parse_filter("sort"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "null (null) cannot be sorted, as it is not an array" else {
+    fail("expected sort null type error")
+  }
+}
+
+///|
+test "eval sort_by compatibility" {
+  assert_eq(
+    must_eval(parse_filter("sort_by(.a)"), must_parse("[{\"a\":2},{\"a\":1}]")),
+    [
+      Json::array([
+        Json::object({ "a": Json::number(1.0) }),
+        Json::object({ "a": Json::number(2.0) }),
+      ]),
+    ],
+  )
+  assert_eq(must_eval(parse_filter("sort_by(.)"), must_parse("[3,1,2]")), [
+    Json::array([Json::number(1.0), Json::number(2.0), Json::number(3.0)]),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("sort_by(empty)"),
+      must_parse("[{\"a\":2},{\"a\":1}]"),
+    ),
+    [
+      Json::array([
+        Json::object({ "a": Json::number(2.0) }),
+        Json::object({ "a": Json::number(1.0) }),
+      ]),
+    ],
+  )
+}
+
+///|
+test "eval sort_by errors" {
+  guard (try? eval(parse_filter("sort_by(.)"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over number (1)" else {
+    fail("expected sort_by non-array error")
+  }
+}
+
+///|
 test "eval select" {
   let j = must_parse("{\"a\":1,\"b\":null}")
   let f1 = parse_filter("select(.a)")
