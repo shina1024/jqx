@@ -497,6 +497,82 @@ test "eval tostring/tonumber compatibility" {
 }
 
 ///|
+test "eval tojson/fromjson compatibility" {
+  assert_eq(must_eval(parse_filter("tojson"), must_parse("1")), [
+    Json::string("1"),
+  ])
+  assert_eq(must_eval(parse_filter("tojson"), must_parse("\"x\"")), [
+    Json::string("\"x\""),
+  ])
+  assert_eq(must_eval(parse_filter("tojson"), must_parse("[1,2]")), [
+    Json::string("[1,2]"),
+  ])
+  assert_eq(must_eval(parse_filter("tojson"), must_parse("{\"a\":1}")), [
+    Json::string("{\"a\":1}"),
+  ])
+  assert_eq(must_eval(parse_filter("tojson"), must_parse("null")), [
+    Json::string("null"),
+  ])
+  assert_eq(must_eval(parse_filter("tojson"), must_parse("true")), [
+    Json::string("true"),
+  ])
+  assert_eq(must_eval(parse_filter("fromjson"), must_parse("\"1\"")), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("fromjson"), must_parse("\"[1,2]\"")), [
+    Json::array([Json::number(1.0), Json::number(2.0)]),
+  ])
+  assert_eq(
+    must_eval(parse_filter("fromjson"), must_parse("\"{\\\"a\\\":1}\"")),
+    [Json::object({ "a": Json::number(1.0) })],
+  )
+  assert_eq(must_eval(parse_filter("fromjson"), must_parse("\"null\"")), [
+    Json::null(),
+  ])
+  assert_eq(must_eval(parse_filter("fromjson"), must_parse("\" true \"")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("fromjson"), must_parse("\"nan\"")), [
+    Json::null(),
+  ])
+  assert_eq(must_eval(parse_filter("fromjson"), must_parse("\"INF\"")), [
+    Json::number(1.7976931348623157e+308),
+  ])
+  assert_eq(must_eval(parse_filter("fromjson"), must_parse("\"-inf\"")), [
+    Json::number(-1.7976931348623157e+308),
+  ])
+}
+
+///|
+test "eval fromjson errors" {
+  guard (try? eval(parse_filter("fromjson"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "number (1) only strings can be parsed" else {
+    fail("expected fromjson number type error")
+  }
+  guard (try? eval(parse_filter("fromjson"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "null (null) only strings can be parsed" else {
+    fail("expected fromjson null type error")
+  }
+  guard (try? eval(parse_filter("fromjson"), must_parse("{}"))) is Err(err) &&
+    err.to_string() == "object ({}) only strings can be parsed" else {
+    fail("expected fromjson object type error")
+  }
+  guard (try? eval(parse_filter("fromjson"), must_parse("\"x\""))) is Err(err) &&
+    err.to_string().contains("while parsing 'x'") else {
+    fail("expected fromjson invalid token parse context")
+  }
+  guard (try? eval(parse_filter("fromjson"), must_parse("\"\""))) is Err(err) &&
+    err.to_string().contains("while parsing ''") else {
+    fail("expected fromjson empty parse context")
+  }
+  guard (try? eval(parse_filter("fromjson"), must_parse("\"[1,2\"")))
+    is Err(err) &&
+    err.to_string().contains("while parsing '[1,2'") else {
+    fail("expected fromjson unfinished array parse context")
+  }
+}
+
+///|
 test "eval tonumber errors" {
   guard (try? eval(parse_filter("tonumber"), must_parse("\"abc\""))) is Err(err) &&
     err.to_string() == "string (\"abc\") cannot be parsed as a number" else {

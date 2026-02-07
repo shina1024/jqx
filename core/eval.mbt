@@ -204,6 +204,59 @@ fn collection_values(input : Json) -> Array[Json] raise EvalError {
 }
 
 ///|
+fn is_ascii_ws(ch : Char) -> Bool {
+  ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n'
+}
+
+///|
+fn trim_ascii_ws(s : String) -> String {
+  let mut start = 0
+  let mut end = s.length()
+  for {
+    if start < end && is_ascii_ws(s.unsafe_get(start).to_int().unsafe_to_char()) {
+      start += 1
+    } else {
+      break
+    }
+  }
+  for {
+    if end > start &&
+      is_ascii_ws(s.unsafe_get(end - 1).to_int().unsafe_to_char()) {
+      end -= 1
+    } else {
+      break
+    }
+  }
+  s.view(start_offset=start, end_offset=end).to_string()
+}
+
+///|
+fn fromjson_fallback_token(s : String) -> Json? {
+  let t = ascii_downcase_string(trim_ascii_ws(s))
+  match t {
+    "nan" | "+nan" | "-nan" => Some(Json::null())
+    "inf" | "+inf" | "infinity" | "+infinity" =>
+      Some(Json::number(1.7976931348623157e+308))
+    "-inf" | "-infinity" => Some(Json::number(-1.7976931348623157e+308))
+    _ => None
+  }
+}
+
+///|
+fn parse_fromjson_string(s : String) -> Json raise EvalError {
+  try parse(s) catch {
+    err =>
+      match fromjson_fallback_token(s) {
+        Some(v) => v
+        None =>
+          raise TypeError(err.to_string() + " (while parsing '" + s + "')")
+      }
+  } noraise {
+    j => j
+  }
+}
+
+///|
 fn flatten_array_full(a : Array[Json]) -> Array[Json] {
   let out = []
   for v in a {
@@ -826,6 +879,7 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
         String(_) => [input]
         _ => [Json::string(input.to_json_string())]
       }
+    "tojson" => [Json::string(input.to_json_string())]
     "tonumber" =>
       match input {
         Number(_, _) => [input]
@@ -841,6 +895,14 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
         _ =>
           raise TypeError(
             json_type_with_value(input) + " cannot be parsed as a number",
+          )
+      }
+    "fromjson" =>
+      match input {
+        String(s) => [parse_fromjson_string(s)]
+        _ =>
+          raise TypeError(
+            json_type_with_value(input) + " only strings can be parsed",
           )
       }
     "first" => [nth_on_input(input, Json::number(0.0))]
