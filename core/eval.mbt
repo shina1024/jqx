@@ -609,6 +609,16 @@ fn eval_call(
             }
             [Json::array(out)]
           }
+          Object(o) => {
+            let out = []
+            let f = args[0]
+            for kv in o.iter() {
+              for v2 in eval_with_env(f, kv.1, env) {
+                out.push(v2)
+              }
+            }
+            [Json::array(out)]
+          }
           _ =>
             raise TypeError(
               "Cannot iterate over " + json_type_with_value(input),
@@ -812,6 +822,45 @@ fn eval_arith(
           }
           out.push(Json::number(v))
         }
+        (String(s), Number(n, _)) =>
+          if op == "*" {
+            out.push(eval_mul_string_number(s, n))
+          } else {
+            raise TypeError(
+              "Cannot apply " +
+              op +
+              " to " +
+              json_type_with_value(a) +
+              " and " +
+              json_type_with_value(b),
+            )
+          }
+        (Number(n, _), String(s)) =>
+          if op == "*" {
+            out.push(eval_mul_string_number(s, n))
+          } else {
+            raise TypeError(
+              "Cannot apply " +
+              op +
+              " to " +
+              json_type_with_value(a) +
+              " and " +
+              json_type_with_value(b),
+            )
+          }
+        (Object(x), Object(y)) =>
+          if op == "*" {
+            out.push(Json::object(merge_objects_recursive(x, y)))
+          } else {
+            raise TypeError(
+              "Cannot apply " +
+              op +
+              " to " +
+              json_type_with_value(a) +
+              " and " +
+              json_type_with_value(b),
+            )
+          }
         (Array(x), Array(y)) =>
           if op == "-" {
             let filtered = []
@@ -851,6 +900,56 @@ fn eval_arith(
     }
   }
   out
+}
+
+///|
+fn eval_mul_string_number(s : String, n : Double) -> Json raise EvalError {
+  if n != n || n < 0.0 || n == @double.neg_infinity {
+    return Json::null()
+  }
+  if s.length() == 0 {
+    return Json::string("")
+  }
+  if n == @double.infinity {
+    raise TypeError("Repeat string result too long")
+  }
+  if n > 2147483647.0 {
+    raise TypeError("Repeat string result too long")
+  }
+  let count = n.to_int()
+  if count <= 0 {
+    return Json::string("")
+  }
+  let max_result_len = 16777216
+  if count > max_result_len / s.length() {
+    raise TypeError("Repeat string result too long")
+  }
+  let buf = StringBuilder::new()
+  for _ in 0..<count {
+    buf.write_string(s)
+  }
+  Json::string(buf.to_string())
+}
+
+///|
+fn merge_objects_recursive(
+  left : Map[String, Json],
+  right : Map[String, Json],
+) -> Map[String, Json] {
+  let merged = Map::new()
+  for kv in left.iter() {
+    merged[kv.0] = kv.1
+  }
+  for kv in right.iter() {
+    let key = kv.0
+    let right_value = kv.1
+    match (merged.get(key), right_value) {
+      (Some(Object(left_obj)), Object(right_obj)) =>
+        merged[key] = Json::object(merge_objects_recursive(left_obj, right_obj))
+      _ => merged[key] = right_value
+    }
+  }
+  merged
 }
 
 ///|

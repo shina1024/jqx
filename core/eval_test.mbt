@@ -231,6 +231,39 @@ test "eval arithmetic" {
 }
 
 ///|
+test "eval multiply compatibility" {
+  let j = must_parse("null")
+  assert_eq(must_eval(parse_filter("\"ab\" * 2"), j), [Json::string("abab")])
+  assert_eq(must_eval(parse_filter("2 * \"ab\""), j), [Json::string("abab")])
+  assert_eq(must_eval(parse_filter("\"ab\" * 2.9"), j), [Json::string("abab")])
+  assert_eq(must_eval(parse_filter("\"ab\" * 0"), j), [Json::string("")])
+  assert_eq(must_eval(parse_filter("\"ab\" * -1"), j), [Json::null()])
+  assert_eq(
+    must_eval(parse_filter("{\"a\":{\"x\":1}} * {\"a\":{\"y\":2}}"), j),
+    [
+      Json::object({
+        "a": Json::object({ "x": Json::number(1.0), "y": Json::number(2.0) }),
+      }),
+    ],
+  )
+  assert_eq(must_eval(parse_filter("{\"a\":{\"x\":1}} * {\"a\":2}"), j), [
+    Json::object({ "a": Json::number(2.0) }),
+  ])
+  assert_eq(must_eval(parse_filter("{\"a\":1} * {\"b\":2}"), j), [
+    Json::object({ "a": Json::number(1.0), "b": Json::number(2.0) }),
+  ])
+}
+
+///|
+test "eval multiply repeat too long error" {
+  let j = must_parse("null")
+  guard (try? eval(parse_filter("\"x\" * 1000000000000"), j)) is Err(err) &&
+    err.to_string() == "Repeat string result too long" else {
+    fail("expected repeat-too-long error")
+  }
+}
+
+///|
 test "eval array subtraction compatibility" {
   let j = must_parse("null")
   assert_eq(must_eval(parse_filter("[1,2,2,3] - [2]"), j), [
@@ -311,6 +344,18 @@ test "eval map" {
   assert_eq(must_eval(parse_filter("map(. + 1)"), j), [
     Json::array([Json::number(2.0), Json::number(3.0), Json::number(4.0)]),
   ])
+}
+
+///|
+test "eval map object compatibility" {
+  let j = must_parse("{\"a\":1}")
+  assert_eq(must_eval(parse_filter("map(. + 1)"), j), [
+    Json::array([Json::number(2.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("map((., . + 1))"), j), [
+    Json::array([Json::number(1.0), Json::number(2.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("map(select(. > 1))"), j), [Json::array([])])
 }
 
 ///|
