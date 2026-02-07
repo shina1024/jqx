@@ -602,6 +602,37 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
             json_type_with_value(input) + " cannot be parsed as a number",
           )
       }
+    "reverse" =>
+      match input {
+        Array(a) => {
+          let out = []
+          for i in 0..<a.length() {
+            out.push(a[a.length() - 1 - i])
+          }
+          [Json::array(out)]
+        }
+        JNull => [Json::array([])]
+        Number(n, _) =>
+          if n == 0.0 {
+            [Json::array([])]
+          } else {
+            raise TypeError("Cannot index number with number")
+          }
+        String(s) =>
+          if s.length() == 0 {
+            [Json::array([])]
+          } else {
+            raise TypeError("Cannot index string with number")
+          }
+        Object(o) =>
+          if o.length() == 0 {
+            [Json::array([])]
+          } else {
+            raise TypeError("Cannot index object with number")
+          }
+        JTrue | JFalse =>
+          raise TypeError(json_type_with_value(input) + " has no length")
+      }
     _ => raise UnknownFunction(name)
   }
 }
@@ -793,6 +824,25 @@ fn eval_call(
           }
         }
         out
+      }
+    "join" =>
+      if args.length() != 1 {
+        raise UnknownFunction("join")
+      } else {
+        match input {
+          Array(a) => {
+            let seps = eval_with_env(args[0], input, env)
+            let out = []
+            for sep in seps {
+              out.push(eval_join(a, sep))
+            }
+            out
+          }
+          _ =>
+            raise TypeError(
+              "Cannot iterate over " + json_type_with_value(input),
+            )
+        }
       }
     _ => raise UnknownFunction(name)
   }
@@ -1028,6 +1078,30 @@ fn eval_add(
     }
   }
   out
+}
+
+///|
+fn eval_join(a : Array[Json], sep : Json) -> Json raise EvalError {
+  let mut acc = Json::string("")
+  for i in 0..<a.length() {
+    if i > 0 {
+      acc = json_add_pair(acc, sep)
+    }
+    acc = json_add_pair(acc, join_item(a[i]))
+  }
+  acc
+}
+
+///|
+fn join_item(v : Json) -> Json {
+  match v {
+    String(_) => v
+    Number(n, repr) => Json::string(Json::number(n, repr?).to_json_string())
+    JTrue => Json::string("true")
+    JFalse => Json::string("false")
+    JNull => Json::string("")
+    _ => v
+  }
 }
 
 ///|

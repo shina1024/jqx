@@ -223,6 +223,89 @@ test "eval tonumber errors" {
 }
 
 ///|
+test "eval reverse compatibility" {
+  assert_eq(must_eval(parse_filter("reverse"), must_parse("[1,2,3]")), [
+    Json::array([Json::number(3.0), Json::number(2.0), Json::number(1.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("reverse"), must_parse("[]")), [
+    Json::array([]),
+  ])
+  assert_eq(must_eval(parse_filter("reverse"), must_parse("null")), [
+    Json::array([]),
+  ])
+  assert_eq(must_eval(parse_filter("reverse"), must_parse("{}")), [
+    Json::array([]),
+  ])
+  assert_eq(must_eval(parse_filter("reverse"), must_parse("\"\"")), [
+    Json::array([]),
+  ])
+  assert_eq(must_eval(parse_filter("reverse"), must_parse("0")), [
+    Json::array([]),
+  ])
+}
+
+///|
+test "eval reverse errors" {
+  guard (try? eval(parse_filter("reverse"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot index number with number" else {
+    fail("expected reverse number index error")
+  }
+  guard (try? eval(parse_filter("reverse"), must_parse("\"abc\""))) is Err(err) &&
+    err.to_string() == "Cannot index string with number" else {
+    fail("expected reverse string index error")
+  }
+  guard (try? eval(parse_filter("reverse"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Cannot index object with number" else {
+    fail("expected reverse object index error")
+  }
+  guard (try? eval(parse_filter("reverse"), must_parse("false"))) is Err(err) &&
+    err.to_string() == "boolean (false) has no length" else {
+    fail("expected reverse boolean length error")
+  }
+}
+
+///|
+test "eval join compatibility" {
+  assert_eq(
+    must_eval(parse_filter("join(\",\")"), must_parse("[\"a\",1,true,null]")),
+    [Json::string("a,1,true,")],
+  )
+  assert_eq(must_eval(parse_filter("join(\",\")"), must_parse("[]")), [
+    Json::string(""),
+  ])
+  assert_eq(must_eval(parse_filter("join(\",\")"), must_parse("[1,2]")), [
+    Json::string("1,2"),
+  ])
+  assert_eq(must_eval(parse_filter("join(1)"), must_parse("[\"a\"]")), [
+    Json::string("a"),
+  ])
+  assert_eq(
+    must_eval(parse_filter("join((\",\", \":\"))"), must_parse("[\"a\",\"b\"]")),
+    [Json::string("a,b"), Json::string("a:b")],
+  )
+  assert_eq(must_eval(parse_filter("join(empty)"), must_parse("[\"a\"]")), [])
+}
+
+///|
+test "eval join errors" {
+  guard (try? eval(parse_filter("join(\",\")"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over number (1)" else {
+    fail("expected join iterate error")
+  }
+  guard (try? eval(parse_filter("join(1)"), must_parse("[\"a\",\"b\"]")))
+    is Err(err) &&
+    err.to_string() == "string (\"a\") and number (1) cannot be added" else {
+    fail("expected join separator type error")
+  }
+  guard (try? eval(parse_filter("join(\",\")"), must_parse("[{\"x\":1}]")))
+    is Err(err) &&
+    err.to_string() == "string (\"\") and object ({\"x\":1}) cannot be added" else {
+    fail("expected join object element type error")
+  }
+}
+
+///|
 test "eval jq type-filter builtins" {
   assert_eq(must_eval(parse_filter("values"), must_parse("null")), [])
   assert_eq(must_eval(parse_filter("values"), must_parse("1")), [
