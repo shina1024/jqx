@@ -624,6 +624,95 @@ test "eval sort_by errors" {
 }
 
 ///|
+test "eval min/max compatibility" {
+  assert_eq(must_eval(parse_filter("min"), must_parse("[3,1,2]")), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("max"), must_parse("[3,1,2]")), [
+    Json::number(3.0),
+  ])
+  assert_eq(must_eval(parse_filter("min"), must_parse("[]")), [Json::null()])
+  assert_eq(must_eval(parse_filter("max"), must_parse("[]")), [Json::null()])
+  assert_eq(
+    must_eval(parse_filter("min"), must_parse("[{\"a\":2},{\"a\":1}]")),
+    [Json::object({ "a": Json::number(1.0) })],
+  )
+  assert_eq(
+    must_eval(parse_filter("max"), must_parse("[{\"a\":2},{\"a\":1}]")),
+    [Json::object({ "a": Json::number(2.0) })],
+  )
+}
+
+///|
+test "eval min/max errors" {
+  guard (try? eval(parse_filter("min"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "number (1) and number (1) cannot be iterated over" else {
+    fail("expected min non-array iterate error")
+  }
+  guard (try? eval(parse_filter("max"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "null (null) and null (null) cannot be iterated over" else {
+    fail("expected max null iterate error")
+  }
+}
+
+///|
+test "eval min_by/max_by compatibility" {
+  assert_eq(
+    must_eval(parse_filter("min_by(.a)"), must_parse("[{\"a\":2},{\"a\":1}]")),
+    [Json::object({ "a": Json::number(1.0) })],
+  )
+  assert_eq(
+    must_eval(parse_filter("max_by(.a)"), must_parse("[{\"a\":2},{\"a\":1}]")),
+    [Json::object({ "a": Json::number(2.0) })],
+  )
+  assert_eq(must_eval(parse_filter("min_by(.)"), must_parse("[3,1,2]")), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("max_by(.)"), must_parse("[3,1,2]")), [
+    Json::number(3.0),
+  ])
+  assert_eq(must_eval(parse_filter("min_by(.)"), must_parse("[]")), [
+    Json::null(),
+  ])
+  assert_eq(must_eval(parse_filter("max_by(.)"), must_parse("[]")), [
+    Json::null(),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("min_by(empty)"),
+      must_parse("[{\"a\":2},{\"a\":1}]"),
+    ),
+    [Json::object({ "a": Json::number(2.0) })],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("max_by(empty)"),
+      must_parse("[{\"a\":2},{\"a\":1}]"),
+    ),
+    [Json::object({ "a": Json::number(1.0) })],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("max_by(.k)"),
+      must_parse("[{\"k\":1,\"id\":\"a\"},{\"k\":1,\"id\":\"b\"}]"),
+    ),
+    [Json::object({ "k": Json::number(1.0), "id": Json::string("b") })],
+  )
+}
+
+///|
+test "eval min_by/max_by errors" {
+  guard (try? eval(parse_filter("min_by(.)"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over number (1)" else {
+    fail("expected min_by non-array error")
+  }
+  guard (try? eval(parse_filter("max_by(.)"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over number (1)" else {
+    fail("expected max_by non-array error")
+  }
+}
+
+///|
 test "eval unique compatibility" {
   assert_eq(must_eval(parse_filter("unique"), must_parse("[1,2,1,3]")), [
     Json::array([Json::number(1.0), Json::number(2.0), Json::number(3.0)]),

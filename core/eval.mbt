@@ -635,6 +635,28 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
             " cannot be sorted, as it is not an array",
           )
       }
+    "min" =>
+      match input {
+        Array(a) => [min_json_array(a)]
+        _ =>
+          raise TypeError(
+            json_type_with_value(input) +
+            " and " +
+            json_type_with_value(input) +
+            " cannot be iterated over",
+          )
+      }
+    "max" =>
+      match input {
+        Array(a) => [max_json_array(a)]
+        _ =>
+          raise TypeError(
+            json_type_with_value(input) +
+            " and " +
+            json_type_with_value(input) +
+            " cannot be iterated over",
+          )
+      }
     "unique" =>
       match input {
         Array(a) => [Json::array(unique_sorted_json_array(sort_json_array(a)))]
@@ -990,6 +1012,30 @@ fn eval_call(
             }
             [Json::array(out)]
           }
+          _ =>
+            raise TypeError(
+              "Cannot iterate over " + json_type_with_value(input),
+            )
+        }
+      }
+    "min_by" =>
+      if args.length() != 1 {
+        raise UnknownFunction("min_by")
+      } else {
+        match input {
+          Array(a) => [minmax_by_json_array(a, args[0], env, choose_max=false)]
+          _ =>
+            raise TypeError(
+              "Cannot iterate over " + json_type_with_value(input),
+            )
+        }
+      }
+    "max_by" =>
+      if args.length() != 1 {
+        raise UnknownFunction("max_by")
+      } else {
+        match input {
+          Array(a) => [minmax_by_json_array(a, args[0], env, choose_max=true)]
           _ =>
             raise TypeError(
               "Cannot iterate over " + json_type_with_value(input),
@@ -1503,6 +1549,69 @@ fn sort_json_array(a : Array[Json]) -> Array[Json] {
     sorted = next
   }
   sorted
+}
+
+///|
+fn min_json_array(a : Array[Json]) -> Json {
+  if a.length() == 0 {
+    return Json::null()
+  }
+  let mut best = a[0]
+  for i in 1..<a.length() {
+    if compare_json(a[i], best) < 0 {
+      best = a[i]
+    }
+  }
+  best
+}
+
+///|
+fn max_json_array(a : Array[Json]) -> Json {
+  if a.length() == 0 {
+    return Json::null()
+  }
+  let mut best = a[0]
+  for i in 1..<a.length() {
+    if compare_json(a[i], best) > 0 {
+      best = a[i]
+    }
+  }
+  best
+}
+
+///|
+fn minmax_by_json_array(
+  a : Array[Json],
+  key_filter : Filter,
+  env : Map[String, Json],
+  choose_max~ : Bool,
+) -> Json raise EvalError {
+  if a.length() == 0 {
+    return Json::null()
+  }
+  let mut best_value = a[0]
+  let first_keys = eval_with_env(key_filter, best_value, env)
+  let mut best_key = if first_keys.length() == 0 {
+    Json::null()
+  } else {
+    first_keys[0]
+  }
+  for i in 1..<a.length() {
+    let v = a[i]
+    let keys = eval_with_env(key_filter, v, env)
+    let key = if keys.length() == 0 { Json::null() } else { keys[0] }
+    let cmp = compare_json(key, best_key)
+    if choose_max {
+      if cmp >= 0 {
+        best_value = v
+        best_key = key
+      }
+    } else if cmp < 0 {
+      best_value = v
+      best_key = key
+    }
+  }
+  best_value
 }
 
 ///|
