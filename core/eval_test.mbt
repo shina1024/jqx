@@ -624,6 +624,88 @@ test "eval sort_by errors" {
 }
 
 ///|
+test "eval unique compatibility" {
+  assert_eq(must_eval(parse_filter("unique"), must_parse("[1,2,1,3]")), [
+    Json::array([Json::number(1.0), Json::number(2.0), Json::number(3.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("unique"), must_parse("[]")), [
+    Json::array([]),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("unique"),
+      must_parse("[{\"a\":2},{\"a\":1},{\"a\":2}]"),
+    ),
+    [
+      Json::array([
+        Json::object({ "a": Json::number(1.0) }),
+        Json::object({ "a": Json::number(2.0) }),
+      ]),
+    ],
+  )
+}
+
+///|
+test "eval unique errors" {
+  guard (try? eval(parse_filter("unique"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "number (1) cannot be sorted, as it is not an array" else {
+    fail("expected unique non-array type error")
+  }
+  guard (try? eval(parse_filter("unique"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "null (null) cannot be sorted, as it is not an array" else {
+    fail("expected unique null type error")
+  }
+}
+
+///|
+test "eval unique_by compatibility" {
+  assert_eq(
+    must_eval(
+      parse_filter("unique_by(.a)"),
+      must_parse(
+        "[{\"a\":2,\"b\":\"x\"},{\"a\":1,\"b\":\"x\"},{\"a\":2,\"b\":\"y\"}]",
+      ),
+    ),
+    [
+      Json::array([
+        Json::object({ "a": Json::number(1.0), "b": Json::string("x") }),
+        Json::object({ "a": Json::number(2.0), "b": Json::string("x") }),
+      ]),
+    ],
+  )
+  assert_eq(must_eval(parse_filter("unique_by(.)"), must_parse("[]")), [
+    Json::array([]),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("unique_by(empty)"),
+      must_parse("[{\"a\":2},{\"a\":1}]"),
+    ),
+    [Json::array([Json::object({ "a": Json::number(2.0) })])],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("unique_by((.a,.b))"),
+      must_parse("[{\"a\":2},{\"a\":1}]"),
+    ),
+    [
+      Json::array([
+        Json::object({ "a": Json::number(1.0) }),
+        Json::object({ "a": Json::number(2.0) }),
+      ]),
+    ],
+  )
+}
+
+///|
+test "eval unique_by errors" {
+  guard (try? eval(parse_filter("unique_by(.)"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over number (1)" else {
+    fail("expected unique_by non-array error")
+  }
+}
+
+///|
 test "eval select" {
   let j = must_parse("{\"a\":1,\"b\":null}")
   let f1 = parse_filter("select(.a)")

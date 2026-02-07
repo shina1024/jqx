@@ -635,6 +635,15 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
             " cannot be sorted, as it is not an array",
           )
       }
+    "unique" =>
+      match input {
+        Array(a) => [Json::array(unique_sorted_json_array(sort_json_array(a)))]
+        _ =>
+          raise TypeError(
+            json_type_with_value(input) +
+            " cannot be sorted, as it is not an array",
+          )
+      }
     "explode" =>
       match input {
         String(s) => [Json::array(explode_string(s))]
@@ -978,6 +987,42 @@ fn eval_call(
             let out = []
             for kv in sorted {
               out.push(kv.1)
+            }
+            [Json::array(out)]
+          }
+          _ =>
+            raise TypeError(
+              "Cannot iterate over " + json_type_with_value(input),
+            )
+        }
+      }
+    "unique_by" =>
+      if args.length() != 1 {
+        raise UnknownFunction("unique_by")
+      } else {
+        match input {
+          Array(a) => {
+            let keyed = []
+            let key_filter = args[0]
+            for v in a {
+              let key_values = eval_with_env(key_filter, v, env)
+              let key = if key_values.length() == 0 {
+                Json::null()
+              } else {
+                key_values[0]
+              }
+              keyed.push((key, v))
+            }
+            let sorted = sort_keyed_pairs(keyed)
+            let out = []
+            let mut prev_key = Json::null()
+            let mut has_prev = false
+            for kv in sorted {
+              if !has_prev || compare_json(prev_key, kv.0) != 0 {
+                out.push(kv.1)
+                prev_key = kv.0
+                has_prev = true
+              }
             }
             [Json::array(out)]
           }
@@ -1458,6 +1503,21 @@ fn sort_json_array(a : Array[Json]) -> Array[Json] {
     sorted = next
   }
   sorted
+}
+
+///|
+fn unique_sorted_json_array(a : Array[Json]) -> Array[Json] {
+  let out = []
+  let mut prev = Json::null()
+  let mut has_prev = false
+  for v in a {
+    if !has_prev || compare_json(prev, v) != 0 {
+      out.push(v)
+      prev = v
+      has_prev = true
+    }
+  }
+  out
 }
 
 ///|
