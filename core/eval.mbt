@@ -44,6 +44,57 @@ fn json_type_with_value(j : Json) -> String {
 }
 
 ///|
+fn contains_type_error(haystack : Json, needle : Json) -> Unit raise EvalError {
+  raise TypeError(
+    json_type_with_value(haystack) +
+    " and " +
+    json_type_with_value(needle) +
+    " cannot have their containment checked",
+  )
+}
+
+///|
+fn contains_match(haystack : Json, needle : Json) -> Bool {
+  match (haystack, needle) {
+    (JNull, JNull) => true
+    (JTrue, JTrue) => true
+    (JFalse, JFalse) => true
+    (Number(x, _), Number(y, _)) => x == y
+    (String(h), String(n)) => h.contains(n)
+    (Array(h), Array(n)) => {
+      for needle_item in n {
+        let mut found = false
+        for hay_item in h {
+          if contains_match(hay_item, needle_item) {
+            found = true
+            break
+          }
+        }
+        if !found {
+          return false
+        }
+      }
+      true
+    }
+    (Object(h), Object(n)) => {
+      for kv in n.iter() {
+        let key = kv.0
+        let needle_value = kv.1
+        match h.get(key) {
+          Some(hay_value) =>
+            if !contains_match(hay_value, needle_value) {
+              return false
+            }
+          None => return false
+        }
+      }
+      true
+    }
+    _ => false
+  }
+}
+
+///|
 pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
   let env = Map::new()
   eval_with_env(filter, input, env)
@@ -95,6 +146,18 @@ fn eval_with_env(
             [Json::null()]
           }
         }
+        String(s) => {
+          let idx = if i < 0 { s.length() + i } else { i }
+          if idx >= 0 && idx < s.length() {
+            [
+              Json::string(
+                s.view(start_offset=idx, end_offset=idx + 1).to_string(),
+              ),
+            ]
+          } else {
+            [Json::null()]
+          }
+        }
         JNull => [Json::null()]
         _ =>
           raise TypeError(
@@ -107,6 +170,18 @@ fn eval_with_env(
           let idx = if i < 0 { a.length() + i } else { i }
           if idx >= 0 && idx < a.length() {
             [a[idx]]
+          } else {
+            [Json::null()]
+          }
+        }
+        String(s) => {
+          let idx = if i < 0 { s.length() + i } else { i }
+          if idx >= 0 && idx < s.length() {
+            [
+              Json::string(
+                s.view(start_offset=idx, end_offset=idx + 1).to_string(),
+              ),
+            ]
           } else {
             [Json::null()]
           }
@@ -421,18 +496,13 @@ fn eval_call(
       } else {
         let cond = args[0]
         let results = eval_with_env(cond, input, env)
-        let mut ok = false
+        let out = []
         for v in results {
           if is_truthy(v) {
-            ok = true
-            break
+            out.push(input)
           }
         }
-        if ok {
-          [input]
-        } else {
-          []
-        }
+        out
       }
     "map" =>
       if args.length() != 1 {
@@ -449,7 +519,10 @@ fn eval_call(
             }
             [Json::array(out)]
           }
-          _ => raise TypeError("Cannot map over " + json_type_with_value(input))
+          _ =>
+            raise TypeError(
+              "Cannot iterate over " + json_type_with_value(input),
+            )
         }
       }
     "map_values" =>
@@ -464,15 +537,24 @@ fn eval_call(
               let vals = eval_with_env(f, kv.1, env)
               if vals.length() > 0 {
                 out[kv.0] = vals[0]
-              } else {
-                out[kv.0] = Json::null()
               }
             }
             [Json::object(out)]
           }
+          Array(a) => {
+            let out = []
+            let f = args[0]
+            for v in a {
+              let vals = eval_with_env(f, v, env)
+              if vals.length() > 0 {
+                out.push(vals[0])
+              }
+            }
+            [Json::array(out)]
+          }
           _ =>
             raise TypeError(
-              "Cannot map_values over " + json_type_with_value(input),
+              "Cannot iterate over " + json_type_with_value(input),
             )
         }
       }
@@ -481,76 +563,54 @@ fn eval_call(
         raise UnknownFunction("contains")
       } else {
         let target = args[0]
-        let vals = eval_with_env(target, input, env)
-        if vals.length() == 0 {
-          [Json::boolean(false)]
-        } else {
-          let needle = vals[0]
+        let needles = eval_with_env(target, input, env)
+        let out = []
+        for needle in needles {
           match (input, needle) {
-            (String(h), String(n)) => [Json::boolean(h.contains(n))]
-            (Array(h), _) => {
-              let mut found = false
-              for v in h {
-                if v == needle {
-                  found = true
-                  break
-                }
-              }
-              [Json::boolean(found)]
-            }
-            _ =>
-              raise TypeError(
-                "Cannot contains " +
-                json_type_with_value(input) +
-                " and " +
-                json_type_with_value(needle),
-              )
+            (JTrue, JFalse) | (JFalse, JTrue) =>
+              contains_type_error(input, needle)
+            (JNull, JNull)
+            | (JTrue, JTrue)
+            | (JFalse, JFalse)
+            | (Number(_, _), Number(_, _))
+            | (String(_), String(_))
+            | (Array(_), Array(_))
+            | (Object(_), Object(_)) =>
+              out.push(Json::boolean(contains_match(input, needle)))
+            _ => contains_type_error(input, needle)
           }
         }
+        out
       }
     "startswith" =>
       if args.length() != 1 {
         raise UnknownFunction("startswith")
       } else {
         let target = args[0]
-        let vals = eval_with_env(target, input, env)
-        if vals.length() == 0 {
-          [Json::boolean(false)]
-        } else {
-          let needle = vals[0]
+        let needles = eval_with_env(target, input, env)
+        let out = []
+        for needle in needles {
           match (input, needle) {
-            (String(h), String(n)) => [Json::boolean(h.has_prefix(n))]
-            _ =>
-              raise TypeError(
-                "Cannot startswith " +
-                json_type_with_value(input) +
-                " and " +
-                json_type_with_value(needle),
-              )
+            (String(h), String(n)) => out.push(Json::boolean(h.has_prefix(n)))
+            _ => raise TypeError("startswith() requires string inputs")
           }
         }
+        out
       }
     "endswith" =>
       if args.length() != 1 {
         raise UnknownFunction("endswith")
       } else {
         let target = args[0]
-        let vals = eval_with_env(target, input, env)
-        if vals.length() == 0 {
-          [Json::boolean(false)]
-        } else {
-          let needle = vals[0]
+        let needles = eval_with_env(target, input, env)
+        let out = []
+        for needle in needles {
           match (input, needle) {
-            (String(h), String(n)) => [Json::boolean(h.has_suffix(n))]
-            _ =>
-              raise TypeError(
-                "Cannot endswith " +
-                json_type_with_value(input) +
-                " and " +
-                json_type_with_value(needle),
-              )
+            (String(h), String(n)) => out.push(Json::boolean(h.has_suffix(n)))
+            _ => raise TypeError("endswith() requires string inputs")
           }
         }
+        out
       }
     _ => raise UnknownFunction(name)
   }
@@ -624,7 +684,17 @@ fn eval_arith(
           let v = match op {
             "-" => x - y
             "*" => x * y
-            _ => x / y
+            _ =>
+              if y == 0.0 {
+                raise TypeError(
+                  json_type_with_value(a) +
+                  " and " +
+                  json_type_with_value(b) +
+                  " cannot be divided because the divisor is zero",
+                )
+              } else {
+                x / y
+              }
           }
           out.push(Json::number(v))
         }
@@ -658,6 +728,8 @@ fn eval_add(
     for i in 0..<l.length() {
       let a = l[i]
       match (a, b) {
+        (JNull, x) => out.push(x)
+        (x, JNull) => out.push(x)
         (Number(x, _), Number(y, _)) => out.push(Json::number(x + y))
         (String(x), String(y)) => out.push(Json::string(x + y))
         (Array(x), Array(y)) => {

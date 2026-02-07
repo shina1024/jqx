@@ -75,6 +75,15 @@ test "eval index and iter" {
 }
 
 ///|
+test "eval string index compatibility" {
+  let s = must_parse("\"abc\"")
+  assert_eq(must_eval(parse_filter(".[0]"), s), [Json::string("a")])
+  assert_eq(must_eval(parse_filter(".[-1]"), s), [Json::string("c")])
+  assert_eq(must_eval(parse_filter(".[3]"), s), [Json::null()])
+  assert_eq(must_eval(parse_filter(".[0]?"), s), [Json::string("a")])
+}
+
+///|
 test "eval optional access" {
   let j = must_parse("[1,2,3]")
   assert_eq(must_eval(parse_filter(".[]?"), j), [
@@ -139,6 +148,14 @@ test "eval select" {
 }
 
 ///|
+test "eval select stream compatibility" {
+  let j = must_parse("1")
+  assert_eq(must_eval(parse_filter("select((false,true,true))"), j), [j, j])
+  assert_eq(must_eval(parse_filter("select((false,false))"), j), [])
+  assert_eq(must_eval(parse_filter("select(empty)"), j), [])
+}
+
+///|
 test "eval compare" {
   let j = must_parse("{\"a\":1,\"b\":2}")
   let f1 = parse_filter(".a == 1")
@@ -179,6 +196,16 @@ test "eval arithmetic" {
 }
 
 ///|
+test "eval division by zero compatibility" {
+  let j = must_parse("null")
+  guard (try? eval(parse_filter("1 / 0"), j)) is Err(err) &&
+    err.to_string() ==
+    "number (1) and number (0) cannot be divided because the divisor is zero" else {
+    fail("expected jq-compatible division by zero error")
+  }
+}
+
+///|
 test "eval arithmetic stream cross product" {
   let j = must_parse("null")
   assert_eq(must_eval(parse_filter("(1,2) + (10,20)"), j), [
@@ -198,6 +225,21 @@ test "eval add arrays and objects" {
   ])
   assert_eq(must_eval(parse_filter(".x + .y"), j), [
     Json::object({ "k": Json::number(2.0) }),
+  ])
+}
+
+///|
+test "eval add null identity compatibility" {
+  let j = must_parse("null")
+  assert_eq(must_eval(parse_filter("null + 1"), j), [Json::number(1.0)])
+  assert_eq(must_eval(parse_filter("1 + null"), j), [Json::number(1.0)])
+  assert_eq(must_eval(parse_filter("null + null"), j), [Json::null()])
+  assert_eq(must_eval(parse_filter("true + null"), j), [Json::boolean(true)])
+  assert_eq(must_eval(parse_filter("null + [1]"), j), [
+    Json::array([Json::number(1.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("{\"a\":1} + null"), j), [
+    Json::object({ "a": Json::number(1.0) }),
   ])
 }
 
@@ -223,6 +265,53 @@ test "eval map" {
   assert_eq(must_eval(parse_filter("map(. + 1)"), j), [
     Json::array([Json::number(2.0), Json::number(3.0), Json::number(4.0)]),
   ])
+}
+
+///|
+test "eval map iter errors" {
+  guard (try? eval(parse_filter("map(. + 1)"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over number (1)" else {
+    fail("expected map number error")
+  }
+  guard (try? eval(parse_filter("map(. + 1)"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over null (null)" else {
+    fail("expected map null error")
+  }
+}
+
+///|
+test "eval map_values jq semantics" {
+  let obj = must_parse("{\"a\":1,\"b\":2}")
+  assert_eq(must_eval(parse_filter("map_values(select(. > 1))"), obj), [
+    Json::object({ "b": Json::number(2.0) }),
+  ])
+  assert_eq(must_eval(parse_filter("map_values((., . + 1))"), obj), [
+    Json::object({ "a": Json::number(1.0), "b": Json::number(2.0) }),
+  ])
+  let arr = must_parse("[1,2,3]")
+  assert_eq(must_eval(parse_filter("map_values(. + 1)"), arr), [
+    Json::array([Json::number(2.0), Json::number(3.0), Json::number(4.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("map_values(select(. > 1))"), arr), [
+    Json::array([Json::number(2.0), Json::number(3.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("map_values((., . + 1))"), arr), [
+    Json::array([Json::number(1.0), Json::number(2.0), Json::number(3.0)]),
+  ])
+}
+
+///|
+test "eval map_values iter errors" {
+  guard (try? eval(parse_filter("map_values(. + 1)"), must_parse("1")))
+    is Err(err) &&
+    err.to_string() == "Cannot iterate over number (1)" else {
+    fail("expected map_values number error")
+  }
+  guard (try? eval(parse_filter("map_values(. + 1)"), must_parse("null")))
+    is Err(err) &&
+    err.to_string() == "Cannot iterate over null (null)" else {
+    fail("expected map_values null error")
+  }
 }
 
 ///|
@@ -306,19 +395,103 @@ test "eval string contains/starts/ends" {
   assert_eq(must_eval(parse_filter("contains(\"ell\")"), j), [
     Json::boolean(true),
   ])
+  assert_eq(must_eval(parse_filter("contains((\"he\",\"zz\"))"), j), [
+    Json::boolean(true),
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("contains(empty)"), j), [])
   assert_eq(must_eval(parse_filter("startswith(\"he\")"), j), [
     Json::boolean(true),
   ])
+  assert_eq(must_eval(parse_filter("startswith((\"h\",\"x\"))"), j), [
+    Json::boolean(true),
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("startswith(empty)"), j), [])
   assert_eq(must_eval(parse_filter("endswith(\"lo\")"), j), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("endswith((\"o\",\"x\"))"), j), [
+    Json::boolean(true),
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("endswith(empty)"), j), [])
+}
+
+///|
+test "eval contains jq semantics" {
+  let array_input = must_parse("[1,{\"x\":2},3]")
+  assert_eq(must_eval(parse_filter("contains([1,3])"), array_input), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("contains([{\"x\":2}])"), array_input), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("contains([{\"x\":9}])"), array_input), [
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("contains(([],[3]))"), array_input), [
+    Json::boolean(true),
+    Json::boolean(true),
+  ])
+  let repeated_input = must_parse("[1]")
+  assert_eq(must_eval(parse_filter("contains([1,1])"), repeated_input), [
+    Json::boolean(true),
+  ])
+  let object_input = must_parse("{\"a\":1,\"b\":{\"c\":2,\"d\":3}}")
+  assert_eq(
+    must_eval(parse_filter("contains({\"b\":{\"c\":2}})"), object_input),
+    [Json::boolean(true)],
+  )
+  assert_eq(
+    must_eval(parse_filter("contains({\"b\":{\"c\":9}})"), object_input),
+    [Json::boolean(false)],
+  )
+  assert_eq(must_eval(parse_filter("contains({\"z\":1})"), object_input), [
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("contains(1)"), must_parse("1")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("contains(2)"), must_parse("1")), [
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("contains(true)"), must_parse("true")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("contains(null)"), must_parse("null")), [
     Json::boolean(true),
   ])
 }
 
 ///|
-test "eval array contains" {
-  let j = must_parse("[1,2,3]")
-  assert_eq(must_eval(parse_filter("contains(2)"), j), [Json::boolean(true)])
-  assert_eq(must_eval(parse_filter("contains(9)"), j), [Json::boolean(false)])
+test "eval contains/startswith/endswith type errors" {
+  let array_input = must_parse("[1,2,3]")
+  guard (try? eval(parse_filter("contains(2)"), array_input)) is Err(err) &&
+    err.to_string() ==
+    "array ([1,2,3]) and number (2) cannot have their containment checked" else {
+    fail("expected jq-compatible contains type error for array/number")
+  }
+  guard (try? eval(parse_filter("contains(false)"), must_parse("true")))
+    is Err(err) &&
+    err.to_string() ==
+    "boolean (true) and boolean (false) cannot have their containment checked" else {
+    fail("expected jq-compatible contains type error for boolean mismatch")
+  }
+  let s = must_parse("\"hello\"")
+  guard (try? eval(parse_filter("startswith(1)"), s)) is Err(err) &&
+    err.to_string() == "startswith() requires string inputs" else {
+    fail("expected startswith type error")
+  }
+  guard (try? eval(parse_filter("endswith(1)"), s)) is Err(err) &&
+    err.to_string() == "endswith() requires string inputs" else {
+    fail("expected endswith type error")
+  }
+  let n = must_parse("1")
+  guard (try? eval(parse_filter("startswith(\"1\")"), n)) is Err(err) &&
+    err.to_string() == "startswith() requires string inputs" else {
+    fail("expected startswith type error for non-string input")
+  }
 }
 
 ///|
