@@ -201,6 +201,84 @@ test "eval first/last/nth errors" {
 }
 
 ///|
+test "eval flatten compatibility" {
+  let nested = must_parse("[1,[2],[[3,[4]]],5]")
+  assert_eq(must_eval(parse_filter("flatten"), nested), [
+    Json::array([
+      Json::number(1.0),
+      Json::number(2.0),
+      Json::number(3.0),
+      Json::number(4.0),
+      Json::number(5.0),
+    ]),
+  ])
+  assert_eq(must_eval(parse_filter("flatten(1)"), nested), [
+    Json::array([
+      Json::number(1.0),
+      Json::number(2.0),
+      Json::array([Json::number(3.0), Json::array([Json::number(4.0)])]),
+      Json::number(5.0),
+    ]),
+  ])
+  assert_eq(must_eval(parse_filter("flatten(2)"), nested), [
+    Json::array([
+      Json::number(1.0),
+      Json::number(2.0),
+      Json::number(3.0),
+      Json::array([Json::number(4.0)]),
+      Json::number(5.0),
+    ]),
+  ])
+  assert_eq(must_eval(parse_filter("flatten(0)"), nested), [nested])
+  assert_eq(must_eval(parse_filter("flatten(0.1)"), nested), [
+    Json::array([
+      Json::number(1.0),
+      Json::number(2.0),
+      Json::number(3.0),
+      Json::number(4.0),
+      Json::number(5.0),
+    ]),
+  ])
+  assert_eq(must_eval(parse_filter("flatten((0,1))"), must_parse("[1,[2]]")), [
+    Json::array([Json::number(1.0), Json::array([Json::number(2.0)])]),
+    Json::array([Json::number(1.0), Json::number(2.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("flatten(empty)"), nested), [])
+}
+
+///|
+test "eval flatten errors" {
+  guard (try? eval(parse_filter("flatten"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over number (1)" else {
+    fail("expected flatten non-array iterate error")
+  }
+  guard (try? eval(parse_filter("flatten"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over null (null)" else {
+    fail("expected flatten null iterate error")
+  }
+  guard (try? eval(parse_filter("flatten(-1)"), must_parse("[1,[2]]")))
+    is Err(err) &&
+    err.to_string() == "flatten depth must not be negative" else {
+    fail("expected flatten negative depth error")
+  }
+  guard (try? eval(parse_filter("flatten(null)"), must_parse("[1,[2]]")))
+    is Err(err) &&
+    err.to_string() == "flatten depth must not be negative" else {
+    fail("expected flatten null depth error")
+  }
+  guard (try? eval(parse_filter("flatten(true)"), must_parse("[1,[2]]")))
+    is Err(err) &&
+    err.to_string() == "flatten depth must not be negative" else {
+    fail("expected flatten bool depth error")
+  }
+  guard (try? eval(parse_filter("flatten(\"x\")"), must_parse("[1,[2]]")))
+    is Err(err) &&
+    err.to_string() == "string (\"x\") and number (1) cannot be subtracted" else {
+    fail("expected flatten string depth error")
+  }
+}
+
+///|
 test "eval to_entries/from_entries/with_entries compatibility" {
   assert_eq(must_eval(parse_filter("to_entries"), must_parse("[10,20]")), [
     Json::array([

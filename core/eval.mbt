@@ -189,6 +189,82 @@ fn nth_on_input(input : Json, key : Json) -> Json raise EvalError {
 }
 
 ///|
+fn flatten_array_full(a : Array[Json]) -> Array[Json] {
+  let out = []
+  for v in a {
+    match v {
+      Array(inner) =>
+        for x in flatten_array_full(inner) {
+          out.push(x)
+        }
+      _ => out.push(v)
+    }
+  }
+  out
+}
+
+///|
+fn flatten_array_depth(a : Array[Json], depth : Int) -> Array[Json] {
+  if depth <= 0 {
+    return a
+  }
+  let out = []
+  for v in a {
+    match v {
+      Array(inner) =>
+        if depth == 1 {
+          for x in inner {
+            out.push(x)
+          }
+        } else {
+          for x in flatten_array_depth(inner, depth - 1) {
+            out.push(x)
+          }
+        }
+      _ => out.push(v)
+    }
+  }
+  out
+}
+
+///|
+fn flatten_default(input : Json) -> Json raise EvalError {
+  match input {
+    Array(a) => Json::array(flatten_array_full(a))
+    _ => raise TypeError("Cannot iterate over " + json_type_with_value(input))
+  }
+}
+
+///|
+fn flatten_with_depth(input : Json, depth : Json) -> Json raise EvalError {
+  match input {
+    Array(a) =>
+      match depth {
+        Number(n, _) =>
+          if n != n || n == @double.neg_infinity || n < 0.0 {
+            raise TypeError("flatten depth must not be negative")
+          } else if n == @double.infinity {
+            Json::array(flatten_array_full(a))
+          } else {
+            let d = n.to_int()
+            if d.to_double() == n {
+              Json::array(flatten_array_depth(a, d))
+            } else {
+              // jq behavior: non-integer positive depths flatten fully.
+              Json::array(flatten_array_full(a))
+            }
+          }
+        String(_) =>
+          raise TypeError(
+            json_type_with_value(depth) + " and number (1) cannot be subtracted",
+          )
+        _ => raise TypeError("flatten depth must not be negative")
+      }
+    _ => raise TypeError("Cannot iterate over " + json_type_with_value(input))
+  }
+}
+
+///|
 fn to_entries_json(input : Json) -> Json raise EvalError {
   match input {
     Object(o) => {
@@ -707,6 +783,7 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
       }
     "first" => [nth_on_input(input, Json::number(0.0))]
     "last" => [nth_on_input(input, Json::number(-1.0))]
+    "flatten" => [flatten_default(input)]
     "to_entries" => [to_entries_json(input)]
     "from_entries" => [from_entries_json(input)]
     "sort" =>
@@ -944,6 +1021,17 @@ fn eval_call(
         let out = []
         for key in keys {
           out.push(nth_on_input(input, key))
+        }
+        out
+      }
+    "flatten" =>
+      if args.length() != 1 {
+        raise UnknownFunction("flatten")
+      } else {
+        let depths = eval_with_env(args[0], input, env)
+        let out = []
+        for depth in depths {
+          out.push(flatten_with_depth(input, depth))
         }
         out
       }
