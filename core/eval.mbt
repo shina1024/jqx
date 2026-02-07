@@ -189,6 +189,84 @@ fn nth_on_input(input : Json, key : Json) -> Json raise EvalError {
 }
 
 ///|
+fn to_entries_json(input : Json) -> Json raise EvalError {
+  match input {
+    Object(o) => {
+      let out = []
+      for kv in o.iter() {
+        out.push(Json::object({ "key": Json::string(kv.0), "value": kv.1 }))
+      }
+      Json::array(out)
+    }
+    Array(a) => {
+      let out = []
+      for i in 0..<a.length() {
+        out.push(
+          Json::object({ "key": Json::number(i.to_double()), "value": a[i] }),
+        )
+      }
+      Json::array(out)
+    }
+    _ => raise TypeError(json_type_with_value(input) + " has no keys")
+  }
+}
+
+///|
+fn entry_key_value(entry : Json) -> (Json, Json) raise EvalError {
+  match entry {
+    Object(o) => {
+      let key = match o.get("key") {
+        Some(v) => v
+        None =>
+          match o.get("Key") {
+            Some(v) => v
+            None =>
+              match o.get("name") {
+                Some(v) => v
+                None =>
+                  match o.get("Name") {
+                    Some(v) => v
+                    None => Json::null()
+                  }
+              }
+          }
+      }
+      let value = match o.get("value") {
+        Some(v) => v
+        None =>
+          match o.get("Value") {
+            Some(v) => v
+            None => Json::null()
+          }
+      }
+      (key, value)
+    }
+    _ => index_type_error(entry, Json::string("key"))
+  }
+}
+
+///|
+fn from_entries_json(input : Json) -> Json raise EvalError {
+  match input {
+    Array(a) => {
+      let out = Map::new()
+      for entry in a {
+        let (key, value) = entry_key_value(entry)
+        match key {
+          String(name) => out[name] = value
+          _ =>
+            raise TypeError(
+              "Cannot use " + json_type_with_value(key) + " as object key",
+            )
+        }
+      }
+      Json::object(out)
+    }
+    _ => raise TypeError("Cannot iterate over " + json_type_with_value(input))
+  }
+}
+
+///|
 pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
   let env = Map::new()
   eval_with_env(filter, input, env)
@@ -629,6 +707,8 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
       }
     "first" => [nth_on_input(input, Json::number(0.0))]
     "last" => [nth_on_input(input, Json::number(-1.0))]
+    "to_entries" => [to_entries_json(input)]
+    "from_entries" => [from_entries_json(input)]
     "sort" =>
       match input {
         Array(a) => [Json::array(sort_json_array(a))]
@@ -866,6 +946,23 @@ fn eval_call(
           out.push(nth_on_input(input, key))
         }
         out
+      }
+    "with_entries" =>
+      if args.length() != 1 {
+        raise UnknownFunction("with_entries")
+      } else {
+        match to_entries_json(input) {
+          Array(entries) => {
+            let mapped = []
+            for entry in entries {
+              for mapped_entry in eval_with_env(args[0], entry, env) {
+                mapped.push(mapped_entry)
+              }
+            }
+            [from_entries_json(Json::array(mapped))]
+          }
+          _ => abort("unreachable")
+        }
       }
     "contains" =>
       if args.length() != 1 {

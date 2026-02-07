@@ -201,6 +201,86 @@ test "eval first/last/nth errors" {
 }
 
 ///|
+test "eval to_entries/from_entries/with_entries compatibility" {
+  assert_eq(must_eval(parse_filter("to_entries"), must_parse("[10,20]")), [
+    Json::array([
+      Json::object({ "key": Json::number(0.0), "value": Json::number(10.0) }),
+      Json::object({ "key": Json::number(1.0), "value": Json::number(20.0) }),
+    ]),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("from_entries"),
+      must_parse(
+        "[{\"key\":\"a\",\"value\":1},{\"Key\":\"b\",\"Value\":2},{\"name\":\"c\",\"value\":3},{\"Name\":\"d\",\"Value\":4}]",
+      ),
+    ),
+    [
+      Json::object({
+        "a": Json::number(1.0),
+        "b": Json::number(2.0),
+        "c": Json::number(3.0),
+        "d": Json::number(4.0),
+      }),
+    ],
+  )
+  assert_eq(
+    must_eval(parse_filter("from_entries"), must_parse("[{\"key\":\"a\"}]")),
+    [Json::object({ "a": Json::null() })],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("with_entries({key: (.key + \"_x\"), value: (.value + 10)})"),
+      must_parse("{\"a\":1}"),
+    ),
+    [Json::object({ "a_x": Json::number(11.0) })],
+  )
+  assert_eq(
+    must_eval(parse_filter("with_entries(empty)"), must_parse("{\"a\":1}")),
+    [Json::object(Map::new())],
+  )
+}
+
+///|
+test "eval to_entries/from_entries/with_entries errors" {
+  guard (try? eval(parse_filter("to_entries"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "number (1) has no keys" else {
+    fail("expected to_entries no-keys error")
+  }
+  guard (try? eval(parse_filter("from_entries"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over number (1)" else {
+    fail("expected from_entries iterate error")
+  }
+  guard (try? eval(parse_filter("from_entries"), must_parse("[1]"))) is Err(err) &&
+    err.to_string() == "Cannot index number with string \"key\"" else {
+    fail("expected from_entries entry index error")
+  }
+  guard (try? eval(parse_filter("from_entries"), must_parse("[{\"value\":1}]")))
+    is Err(err) &&
+    err.to_string() == "Cannot use null (null) as object key" else {
+    fail("expected from_entries null key error")
+  }
+  guard (try? eval(
+      parse_filter("from_entries"),
+      must_parse("[{\"key\":1,\"value\":2}]"),
+    ))
+    is Err(err) &&
+    err.to_string() == "Cannot use number (1) as object key" else {
+    fail("expected from_entries number key error")
+  }
+  guard (try? eval(parse_filter("with_entries(.)"), must_parse("1")))
+    is Err(err) &&
+    err.to_string() == "number (1) has no keys" else {
+    fail("expected with_entries no-keys error")
+  }
+  guard (try? eval(parse_filter("with_entries(.)"), must_parse("[10,20]")))
+    is Err(err) &&
+    err.to_string() == "Cannot use number (0) as object key" else {
+    fail("expected with_entries array key type error")
+  }
+}
+
+///|
 test "eval keys compatibility errors and keys_unsorted" {
   let arr = must_parse("[10,20]")
   assert_eq(must_eval(parse_filter("keys_unsorted"), arr), [
