@@ -544,6 +544,25 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
         Array(_) | Object(_) => []
         _ => [input]
       }
+    "add" =>
+      match input {
+        Array(a) => {
+          let mut acc = Json::null()
+          for v in a {
+            acc = json_add_pair(acc, v)
+          }
+          [acc]
+        }
+        Object(o) => {
+          let mut acc = Json::null()
+          for kv in o.iter() {
+            acc = json_add_pair(acc, kv.1)
+          }
+          [acc]
+        }
+        _ =>
+          raise TypeError("Cannot iterate over " + json_type_with_value(input))
+      }
     _ => raise UnknownFunction(name)
   }
 }
@@ -966,39 +985,44 @@ fn eval_add(
     let b = r[j]
     for i in 0..<l.length() {
       let a = l[i]
-      match (a, b) {
-        (JNull, x) => out.push(x)
-        (x, JNull) => out.push(x)
-        (Number(x, _), Number(y, _)) => out.push(Json::number(x + y))
-        (String(x), String(y)) => out.push(Json::string(x + y))
-        (Array(x), Array(y)) => {
-          let merged = x.copy()
-          for v in y {
-            merged.push(v)
-          }
-          out.push(Json::array(merged))
-        }
-        (Object(x), Object(y)) => {
-          let merged = Map::new()
-          for kv in x.iter() {
-            merged[kv.0] = kv.1
-          }
-          for kv in y.iter() {
-            merged[kv.0] = kv.1
-          }
-          out.push(Json::object(merged))
-        }
-        _ =>
-          raise TypeError(
-            "Cannot apply + to " +
-            json_type_with_value(a) +
-            " and " +
-            json_type_with_value(b),
-          )
-      }
+      out.push(json_add_pair(a, b))
     }
   }
   out
+}
+
+///|
+fn json_add_pair(a : Json, b : Json) -> Json raise EvalError {
+  match (a, b) {
+    (JNull, x) => x
+    (x, JNull) => x
+    (Number(x, _), Number(y, _)) => Json::number(x + y)
+    (String(x), String(y)) => Json::string(x + y)
+    (Array(x), Array(y)) => {
+      let merged = x.copy()
+      for v in y {
+        merged.push(v)
+      }
+      Json::array(merged)
+    }
+    (Object(x), Object(y)) => {
+      let merged = Map::new()
+      for kv in x.iter() {
+        merged[kv.0] = kv.1
+      }
+      for kv in y.iter() {
+        merged[kv.0] = kv.1
+      }
+      Json::object(merged)
+    }
+    _ =>
+      raise TypeError(
+        json_type_with_value(a) +
+        " and " +
+        json_type_with_value(b) +
+        " cannot be added",
+      )
+  }
 }
 
 ///|

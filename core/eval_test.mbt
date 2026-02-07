@@ -174,6 +174,53 @@ test "eval jq type-filter builtins" {
 }
 
 ///|
+test "eval add builtin compatibility" {
+  assert_eq(must_eval(parse_filter("add"), must_parse("[1,2,3]")), [
+    Json::number(6.0),
+  ])
+  assert_eq(must_eval(parse_filter("add"), must_parse("[]")), [Json::null()])
+  assert_eq(must_eval(parse_filter("add"), must_parse("{}")), [Json::null()])
+  assert_eq(must_eval(parse_filter("add"), must_parse("{\"a\":1,\"b\":2}")), [
+    Json::number(3.0),
+  ])
+  assert_eq(must_eval(parse_filter("add"), must_parse("[\"a\",\"b\"]")), [
+    Json::string("ab"),
+  ])
+  assert_eq(must_eval(parse_filter("add"), must_parse("[[1],[2]]")), [
+    Json::array([Json::number(1.0), Json::number(2.0)]),
+  ])
+  assert_eq(
+    must_eval(parse_filter("add"), must_parse("[{\"a\":1},{\"b\":2}]")),
+    [Json::object({ "a": Json::number(1.0), "b": Json::number(2.0) })],
+  )
+  assert_eq(must_eval(parse_filter("add"), must_parse("[null,1]")), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("add"), must_parse("[1,null]")), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("add"), must_parse("[null,null]")), [
+    Json::null(),
+  ])
+}
+
+///|
+test "eval add builtin errors" {
+  guard (try? eval(parse_filter("add"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over null (null)" else {
+    fail("expected add null iterate error")
+  }
+  guard (try? eval(parse_filter("add"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over number (1)" else {
+    fail("expected add number iterate error")
+  }
+  guard (try? eval(parse_filter("add"), must_parse("[true,false]"))) is Err(err) &&
+    err.to_string() == "boolean (true) and boolean (false) cannot be added" else {
+    fail("expected add type mismatch error")
+  }
+}
+
+///|
 test "eval select" {
   let j = must_parse("{\"a\":1,\"b\":null}")
   let f1 = parse_filter("select(.a)")
