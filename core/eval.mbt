@@ -189,6 +189,50 @@ fn nth_on_input(input : Json, key : Json) -> Json raise EvalError {
 }
 
 ///|
+fn getpath_on_input(input : Json, path : Json) -> Json raise EvalError {
+  match path {
+    Array(parts) => {
+      let mut current = input
+      for key in parts {
+        let cur = current
+        current = match cur {
+          Object(o) =>
+            match key {
+              String(name) =>
+                match o.get(name) {
+                  Some(v) => v
+                  None => Json::null()
+                }
+              _ => index_type_error(cur, key)
+            }
+          Array(a) =>
+            match key {
+              Number(n, _) => {
+                let i = n.to_int()
+                let idx = if i < 0 { a.length() + i } else { i }
+                if idx >= 0 && idx < a.length() {
+                  a[idx]
+                } else {
+                  Json::null()
+                }
+              }
+              _ => index_type_error(cur, key)
+            }
+          JNull =>
+            match key {
+              Number(_, _) | String(_) | Object(_) => Json::null()
+              _ => index_type_error(cur, key)
+            }
+          _ => index_type_error(cur, key)
+        }
+      }
+      current
+    }
+    _ => raise TypeError("Path must be specified as an array")
+  }
+}
+
+///|
 fn collection_values(input : Json) -> Array[Json] raise EvalError {
   match input {
     Array(a) => a
@@ -1545,6 +1589,17 @@ fn eval_call(
                 json_type_with_value(input) + " cannot be searched from",
               )
           }
+        }
+        out
+      }
+    "getpath" =>
+      if args.length() != 1 {
+        raise UnknownFunction("getpath")
+      } else {
+        let paths = eval_with_env(args[0], input, env)
+        let out = []
+        for path in paths {
+          out.push(getpath_on_input(input, path))
         }
         out
       }

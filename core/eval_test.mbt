@@ -881,6 +881,72 @@ test "eval bsearch errors" {
 }
 
 ///|
+test "eval getpath compatibility" {
+  let j = must_parse("{\"a\":[1,2],\"b\":{\"c\":3}}")
+  assert_eq(must_eval(parse_filter("getpath([\"a\",1])"), j), [
+    Json::number(2.0),
+  ])
+  assert_eq(must_eval(parse_filter("getpath([\"b\",\"c\"])"), j), [
+    Json::number(3.0),
+  ])
+  assert_eq(must_eval(parse_filter("getpath([\"a\",9])"), j), [Json::null()])
+  assert_eq(must_eval(parse_filter("getpath([\"x\"])"), j), [Json::null()])
+  assert_eq(must_eval(parse_filter("getpath(( [\"a\",0], [\"a\",1] ))"), j), [
+    Json::number(1.0),
+    Json::number(2.0),
+  ])
+  assert_eq(must_eval(parse_filter("getpath([])"), j), [j])
+  assert_eq(must_eval(parse_filter("getpath(empty)"), j), [])
+  assert_eq(
+    must_eval(parse_filter("getpath([1.9])"), must_parse("[10,20,30]")),
+    [Json::number(20.0)],
+  )
+  assert_eq(must_eval(parse_filter("getpath([\"a\"])"), must_parse("null")), [
+    Json::null(),
+  ])
+  assert_eq(must_eval(parse_filter("getpath([0])"), must_parse("null")), [
+    Json::null(),
+  ])
+  assert_eq(must_eval(parse_filter("getpath([{}])"), must_parse("null")), [
+    Json::null(),
+  ])
+}
+
+///|
+test "eval getpath errors" {
+  guard (try? eval(parse_filter("getpath(\"a\")"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Path must be specified as an array" else {
+    fail("expected getpath path-array type error")
+  }
+  guard (try? eval(parse_filter("getpath([\"a\"])"), must_parse("1")))
+    is Err(err) &&
+    err.to_string() == "Cannot index number with string \"a\"" else {
+    fail("expected getpath number string-index error")
+  }
+  guard (try? eval(parse_filter("getpath([0])"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Cannot index object with number" else {
+    fail("expected getpath object number-index error")
+  }
+  guard (try? eval(parse_filter("getpath([\"a\"])"), must_parse("[1,2]")))
+    is Err(err) &&
+    err.to_string() == "Cannot index array with string \"a\"" else {
+    fail("expected getpath array string-index error")
+  }
+  guard (try? eval(parse_filter("getpath([true])"), must_parse("null")))
+    is Err(err) &&
+    err.to_string() == "Cannot index null with boolean" else {
+    fail("expected getpath null boolean-index error")
+  }
+  guard (try? eval(parse_filter("getpath([[]])"), must_parse("null")))
+    is Err(err) &&
+    err.to_string() == "Cannot index null with array" else {
+    fail("expected getpath null array-index error")
+  }
+}
+
+///|
 test "eval any/all compatibility" {
   assert_eq(must_eval(parse_filter("any"), must_parse("[true,false]")), [
     Json::boolean(true),
