@@ -616,6 +616,16 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
         String(s) => [Json::array(explode_string(s))]
         _ => raise TypeError("explode input must be a string")
       }
+    "ascii_upcase" =>
+      match input {
+        String(s) => [Json::string(ascii_upcase_string(s))]
+        _ => raise TypeError("explode input must be a string")
+      }
+    "ascii_downcase" =>
+      match input {
+        String(s) => [Json::string(ascii_downcase_string(s))]
+        _ => raise TypeError("explode input must be a string")
+      }
     "implode" =>
       match input {
         Array(a) => [Json::string(implode_array(a))]
@@ -840,6 +850,52 @@ fn eval_call(
           match (input, needle) {
             (String(h), String(n)) => out.push(Json::boolean(h.has_suffix(n)))
             _ => raise TypeError("endswith() requires string inputs")
+          }
+        }
+        out
+      }
+    "ltrimstr" =>
+      if args.length() != 1 {
+        raise UnknownFunction("ltrimstr")
+      } else {
+        let needles = eval_with_env(args[0], input, env)
+        let out = []
+        for needle in needles {
+          match (input, needle) {
+            (String(h), String(n)) =>
+              if h.has_prefix(n) {
+                out.push(
+                  Json::string(h.view(start_offset=n.length()).to_string()),
+                )
+              } else {
+                out.push(Json::string(h))
+              }
+            _ => raise TypeError("startswith() requires string inputs")
+          }
+        }
+        out
+      }
+    "rtrimstr" =>
+      if args.length() != 1 {
+        raise UnknownFunction("rtrimstr")
+      } else {
+        let needles = eval_with_env(args[0], input, env)
+        let out = []
+        for needle in needles {
+          match (input, needle) {
+            (String(h), String(n)) =>
+              if h.has_suffix(n) {
+                out.push(
+                  Json::string(
+                    h
+                    .view(start_offset=0, end_offset=h.length() - n.length())
+                    .to_string(),
+                  ),
+                )
+              } else {
+                out.push(Json::string(h))
+              }
+            _ => raise TypeError("startswith() requires string inputs")
           }
         }
         out
@@ -1331,6 +1387,34 @@ fn codepoint_or_replacement(code : Int) -> Char {
   } else {
     code.unsafe_to_char()
   }
+}
+
+///|
+fn ascii_upcase_string(s : String) -> String {
+  let buf = StringBuilder::new()
+  for ch in s {
+    let code = ch.to_int()
+    if code >= 'a'.to_int() && code <= 'z'.to_int() {
+      buf.write_char((code - 32).unsafe_to_char())
+    } else {
+      buf.write_char(ch)
+    }
+  }
+  buf.to_string()
+}
+
+///|
+fn ascii_downcase_string(s : String) -> String {
+  let buf = StringBuilder::new()
+  for ch in s {
+    let code = ch.to_int()
+    if code >= 'A'.to_int() && code <= 'Z'.to_int() {
+      buf.write_char((code + 32).unsafe_to_char())
+    } else {
+      buf.write_char(ch)
+    }
+  }
+  buf.to_string()
 }
 
 ///|

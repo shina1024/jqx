@@ -868,6 +868,71 @@ test "eval string contains/starts/ends" {
 }
 
 ///|
+test "eval trimstr compatibility" {
+  let j = must_parse("\"foobar\"")
+  assert_eq(must_eval(parse_filter("ltrimstr(\"foo\")"), j), [
+    Json::string("bar"),
+  ])
+  assert_eq(must_eval(parse_filter("ltrimstr(\"bar\")"), j), [
+    Json::string("foobar"),
+  ])
+  assert_eq(must_eval(parse_filter("rtrimstr(\"bar\")"), j), [
+    Json::string("foo"),
+  ])
+  assert_eq(must_eval(parse_filter("rtrimstr(\"foo\")"), j), [
+    Json::string("foobar"),
+  ])
+  assert_eq(must_eval(parse_filter("ltrimstr((\"foo\",\"bar\"))"), j), [
+    Json::string("bar"),
+    Json::string("foobar"),
+  ])
+  assert_eq(must_eval(parse_filter("ltrimstr(empty)"), j), [])
+}
+
+///|
+test "eval trimstr errors" {
+  guard (try? eval(parse_filter("ltrimstr(\"1\")"), must_parse("1")))
+    is Err(err) &&
+    err.to_string() == "startswith() requires string inputs" else {
+    fail("expected ltrimstr input type error")
+  }
+  guard (try? eval(parse_filter("ltrimstr(1)"), must_parse("\"x\"")))
+    is Err(err) &&
+    err.to_string() == "startswith() requires string inputs" else {
+    fail("expected ltrimstr separator type error")
+  }
+  guard (try? eval(parse_filter("rtrimstr(1)"), must_parse("\"x\"")))
+    is Err(err) &&
+    err.to_string() == "startswith() requires string inputs" else {
+    fail("expected rtrimstr separator type error")
+  }
+}
+
+///|
+test "eval ascii case compatibility" {
+  assert_eq(
+    must_eval(parse_filter("ascii_downcase"), must_parse("\"AbC_é\"")),
+    [Json::string("abc_é")],
+  )
+  assert_eq(must_eval(parse_filter("ascii_upcase"), must_parse("\"AbC_é\"")), [
+    Json::string("ABC_é"),
+  ])
+}
+
+///|
+test "eval ascii case errors" {
+  guard (try? eval(parse_filter("ascii_upcase"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "explode input must be a string" else {
+    fail("expected ascii_upcase type error")
+  }
+  guard (try? eval(parse_filter("ascii_downcase"), must_parse("null")))
+    is Err(err) &&
+    err.to_string() == "explode input must be a string" else {
+    fail("expected ascii_downcase type error")
+  }
+}
+
+///|
 test "eval contains jq semantics" {
   let array_input = must_parse("[1,{\"x\":2},3]")
   assert_eq(must_eval(parse_filter("contains([1,3])"), array_input), [
