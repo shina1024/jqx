@@ -65,7 +65,15 @@ fn eval_with_env(
             Some(v) => [v]
             None => [Json::null()]
           }
-        _ => [Json::null()]
+        JNull => [Json::null()]
+        _ =>
+          raise TypeError(
+            "Cannot index " +
+            json_type_name(input) +
+            " with string \"" +
+            name +
+            "\"",
+          )
       }
     FieldOpt(name) =>
       match input {
@@ -74,7 +82,8 @@ fn eval_with_env(
             Some(v) => [v]
             None => [Json::null()]
           }
-        _ => [Json::null()]
+        JNull => [Json::null()]
+        _ => []
       }
     Index(i) =>
       match input {
@@ -86,7 +95,11 @@ fn eval_with_env(
             [Json::null()]
           }
         }
-        _ => [Json::null()]
+        JNull => [Json::null()]
+        _ =>
+          raise TypeError(
+            "Cannot index " + json_type_name(input) + " with number",
+          )
       }
     IndexOpt(i) =>
       match input {
@@ -98,8 +111,11 @@ fn eval_with_env(
             [Json::null()]
           }
         }
-        _ => [Json::null()]
+        JNull => [Json::null()]
+        _ => []
       }
+    Slice(start, end) => eval_slice(start, end, input, optional=false)
+    SliceOpt(start, end) => eval_slice(start, end, input, optional=true)
     Iter =>
       match input {
         Array(a) => a
@@ -672,4 +688,76 @@ fn eval_add(
     }
   }
   out
+}
+
+///|
+fn clamp_slice_index(i : Int, len : Int) -> Int {
+  if i < 0 {
+    0
+  } else if i > len {
+    len
+  } else {
+    i
+  }
+}
+
+///|
+fn normalize_slice_index(i : Int?, len : Int, default : Int) -> Int {
+  match i {
+    Some(v) => {
+      let idx = if v < 0 { len + v } else { v }
+      clamp_slice_index(idx, len)
+    }
+    None => default
+  }
+}
+
+///|
+fn eval_slice_array(a : Array[Json], start : Int?, end : Int?) -> Array[Json] {
+  let len = a.length()
+  let lo = normalize_slice_index(start, len, 0)
+  let hi = normalize_slice_index(end, len, len)
+  if hi <= lo {
+    []
+  } else {
+    let out = []
+    for i in lo..<hi {
+      out.push(a[i])
+    }
+    out
+  }
+}
+
+///|
+fn eval_slice_string(s : String, start : Int?, end : Int?) -> String {
+  let len = s.length()
+  let lo = normalize_slice_index(start, len, 0)
+  let hi = normalize_slice_index(end, len, len)
+  if hi <= lo {
+    ""
+  } else {
+    s.view(start_offset=lo, end_offset=hi).to_string()
+  }
+}
+
+///|
+fn eval_slice(
+  start : Int?,
+  end : Int?,
+  input : Json,
+  optional~ : Bool,
+) -> Array[Json] raise EvalError {
+  match input {
+    Array(a) => [Json::array(eval_slice_array(a, start, end))]
+    String(s) => [Json::string(eval_slice_string(s, start, end))]
+    JNull => [Json::null()]
+    _ =>
+      if optional {
+        []
+      } else {
+        raise TypeError(
+          "Cannot index " + json_type_name(input) + " with object",
+        )
+      }
+  }
 }

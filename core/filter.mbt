@@ -21,6 +21,8 @@ pub enum Filter {
   FieldOpt(String)
   Index(Int)
   IndexOpt(Int)
+  Slice(Int?, Int?)
+  SliceOpt(Int?, Int?)
   Iter
   IterOpt
   Literal(Json)
@@ -75,6 +77,16 @@ pub fn Filter::index(i : Int) -> Filter {
 ///|
 pub fn Filter::index_opt(i : Int) -> Filter {
   IndexOpt(i)
+}
+
+///|
+pub fn Filter::slice(start : Int?, end : Int?) -> Filter {
+  Slice(start, end)
+}
+
+///|
+pub fn Filter::slice_opt(start : Int?, end : Int?) -> Filter {
+  SliceOpt(start, end)
 }
 
 ///|

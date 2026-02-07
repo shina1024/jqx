@@ -44,6 +44,8 @@ pub enum Filter {
   FieldOpt(String)
   Index(Int)
   IndexOpt(Int)
+  Slice(Int?, Int?)
+  SliceOpt(Int?, Int?)
   Iter
   IterOpt
   Literal(Json)
@@ -104,6 +106,8 @@ pub fn Filter::not(Self) -> Self
 pub fn Filter::or_(Self, Self) -> Self
 pub fn Filter::pipe(Self, Self) -> Self
 pub fn Filter::reduce(Self, String, Self, Self) -> Self
+pub fn Filter::slice(Int?, Int?) -> Self
+pub fn Filter::slice_opt(Int?, Int?) -> Self
 pub fn Filter::sub(Self, Self) -> Self
 pub fn Filter::try_(Self) -> Self
 pub fn Filter::try_catch(Self, Self) -> Self

@@ -30,6 +30,38 @@ test "eval field and missing field" {
 }
 
 ///|
+test "eval field/index type errors and optional suppression" {
+  let number_json = must_parse("1")
+  let array_json = must_parse("[1,2]")
+  let object_json = must_parse("{\"a\":1}")
+  let null_json = must_parse("null")
+  guard (try? eval(parse_filter(".foo"), number_json)) is Err(err) &&
+    err.to_string() == "Cannot index number with string \"foo\"" else {
+    fail("expected type error for number .foo")
+  }
+  guard (try? eval(parse_filter(".foo"), array_json)) is Err(err) &&
+    err.to_string() == "Cannot index array with string \"foo\"" else {
+    fail("expected type error for array .foo")
+  }
+  guard (try? eval(parse_filter(".[0]"), number_json)) is Err(err) &&
+    err.to_string() == "Cannot index number with number" else {
+    fail("expected type error for number .[0]")
+  }
+  guard (try? eval(parse_filter(".[0]"), object_json)) is Err(err) &&
+    err.to_string() == "Cannot index object with number" else {
+    fail("expected type error for object .[0]")
+  }
+  assert_eq(must_eval(parse_filter(".foo?"), number_json), [])
+  assert_eq(must_eval(parse_filter(".foo?"), array_json), [])
+  assert_eq(must_eval(parse_filter(".[0]?"), number_json), [])
+  assert_eq(must_eval(parse_filter(".[0]?"), object_json), [])
+  assert_eq(must_eval(parse_filter(".foo"), null_json), [Json::null()])
+  assert_eq(must_eval(parse_filter(".foo?"), null_json), [Json::null()])
+  assert_eq(must_eval(parse_filter(".[0]"), null_json), [Json::null()])
+  assert_eq(must_eval(parse_filter(".[0]?"), null_json), [Json::null()])
+}
+
+///|
 test "eval index and iter" {
   let j = must_parse("[1,2,3]")
   let f1 = parse_filter(".[1]")
@@ -52,8 +84,8 @@ test "eval optional access" {
   ])
   let j2 = must_parse("1")
   assert_eq(must_eval(parse_filter(".[]?"), j2), [])
-  assert_eq(must_eval(parse_filter(".foo?"), j2), [Json::null()])
-  assert_eq(must_eval(parse_filter(".[0]?"), j2), [Json::null()])
+  assert_eq(must_eval(parse_filter(".foo?"), j2), [])
+  assert_eq(must_eval(parse_filter(".[0]?"), j2), [])
 }
 
 ///|
@@ -205,7 +237,7 @@ test "eval as and variable" {
 test "eval try" {
   let j = must_parse("{\"a\":\"hi\"}")
   assert_eq(must_eval(parse_filter("(.a + 1)?"), j), [])
-  assert_eq(must_eval(parse_filter("(.a | .b)?"), j), [Json::null()])
+  assert_eq(must_eval(parse_filter("(.a | .b)?"), j), [])
 }
 
 ///|
@@ -304,6 +336,37 @@ test "eval index negative" {
   assert_eq(must_eval(parse_filter(".[-1]"), j), [Json::number(2.0)])
   assert_eq(must_eval(parse_filter(".[-1]?"), j), [Json::number(2.0)])
   assert_eq(must_eval(parse_filter(".[-3]"), j), [Json::null()])
+}
+
+///|
+test "eval slice compatibility" {
+  let arr = must_parse("[1,2,3]")
+  assert_eq(must_eval(parse_filter(".[1:2]"), arr), [
+    Json::array([Json::number(2.0)]),
+  ])
+  assert_eq(must_eval(parse_filter(".[1:9]"), arr), [
+    Json::array([Json::number(2.0), Json::number(3.0)]),
+  ])
+  assert_eq(must_eval(parse_filter(".[-2:]"), arr), [
+    Json::array([Json::number(2.0), Json::number(3.0)]),
+  ])
+  assert_eq(must_eval(parse_filter(".[:2]"), arr), [
+    Json::array([Json::number(1.0), Json::number(2.0)]),
+  ])
+  let s = must_parse("\"abcd\"")
+  assert_eq(must_eval(parse_filter(".[1:3]"), s), [Json::string("bc")])
+  assert_eq(must_eval(parse_filter(".[-2:]"), s), [Json::string("cd")])
+  assert_eq(must_eval(parse_filter(".[:2]"), s), [Json::string("ab")])
+  assert_eq(must_eval(parse_filter(".[2:2]"), s), [Json::string("")])
+  let n = must_parse("null")
+  assert_eq(must_eval(parse_filter(".[1:2]"), n), [Json::null()])
+  assert_eq(must_eval(parse_filter(".[1:2]?"), n), [Json::null()])
+  let num = must_parse("1")
+  guard (try? eval(parse_filter(".[1:2]"), num)) is Err(err) &&
+    err.to_string() == "Cannot index number with object" else {
+    fail("expected type error for number slice")
+  }
+  assert_eq(must_eval(parse_filter(".[1:2]?"), num), [])
 }
 
 ///|

@@ -200,6 +200,18 @@ fn FilterCursor::parse_int(ctx : FilterCursor) -> Int raise FilterError {
 }
 
 ///|
+fn FilterCursor::parse_optional_int(
+  ctx : FilterCursor,
+) -> Int? raise FilterError {
+  ctx.skip_ws()
+  match ctx.peek_char() {
+    Some('-') => Some(ctx.parse_int())
+    Some(c) => if c is ('0'..='9') { Some(ctx.parse_int()) } else { None }
+    None => None
+  }
+}
+
+///|
 fn FilterCursor::parse_string_literal(
   ctx : FilterCursor,
 ) -> String raise FilterError {
@@ -351,10 +363,27 @@ fn FilterCursor::parse_dot_suffix(
           Filter::field(name)
         }
         _ => {
-          let idx = ctx.parse_int()
+          let start = ctx.parse_optional_int()
           ctx.skip_ws()
-          ctx.expect_char(']')
-          Filter::index(idx)
+          if ctx.peek_char() is Some(':') {
+            ctx.read_char() |> ignore
+            ctx.skip_ws()
+            let end = ctx.parse_optional_int()
+            ctx.skip_ws()
+            if start is None && end is None {
+              ctx.invalid_char()
+            }
+            ctx.expect_char(']')
+            Filter::slice(start, end)
+          } else {
+            match start {
+              Some(idx) => {
+                ctx.expect_char(']')
+                Filter::index(idx)
+              }
+              None => ctx.invalid_char()
+            }
+          }
         }
       }
     }
@@ -373,6 +402,7 @@ fn FilterCursor::parse_dot_suffix(
       match base {
         Field(name) => Filter::field_opt(name)
         Index(i) => Filter::index_opt(i)
+        Slice(start, end) => Filter::slice_opt(start, end)
         Iter => Filter::iter_opt()
         _ => base
       }

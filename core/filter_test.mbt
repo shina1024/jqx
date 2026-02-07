@@ -22,6 +22,27 @@ test "parse index" {
 }
 
 ///|
+test "parse slice" {
+  inspect(
+    parse_filter(".[1:3]"),
+    content="Pipe(Identity, Slice(Some(1), Some(3)))",
+  )
+  inspect(parse_filter(".[:2]"), content="Pipe(Identity, Slice(None, Some(2)))")
+  inspect(parse_filter(".[1:]"), content="Pipe(Identity, Slice(Some(1), None))")
+  inspect(
+    parse_filter(".[1:3]?"),
+    content="Pipe(Identity, SliceOpt(Some(1), Some(3)))",
+  )
+}
+
+///|
+test "parse invalid empty slice" {
+  guard (try? parse_filter(".[:]")) is Err(_) else {
+    fail("expected parse error for empty slice")
+  }
+}
+
+///|
 test "parse iter" {
   inspect(parse_filter(".[]"), content="Pipe(Identity, Iter)")
 }
