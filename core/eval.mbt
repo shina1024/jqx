@@ -95,6 +95,51 @@ fn contains_match(haystack : Json, needle : Json) -> Bool {
 }
 
 ///|
+fn has_key(collection : Json, key : Json) -> Bool raise EvalError {
+  match collection {
+    JNull => false
+    Object(o) =>
+      match key {
+        String(name) => o.contains(name)
+        _ =>
+          raise TypeError(
+            "Cannot check whether " +
+            json_type_name(collection) +
+            " has a " +
+            json_type_name(key) +
+            " key",
+          )
+      }
+    Array(a) =>
+      match key {
+        Number(n, _) =>
+          if n == @double.infinity || n == @double.neg_infinity || n != n {
+            false
+          } else {
+            let idx = n.to_int()
+            idx >= 0 && idx < a.length()
+          }
+        _ =>
+          raise TypeError(
+            "Cannot check whether " +
+            json_type_name(collection) +
+            " has a " +
+            json_type_name(key) +
+            " key",
+          )
+      }
+    _ =>
+      raise TypeError(
+        "Cannot check whether " +
+        json_type_name(collection) +
+        " has a " +
+        json_type_name(key) +
+        " key",
+      )
+  }
+}
+
+///|
 pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
   let env = Map::new()
   eval_with_env(filter, input, env)
@@ -454,6 +499,51 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
         _ =>
           raise TypeError("Cannot get keys of " + json_type_with_value(input))
       }
+    "values" =>
+      match input {
+        JNull => []
+        _ => [input]
+      }
+    "nulls" =>
+      match input {
+        JNull => [input]
+        _ => []
+      }
+    "booleans" =>
+      match input {
+        JTrue | JFalse => [input]
+        _ => []
+      }
+    "numbers" =>
+      match input {
+        Number(_, _) => [input]
+        _ => []
+      }
+    "strings" =>
+      match input {
+        String(_) => [input]
+        _ => []
+      }
+    "arrays" =>
+      match input {
+        Array(_) => [input]
+        _ => []
+      }
+    "objects" =>
+      match input {
+        Object(_) => [input]
+        _ => []
+      }
+    "iterables" =>
+      match input {
+        Array(_) | Object(_) => [input]
+        _ => []
+      }
+    "scalars" =>
+      match input {
+        Array(_) | Object(_) => []
+        _ => [input]
+      }
     _ => raise UnknownFunction(name)
   }
 }
@@ -582,6 +672,30 @@ fn eval_call(
         }
         out
       }
+    "has" =>
+      if args.length() != 1 {
+        raise UnknownFunction("has")
+      } else {
+        let key_filter = args[0]
+        let keys = eval_with_env(key_filter, input, env)
+        let out = []
+        for key in keys {
+          out.push(Json::boolean(has_key(input, key)))
+        }
+        out
+      }
+    "in" =>
+      if args.length() != 1 {
+        raise UnknownFunction("in")
+      } else {
+        let collection_filter = args[0]
+        let collections = eval_with_env(collection_filter, input, env)
+        let out = []
+        for collection in collections {
+          out.push(Json::boolean(has_key(collection, input)))
+        }
+        out
+      }
     "startswith" =>
       if args.length() != 1 {
         raise UnknownFunction("startswith")
@@ -698,6 +812,32 @@ fn eval_arith(
           }
           out.push(Json::number(v))
         }
+        (Array(x), Array(y)) =>
+          if op == "-" {
+            let filtered = []
+            for xv in x {
+              let mut removed = false
+              for yv in y {
+                if xv == yv {
+                  removed = true
+                  break
+                }
+              }
+              if !removed {
+                filtered.push(xv)
+              }
+            }
+            out.push(Json::array(filtered))
+          } else {
+            raise TypeError(
+              "Cannot apply " +
+              op +
+              " to " +
+              json_type_with_value(a) +
+              " and " +
+              json_type_with_value(b),
+            )
+          }
         _ =>
           raise TypeError(
             "Cannot apply " +

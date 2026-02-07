@@ -139,6 +139,41 @@ test "eval builtins" {
 }
 
 ///|
+test "eval jq type-filter builtins" {
+  assert_eq(must_eval(parse_filter("values"), must_parse("null")), [])
+  assert_eq(must_eval(parse_filter("values"), must_parse("1")), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("nulls"), must_parse("null")), [Json::null()])
+  assert_eq(must_eval(parse_filter("nulls"), must_parse("1")), [])
+  assert_eq(must_eval(parse_filter("booleans"), must_parse("true")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("booleans"), must_parse("1")), [])
+  assert_eq(must_eval(parse_filter("numbers"), must_parse("1")), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("numbers"), must_parse("\"1\"")), [])
+  assert_eq(must_eval(parse_filter("strings"), must_parse("\"x\"")), [
+    Json::string("x"),
+  ])
+  assert_eq(must_eval(parse_filter("arrays"), must_parse("[]")), [
+    Json::array([]),
+  ])
+  assert_eq(must_eval(parse_filter("objects"), must_parse("{}")), [
+    Json::object(Map::new()),
+  ])
+  assert_eq(must_eval(parse_filter("iterables"), must_parse("{}")), [
+    Json::object(Map::new()),
+  ])
+  assert_eq(must_eval(parse_filter("iterables"), must_parse("1")), [])
+  assert_eq(must_eval(parse_filter("scalars"), must_parse("1")), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("scalars"), must_parse("{}")), [])
+}
+
+///|
 test "eval select" {
   let j = must_parse("{\"a\":1,\"b\":null}")
   let f1 = parse_filter("select(.a)")
@@ -193,6 +228,17 @@ test "eval arithmetic" {
   assert_eq(must_eval(parse_filter(".c - .a"), j), [Json::number(2.0)])
   assert_eq(must_eval(parse_filter(".a * .b"), j), [Json::number(2.0)])
   assert_eq(must_eval(parse_filter(".c / .a"), j), [Json::number(3.0)])
+}
+
+///|
+test "eval array subtraction compatibility" {
+  let j = must_parse("null")
+  assert_eq(must_eval(parse_filter("[1,2,2,3] - [2]"), j), [
+    Json::array([Json::number(1.0), Json::number(3.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("[1,{\"a\":1}] - [{\"a\":1}]"), j), [
+    Json::array([Json::number(1.0)]),
+  ])
 }
 
 ///|
@@ -491,6 +537,93 @@ test "eval contains/startswith/endswith type errors" {
   guard (try? eval(parse_filter("startswith(\"1\")"), n)) is Err(err) &&
     err.to_string() == "startswith() requires string inputs" else {
     fail("expected startswith type error for non-string input")
+  }
+}
+
+///|
+test "eval has jq semantics" {
+  let obj = must_parse("{\"a\":1}")
+  assert_eq(must_eval(parse_filter("has(\"a\")"), obj), [Json::boolean(true)])
+  assert_eq(must_eval(parse_filter("has(\"z\")"), obj), [Json::boolean(false)])
+  assert_eq(must_eval(parse_filter("has((\"a\",\"z\"))"), obj), [
+    Json::boolean(true),
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("has(empty)"), obj), [])
+  let arr = must_parse("[1,2]")
+  assert_eq(must_eval(parse_filter("has(0)"), arr), [Json::boolean(true)])
+  assert_eq(must_eval(parse_filter("has(2)"), arr), [Json::boolean(false)])
+  assert_eq(must_eval(parse_filter("has((-1,1.9,-0.9))"), arr), [
+    Json::boolean(false),
+    Json::boolean(true),
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("has(empty)"), arr), [])
+  let n = must_parse("null")
+  assert_eq(must_eval(parse_filter("has((0,\"a\",true))"), n), [
+    Json::boolean(false),
+    Json::boolean(false),
+    Json::boolean(false),
+  ])
+}
+
+///|
+test "eval has type errors" {
+  let obj = must_parse("{\"a\":1}")
+  guard (try? eval(parse_filter("has(0)"), obj)) is Err(err) &&
+    err.to_string() == "Cannot check whether object has a number key" else {
+    fail("expected object has(number) type error")
+  }
+  let arr = must_parse("[1,2]")
+  guard (try? eval(parse_filter("has(\"0\")"), arr)) is Err(err) &&
+    err.to_string() == "Cannot check whether array has a string key" else {
+    fail("expected array has(string) type error")
+  }
+  let s = must_parse("\"abc\"")
+  guard (try? eval(parse_filter("has(0)"), s)) is Err(err) &&
+    err.to_string() == "Cannot check whether string has a number key" else {
+    fail("expected string has(number) type error")
+  }
+}
+
+///|
+test "eval in jq semantics" {
+  assert_eq(
+    must_eval(parse_filter("\"a\" | in({\"a\":1})"), must_parse("null")),
+    [Json::boolean(true)],
+  )
+  assert_eq(must_eval(parse_filter("2 | in([10,20])"), must_parse("null")), [
+    Json::boolean(false),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("\"a\" | in(({\"a\":1},{\"b\":2}))"),
+      must_parse("null"),
+    ),
+    [Json::boolean(true), Json::boolean(false)],
+  )
+  assert_eq(must_eval(parse_filter("0 | in(null)"), must_parse("null")), [
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("0 | in(empty)"), must_parse("null")), [])
+}
+
+///|
+test "eval in type errors" {
+  guard (try? eval(parse_filter("\"a\" | in(1)"), must_parse("null")))
+    is Err(err) &&
+    err.to_string() == "Cannot check whether number has a string key" else {
+    fail("expected in(number, string) type error")
+  }
+  guard (try? eval(parse_filter("1 | in({\"a\":1})"), must_parse("null")))
+    is Err(err) &&
+    err.to_string() == "Cannot check whether object has a number key" else {
+    fail("expected in(object, number) type error")
+  }
+  guard (try? eval(parse_filter("\"a\" | in([1,2])"), must_parse("null")))
+    is Err(err) &&
+    err.to_string() == "Cannot check whether array has a string key" else {
+    fail("expected in(array, string) type error")
   }
 }
 
