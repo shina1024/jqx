@@ -189,6 +189,21 @@ fn nth_on_input(input : Json, key : Json) -> Json raise EvalError {
 }
 
 ///|
+fn collection_values(input : Json) -> Array[Json] raise EvalError {
+  match input {
+    Array(a) => a
+    Object(o) => {
+      let out = []
+      for kv in o.iter() {
+        out.push(kv.1)
+      }
+      out
+    }
+    _ => raise TypeError("Cannot iterate over " + json_type_with_value(input))
+  }
+}
+
+///|
 fn flatten_array_full(a : Array[Json]) -> Array[Json] {
   let out = []
   for v in a {
@@ -830,6 +845,28 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
       }
     "first" => [nth_on_input(input, Json::number(0.0))]
     "last" => [nth_on_input(input, Json::number(-1.0))]
+    "any" => {
+      let values = collection_values(input)
+      let mut ok = false
+      for v in values {
+        if is_truthy(v) {
+          ok = true
+          break
+        }
+      }
+      [Json::boolean(ok)]
+    }
+    "all" => {
+      let values = collection_values(input)
+      let mut ok = true
+      for v in values {
+        if !is_truthy(v) {
+          ok = false
+          break
+        }
+      }
+      [Json::boolean(ok)]
+    }
     "flatten" => [flatten_default(input)]
     "transpose" => [transpose_json(input)]
     "to_entries" => [to_entries_json(input)]
@@ -1071,6 +1108,46 @@ fn eval_call(
           out.push(nth_on_input(input, key))
         }
         out
+      }
+    "any" =>
+      if args.length() != 1 {
+        raise UnknownFunction("any")
+      } else {
+        let values = collection_values(input)
+        let cond = args[0]
+        let mut ok = false
+        for v in values {
+          for cond_out in eval_with_env(cond, v, env) {
+            if is_truthy(cond_out) {
+              ok = true
+              break
+            }
+          }
+          if ok {
+            break
+          }
+        }
+        [Json::boolean(ok)]
+      }
+    "all" =>
+      if args.length() != 1 {
+        raise UnknownFunction("all")
+      } else {
+        let values = collection_values(input)
+        let cond = args[0]
+        let mut ok = true
+        for v in values {
+          for cond_out in eval_with_env(cond, v, env) {
+            if !is_truthy(cond_out) {
+              ok = false
+              break
+            }
+          }
+          if !ok {
+            break
+          }
+        }
+        [Json::boolean(ok)]
       }
     "flatten" =>
       if args.length() != 1 {

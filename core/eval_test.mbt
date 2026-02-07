@@ -740,6 +740,91 @@ test "eval index/rindex/indices errors" {
 }
 
 ///|
+test "eval any/all compatibility" {
+  assert_eq(must_eval(parse_filter("any"), must_parse("[true,false]")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("all"), must_parse("[true,false]")), [
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("any"), must_parse("[]")), [
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("all"), must_parse("[]")), [
+    Json::boolean(true),
+  ])
+  assert_eq(
+    must_eval(parse_filter("any"), must_parse("{\"a\":false,\"b\":true}")),
+    [Json::boolean(true)],
+  )
+  assert_eq(
+    must_eval(parse_filter("all"), must_parse("{\"a\":false,\"b\":true}")),
+    [Json::boolean(false)],
+  )
+  assert_eq(must_eval(parse_filter("any"), must_parse("{}")), [
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("all"), must_parse("{}")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("any(. > 2)"), must_parse("[1,2,3]")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("all(. > 0)"), must_parse("[1,2,3]")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("all(. > 2)"), must_parse("[1,2,3]")), [
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("any(empty)"), must_parse("[1,2,3]")), [
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("all(empty)"), must_parse("[1,2,3]")), [
+    Json::boolean(true),
+  ])
+  assert_eq(
+    must_eval(parse_filter("any((false,true))"), must_parse("[1,2,3]")),
+    [Json::boolean(true)],
+  )
+  assert_eq(
+    must_eval(parse_filter("all((true,false))"), must_parse("[1,2,3]")),
+    [Json::boolean(false)],
+  )
+  assert_eq(
+    must_eval(parse_filter("any(. > 0)"), must_parse("{\"a\":1,\"b\":0}")),
+    [Json::boolean(true)],
+  )
+  assert_eq(
+    must_eval(parse_filter("all(. > 0)"), must_parse("{\"a\":1,\"b\":0}")),
+    [Json::boolean(false)],
+  )
+}
+
+///|
+test "eval any/all errors" {
+  guard (try? eval(parse_filter("any"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over number (1)" else {
+    fail("expected any number iterate error")
+  }
+  guard (try? eval(parse_filter("all"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over null (null)" else {
+    fail("expected all null iterate error")
+  }
+  guard (try? eval(parse_filter("any"), must_parse("\"ab\""))) is Err(err) &&
+    err.to_string() == "Cannot iterate over string (\"ab\")" else {
+    fail("expected any string iterate error")
+  }
+  guard (try? eval(parse_filter("any(.)"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over number (1)" else {
+    fail("expected any(cond) number iterate error")
+  }
+  guard (try? eval(parse_filter("all(.)"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over null (null)" else {
+    fail("expected all(cond) null iterate error")
+  }
+}
+
+///|
 test "eval jq type-filter builtins" {
   assert_eq(must_eval(parse_filter("values"), must_parse("null")), [])
   assert_eq(must_eval(parse_filter("values"), must_parse("1")), [
