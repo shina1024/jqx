@@ -388,6 +388,52 @@ fn delpaths_on_input(
 }
 
 ///|
+fn collect_paths(
+  input : Json,
+  prefix : Array[Json],
+  predicate : Filter?,
+  env : Map[String, Json],
+) -> Array[Json] raise EvalError {
+  let out = []
+  fn include_node(v : Json) -> Bool raise EvalError {
+    match predicate {
+      Some(pred) => eval_to_bool(pred, v, env)
+      None => true
+    }
+  }
+
+  match input {
+    Object(o) =>
+      for kv in o.iter() {
+        let key = kv.0
+        let value = kv.1
+        let p = prefix.copy()
+        p.push(Json::string(key))
+        if include_node(value) {
+          out.push(Json::array(p))
+        }
+        for child in collect_paths(value, p, predicate, env) {
+          out.push(child)
+        }
+      }
+    Array(a) =>
+      for i in 0..<a.length() {
+        let value = a[i]
+        let p = prefix.copy()
+        p.push(Json::number(i.to_double()))
+        if include_node(value) {
+          out.push(Json::array(p))
+        }
+        for child in collect_paths(value, p, predicate, env) {
+          out.push(child)
+        }
+      }
+    _ => ()
+  }
+  out
+}
+
+///|
 fn collection_values(input : Json) -> Array[Json] raise EvalError {
   match input {
     Array(a) => a
@@ -1054,6 +1100,7 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
         Array(_) | Object(_) => []
         _ => [input]
       }
+    "paths" => collect_paths(input, [], None, Map::new())
     "add" =>
       match input {
         Array(a) => {
@@ -1769,6 +1816,12 @@ fn eval_call(
           out.push(delpaths_on_input(input, normalized))
         }
         out
+      }
+    "paths" =>
+      if args.length() != 1 {
+        raise UnknownFunction("paths")
+      } else {
+        collect_paths(input, [], Some(args[0]), env)
       }
     "index" =>
       if args.length() != 1 {

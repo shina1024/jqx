@@ -1101,6 +1101,61 @@ test "eval delpaths errors" {
 }
 
 ///|
+test "eval paths compatibility" {
+  let obj = must_parse("{\"a\":1,\"b\":[2,3]}")
+  assert_eq(must_eval(parse_filter("paths"), obj), [
+    Json::array([Json::string("a")]),
+    Json::array([Json::string("b")]),
+    Json::array([Json::string("b"), Json::number(0.0)]),
+    Json::array([Json::string("b"), Json::number(1.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("paths(type==\"number\")"), obj), [
+    Json::array([Json::string("a")]),
+    Json::array([Json::string("b"), Json::number(0.0)]),
+    Json::array([Json::string("b"), Json::number(1.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("paths(type==\"array\" or .==3)"), obj), [
+    Json::array([Json::string("b")]),
+    Json::array([Json::string("b"), Json::number(1.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("paths"), must_parse("[1,[2],{\"a\":3}]")), [
+    Json::array([Json::number(0.0)]),
+    Json::array([Json::number(1.0)]),
+    Json::array([Json::number(1.0), Json::number(0.0)]),
+    Json::array([Json::number(2.0)]),
+    Json::array([Json::number(2.0), Json::string("a")]),
+  ])
+  assert_eq(must_eval(parse_filter("paths"), must_parse("1")), [])
+  assert_eq(must_eval(parse_filter("paths"), must_parse("null")), [])
+  assert_eq(must_eval(parse_filter("paths"), must_parse("{}")), [])
+  assert_eq(must_eval(parse_filter("paths"), must_parse("[]")), [])
+  assert_eq(must_eval(parse_filter("paths(.)"), must_parse("1")), [])
+  assert_eq(
+    must_eval(parse_filter("paths(values)"), must_parse("{\"a\":null,\"b\":1}")),
+    [Json::array([Json::string("b")])],
+  )
+  assert_eq(must_eval(parse_filter("paths(empty)"), obj), [])
+  assert_eq(
+    must_eval(parse_filter("paths((true,true))"), must_parse("{\"a\":1}")),
+    [Json::array([Json::string("a")])],
+  )
+}
+
+///|
+test "eval paths errors" {
+  guard (try? eval(parse_filter("paths(.foo)"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Cannot index number with string \"foo\"" else {
+    fail("expected paths predicate string-index error")
+  }
+  guard (try? eval(parse_filter("paths(.[0])"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Cannot index number with number" else {
+    fail("expected paths predicate number-index error")
+  }
+}
+
+///|
 test "eval any/all compatibility" {
   assert_eq(must_eval(parse_filter("any"), must_parse("[true,false]")), [
     Json::boolean(true),
