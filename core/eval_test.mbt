@@ -211,6 +211,24 @@ test "eval fallback and empty" {
 }
 
 ///|
+test "eval fallback jq semantics with null/false and streams" {
+  let j = must_parse("null")
+  assert_eq(must_eval(parse_filter("null // 1"), j), [Json::number(1.0)])
+  assert_eq(must_eval(parse_filter("false // 1"), j), [Json::number(1.0)])
+  assert_eq(must_eval(parse_filter("true // 1"), j), [Json::boolean(true)])
+  assert_eq(must_eval(parse_filter("[false,1] | .[] // 9"), j), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("[null,false] | .[] // 9"), j), [
+    Json::number(9.0),
+  ])
+  assert_eq(must_eval(parse_filter("(1,2) // 9"), j), [
+    Json::number(1.0),
+    Json::number(2.0),
+  ])
+}
+
+///|
 test "eval string contains/starts/ends" {
   let j = must_parse("\"hello\"")
   assert_eq(must_eval(parse_filter("contains(\"ell\")"), j), [
@@ -238,4 +256,33 @@ test "eval iter non-array errors" {
   guard (try? eval(f, j)) is Err(_) else {
     fail("expected error for iter over non-array/object")
   }
+}
+
+///|
+test "eval index negative" {
+  let j = must_parse("[1,2]")
+  assert_eq(must_eval(parse_filter(".[-1]"), j), [Json::number(2.0)])
+  assert_eq(must_eval(parse_filter(".[-1]?"), j), [Json::number(2.0)])
+  assert_eq(must_eval(parse_filter(".[-3]"), j), [Json::null()])
+}
+
+///|
+test "eval length compatibility" {
+  assert_eq(must_eval(parse_filter("length"), must_parse("null")), [
+    Json::number(0.0),
+  ])
+  assert_eq(must_eval(parse_filter("length"), must_parse("-3")), [
+    Json::number(3.0),
+  ])
+  assert_eq(must_eval(parse_filter("length"), must_parse("3.14")), [
+    Json::number(3.14),
+  ])
+}
+
+///|
+test "eval keys array compatibility" {
+  let j = must_parse("[10,20]")
+  assert_eq(must_eval(parse_filter("keys"), j), [
+    Json::array([Json::number(0.0), Json::number(1.0)]),
+  ])
 }

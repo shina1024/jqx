@@ -78,22 +78,26 @@ fn eval_with_env(
       }
     Index(i) =>
       match input {
-        Array(a) =>
-          if i >= 0 && i < a.length() {
-            [a[i]]
+        Array(a) => {
+          let idx = if i < 0 { a.length() + i } else { i }
+          if idx >= 0 && idx < a.length() {
+            [a[idx]]
           } else {
             [Json::null()]
           }
+        }
         _ => [Json::null()]
       }
     IndexOpt(i) =>
       match input {
-        Array(a) =>
-          if i >= 0 && i < a.length() {
-            [a[i]]
+        Array(a) => {
+          let idx = if i < 0 { a.length() + i } else { i }
+          if idx >= 0 && idx < a.length() {
+            [a[idx]]
           } else {
             [Json::null()]
           }
+        }
         _ => [Json::null()]
       }
     Iter =>
@@ -283,8 +287,14 @@ fn eval_with_env(
       }
     Fallback(left, right) => {
       let l = eval_with_env(left, input, env)
-      if l.length() > 0 {
-        l
+      let truthy_values = []
+      for v in l {
+        if is_truthy(v) {
+          truthy_values.push(v)
+        }
+      }
+      if truthy_values.length() > 0 {
+        truthy_values
       } else {
         eval_with_env(right, input, env)
       }
@@ -301,6 +311,13 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
         Array(a) => [Json::number(a.length().to_double())]
         Object(o) => [Json::number(o.length().to_double())]
         String(s) => [Json::number(s.length().to_double())]
+        JNull => [Json::number(0.0)]
+        Number(n, _) =>
+          if n < 0.0 {
+            [Json::number(-n)]
+          } else {
+            [Json::number(n)]
+          }
         _ =>
           raise TypeError("Cannot get length of " + json_type_with_value(input))
       }
@@ -313,6 +330,13 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
           let out = []
           for k in keys {
             out.push(Json::string(k))
+          }
+          [Json::array(out)]
+        }
+        Array(a) => {
+          let out = []
+          for i in 0..<a.length() {
+            out.push(Json::number(i.to_double()))
           }
           [Json::array(out)]
         }
