@@ -844,6 +844,57 @@ test "eval sort_by errors" {
 }
 
 ///|
+test "eval group_by compatibility" {
+  assert_eq(
+    must_eval(
+      parse_filter("group_by(.a)"),
+      must_parse("[{\"a\":2},{\"a\":1},{\"a\":2}]"),
+    ),
+    [
+      Json::array([
+        Json::array([Json::object({ "a": Json::number(1.0) })]),
+        Json::array([
+          Json::object({ "a": Json::number(2.0) }),
+          Json::object({ "a": Json::number(2.0) }),
+        ]),
+      ]),
+    ],
+  )
+  assert_eq(must_eval(parse_filter("group_by(.)"), must_parse("[3,1,2,1]")), [
+    Json::array([
+      Json::array([Json::number(1.0), Json::number(1.0)]),
+      Json::array([Json::number(2.0)]),
+      Json::array([Json::number(3.0)]),
+    ]),
+  ])
+  assert_eq(must_eval(parse_filter("group_by(.)"), must_parse("[]")), [
+    Json::array([]),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("group_by(empty)"),
+      must_parse("[{\"a\":2},{\"a\":1}]"),
+    ),
+    [
+      Json::array([
+        Json::array([
+          Json::object({ "a": Json::number(2.0) }),
+          Json::object({ "a": Json::number(1.0) }),
+        ]),
+      ]),
+    ],
+  )
+}
+
+///|
+test "eval group_by errors" {
+  guard (try? eval(parse_filter("group_by(.)"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over number (1)" else {
+    fail("expected group_by non-array error")
+  }
+}
+
+///|
 test "eval min/max compatibility" {
   assert_eq(must_eval(parse_filter("min"), must_parse("[3,1,2]")), [
     Json::number(1.0),

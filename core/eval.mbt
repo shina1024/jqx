@@ -1239,6 +1239,50 @@ fn eval_call(
             )
         }
       }
+    "group_by" =>
+      if args.length() != 1 {
+        raise UnknownFunction("group_by")
+      } else {
+        match input {
+          Array(a) => {
+            let keyed = []
+            let key_filter = args[0]
+            for v in a {
+              let key_values = eval_with_env(key_filter, v, env)
+              let key = if key_values.length() == 0 {
+                Json::null()
+              } else {
+                key_values[0]
+              }
+              keyed.push((key, v))
+            }
+            let sorted = sort_keyed_pairs(keyed)
+            let groups = []
+            let mut current : Array[Json] = []
+            let mut current_key = Json::null()
+            let mut has_current = false
+            for kv in sorted {
+              if !has_current || compare_json(current_key, kv.0) != 0 {
+                if has_current {
+                  groups.push(Json::array(current))
+                }
+                current = []
+                current_key = kv.0
+                has_current = true
+              }
+              current.push(kv.1)
+            }
+            if has_current {
+              groups.push(Json::array(current))
+            }
+            [Json::array(groups)]
+          }
+          _ =>
+            raise TypeError(
+              "Cannot iterate over " + json_type_with_value(input),
+            )
+        }
+      }
     "min_by" =>
       if args.length() != 1 {
         raise UnknownFunction("min_by")
