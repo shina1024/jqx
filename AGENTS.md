@@ -135,7 +135,7 @@ This is a [MoonBit](https://docs.moonbitlang.com) project.
 ### Windows
 
 - Visual Studio Build Tools (C++ build tools) と Windows 10/11 SDK が必要
-- Developer Command Prompt for VS を使う（`INCLUDE`/`LIB`/`PATH` が通る）
+- Developer PowerShell for VS を使う（`INCLUDE`/`LIB`/`PATH` が通る）
 - 例:
   - `moon test --target native --package core`
   - `moon run --target native cmd/jqx -- ".foo" '{"foo": 1}'`

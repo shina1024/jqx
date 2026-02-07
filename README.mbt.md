@@ -11,7 +11,7 @@ Prerequisites:
 - Windows 10/11 SDK
 
 Recommended shell:
-- Use **Developer Command Prompt for VS** (it sets `INCLUDE`/`LIB`/`PATH`).
+- Use **Developer PowerShell for VS** (it sets `INCLUDE`/`LIB`/`PATH`).
 
 Commands:
 ```powershell
