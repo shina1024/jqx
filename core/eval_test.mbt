@@ -139,6 +139,90 @@ test "eval builtins" {
 }
 
 ///|
+test "eval keys compatibility errors and keys_unsorted" {
+  let arr = must_parse("[10,20]")
+  assert_eq(must_eval(parse_filter("keys_unsorted"), arr), [
+    Json::array([Json::number(0.0), Json::number(1.0)]),
+  ])
+  let obj = must_parse("{\"b\":2,\"a\":1}")
+  let unsorted = must_eval(parse_filter("keys_unsorted"), obj)
+  guard unsorted.length() == 1 else {
+    fail("expected one output from keys_unsorted")
+  }
+  guard unsorted[0] is Array(keys_arr) else {
+    fail("expected array result from keys_unsorted")
+  }
+  assert_eq(keys_arr.length(), 2)
+  let mut saw_a = false
+  let mut saw_b = false
+  for k in keys_arr {
+    if k == Json::string("a") {
+      saw_a = true
+    } else if k == Json::string("b") {
+      saw_b = true
+    } else {
+      fail("unexpected key from keys_unsorted")
+    }
+  }
+  guard saw_a && saw_b else { fail("keys_unsorted missing keys") }
+  guard (try? eval(parse_filter("keys"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "number (1) has no keys" else {
+    fail("expected jq-compatible keys error")
+  }
+  guard (try? eval(parse_filter("keys_unsorted"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "number (1) has no keys" else {
+    fail("expected jq-compatible keys_unsorted error")
+  }
+}
+
+///|
+test "eval tostring/tonumber compatibility" {
+  assert_eq(must_eval(parse_filter("tostring"), must_parse("1")), [
+    Json::string("1"),
+  ])
+  assert_eq(must_eval(parse_filter("tostring"), must_parse("\"x\"")), [
+    Json::string("x"),
+  ])
+  assert_eq(must_eval(parse_filter("tostring"), must_parse("null")), [
+    Json::string("null"),
+  ])
+  assert_eq(must_eval(parse_filter("tostring"), must_parse("[1,2]")), [
+    Json::string("[1,2]"),
+  ])
+  assert_eq(must_eval(parse_filter("tonumber"), must_parse("\"1\"")), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("tonumber"), must_parse("\"01\"")), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("tonumber"), must_parse("\"1.25\"")), [
+    Json::number(1.25),
+  ])
+  assert_eq(must_eval(parse_filter("tonumber"), must_parse("1")), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("tonumber"), must_parse("\"nan\"")), [
+    Json::null(),
+  ])
+}
+
+///|
+test "eval tonumber errors" {
+  guard (try? eval(parse_filter("tonumber"), must_parse("\"abc\""))) is Err(err) &&
+    err.to_string() == "string (\"abc\") cannot be parsed as a number" else {
+    fail("expected tonumber string parse error")
+  }
+  guard (try? eval(parse_filter("tonumber"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "null (null) cannot be parsed as a number" else {
+    fail("expected tonumber null parse error")
+  }
+  guard (try? eval(parse_filter("tonumber"), must_parse("true"))) is Err(err) &&
+    err.to_string() == "boolean (true) cannot be parsed as a number" else {
+    fail("expected tonumber boolean parse error")
+  }
+}
+
+///|
 test "eval jq type-filter builtins" {
   assert_eq(must_eval(parse_filter("values"), must_parse("null")), [])
   assert_eq(must_eval(parse_filter("values"), must_parse("1")), [

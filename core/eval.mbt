@@ -496,8 +496,25 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
           }
           [Json::array(out)]
         }
-        _ =>
-          raise TypeError("Cannot get keys of " + json_type_with_value(input))
+        _ => raise TypeError(json_type_with_value(input) + " has no keys")
+      }
+    "keys_unsorted" =>
+      match input {
+        Object(o) => {
+          let out = []
+          for kv in o.iter() {
+            out.push(Json::string(kv.0))
+          }
+          [Json::array(out)]
+        }
+        Array(a) => {
+          let out = []
+          for i in 0..<a.length() {
+            out.push(Json::number(i.to_double()))
+          }
+          [Json::array(out)]
+        }
+        _ => raise TypeError(json_type_with_value(input) + " has no keys")
       }
     "values" =>
       match input {
@@ -562,6 +579,28 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
         }
         _ =>
           raise TypeError("Cannot iterate over " + json_type_with_value(input))
+      }
+    "tostring" =>
+      match input {
+        String(_) => [input]
+        _ => [Json::string(input.to_json_string())]
+      }
+    "tonumber" =>
+      match input {
+        Number(_, _) => [input]
+        String(s) =>
+          try @strconv.parse_double(s) catch {
+            _ =>
+              raise TypeError(
+                json_type_with_value(input) + " cannot be parsed as a number",
+              )
+          } noraise {
+            n => if n != n { [Json::null()] } else { [Json::number(n)] }
+          }
+        _ =>
+          raise TypeError(
+            json_type_with_value(input) + " cannot be parsed as a number",
+          )
       }
     _ => raise UnknownFunction(name)
   }
