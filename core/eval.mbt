@@ -221,38 +221,58 @@ fn eval_with_env(
       [Json::array(out)]
     }
     Object(items) => {
-      let map = Map::new()
+      let mut partials = [Map::new()]
       for kv in items {
         let key = kv.0
         let f = kv.1
         let vals = eval_with_env(f, input, env)
-        if vals.length() > 0 {
-          map[key] = vals[0]
-        } else {
-          map[key] = Json::null()
+        if vals.length() == 0 {
+          return []
         }
+        let next = []
+        for partial in partials {
+          for i in 0..<vals.length() {
+            let v = vals[i]
+            let m = partial.copy()
+            m[key] = v
+            next.push(m)
+          }
+        }
+        partials = next
       }
-      [Json::object(map)]
+      let out = []
+      for m in partials {
+        out.push(Json::object(m))
+      }
+      out
     }
     Builtin(name) => eval_builtin(name, input)
     Call(name, args) => eval_call(name, args, input, env)
     Eq(left, right) => {
       let l = eval_with_env(left, input, env)
       let r = eval_with_env(right, input, env)
-      if l.length() == 0 || r.length() == 0 {
-        [Json::boolean(false)]
-      } else {
-        [Json::boolean(l[0] == r[0])]
+      let out = []
+      for j in 0..<r.length() {
+        let b = r[j]
+        for i in 0..<l.length() {
+          let a = l[i]
+          out.push(Json::boolean(a == b))
+        }
       }
+      out
     }
     Neq(left, right) => {
       let l = eval_with_env(left, input, env)
       let r = eval_with_env(right, input, env)
-      if l.length() == 0 || r.length() == 0 {
-        [Json::boolean(true)]
-      } else {
-        [Json::boolean(l[0] != r[0])]
+      let out = []
+      for j in 0..<r.length() {
+        let b = r[j]
+        for i in 0..<l.length() {
+          let a = l[i]
+          out.push(Json::boolean(a != b))
+        }
       }
+      out
     }
     Lt(left, right) => eval_compare("<", left, right, input, env)
     Lte(left, right) => eval_compare("<=", left, right, input, env)
@@ -530,39 +550,42 @@ fn eval_compare(
 ) -> Array[Json] raise EvalError {
   let l = eval_with_env(left, input, env)
   let r = eval_with_env(right, input, env)
-  if l.length() == 0 || r.length() == 0 {
-    return [Json::boolean(false)]
-  }
-  let a = l[0]
-  let b = r[0]
-  match (a, b) {
-    (Number(x, _), Number(y, _)) => {
-      let ok = match op {
-        "<" => x < y
-        "<=" => x <= y
-        ">" => x > y
-        _ => x >= y
+  let out = []
+  for j in 0..<r.length() {
+    let b = r[j]
+    for i in 0..<l.length() {
+      let a = l[i]
+      match (a, b) {
+        (Number(x, _), Number(y, _)) => {
+          let ok = match op {
+            "<" => x < y
+            "<=" => x <= y
+            ">" => x > y
+            _ => x >= y
+          }
+          out.push(Json::boolean(ok))
+        }
+        (String(x), String(y)) => {
+          let cmp = x.compare(y)
+          let ok = match op {
+            "<" => cmp < 0
+            "<=" => cmp <= 0
+            ">" => cmp > 0
+            _ => cmp >= 0
+          }
+          out.push(Json::boolean(ok))
+        }
+        _ =>
+          raise TypeError(
+            "Cannot compare " +
+            json_type_with_value(a) +
+            " and " +
+            json_type_with_value(b),
+          )
       }
-      [Json::boolean(ok)]
     }
-    (String(x), String(y)) => {
-      let cmp = x.compare(y)
-      let ok = match op {
-        "<" => cmp < 0
-        "<=" => cmp <= 0
-        ">" => cmp > 0
-        _ => cmp >= 0
-      }
-      [Json::boolean(ok)]
-    }
-    _ =>
-      raise TypeError(
-        "Cannot compare " +
-        json_type_with_value(a) +
-        " and " +
-        json_type_with_value(b),
-      )
   }
+  out
 }
 
 ///|
@@ -575,30 +598,33 @@ fn eval_arith(
 ) -> Array[Json] raise EvalError {
   let l = eval_with_env(left, input, env)
   let r = eval_with_env(right, input, env)
-  if l.length() == 0 || r.length() == 0 {
-    return [Json::null()]
-  }
-  let a = l[0]
-  let b = r[0]
-  match (a, b) {
-    (Number(x, _), Number(y, _)) => {
-      let v = match op {
-        "-" => x - y
-        "*" => x * y
-        _ => x / y
+  let out = []
+  for j in 0..<r.length() {
+    let b = r[j]
+    for i in 0..<l.length() {
+      let a = l[i]
+      match (a, b) {
+        (Number(x, _), Number(y, _)) => {
+          let v = match op {
+            "-" => x - y
+            "*" => x * y
+            _ => x / y
+          }
+          out.push(Json::number(v))
+        }
+        _ =>
+          raise TypeError(
+            "Cannot apply " +
+            op +
+            " to " +
+            json_type_with_value(a) +
+            " and " +
+            json_type_with_value(b),
+          )
       }
-      [Json::number(v)]
     }
-    _ =>
-      raise TypeError(
-        "Cannot apply " +
-        op +
-        " to " +
-        json_type_with_value(a) +
-        " and " +
-        json_type_with_value(b),
-      )
   }
+  out
 }
 
 ///|
@@ -610,37 +636,40 @@ fn eval_add(
 ) -> Array[Json] raise EvalError {
   let l = eval_with_env(left, input, env)
   let r = eval_with_env(right, input, env)
-  if l.length() == 0 || r.length() == 0 {
-    return [Json::null()]
-  }
-  let a = l[0]
-  let b = r[0]
-  match (a, b) {
-    (Number(x, _), Number(y, _)) => [Json::number(x + y)]
-    (String(x), String(y)) => [Json::string(x + y)]
-    (Array(x), Array(y)) => {
-      let out = x.copy()
-      for v in y {
-        out.push(v)
+  let out = []
+  for j in 0..<r.length() {
+    let b = r[j]
+    for i in 0..<l.length() {
+      let a = l[i]
+      match (a, b) {
+        (Number(x, _), Number(y, _)) => out.push(Json::number(x + y))
+        (String(x), String(y)) => out.push(Json::string(x + y))
+        (Array(x), Array(y)) => {
+          let merged = x.copy()
+          for v in y {
+            merged.push(v)
+          }
+          out.push(Json::array(merged))
+        }
+        (Object(x), Object(y)) => {
+          let merged = Map::new()
+          for kv in x.iter() {
+            merged[kv.0] = kv.1
+          }
+          for kv in y.iter() {
+            merged[kv.0] = kv.1
+          }
+          out.push(Json::object(merged))
+        }
+        _ =>
+          raise TypeError(
+            "Cannot apply + to " +
+            json_type_with_value(a) +
+            " and " +
+            json_type_with_value(b),
+          )
       }
-      [Json::array(out)]
     }
-    (Object(x), Object(y)) => {
-      let out = Map::new()
-      for kv in x.iter() {
-        out[kv.0] = kv.1
-      }
-      for kv in y.iter() {
-        out[kv.0] = kv.1
-      }
-      [Json::object(out)]
-    }
-    _ =>
-      raise TypeError(
-        "Cannot apply + to " +
-        json_type_with_value(a) +
-        " and " +
-        json_type_with_value(b),
-      )
   }
+  out
 }

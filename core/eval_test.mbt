@@ -116,6 +116,18 @@ test "eval compare" {
 }
 
 ///|
+test "eval compare stream cross product" {
+  let j = must_parse("null")
+  assert_eq(must_eval(parse_filter("(1,2) == (1,2)"), j), [
+    Json::boolean(true),
+    Json::boolean(false),
+    Json::boolean(false),
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("(empty) == 1"), j), [])
+}
+
+///|
 test "eval compare order and logical" {
   let j = must_parse("{\"a\":1,\"b\":2}")
   assert_eq(must_eval(parse_filter(".a < .b"), j), [Json::boolean(true)])
@@ -135,6 +147,18 @@ test "eval arithmetic" {
 }
 
 ///|
+test "eval arithmetic stream cross product" {
+  let j = must_parse("null")
+  assert_eq(must_eval(parse_filter("(1,2) + (10,20)"), j), [
+    Json::number(11.0),
+    Json::number(12.0),
+    Json::number(21.0),
+    Json::number(22.0),
+  ])
+  assert_eq(must_eval(parse_filter("(empty) + 1"), j), [])
+}
+
+///|
 test "eval add arrays and objects" {
   let j = must_parse("{\"a\":[1],\"b\":[2],\"x\":{\"k\":1},\"y\":{\"k\":2}}")
   assert_eq(must_eval(parse_filter(".a + .b"), j), [
@@ -143,6 +167,22 @@ test "eval add arrays and objects" {
   assert_eq(must_eval(parse_filter(".x + .y"), j), [
     Json::object({ "k": Json::number(2.0) }),
   ])
+}
+
+///|
+test "eval object literal stream product" {
+  let j = must_parse("null")
+  assert_eq(must_eval(parse_filter("{a:(1,2)}"), j), [
+    Json::object({ "a": Json::number(1.0) }),
+    Json::object({ "a": Json::number(2.0) }),
+  ])
+  assert_eq(must_eval(parse_filter("{a:(1,2), b:(3,4)}"), j), [
+    Json::object({ "a": Json::number(1.0), "b": Json::number(3.0) }),
+    Json::object({ "a": Json::number(1.0), "b": Json::number(4.0) }),
+    Json::object({ "a": Json::number(2.0), "b": Json::number(3.0) }),
+    Json::object({ "a": Json::number(2.0), "b": Json::number(4.0) }),
+  ])
+  assert_eq(must_eval(parse_filter("{a:(empty)}"), j), [])
 }
 
 ///|
