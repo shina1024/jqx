@@ -279,6 +279,76 @@ test "eval flatten errors" {
 }
 
 ///|
+test "eval transpose compatibility" {
+  assert_eq(must_eval(parse_filter("transpose"), must_parse("[[1,2],[3,4]]")), [
+    Json::array([
+      Json::array([Json::number(1.0), Json::number(3.0)]),
+      Json::array([Json::number(2.0), Json::number(4.0)]),
+    ]),
+  ])
+  assert_eq(must_eval(parse_filter("transpose"), must_parse("[[1],[2,3]]")), [
+    Json::array([
+      Json::array([Json::number(1.0), Json::number(2.0)]),
+      Json::array([Json::null(), Json::number(3.0)]),
+    ]),
+  ])
+  assert_eq(must_eval(parse_filter("transpose"), must_parse("[]")), [
+    Json::array([]),
+  ])
+  assert_eq(must_eval(parse_filter("transpose"), must_parse("[[],[]]")), [
+    Json::array([]),
+  ])
+  assert_eq(must_eval(parse_filter("transpose"), must_parse("[[1],[]]")), [
+    Json::array([Json::array([Json::number(1.0), Json::null()])]),
+  ])
+  assert_eq(must_eval(parse_filter("transpose"), must_parse("[{}]")), [
+    Json::array([]),
+  ])
+  assert_eq(must_eval(parse_filter("transpose"), must_parse("[[1],null]")), [
+    Json::array([Json::array([Json::number(1.0), Json::null()])]),
+  ])
+  assert_eq(
+    must_eval(parse_filter("transpose"), must_parse("[[1,null],[2]]")),
+    [
+      Json::array([
+        Json::array([Json::number(1.0), Json::number(2.0)]),
+        Json::array([Json::null(), Json::null()]),
+      ]),
+    ],
+  )
+}
+
+///|
+test "eval transpose errors" {
+  guard (try? eval(parse_filter("transpose"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over number (1)" else {
+    fail("expected transpose non-array iterate error")
+  }
+  guard (try? eval(parse_filter("transpose"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "Cannot iterate over null (null)" else {
+    fail("expected transpose null iterate error")
+  }
+  guard (try? eval(parse_filter("transpose"), must_parse("[1]"))) is Err(err) &&
+    err.to_string() == "Cannot index number with number" else {
+    fail("expected transpose number index error")
+  }
+  guard (try? eval(parse_filter("transpose"), must_parse("[[1],{}]")))
+    is Err(err) &&
+    err.to_string() == "Cannot index object with number" else {
+    fail("expected transpose object index error")
+  }
+  guard (try? eval(parse_filter("transpose"), must_parse("[[1],\"x\"]")))
+    is Err(err) &&
+    err.to_string() == "Cannot index string with number" else {
+    fail("expected transpose string index error")
+  }
+  guard (try? eval(parse_filter("transpose"), must_parse("[true]"))) is Err(err) &&
+    err.to_string() == "boolean (true) has no length" else {
+    fail("expected transpose boolean length error")
+  }
+}
+
+///|
 test "eval to_entries/from_entries/with_entries compatibility" {
   assert_eq(must_eval(parse_filter("to_entries"), must_parse("[10,20]")), [
     Json::array([

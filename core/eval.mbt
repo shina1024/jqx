@@ -265,6 +265,53 @@ fn flatten_with_depth(input : Json, depth : Json) -> Json raise EvalError {
 }
 
 ///|
+fn transpose_row_length(row : Json) -> Int raise EvalError {
+  match row {
+    Array(a) => a.length()
+    Object(o) => o.length()
+    String(s) => s.length()
+    JNull => 0
+    Number(n, _) => if n == 0.0 { 0 } else { 1 }
+    JTrue | JFalse =>
+      raise TypeError(json_type_with_value(row) + " has no length")
+  }
+}
+
+///|
+fn transpose_row_index(row : Json, i : Int) -> Json raise EvalError {
+  match row {
+    Array(a) => if i >= 0 && i < a.length() { a[i] } else { Json::null() }
+    JNull => Json::null()
+    _ => index_type_error(row, Json::number(i.to_double()))
+  }
+}
+
+///|
+fn transpose_json(input : Json) -> Json raise EvalError {
+  match input {
+    Array(rows) => {
+      let mut max_len = 0
+      for row in rows {
+        let n = transpose_row_length(row)
+        if n > max_len {
+          max_len = n
+        }
+      }
+      let out = []
+      for i in 0..<max_len {
+        let col = []
+        for row in rows {
+          col.push(transpose_row_index(row, i))
+        }
+        out.push(Json::array(col))
+      }
+      Json::array(out)
+    }
+    _ => raise TypeError("Cannot iterate over " + json_type_with_value(input))
+  }
+}
+
+///|
 fn to_entries_json(input : Json) -> Json raise EvalError {
   match input {
     Object(o) => {
@@ -784,6 +831,7 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
     "first" => [nth_on_input(input, Json::number(0.0))]
     "last" => [nth_on_input(input, Json::number(-1.0))]
     "flatten" => [flatten_default(input)]
+    "transpose" => [transpose_json(input)]
     "to_entries" => [to_entries_json(input)]
     "from_entries" => [from_entries_json(input)]
     "sort" =>
