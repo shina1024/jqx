@@ -84,6 +84,28 @@ This is a [MoonBit](https://docs.moonbitlang.com) project.
 - APIは小さく安定させ、後でTS定義を追加しやすい形にする。
 - 数値はJS互換（IEEE754 Double）を優先し、精度限界は仕様として明記する。
 
+### JS/TS 型推論戦略 (今後)
+
+- 方針は「2レーン」で進める。
+  - Dynamicレーン: jq文字列入力をそのまま評価する互換API
+  - Typedレーン: `Query[I, O]` 相当の typed DSL で強い型推論を提供
+- jq文字列に対する型付けは「部分推論」に留める。
+  - 推論不能・不安定な箇所は `unknown` / `Json` にフォールバック
+  - 文字列からの「強い」静的型推論を主軸にはしない
+- 強い型安全が必要なユースケースは typed DSL を推奨し、
+  jq文字列APIは互換性重視で維持する。
+- core は既存の `Filter` AST + `eval` を活用する前提とし、
+  typed DSL 導入のための大規模な core 改修は避ける。
+
+### JS/TS 実装ロードマップ
+
+1. JS向け公開APIを Dynamic/Typed で分離する
+2. typed DSL から `Filter` AST を生成するレイヤを追加する
+3. 最低限の型付きコンビネータ (`identity`, `field`, `index`, `pipe`, `map`) を実装する
+4. jq文字列APIには静的検証と部分推論のみを追加する
+5. TSテストで推論結果（コンパイル時）と実行結果（ランタイム）を分けて検証する
+6. バージョン採番前は互換維持を優先せず、必要なら既存APIを直接置き換える
+
 ### Implementation Steps (First Pass)
 
 1. JSON値型 `Json` を定義
