@@ -233,6 +233,116 @@ fn getpath_on_input(input : Json, path : Json) -> Json raise EvalError {
 }
 
 ///|
+fn normalize_setpath_arg(path : Json) -> Array[Json] raise EvalError {
+  match path {
+    Array(parts) => parts
+    _ => raise TypeError("Path must be specified as an array")
+  }
+}
+
+///|
+fn setpath_on_input(
+  input : Json,
+  path : Array[Json],
+  value : Json,
+) -> Json raise EvalError {
+  if path.length() == 0 {
+    return value
+  }
+  let key = path[0]
+  let rest = path_tail(path)
+  match input {
+    Object(o) =>
+      match key {
+        String(name) => {
+          let child = match o.get(name) {
+            Some(v) => v
+            None => Json::null()
+          }
+          let updated = setpath_on_input(child, rest, value)
+          let out = Map::new()
+          for kv in o.iter() {
+            out[kv.0] = kv.1
+          }
+          out[name] = updated
+          Json::object(out)
+        }
+        _ => index_type_error(input, key)
+      }
+    Array(a) =>
+      match key {
+        Number(n, _) =>
+          if n != n {
+            raise TypeError("Cannot set array element at NaN index")
+          } else if n == @double.infinity || n == @double.neg_infinity {
+            raise TypeError("Array index too large")
+          } else {
+            let i = n.to_int()
+            if i < 0 {
+              let idx = a.length() + i
+              if idx < 0 {
+                raise TypeError("Out of bounds negative array index")
+              } else {
+                let out = a.copy()
+                out[idx] = setpath_on_input(out[idx], rest, value)
+                Json::array(out)
+              }
+            } else {
+              let out = a.copy()
+              for {
+                if out.length() <= i {
+                  out.push(Json::null())
+                } else {
+                  break
+                }
+              }
+              out[i] = setpath_on_input(out[i], rest, value)
+              Json::array(out)
+            }
+          }
+        Object(_) =>
+          raise TypeError("Array/string slice indices must be integers")
+        Array(_) =>
+          raise TypeError("Cannot update field at array index of array")
+        _ => index_type_error(input, key)
+      }
+    JNull =>
+      match key {
+        String(name) => {
+          let updated = setpath_on_input(Json::null(), rest, value)
+          let out = Map::new()
+          out[name] = updated
+          Json::object(out)
+        }
+        Number(n, _) =>
+          if n != n {
+            raise TypeError("Cannot set array element at NaN index")
+          } else if n == @double.infinity || n == @double.neg_infinity {
+            raise TypeError("Array index too large")
+          } else {
+            let i = n.to_int()
+            if i < 0 {
+              raise TypeError("Out of bounds negative array index")
+            } else {
+              let out = []
+              for {
+                if out.length() <= i {
+                  out.push(Json::null())
+                } else {
+                  break
+                }
+              }
+              out[i] = setpath_on_input(out[i], rest, value)
+              Json::array(out)
+            }
+          }
+        _ => index_type_error(input, key)
+      }
+    _ => index_type_error(input, key)
+  }
+}
+
+///|
 fn path_tail(path : Array[Json]) -> Array[Json] {
   let out = []
   for i in 1..<path.length() {
@@ -1804,6 +1914,25 @@ fn eval_call(
           out.push(getpath_on_input(input, path))
         }
         out
+      }
+    "setpath" =>
+      if args.length() != 2 {
+        raise UnknownFunction("setpath")
+      } else {
+        let values = eval_with_env(args[1], input, env)
+        if values.length() == 0 {
+          []
+        } else {
+          let paths = eval_with_env(args[0], input, env)
+          let out = []
+          for value in values {
+            for path in paths {
+              let parts = normalize_setpath_arg(path)
+              out.push(setpath_on_input(input, parts, value))
+            }
+          }
+          out
+        }
       }
     "delpaths" =>
       if args.length() != 1 {

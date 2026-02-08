@@ -947,6 +947,157 @@ test "eval getpath errors" {
 }
 
 ///|
+test "eval setpath compatibility" {
+  assert_eq(
+    must_eval(parse_filter("setpath([\"a\"];2)"), must_parse("{\"a\":1}")),
+    [Json::object({ "a": Json::number(2.0) })],
+  )
+  assert_eq(
+    must_eval(parse_filter("setpath([\"a\",\"b\"];1)"), must_parse("{}")),
+    [Json::object({ "a": Json::object({ "b": Json::number(1.0) }) })],
+  )
+  assert_eq(must_eval(parse_filter("setpath([2];1)"), must_parse("[]")), [
+    Json::array([Json::null(), Json::null(), Json::number(1.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("setpath([-1];9)"), must_parse("[0,1]")), [
+    Json::array([Json::number(0.0), Json::number(9.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("setpath([1.9];9)"), must_parse("[0,1]")), [
+    Json::array([Json::number(0.0), Json::number(9.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("setpath([\"a\"];2)"), must_parse("null")), [
+    Json::object({ "a": Json::number(2.0) }),
+  ])
+  assert_eq(must_eval(parse_filter("setpath([0];2)"), must_parse("null")), [
+    Json::array([Json::number(2.0)]),
+  ])
+  assert_eq(must_eval(parse_filter("setpath([];2)"), must_parse("{\"a\":1}")), [
+    Json::number(2.0),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("setpath(([\"a\"],[\"b\"]);(2,3))"),
+      must_parse("{\"a\":1}"),
+    ),
+    [
+      Json::object({ "a": Json::number(2.0) }),
+      Json::object({ "a": Json::number(1.0), "b": Json::number(2.0) }),
+      Json::object({ "a": Json::number(3.0) }),
+      Json::object({ "a": Json::number(1.0), "b": Json::number(3.0) }),
+    ],
+  )
+  assert_eq(
+    must_eval(parse_filter("setpath(empty;2)"), must_parse("{\"a\":1}")),
+    [],
+  )
+  assert_eq(
+    must_eval(parse_filter("setpath([\"a\"];empty)"), must_parse("{\"a\":1}")),
+    [],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("setpath((empty,[\"a\"]);2)"),
+      must_parse("{\"a\":1}"),
+    ),
+    [Json::object({ "a": Json::number(2.0) })],
+  )
+  assert_eq(must_eval(parse_filter("setpath([\"a\",2];1)"), must_parse("{}")), [
+    Json::object({
+      "a": Json::array([Json::null(), Json::null(), Json::number(1.0)]),
+    }),
+  ])
+  assert_eq(must_eval(parse_filter("setpath([0,\"a\"];1)"), must_parse("[]")), [
+    Json::array([Json::object({ "a": Json::number(1.0) })]),
+  ])
+}
+
+///|
+test "eval setpath errors" {
+  guard (try? eval(parse_filter("setpath(\"a\";2)"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Path must be specified as an array" else {
+    fail("expected setpath path-array error")
+  }
+  guard (try? eval(parse_filter("setpath([{}];2)"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Cannot index object with object" else {
+    fail("expected setpath object-key type error")
+  }
+  guard (try? eval(
+      parse_filter("setpath([[\"a\"]];2)"),
+      must_parse("{\"a\":1}"),
+    ))
+    is Err(err) &&
+    err.to_string() == "Cannot index object with array" else {
+    fail("expected setpath array-key type error")
+  }
+  guard (try? eval(parse_filter("setpath([\"a\"];2)"), must_parse("[1,2]")))
+    is Err(err) &&
+    err.to_string() == "Cannot index array with string \"a\"" else {
+    fail("expected setpath array string-index error")
+  }
+  guard (try? eval(parse_filter("setpath([0];2)"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Cannot index object with number" else {
+    fail("expected setpath object number-index error")
+  }
+  guard (try? eval(parse_filter("setpath([\"a\"];2)"), must_parse("1")))
+    is Err(err) &&
+    err.to_string() == "Cannot index number with string \"a\"" else {
+    fail("expected setpath number string-index error")
+  }
+  guard (try? eval(parse_filter("setpath([0];2)"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "Cannot index number with number" else {
+    fail("expected setpath number index error")
+  }
+  guard (try? eval(parse_filter("setpath([true];2)"), must_parse("null")))
+    is Err(err) &&
+    err.to_string() == "Cannot index null with boolean" else {
+    fail("expected setpath null boolean-index error")
+  }
+  guard (try? eval(parse_filter("setpath([[]];2)"), must_parse("null")))
+    is Err(err) &&
+    err.to_string() == "Cannot index null with array" else {
+    fail("expected setpath null array-index error")
+  }
+  guard (try? eval(parse_filter("setpath([(1e308 * 10)];2)"), must_parse("[]")))
+    is Err(err) &&
+    err.to_string() == "Array index too large" else {
+    fail("expected setpath array index too large error")
+  }
+  guard (try? eval(
+      parse_filter("setpath([((1e308 * 10) - (1e308 * 10))];2)"),
+      must_parse("[]"),
+    ))
+    is Err(err) &&
+    err.to_string() == "Cannot set array element at NaN index" else {
+    fail("expected setpath NaN index error")
+  }
+  guard (try? eval(parse_filter("setpath([-1];2)"), must_parse("[]")))
+    is Err(err) &&
+    err.to_string() == "Out of bounds negative array index" else {
+    fail("expected setpath negative index error")
+  }
+  guard (try? eval(parse_filter("setpath([\"a\",-1];1)"), must_parse("{}")))
+    is Err(err) &&
+    err.to_string() == "Out of bounds negative array index" else {
+    fail("expected setpath nested negative index error")
+  }
+  guard (try? eval(parse_filter("setpath([{}];2)"), must_parse("[1,2]")))
+    is Err(err) &&
+    err.to_string() == "Array/string slice indices must be integers" else {
+    fail("expected setpath object index-in-array error")
+  }
+  guard (try? eval(parse_filter("setpath([[]];2)"), must_parse("[1,2]")))
+    is Err(err) &&
+    err.to_string() == "Cannot update field at array index of array" else {
+    fail("expected setpath array index-in-array error")
+  }
+  assert_eq(must_eval(parse_filter("setpath(.foo;empty)"), must_parse("1")), [])
+  assert_eq(must_eval(parse_filter("setpath(\"a\";empty)"), must_parse("1")), [])
+}
+
+///|
 test "eval delpaths compatibility" {
   assert_eq(
     must_eval(

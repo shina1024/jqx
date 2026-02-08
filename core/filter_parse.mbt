@@ -572,10 +572,26 @@ fn FilterCursor::parse_identifier_or_call(
         ctx.read_char() |> ignore
         Filter::call(name, [])
       } else {
-        let inner = ctx.parse_comma()
-        ctx.skip_ws()
-        ctx.expect_char(')')
-        Filter::call(name, [inner])
+        let args = []
+        for {
+          let arg = ctx.parse_comma()
+          args.push(arg)
+          ctx.skip_ws()
+          match ctx.peek_char() {
+            Some(';') => {
+              ctx.read_char() |> ignore
+              ctx.skip_ws()
+              continue
+            }
+            Some(')') => {
+              ctx.read_char() |> ignore
+              break
+            }
+            Some(_) => ctx.invalid_char()
+            None => raise InvalidEof
+          }
+        }
+        Filter::call(name, args)
       }
     }
     _ => Filter::builtin(name)

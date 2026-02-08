@@ -121,6 +121,14 @@ test "parse call" {
     parse_filter("select(.a)"),
     content="Call(\"select\", [Pipe(Identity, Field(\"a\"))])",
   )
+  inspect(
+    parse_filter("setpath([\"a\"]; 1)"),
+    content="Call(\"setpath\", [Array([Literal(String(\"a\"))]), Literal(Number(1))])",
+  )
+  inspect(
+    parse_filter("setpath(([\"a\"], [\"b\"]); 1)"),
+    content="Call(\"setpath\", [Comma(Array([Literal(String(\"a\"))]), Array([Literal(String(\"b\"))])), Literal(Number(1))])",
+  )
 }
 
 ///|
