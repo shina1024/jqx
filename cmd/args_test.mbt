@@ -17,3 +17,24 @@ test "parse args input" {
   assert_eq(cfg.filter, ".foo")
   assert_eq(cfg.input, Some("{\"foo\":1}"))
 }
+
+///|
+test "parse args unknown option" {
+  let args = ["jqx", "-z", "."]
+  let parsed = parse_cli_args(args)
+  guard parsed is Err(_) else { fail("expected Err") }
+}
+
+///|
+test "parse args -n with input" {
+  let args = ["jqx", "-n", ".", "1"]
+  let parsed = parse_cli_args(args)
+  guard parsed is Err(_) else { fail("expected Err") }
+}
+
+///|
+test "parse args too many arguments" {
+  let args = ["jqx", ".", "1", "2"]
+  let parsed = parse_cli_args(args)
+  guard parsed is Err(_) else { fail("expected Err") }
+}

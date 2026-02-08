@@ -16,6 +16,10 @@ pub fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
   let mut idx = 1
   while idx < args.length() {
     let a = args[idx]
+    if a == "--" {
+      idx += 1
+      break
+    }
     if a == "-r" {
       raw = true
       idx += 1
@@ -30,6 +34,9 @@ pub fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
       idx += 1
       continue
     }
+    if a.has_prefix("-") {
+      return Err("unknown option: " + a)
+    }
     break
   }
   if idx >= args.length() {
@@ -37,10 +44,19 @@ pub fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
   }
   let filter = args[idx]
   idx += 1
-  let input = if no_input {
-    None
-  } else if idx < args.length() {
-    Some(args[idx])
+  if no_input {
+    if idx < args.length() {
+      return Err("input is not allowed with -n")
+    }
+    return Ok({ raw, no_input, filter, input: None })
+  }
+  let input = if idx < args.length() {
+    let value = args[idx]
+    idx += 1
+    if idx < args.length() {
+      return Err("too many arguments")
+    }
+    Some(value)
   } else {
     None
   }

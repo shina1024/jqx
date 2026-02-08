@@ -16,7 +16,7 @@ fn main {
   }
   let parsed = parse_cli_args(args)
   guard parsed is Ok(cfg) else {
-    println("jqx: error: missing filter")
+    println("jqx: error: " + parsed.unwrap_err())
     println(
       "Usage: moon run --target native cmd -- [options] \"<filter>\" [\"<json>\"]",
     )
