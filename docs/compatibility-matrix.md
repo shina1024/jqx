@@ -56,7 +56,7 @@ Implemented builtins/functions in `core/eval.mbt` include:
 | Object key order | partial | `Map` iteration order is not guaranteed |
 | Number edge behavior | partial | `Double`-first semantics; Infinity/NaN handling still evolving |
 | Exact error text | partial | close to jq style but not byte-for-byte compatible |
-| CLI option coverage | partial | currently `-r`, `-c`, `-n` only |
+| CLI option coverage | partial | currently `-r`, `-c`, `-n`, `-e` |
 
 ## JS/TS Library Track
 

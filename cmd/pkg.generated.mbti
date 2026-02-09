@@ -20,6 +20,7 @@ pub fn read_stdin_all() -> String
 pub struct CliArgs {
   raw : Bool
   no_input : Bool
+  exit_status : Bool
   filter : String
   input : String?
 }

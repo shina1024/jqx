@@ -11,7 +11,9 @@ fn main {
     println(
       "Example (arg):   moon run --target native cmd -- \".foo\" '{\"foo\": 1}'",
     )
-    println("Options: -r (raw strings), -c (compact; default), -n (null input)")
+    println(
+      "Options: -r (raw strings), -c (compact; default), -n (null input), -e (set exit status)",
+    )
     return
   }
   let parsed = parse_cli_args(args)
@@ -23,6 +25,7 @@ fn main {
     return
   }
   let raw = cfg.raw
+  let exit_status = cfg.exit_status
   let filter = cfg.filter
   let input = if cfg.no_input {
     None
@@ -41,6 +44,9 @@ fn main {
     let outputs = @lib.eval(f, j)
     for v in outputs {
       println(format_output(raw, v))
+    }
+    if exit_status {
+      jqx_exit(compute_exit_status(outputs))
     }
   } catch {
     err => {
@@ -87,4 +93,15 @@ fn format_error_message(msg : String) -> String {
     None => ()
   }
   "jqx: error: " + msg
+}
+
+///|
+fn compute_exit_status(outputs : Array[@lib.Json]) -> Int {
+  if outputs.length() == 0 {
+    return 4
+  }
+  match outputs[outputs.length() - 1] {
+    @lib.Json::JFalse | @lib.Json::JNull => 1
+    _ => 0
+  }
 }

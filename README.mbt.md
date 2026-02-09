@@ -44,6 +44,9 @@ moon run --target native cmd -- -r ".foo" '{"foo": "bar"}'
 
 # Null input (ignore stdin/arg)
 moon run --target native cmd -- -n "."
+
+# Exit status by result truthiness (jq -e style)
+moon run --target native cmd -- -e ".ok" '{"ok": false}'
 ```
 
 ## Filters (Current)
