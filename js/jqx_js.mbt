@@ -71,6 +71,8 @@ pub fn safeExecute(
 }
 
 ///|
+/// Compatibility lane:
+/// returns JSON text so large numbers and repr are preserved.
 pub fn evalToJsonStrings(
   filter : String,
   input : String,
@@ -90,6 +92,41 @@ pub fn evalToJsonStrings(
 }
 
 ///|
+/// Compatibility lane alias.
 pub fn run(filter : String, input : String) -> Result[Array[String], String] {
   evalToJsonStrings(filter, input)
+}
+
+///|
+/// Compatibility lane explicit entrypoint.
+pub fn runCompat(
+  filter : String,
+  input : String,
+) -> Result[Array[String], String] {
+  evalToJsonStrings(filter, input)
+}
+
+///|
+/// Convenience lane:
+/// returns core Json values (Number uses Double semantics internally).
+pub fn runValues(
+  filter : String,
+  input : String,
+) -> Result[Array[@core.Json], String] {
+  try {
+    let f = @core.parse_filter(filter)
+    let j = @core.parse(input)
+    Ok(@core.eval(f, j))
+  } catch {
+    err => Err(err.to_string())
+  }
+}
+
+///|
+/// Convenience lane alias.
+pub fn safeRunValues(
+  filter : String,
+  input : String,
+) -> Result[Array[@core.Json], String] {
+  runValues(filter, input)
 }

@@ -30,13 +30,19 @@ pub fn pipe(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Que
 
 pub fn run(String, String) -> Result[Array[String], String]
 
+pub fn runCompat(String, String) -> Result[Array[String], String]
+
 pub fn runQuery(Query[@core.Json, @core.Json], String) -> Result[Array[String], String]
+
+pub fn runValues(String, String) -> Result[Array[@core.Json], String]
 
 pub fn safeExecute(@core.Filter, @core.Json) -> Result[Array[@core.Json], String]
 
 pub fn safeParseFilter(String) -> Result[@core.Filter, String]
 
 pub fn safeParseJson(String) -> Result[@core.Json, String]
+
+pub fn safeRunValues(String, String) -> Result[Array[@core.Json], String]
 
 pub fn tryEval(@core.Filter, @core.Json) -> Result[Array[@core.Json], String]
 

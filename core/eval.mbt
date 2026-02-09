@@ -44,6 +44,11 @@ fn json_type_with_value(j : Json) -> String {
 }
 
 ///|
+fn json_number_value(n : Double) -> Json {
+  Json::number(n)
+}
+
+///|
 fn[T] contains_type_error(haystack : Json, needle : Json) -> T raise EvalError {
   raise TypeError(
     json_type_with_value(haystack) +
@@ -276,6 +281,8 @@ fn setpath_on_input(
             raise TypeError("Cannot set array element at NaN index")
           } else if n == @double.infinity || n == @double.neg_infinity {
             raise TypeError("Array index too large")
+          } else if n > 2147483647.0 || n < -2147483648.0 {
+            raise TypeError("Array index too large")
           } else {
             let i = n.to_int()
             if i < 0 {
@@ -318,6 +325,8 @@ fn setpath_on_input(
           if n != n {
             raise TypeError("Cannot set array element at NaN index")
           } else if n == @double.infinity || n == @double.neg_infinity {
+            raise TypeError("Array index too large")
+          } else if n > 2147483647.0 || n < -2147483648.0 {
             raise TypeError("Array index too large")
           } else {
             let i = n.to_int()
@@ -1212,7 +1221,7 @@ fn eval_arith(
                 x / y
               }
           }
-          out.push(Json::number(v))
+          out.push(json_number_value(v))
         }
         (String(s), Number(n, _)) =>
           if op == "*" {
@@ -1795,7 +1804,7 @@ fn json_add_pair(a : Json, b : Json) -> Json raise EvalError {
   match (a, b) {
     (JNull, x) => x
     (x, JNull) => x
-    (Number(x, _), Number(y, _)) => Json::number(x + y)
+    (Number(x, _), Number(y, _)) => json_number_value(x + y)
     (String(x), String(y)) => Json::string(x + y)
     (Array(x), Array(y)) => {
       let merged = x.copy()

@@ -279,7 +279,7 @@ fn eval_call(
               } else {
                 out.push(Json::string(h))
               }
-            _ => raise TypeError("startswith() requires string inputs")
+            _ => raise TypeError("ltrimstr() requires string inputs")
           }
         }
         out
@@ -304,7 +304,7 @@ fn eval_call(
               } else {
                 out.push(Json::string(h))
               }
-            _ => raise TypeError("startswith() requires string inputs")
+            _ => raise TypeError("rtrimstr() requires string inputs")
           }
         }
         out

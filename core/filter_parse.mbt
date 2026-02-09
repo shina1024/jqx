@@ -310,9 +310,21 @@ fn FilterCursor::parse_number_literal(
     Some(_) => ctx.invalid_char(shift=-1)
     None => raise InvalidEof
   }
+  let mut prev_is_exp_marker = false
   for {
     match ctx.read_char() {
-      Some(c) if c is ('0'..='9' | '.' | 'e' | 'E' | '+' | '-') => continue
+      Some(c) if c is ('0'..='9' | '.' | 'e' | 'E') => {
+        prev_is_exp_marker = c == 'e' || c == 'E'
+        continue
+      }
+      Some(c) if c is ('+' | '-') => {
+        if prev_is_exp_marker {
+          prev_is_exp_marker = false
+          continue
+        }
+        ctx.offset -= 1
+        break
+      }
       Some(_) => {
         ctx.offset -= 1
         break
@@ -323,20 +335,11 @@ fn FilterCursor::parse_number_literal(
   let end = ctx.offset
   let s = ctx.input.view(start_offset=start, end_offset=end)
   let s_str = s.to_string()
-  let parsed_double = try? @strconv.parse_double(s)
-  match parsed_double {
-    Ok(d) =>
-      if !s.contains(".") && !s.contains("e") && !s.contains("E") {
-        let parsed_int = try? @strconv.parse_int64(s)
-        match parsed_int {
-          Ok(i) if i <= 9007199254740991 && i >= -9007199254740991 =>
-            Json::number(d)
-          Ok(_) => Json::number(d, repr=s_str)
-          Err(_) => Json::number(d, repr=s_str)
-        }
-      } else {
-        Json::number(d)
-      }
+  let parsed = try? parse(s)
+  match parsed {
+    Ok(Number(n, repr)) => Json::number(n, repr?)
+    Ok(_) =>
+      raise InvalidNumber(filter_offset_to_position(ctx.input, start), s_str)
     Err(_) =>
       raise InvalidNumber(filter_offset_to_position(ctx.input, start), s_str)
   }

@@ -155,7 +155,16 @@ pub fn Json::to_json_string(self : Json) -> String {
       Number(n, repr) =>
         match repr {
           Some(s) => buf.write_string(s)
-          None => buf.write_string(n.to_string())
+          None =>
+            if n != n {
+              buf.write_string("null")
+            } else if n == @double.infinity {
+              buf.write_string("1.7976931348623157e+308")
+            } else if n == @double.neg_infinity {
+              buf.write_string("-1.7976931348623157e+308")
+            } else {
+              buf.write_string(n.to_string())
+            }
         }
       String(s) => write_escaped(s)
       Array(a) => {

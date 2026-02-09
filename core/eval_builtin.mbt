@@ -129,15 +129,30 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
     "tonumber" =>
       match input {
         Number(_, _) => [input]
-        String(s) =>
-          try @strconv.parse_double(s) catch {
-            _ =>
-              raise TypeError(
-                json_type_with_value(input) + " cannot be parsed as a number",
-              )
-          } noraise {
-            n => if n != n { [Json::null()] } else { [Json::number(n)] }
+        String(s) => {
+          let parsed_double = try? @strconv.parse_double(s)
+          match parsed_double {
+            Ok(n) => [json_number_value(n)]
+            Err(_) =>
+              try parse(s) catch {
+                _ =>
+                  raise TypeError(
+                    json_type_with_value(input) +
+                    " cannot be parsed as a number",
+                  )
+              } noraise {
+                j =>
+                  match j {
+                    Number(_, _) => [j]
+                    _ =>
+                      raise TypeError(
+                        json_type_with_value(input) +
+                        " cannot be parsed as a number",
+                      )
+                  }
+              }
           }
+        }
         _ =>
           raise TypeError(
             json_type_with_value(input) + " cannot be parsed as a number",
@@ -227,12 +242,12 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
     "ascii_upcase" =>
       match input {
         String(s) => [Json::string(ascii_upcase_string(s))]
-        _ => raise TypeError("explode input must be a string")
+        _ => raise TypeError("ascii_upcase input must be a string")
       }
     "ascii_downcase" =>
       match input {
         String(s) => [Json::string(ascii_downcase_string(s))]
-        _ => raise TypeError("explode input must be a string")
+        _ => raise TypeError("ascii_downcase input must be a string")
       }
     "implode" =>
       match input {

@@ -491,9 +491,18 @@ test "eval tostring/tonumber compatibility" {
   assert_eq(must_eval(parse_filter("tonumber"), must_parse("1")), [
     Json::number(1.0),
   ])
-  assert_eq(must_eval(parse_filter("tonumber"), must_parse("\"nan\"")), [
-    Json::null(),
-  ])
+  let nan_number = must_eval(parse_filter("tonumber"), must_parse("\"nan\""))
+  assert_eq(nan_number.length(), 1)
+  assert_eq(nan_number[0].to_json_string(), "null")
+  let huge = must_eval(parse_filter("tonumber"), must_parse("\"1e309\""))
+  assert_eq(huge.length(), 1)
+  assert_eq(huge[0].to_json_string(), "1e309")
+  let pos_inf = must_eval(parse_filter("tonumber"), must_parse("\"Infinity\""))
+  assert_eq(pos_inf.length(), 1)
+  assert_eq(pos_inf[0].to_json_string(), "1.7976931348623157e+308")
+  let neg_inf = must_eval(parse_filter("tonumber"), must_parse("\"-Infinity\""))
+  assert_eq(neg_inf.length(), 1)
+  assert_eq(neg_inf[0].to_json_string(), "-1.7976931348623157e+308")
 }
 
 ///|
@@ -1842,6 +1851,19 @@ test "eval arithmetic" {
   assert_eq(must_eval(parse_filter(".c - .a"), j), [Json::number(2.0)])
   assert_eq(must_eval(parse_filter(".a * .b"), j), [Json::number(2.0)])
   assert_eq(must_eval(parse_filter(".c / .a"), j), [Json::number(3.0)])
+  let inf_out = must_eval(parse_filter(". + 1"), must_parse("1e309"))
+  assert_eq(inf_out.length(), 1)
+  assert_eq(inf_out[0].to_json_string(), "1.7976931348623157e+308")
+  let nan_out = must_eval(parse_filter(". - ."), must_parse("1e309"))
+  assert_eq(nan_out.length(), 1)
+  assert_eq(nan_out[0].to_json_string(), "null")
+  let null_input = must_parse("null")
+  let literal_inf_out = must_eval(parse_filter("1e309 + 1"), null_input)
+  assert_eq(literal_inf_out.length(), 1)
+  assert_eq(literal_inf_out[0].to_json_string(), "1.7976931348623157e+308")
+  let literal_nan_out = must_eval(parse_filter("1e309 - 1e309"), null_input)
+  assert_eq(literal_nan_out.length(), 1)
+  assert_eq(literal_nan_out[0].to_json_string(), "null")
 }
 
 ///|
@@ -2149,17 +2171,17 @@ test "eval trimstr compatibility" {
 test "eval trimstr errors" {
   guard (try? eval(parse_filter("ltrimstr(\"1\")"), must_parse("1")))
     is Err(err) &&
-    err.to_string() == "startswith() requires string inputs" else {
+    err.to_string() == "ltrimstr() requires string inputs" else {
     fail("expected ltrimstr input type error")
   }
   guard (try? eval(parse_filter("ltrimstr(1)"), must_parse("\"x\"")))
     is Err(err) &&
-    err.to_string() == "startswith() requires string inputs" else {
+    err.to_string() == "ltrimstr() requires string inputs" else {
     fail("expected ltrimstr separator type error")
   }
   guard (try? eval(parse_filter("rtrimstr(1)"), must_parse("\"x\"")))
     is Err(err) &&
-    err.to_string() == "startswith() requires string inputs" else {
+    err.to_string() == "rtrimstr() requires string inputs" else {
     fail("expected rtrimstr separator type error")
   }
 }
@@ -2178,12 +2200,12 @@ test "eval ascii case compatibility" {
 ///|
 test "eval ascii case errors" {
   guard (try? eval(parse_filter("ascii_upcase"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "explode input must be a string" else {
+    err.to_string() == "ascii_upcase input must be a string" else {
     fail("expected ascii_upcase type error")
   }
   guard (try? eval(parse_filter("ascii_downcase"), must_parse("null")))
     is Err(err) &&
-    err.to_string() == "explode input must be a string" else {
+    err.to_string() == "ascii_downcase input must be a string" else {
     fail("expected ascii_downcase type error")
   }
 }

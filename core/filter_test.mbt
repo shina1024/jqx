@@ -193,6 +193,14 @@ test "parse arithmetic" {
     content="Add(Pipe(Identity, Field(\"a\")), Mul(Pipe(Identity, Field(\"b\")), Pipe(Identity, Field(\"c\"))))",
   )
   inspect(
+    parse_filter("1+2"),
+    content="Add(Literal(Number(1)), Literal(Number(2)))",
+  )
+  inspect(
+    parse_filter("1-2"),
+    content="Sub(Literal(Number(1)), Literal(Number(2)))",
+  )
+  inspect(
     parse_filter("(.a - .b) / 2"),
     content="Div(Sub(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\"))), Literal(Number(2)))",
   )

@@ -70,3 +70,22 @@ test "js execute and safeExecute aliases" {
   assert_eq(values.length(), 1)
   assert_eq(values[0].to_json_string(), "5")
 }
+
+///|
+test "js runCompat preserves large-number repr output" {
+  let out = runCompat(".", "1e309")
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values, ["1e309"])
+}
+
+///|
+test "js runValues convenience lane" {
+  let out = runValues(".foo + 1", "{\"foo\": 41}")
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values.length(), 1)
+  assert_eq(values[0].to_json_string(), "42")
+  let safe_out = safeRunValues(".foo", "{\"foo\": 9}")
+  guard safe_out is Ok(safe_values) else { fail("expected Ok") }
+  assert_eq(safe_values.length(), 1)
+  assert_eq(safe_values[0].to_json_string(), "9")
+}

@@ -93,7 +93,14 @@ Functions:
 - `tryParseJson(text)` -> `Result<Json, string>`
 - `tryParseFilter(text)` -> `Result<Filter, string>`
 - `tryEval(filter, json)` -> `Result<Json[], string>`
-- `run(filter, jsonText)` -> `Result<string[], string>` (Dynamic lane recommended)
+- `run(filter, jsonText)` -> `Result<string[], string>` (compatibility lane alias)
+- `runCompat(filter, jsonText)` -> `Result<string[], string>` (compatibility lane)
+- `runValues(filter, jsonText)` -> `Result<Json[], string>` (convenience lane)
+- `safeRunValues(filter, jsonText)` -> `Result<Json[], string>` (convenience lane alias)
+
+Lanes:
+- Compatibility lane (`run`/`runCompat`/`evalToJsonStrings`) keeps JSON text output to preserve numeric representation.
+- Convenience lane (`runValues`/`safeRunValues`) returns `Json` values directly (`Number` uses Double semantics).
 
 Typed lane (scaffold):
 - `Query[I, O]`

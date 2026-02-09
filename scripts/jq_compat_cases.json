@@ -310,6 +310,36 @@
     "input": "{\"a\":1}"
   },
   {
+    "name": "arith-literal-plus-nospace",
+    "filter": "1+2",
+    "input": "null"
+  },
+  {
+    "name": "arith-literal-minus-nospace",
+    "filter": "1-2",
+    "input": "null"
+  },
+  {
+    "name": "arith-huge-input-plus",
+    "filter": ". + 1",
+    "input": "1e309"
+  },
+  {
+    "name": "arith-huge-input-minus-self",
+    "filter": ". - .",
+    "input": "1e309"
+  },
+  {
+    "name": "tonumber-huge-string",
+    "filter": "tonumber",
+    "input": "\"1E+309\""
+  },
+  {
+    "name": "tonumber-infinity-string",
+    "filter": "tonumber",
+    "input": "\"Infinity\""
+  },
+  {
     "name": "arith-add-fields",
     "filter": ".a + .b",
     "input": "{\"a\":2,\"b\":3}"

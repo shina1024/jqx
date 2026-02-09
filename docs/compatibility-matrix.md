@@ -54,7 +54,7 @@ Implemented builtins/functions in `core/eval.mbt` include:
 | Topic | Status | Notes |
 | --- | --- | --- |
 | Object key order | partial | `Map` iteration order is not guaranteed |
-| Number edge behavior | partial | `Double`-first semantics; Infinity/NaN handling still evolving |
+| Number edge behavior | partial | parser/evaluator now avoid non-finite JSON output (`NaN -> null`, `±Infinity -> ±MAX_DOUBLE` in numeric ops), but full jq decnum parity is still out of scope |
 | Exact error text | partial | close to jq style but not byte-for-byte compatible |
 | CLI option coverage | partial | currently `-r`, `-R`, `-c`, `-n`, `-s`, `-e` (`-R` is line-based without full JSON-stream parity) |
 
@@ -62,7 +62,7 @@ Implemented builtins/functions in `core/eval.mbt` include:
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Dynamic API | supported | `parseJson`, `safeParseJson`, `parseFilter`, `safeParseFilter`, `execute`, `safeExecute`, `eval`, `run` |
+| Dynamic API | supported | compatibility lane: `run`/`runCompat`/`evalToJsonStrings` (JSON text); convenience lane: `runValues`/`safeRunValues` (core `Json` values) |
 | Typed DSL | partial | `Query[I, O]` scaffold + `identity` / `field` / `index` / `pipe` / `map`, with `evalQuery` / `runQuery` |
 | TS compile-time inference tests | planned | runtime tests and `typecheck` exist; type-level assertion tests are pending |
 | Zod adapter | partial | `ts/zod-adapter` provides `safeRunWithZod`, `safeExecuteWithZod`, aliases, tests, and CI checks; final npm binding is pending |
