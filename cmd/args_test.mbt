@@ -4,6 +4,7 @@ test "parse args -n" {
   let parsed = parse_cli_args(args)
   guard parsed is Ok(cfg) else { fail("expected Ok") }
   assert_eq(cfg.no_input, true)
+  assert_eq(cfg.raw_input, false)
   assert_eq(cfg.exit_status, false)
   assert_eq(cfg.slurp, false)
   assert_eq(cfg.filter, ".")
@@ -16,6 +17,7 @@ test "parse args input" {
   let parsed = parse_cli_args(args)
   guard parsed is Ok(cfg) else { fail("expected Ok") }
   assert_eq(cfg.no_input, false)
+  assert_eq(cfg.raw_input, false)
   assert_eq(cfg.exit_status, false)
   assert_eq(cfg.slurp, false)
   assert_eq(cfg.filter, ".foo")
@@ -28,6 +30,7 @@ test "parse args -e" {
   let parsed = parse_cli_args(args)
   guard parsed is Ok(cfg) else { fail("expected Ok") }
   assert_eq(cfg.exit_status, true)
+  assert_eq(cfg.raw_input, false)
   assert_eq(cfg.no_input, false)
   assert_eq(cfg.slurp, false)
   assert_eq(cfg.filter, ".foo")
@@ -40,6 +43,7 @@ test "parse args -e with -n" {
   let parsed = parse_cli_args(args)
   guard parsed is Ok(cfg) else { fail("expected Ok") }
   assert_eq(cfg.exit_status, true)
+  assert_eq(cfg.raw_input, false)
   assert_eq(cfg.no_input, true)
   assert_eq(cfg.slurp, false)
   assert_eq(cfg.filter, ".")
@@ -52,6 +56,7 @@ test "parse args -s" {
   let parsed = parse_cli_args(args)
   guard parsed is Ok(cfg) else { fail("expected Ok") }
   assert_eq(cfg.slurp, true)
+  assert_eq(cfg.raw_input, false)
   assert_eq(cfg.no_input, false)
   assert_eq(cfg.filter, ".")
   assert_eq(cfg.input, Some("1"))
@@ -63,8 +68,43 @@ test "parse args -s with -n" {
   let parsed = parse_cli_args(args)
   guard parsed is Ok(cfg) else { fail("expected Ok") }
   assert_eq(cfg.slurp, true)
+  assert_eq(cfg.raw_input, false)
   assert_eq(cfg.no_input, true)
   assert_eq(cfg.filter, ".")
+  assert_eq(cfg.input, None)
+}
+
+///|
+test "parse args -R" {
+  let args = ["jqx", "-R", "."]
+  let parsed = parse_cli_args(args)
+  guard parsed is Ok(cfg) else { fail("expected Ok") }
+  assert_eq(cfg.raw_input, true)
+  assert_eq(cfg.raw, false)
+  assert_eq(cfg.slurp, false)
+  assert_eq(cfg.no_input, false)
+  assert_eq(cfg.filter, ".")
+  assert_eq(cfg.input, None)
+}
+
+///|
+test "parse args -R -s" {
+  let args = ["jqx", "-R", "-s", "."]
+  let parsed = parse_cli_args(args)
+  guard parsed is Ok(cfg) else { fail("expected Ok") }
+  assert_eq(cfg.raw_input, true)
+  assert_eq(cfg.slurp, true)
+  assert_eq(cfg.no_input, false)
+  assert_eq(cfg.filter, ".")
+}
+
+///|
+test "parse args -R with -n" {
+  let args = ["jqx", "-R", "-n", "."]
+  let parsed = parse_cli_args(args)
+  guard parsed is Ok(cfg) else { fail("expected Ok") }
+  assert_eq(cfg.raw_input, true)
+  assert_eq(cfg.no_input, true)
   assert_eq(cfg.input, None)
 }
 

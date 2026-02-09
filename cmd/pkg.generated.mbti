@@ -19,6 +19,7 @@ pub fn read_stdin_all() -> String
 // Types and methods
 pub struct CliArgs {
   raw : Bool
+  raw_input : Bool
   no_input : Bool
   exit_status : Bool
   slurp : Bool

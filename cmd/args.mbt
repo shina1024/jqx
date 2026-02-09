@@ -1,6 +1,7 @@
 ///|
 pub struct CliArgs {
   raw : Bool
+  raw_input : Bool
   no_input : Bool
   exit_status : Bool
   slurp : Bool
@@ -14,6 +15,7 @@ pub fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
     return Err("missing filter")
   }
   let mut raw = false
+  let mut raw_input = false
   let mut no_input = false
   let mut exit_status = false
   let mut slurp = false
@@ -26,6 +28,11 @@ pub fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
     }
     if a == "-r" {
       raw = true
+      idx += 1
+      continue
+    }
+    if a == "-R" {
+      raw_input = true
       idx += 1
       continue
     }
@@ -62,7 +69,15 @@ pub fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
     if idx < args.length() {
       return Err("input is not allowed with -n")
     }
-    return Ok({ raw, no_input, exit_status, slurp, filter, input: None })
+    return Ok({
+      raw,
+      raw_input,
+      no_input,
+      exit_status,
+      slurp,
+      filter,
+      input: None,
+    })
   }
   let input = if idx < args.length() {
     let value = args[idx]
@@ -74,5 +89,5 @@ pub fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
   } else {
     None
   }
-  Ok({ raw, no_input, exit_status, slurp, filter, input })
+  Ok({ raw, raw_input, no_input, exit_status, slurp, filter, input })
 }

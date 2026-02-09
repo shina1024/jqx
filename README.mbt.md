@@ -42,6 +42,12 @@ Options:
 # Raw string output (no JSON quotes)
 moon run --target native cmd -- -r ".foo" '{"foo": "bar"}'
 
+# Raw input mode (read each line as string)
+moon run --target native cmd -- -R "." "a\nb"
+
+# Raw input slurp (read entire input as one string)
+moon run --target native cmd -- -R -s "." "a\nb\n"
+
 # Null input (ignore stdin/arg)
 moon run --target native cmd -- -n "."
 

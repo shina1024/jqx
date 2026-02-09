@@ -12,7 +12,7 @@ fn main {
       "Example (arg):   moon run --target native cmd -- \".foo\" '{\"foo\": 1}'",
     )
     println(
-      "Options: -r (raw strings), -c (compact; default), -n (null input), -s (slurp inputs), -e (set exit status)",
+      "Options: -r (raw strings), -R (raw input), -c (compact; default), -n (null input), -s (slurp inputs), -e (set exit status)",
     )
     return
   }
@@ -34,8 +34,13 @@ fn main {
   }
   try {
     let f = @lib.parse_filter(filter)
-    let j = parse_cli_input_json(cfg, stdin_text)
-    let outputs = @lib.eval(f, j)
+    let inputs = parse_cli_inputs(cfg, stdin_text)
+    let outputs = []
+    for j in inputs {
+      for v in @lib.eval(f, j) {
+        outputs.push(v)
+      }
+    }
     for v in outputs {
       println(format_output(raw, v))
     }
@@ -101,31 +106,60 @@ fn compute_exit_status(outputs : Array[@lib.Json]) -> Int {
 }
 
 ///|
-fn parse_cli_input_json(
+fn parse_cli_inputs(
   cfg : CliArgs,
   stdin_text : String,
-) -> @lib.Json raise @lib.ParseError {
+) -> Array[@lib.Json] raise @lib.ParseError {
   if cfg.no_input {
-    if cfg.slurp {
-      @lib.Json::array([])
-    } else {
-      @lib.Json::null()
-    }
+    [@lib.Json::null()]
   } else {
     let text = match cfg.input {
       Some(v) => v
       None => stdin_text
     }
-    if cfg.slurp {
-      @lib.Json::array(parse_slurp_values(text))
+    if cfg.raw_input {
+      if cfg.slurp {
+        [@lib.Json::string(text)]
+      } else {
+        parse_raw_lines(text)
+      }
     } else {
-      @lib.parse(text)
+      parse_json_inputs(text, cfg.slurp)
     }
   }
 }
 
 ///|
+fn parse_json_inputs(
+  text : String,
+  slurp : Bool,
+) -> Array[@lib.Json] raise @lib.ParseError {
+  if slurp {
+    [@lib.Json::array(parse_slurp_values(text))]
+  } else {
+    parse_json_stream_values(text)
+  }
+}
+
+///|
 fn parse_slurp_values(text : String) -> Array[@lib.Json] raise @lib.ParseError {
+  let trimmed = trim_ascii_ws(text)
+  if trimmed.length() == 0 {
+    return []
+  }
+  // Prefer parsing the full input as one JSON value first.
+  try [@lib.parse(trimmed)] catch {
+    // Fallback for newline-delimited JSON inputs.
+    _ => parse_ndjson_lines(trimmed)
+  } noraise {
+    values => values
+  }
+}
+
+///|
+fn parse_json_stream_values(
+  text : String,
+) -> Array[@lib.Json] raise @lib.ParseError {
   let trimmed = trim_ascii_ws(text)
   if trimmed.length() == 0 {
     return []
@@ -161,6 +195,36 @@ fn parse_ndjson_lines(text : String) -> Array[@lib.Json] raise @lib.ParseError {
     }
   }
   values
+}
+
+///|
+fn parse_raw_lines(text : String) -> Array[@lib.Json] {
+  if text.length() == 0 {
+    return []
+  }
+  let values = []
+  let mut start = 0
+  for i in 0..<text.length() {
+    if text.unsafe_get(i) == '\n' {
+      let line = text.view(start_offset=start, end_offset=i).to_string()
+      values.push(@lib.Json::string(trim_single_trailing_cr(line)))
+      start = i + 1
+    }
+  }
+  if start < text.length() {
+    let line = text.view(start_offset=start).to_string()
+    values.push(@lib.Json::string(trim_single_trailing_cr(line)))
+  }
+  values
+}
+
+///|
+fn trim_single_trailing_cr(s : String) -> String {
+  if s.length() > 0 && s.unsafe_get(s.length() - 1) == '\r' {
+    s.view(end_offset=s.length() - 1).to_string()
+  } else {
+    s
+  }
 }
 
 ///|

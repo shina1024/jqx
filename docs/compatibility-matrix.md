@@ -56,7 +56,7 @@ Implemented builtins/functions in `core/eval.mbt` include:
 | Object key order | partial | `Map` iteration order is not guaranteed |
 | Number edge behavior | partial | `Double`-first semantics; Infinity/NaN handling still evolving |
 | Exact error text | partial | close to jq style but not byte-for-byte compatible |
-| CLI option coverage | partial | currently `-r`, `-c`, `-n`, `-s`, `-e` |
+| CLI option coverage | partial | currently `-r`, `-R`, `-c`, `-n`, `-s`, `-e` (`-R` is line-based without full JSON-stream parity) |
 
 ## JS/TS Library Track
 
@@ -92,5 +92,5 @@ Notes:
 
 1. Expand differential cases from smoke to feature coverage (per builtin/operator).
 2. Add unsupported high-priority jq features (starting with assignment/update and regex family).
-3. Introduce CLI compatibility options (`-s`, `-R`, `-e`) with differential tests.
+3. Expand CLI differential tests (`-R/-s/-n/-e` combinations and stdin variants).
 4. Split JS API into Dynamic/Typed lanes and start typed DSL scaffolding.
