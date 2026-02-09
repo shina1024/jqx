@@ -105,6 +105,18 @@ bash ./scripts/jq_diff.sh
 Cases are defined in `scripts/jq_compat_cases.json` and are expected to be
 expanded continuously.
 
+Native binary differential test for `-e` exit status parity:
+
+```powershell
+./scripts/jq_diff_native.ps1
+```
+
+```bash
+bash ./scripts/jq_diff_native.sh
+```
+
+Cases are defined in `scripts/jq_exit_cases.json`.
+
 Notes:
 - PowerShell script resolves `jq` via `mise which jq` if `jq` is not in `PATH`.
 - Bash script first uses `PATH`, then falls back to `mise` where possible.

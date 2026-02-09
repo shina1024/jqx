@@ -73,6 +73,11 @@ Smoke differential scripts:
 - Bash: `scripts/jq_diff.sh`
 - Cases: `scripts/jq_compat_cases.json`
 
+Native binary `-e` differential scripts:
+- PowerShell: `scripts/jq_diff_native.ps1`
+- Bash: `scripts/jq_diff_native.sh`
+- Cases: `scripts/jq_exit_cases.json`
+
 Run examples:
 
 ```powershell
@@ -83,16 +88,26 @@ Run examples:
 bash ./scripts/jq_diff.sh
 ```
 
+```powershell
+./scripts/jq_diff_native.ps1
+```
+
+```bash
+bash ./scripts/jq_diff_native.sh
+```
+
 Notes:
 - `jq_diff.ps1` is the primary runner for Windows environments and can resolve
   `jq` from `mise`.
 - `jq_diff.sh` targets Linux/macOS and falls back to `mise` when available.
 - CLI compatibility cases can specify `jq_args` / `jqx_args` and
   `jqx_use_stdin` for option-aware differential runs.
+- Native differential scripts build `cmd` and execute the produced binary
+  directly to validate `-e` exit-status parity.
 
 ## Next Execution Order
 
 1. Expand differential cases from smoke to feature coverage (per builtin/operator).
 2. Add unsupported high-priority jq features (starting with assignment/update and regex family).
-3. Add native-binary differential checks for reliable `-e` exit-status parity.
+3. Integrate native-binary `-e` differential checks into CI.
 4. Split JS API into Dynamic/Typed lanes and start typed DSL scaffolding.

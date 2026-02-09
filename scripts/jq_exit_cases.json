@@ -1,0 +1,77 @@
+[
+  {
+    "name": "exit-e-true",
+    "filter": "true",
+    "input": "null",
+    "jq_args": ["-e"],
+    "jqx_args": ["-e"],
+    "expect_status": 0
+  },
+  {
+    "name": "exit-e-false",
+    "filter": "false",
+    "input": "null",
+    "jq_args": ["-e"],
+    "jqx_args": ["-e"],
+    "expect_status": 1
+  },
+  {
+    "name": "exit-e-null",
+    "filter": "null",
+    "input": "null",
+    "jq_args": ["-e"],
+    "jqx_args": ["-e"],
+    "expect_status": 1
+  },
+  {
+    "name": "exit-e-empty",
+    "filter": "empty",
+    "input": "null",
+    "jq_args": ["-e"],
+    "jqx_args": ["-e"],
+    "expect_status": 4
+  },
+  {
+    "name": "exit-e-last-false",
+    "filter": "., false",
+    "input": "1",
+    "jq_args": ["-e"],
+    "jqx_args": ["-e"],
+    "expect_status": 1
+  },
+  {
+    "name": "exit-e-last-true",
+    "filter": "false, true",
+    "input": "1",
+    "jq_args": ["-e"],
+    "jqx_args": ["-e"],
+    "expect_status": 0
+  },
+  {
+    "name": "exit-e-n-true",
+    "filter": "1",
+    "input": "",
+    "jq_args": ["-n", "-e"],
+    "jqx_args": ["-n", "-e"],
+    "jqx_use_stdin": true,
+    "expect_status": 0
+  },
+  {
+    "name": "exit-e-n-null",
+    "filter": ".",
+    "input": "",
+    "jq_args": ["-n", "-e"],
+    "jqx_args": ["-n", "-e"],
+    "jqx_use_stdin": true,
+    "expect_status": 1
+  },
+  {
+    "name": "exit-e-n-empty",
+    "filter": "empty",
+    "input": "",
+    "jq_args": ["-n", "-e"],
+    "jqx_args": ["-n", "-e"],
+    "jqx_use_stdin": true,
+    "expect_status": 4
+  }
+]

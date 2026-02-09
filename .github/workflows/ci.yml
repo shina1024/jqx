@@ -64,3 +64,7 @@ jobs:
       - name: Differential Smoke (jq)
         if: runner.os == 'Linux'
         run: bash ./scripts/jq_diff.sh
+
+      - name: Differential Native Exit (jq)
+        if: runner.os == 'Linux'
+        run: bash ./scripts/jq_diff_native.sh
