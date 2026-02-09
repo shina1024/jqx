@@ -39,6 +39,12 @@ jobs:
       - name: MoonBit Version
         run: moon version --all
 
+      - name: Setup pnpm (latest)
+        if: runner.os == 'Linux'
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
       - name: Setup Node (Linux)
         if: runner.os == 'Linux'
         uses: actions/setup-node@v5
@@ -47,12 +53,9 @@ jobs:
           cache: pnpm
           cache-dependency-path: ts/zod-adapter/pnpm-lock.yaml
 
-      - name: Setup pnpm (latest)
+      - name: pnpm Version (Linux)
         if: runner.os == 'Linux'
-        run: |
-          corepack enable
-          corepack prepare pnpm@latest --activate
-          pnpm --version
+        run: pnpm --version
 
       - name: Check
         run: moon check -d
