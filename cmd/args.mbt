@@ -1,5 +1,5 @@
 ///|
-pub struct CliArgs {
+struct CliArgs {
   raw : Bool
   raw_input : Bool
   no_input : Bool
@@ -10,7 +10,7 @@ pub struct CliArgs {
 }
 
 ///|
-pub fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
+fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
   if args.length() < 2 {
     return Err("missing filter")
   }

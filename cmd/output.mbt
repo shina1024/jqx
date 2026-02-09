@@ -1,5 +1,5 @@
 ///|
-pub fn format_output(raw : Bool, v : @lib.Json) -> String {
+fn format_output(raw : Bool, v : @lib.Json) -> String {
   if raw && v is @lib.Json::String(s) {
     s
   } else {

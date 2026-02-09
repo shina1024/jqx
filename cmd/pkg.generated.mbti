@@ -1,31 +1,12 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "shina1024/jqx/cmd"
 
-import {
-  "shina1024/jqx/core",
-}
-
 // Values
-pub fn format_output(Bool, @core.Json) -> String
-
-pub fn jqx_exit(Int) -> Unit
-
-pub fn parse_cli_args(Array[String]) -> Result[CliArgs, String]
-
-pub fn read_stdin_all() -> String
 
 // Errors
 
 // Types and methods
-pub struct CliArgs {
-  raw : Bool
-  raw_input : Bool
-  no_input : Bool
-  exit_status : Bool
-  slurp : Bool
-  filter : String
-  input : String?
-}
+type CliArgs
 
 // Type aliases
 
