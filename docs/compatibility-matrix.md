@@ -65,6 +65,7 @@ Implemented builtins/functions in `core/eval.mbt` include:
 | Dynamic API | supported | exception-based (`parseJson`, `parseFilter`, `eval`) + JS-friendly aliases (`safeParseJson`, `safeParseFilter`, `execute`, `safeExecute`) + result-based (`tryParseJson`, `tryParseFilter`, `tryEval`, `run`) |
 | Typed DSL | partial | `Query[I, O]` scaffold + `identity` / `field` / `index` / `pipe` / `map`, with `evalQuery` / `runQuery` (current combinators are `Json -> Json`) |
 | TS compile-time inference tests | planned | runtime tests exist, type-level tests pending |
+| Zod adapter | planned | design draft in `docs/js-zod-integration.md`; implementation belongs to TS wrapper layer |
 
 ## Differential Testing
 

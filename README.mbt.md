@@ -107,6 +107,7 @@ Typed lane (scaffold):
 The compatibility baseline and current gap list is tracked in:
 
 - `docs/compatibility-matrix.md`
+- `docs/js-zod-integration.md` (JS/TS Zod adapter plan)
 
 Differential smoke test against `jq`:
 
