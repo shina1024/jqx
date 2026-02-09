@@ -39,6 +39,21 @@ jobs:
       - name: MoonBit Version
         run: moon version --all
 
+      - name: Setup Node (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: ts/zod-adapter/pnpm-lock.yaml
+
+      - name: Setup pnpm (latest)
+        if: runner.os == 'Linux'
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          pnpm --version
+
       - name: Check
         run: moon check -d
 
@@ -60,6 +75,15 @@ jobs:
           if (-not $vs) { throw "Visual Studio with C++ tools not found." }
           $vcvars = Join-Path $vs "VC\\Auxiliary\\Build\\vcvars64.bat"
           cmd /c "`"$vcvars`" && moon test --target native core && moon test --target native cmd"
+
+      - name: TS Adapter (pnpm lint/typecheck/test)
+        if: runner.os == 'Linux'
+        working-directory: ts/zod-adapter
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint
+          pnpm typecheck
+          pnpm test
 
       - name: Differential Smoke (jq)
         if: runner.os == 'Linux'
