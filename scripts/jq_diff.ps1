@@ -123,18 +123,44 @@ try {
     if ($case.PSObject.Properties.Name -contains "expect_error" -and $null -ne $case.expect_error) {
       $expectError = [bool]$case.expect_error
     }
+    $expectStatus = $null
+    if ($case.PSObject.Properties.Name -contains "expect_status" -and $null -ne $case.expect_status) {
+      $expectStatus = [int]$case.expect_status
+    }
+    $jqArgs = @()
+    if ($case.PSObject.Properties.Name -contains "jq_args" -and $null -ne $case.jq_args) {
+      $jqArgs = @($case.jq_args | ForEach-Object { [string]$_ })
+    }
+    $jqxArgs = @()
+    if ($case.PSObject.Properties.Name -contains "jqx_args" -and $null -ne $case.jqx_args) {
+      $jqxArgs = @($case.jqx_args | ForEach-Object { [string]$_ })
+    }
+    $jqxUseStdin = $false
+    if ($case.PSObject.Properties.Name -contains "jqx_use_stdin" -and $null -ne $case.jqx_use_stdin) {
+      $jqxUseStdin = [bool]$case.jqx_use_stdin
+    }
 
-    $jqRaw = $input | & $resolvedJq -c $filter 2>&1
+    $jqCmd = @("-c") + $jqArgs + @($filter)
+    $jqRaw = $input | & $resolvedJq @jqCmd 2>&1
     $jqStatus = $LASTEXITCODE
     $jqOut = Normalize-Output $jqRaw
 
-    $jqxRaw = & $resolvedMoon run --target native cmd -- $filter $input 2>&1
+    $jqxCmd = @("run", "--target", "native", "cmd", "--") + $jqxArgs + @($filter)
+    $jqxRaw = if ($jqxUseStdin) {
+      $input | & $resolvedMoon @jqxCmd 2>&1
+    } else {
+      & $resolvedMoon @jqxCmd $input 2>&1
+    }
     $jqxStatus = $LASTEXITCODE
     $jqxOut = Normalize-Output $jqxRaw
 
     $ok = $false
     if ($expectError) {
       if ($jqStatus -ne 0 -and $jqxStatus -ne 0) {
+        $ok = $true
+      }
+    } elseif ($null -ne $expectStatus) {
+      if ($jqStatus -eq $expectStatus -and $jqxStatus -eq $expectStatus -and $jqOut -eq $jqxOut) {
         $ok = $true
       }
     } else {

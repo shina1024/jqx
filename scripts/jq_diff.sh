@@ -86,25 +86,51 @@ total=0
 passed=0
 failed=0
 
-while IFS=$'\t' read -r name filter input expect_error; do
+while IFS= read -r case_json; do
   total=$((total + 1))
+  name="$("${JQ_BIN_RESOLVED}" -r '.name' <<<"${case_json}")"
+  filter="$("${JQ_BIN_RESOLVED}" -r '.filter' <<<"${case_json}")"
+  input="$("${JQ_BIN_RESOLVED}" -r '.input' <<<"${case_json}")"
+  expect_error="$("${JQ_BIN_RESOLVED}" -r '(.expect_error // false) | tostring' <<<"${case_json}")"
+  expect_status="$("${JQ_BIN_RESOLVED}" -r 'if has("expect_status") then (.expect_status | tostring) else "" end' <<<"${case_json}")"
+  jqx_use_stdin="$("${JQ_BIN_RESOLVED}" -r '(.jqx_use_stdin // false) | tostring' <<<"${case_json}")"
   name="${name%$'\r'}"
   filter="${filter%$'\r'}"
   input="${input%$'\r'}"
   expect_error="${expect_error%$'\r'}"
+  expect_status="${expect_status%$'\r'}"
+  jqx_use_stdin="${jqx_use_stdin%$'\r'}"
+
+  mapfile -t jq_args < <("${JQ_BIN_RESOLVED}" -r '.jq_args // [] | .[]' <<<"${case_json}")
+  mapfile -t jqx_args < <("${JQ_BIN_RESOLVED}" -r '.jqx_args // [] | .[]' <<<"${case_json}")
+  for i in "${!jq_args[@]}"; do
+    jq_args[$i]="${jq_args[$i]%$'\r'}"
+  done
+  for i in "${!jqx_args[@]}"; do
+    jqx_args[$i]="${jqx_args[$i]%$'\r'}"
+  done
 
   set +e
-  jq_out="$(printf '%s' "${input}" | "${JQ_BIN_RESOLVED}" -c "${filter}" 2>&1)"
+  jq_out="$(printf '%s' "${input}" | "${JQ_BIN_RESOLVED}" -c "${jq_args[@]}" "${filter}" 2>&1)"
   jq_status=$?
-  jqx_out="$("${MOON_BIN_RESOLVED}" run --target native cmd -- "${filter}" "${input}" 2>&1 </dev/null)"
+  if [[ "${jqx_use_stdin}" == "true" ]]; then
+    jqx_out="$(printf '%s' "${input}" | "${MOON_BIN_RESOLVED}" run --target native cmd -- "${jqx_args[@]}" "${filter}" 2>&1)"
+  else
+    jqx_out="$("${MOON_BIN_RESOLVED}" run --target native cmd -- "${jqx_args[@]}" "${filter}" "${input}" 2>&1 </dev/null)"
+  fi
   jqx_status=$?
   set -e
 
-  jqx_out="$(printf '%s\n' "${jqx_out}" | sed '/^Blocking waiting for file lock /d')"
+  jq_out="$(printf '%s' "${jq_out}" | tr -d '\r')"
+  jqx_out="$(printf '%s\n' "${jqx_out}" | sed '/^Blocking waiting for file lock /d' | tr -d '\r')"
 
   ok=false
   if [[ "${expect_error}" == "true" ]]; then
     if [[ ${jq_status} -ne 0 && ${jqx_status} -ne 0 ]]; then
+      ok=true
+    fi
+  elif [[ -n "${expect_status}" ]]; then
+    if [[ ${jq_status} -eq ${expect_status} && ${jqx_status} -eq ${expect_status} && "${jq_out}" == "${jqx_out}" ]]; then
       ok=true
     fi
   else
@@ -124,7 +150,7 @@ while IFS=$'\t' read -r name filter input expect_error; do
     printf '  jq status=%s output=%s\n' "${jq_status}" "${jq_out}"
     printf '  jqx status=%s output=%s\n' "${jqx_status}" "${jqx_out}"
   fi
-done < <("${JQ_BIN_RESOLVED}" -r '.[] | [.name, .filter, .input, ((.expect_error // false) | tostring)] | @tsv' "${CASES_PATH_FOR_JQ}")
+done < <("${JQ_BIN_RESOLVED}" -c '.[]' "${CASES_PATH_FOR_JQ}")
 
 printf '\nSummary: total=%s passed=%s failed=%s\n' "${total}" "${passed}" "${failed}"
 if [[ ${failed} -ne 0 ]]; then

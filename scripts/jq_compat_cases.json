@@ -308,5 +308,35 @@
     "name": "map-object",
     "filter": "map(. + 1)",
     "input": "{\"a\":1}"
+  },
+  {
+    "name": "cli-slurp-ndjson",
+    "filter": ".",
+    "input": "1\n2",
+    "jq_args": ["-s"],
+    "jqx_args": ["-s"]
+  },
+  {
+    "name": "cli-raw-lines",
+    "filter": ".",
+    "input": "a\nb",
+    "jq_args": ["-R"],
+    "jqx_args": ["-R"]
+  },
+  {
+    "name": "cli-no-input",
+    "filter": ".",
+    "input": "",
+    "jq_args": ["-n"],
+    "jqx_args": ["-n"],
+    "jqx_use_stdin": true
+  },
+  {
+    "name": "cli-no-input-raw-slurp",
+    "filter": ".",
+    "input": "",
+    "jq_args": ["-n", "-R", "-s"],
+    "jqx_args": ["-n", "-R", "-s"],
+    "jqx_use_stdin": true
   }
 ]
