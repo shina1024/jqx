@@ -10,8 +10,8 @@ It accepts a runtime implementation via dependency injection.
 ## Scripts
 
 ```bash
-npm run typecheck
-npm test
+pnpm typecheck
+pnpm test
 ```
 
 ## Core APIs
