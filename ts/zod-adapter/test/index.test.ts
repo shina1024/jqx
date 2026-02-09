@@ -15,8 +15,8 @@ test("safeRunWithZod validates input and output", async () => {
   const runtime: JqxDynamicRuntime = {
     run(filter, input) {
       assert.equal(filter, ".user.name");
-      assert.equal(input, "{\"user\":{\"name\":\"alice\"}}");
-      return { ok: true, value: ["\"alice\""] };
+      assert.equal(input, '{"user":{"name":"alice"}}');
+      return { ok: true, value: ['"alice"'] };
     },
   };
   const result = await safeRunWithZod(runtime, {
@@ -116,7 +116,7 @@ test("safeExecuteWithZod validates through typed runtime", async () => {
   const runtime: JqxTypedRuntime<{ kind: "Q" }> = {
     runQuery(query, input) {
       assert.deepEqual(query, { kind: "Q" });
-      assert.equal(input, "{\"x\":7}");
+      assert.equal(input, '{"x":7}');
       return { ok: true, value: ["7"] };
     },
   };

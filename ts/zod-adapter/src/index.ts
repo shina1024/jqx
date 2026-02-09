@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-export type JqxResult<T, E = string> =
-  | { ok: true; value: T }
-  | { ok: false; error: E };
+export type JqxResult<T, E = string> = { ok: true; value: T } | { ok: false; error: E };
 
 export type MaybePromise<T> = T | Promise<T>;
 
@@ -37,10 +35,7 @@ export type ZodAdapterError =
       issues: z.ZodIssue[];
     };
 
-export interface RunWithZodOptions<
-  InSchema extends z.ZodTypeAny,
-  OutSchema extends z.ZodTypeAny,
-> {
+export interface RunWithZodOptions<InSchema extends z.ZodTypeAny, OutSchema extends z.ZodTypeAny> {
   filter: string;
   input: unknown;
   inputSchema: InSchema;
@@ -93,10 +88,7 @@ function parseAndValidateOutput<OutSchema extends z.ZodTypeAny>(
   return { ok: true, value: validated };
 }
 
-export async function safeRunWithZod<
-  InSchema extends z.ZodTypeAny,
-  OutSchema extends z.ZodTypeAny,
->(
+export async function safeRunWithZod<InSchema extends z.ZodTypeAny, OutSchema extends z.ZodTypeAny>(
   runtime: JqxDynamicRuntime,
   options: RunWithZodOptions<InSchema, OutSchema>,
 ): Promise<JqxResult<z.output<OutSchema>[], ZodAdapterError>> {

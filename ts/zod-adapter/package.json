@@ -2,21 +2,27 @@
   "name": "@shina1024/jqx-zod-adapter",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "pnpm@10.29.2",
-  "type": "module",
   "description": "Zod adapter utilities for jqx JS/TS runtime",
   "license": "Apache-2.0",
+  "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
+    "format": "oxfmt .",
+    "format:check": "oxfmt . --check",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --import tsx --test test/**/*.test.ts"
   },
   "devDependencies": {
     "@types/node": "^24.7.2",
+    "oxfmt": "^0.28.0",
+    "oxlint": "^1.43.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "zod": "^4.1.8"
-  }
+  },
+  "packageManager": "pnpm@10.29.2"
 }

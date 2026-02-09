@@ -10,6 +10,10 @@ It accepts a runtime implementation via dependency injection.
 ## Scripts
 
 ```bash
+pnpm format
+pnpm format:check
+pnpm lint
+pnpm lint:fix
 pnpm typecheck
 pnpm test
 ```
