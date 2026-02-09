@@ -109,6 +109,9 @@ The compatibility baseline and current gap list is tracked in:
 - `docs/compatibility-matrix.md`
 - `docs/js-zod-integration.md` (JS/TS Zod adapter plan)
 
+TS adapter scaffold:
+- `ts/zod-adapter` (`npm run typecheck`, `npm test`)
+
 Differential smoke test against `jq`:
 
 ```powershell

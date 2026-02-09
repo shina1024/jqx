@@ -1,12 +1,29 @@
 # JS/TS Zod Integration Plan
 
-Updated: 2026-02-09
+Updated: 2026-02-10
 
 ## Goal
 
 Provide a practical, type-safe integration path between `jqx` and Zod for JS/TS users.
 
 This plan keeps MoonBit core pure and puts Zod coupling in a TS wrapper layer.
+
+## Current Implementation
+
+Implemented scaffold:
+
+1. `ts/zod-adapter/src/index.ts`
+2. Runtime-injected APIs:
+   - `safeRunWithZod`
+   - `safeExecuteWithZod`
+   - `withZod` / `withZ`
+3. Runtime and typecheck tests:
+   - `ts/zod-adapter/test/index.test.ts`
+
+Not implemented yet:
+
+1. Binding this adapter to the final published `jqx` npm runtime package.
+2. CI job for TypeScript adapter tests in this repository workflow.
 
 ## Design Principles
 
@@ -85,9 +102,9 @@ For compatibility with current APIs, expose a string-based shorthand (`error: st
 
 ## Phased Rollout
 
-1. Phase 1:
+1. Phase 1 (done):
    - Introduce TS adapter package with `safeRunWithZod` (dynamic path)
-2. Phase 2:
+2. Phase 2 (done):
    - Add `safeExecuteWithZod` for compiled/typed query path
 3. Phase 3:
    - Type tests (`tsd` or `vitest` + `expectTypeOf`)
