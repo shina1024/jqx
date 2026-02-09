@@ -84,7 +84,8 @@ Functions:
 - `parseJson(text)` -> Json
 - `parseFilter(text)` -> Filter
 - `eval(filter, json)` -> Json[]
-- `evalToJsonStrings(filter, jsonText)` -> string[] (JSON strings)
+- `evalToJsonStrings(filter, jsonText)` -> `Result<string[], string>`
+  (JSON strings / error message)
 
 ## Compatibility Baseline
 
