@@ -442,6 +442,22 @@ fn FilterCursor::parse_dot_expr(ctx : FilterCursor) -> Filter raise FilterError 
 ///|
 fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
   ctx.skip_ws()
+  fn parse_not_operand_or_identity() -> Filter raise FilterError {
+    ctx.skip_ws()
+    let saved = ctx.offset
+    if ctx.try_keyword("and") || ctx.try_keyword("or") {
+      ctx.offset = saved
+      return Filter::identity()
+    }
+    ctx.offset = saved
+    match ctx.peek_char() {
+      None => Filter::identity()
+      Some('|' | ',' | ')' | ']' | '}') => Filter::identity()
+      Some('+' | '-' | '*' | '/' | '<' | '>' | '=' | '!') => Filter::identity()
+      _ => ctx.parse_primary()
+    }
+  }
+
   fn parse_reduce_like(is_foreach : Bool) -> Filter raise FilterError {
     let source = ctx.parse_comma(allow_as=false)
     ctx.skip_ws()
@@ -510,7 +526,7 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
       if ctx.try_keyword("null") {
         Filter::literal(Json::null())
       } else if ctx.try_keyword("not") {
-        Filter::not(ctx.parse_primary())
+        Filter::not(parse_not_operand_or_identity())
       } else {
         ctx.parse_identifier_or_call()
       }

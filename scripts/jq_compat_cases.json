@@ -310,6 +310,111 @@
     "input": "{\"a\":1}"
   },
   {
+    "name": "arith-add-fields",
+    "filter": ".a + .b",
+    "input": "{\"a\":2,\"b\":3}"
+  },
+  {
+    "name": "arith-sub-fields",
+    "filter": ".a - .b",
+    "input": "{\"a\":5,\"b\":3}"
+  },
+  {
+    "name": "arith-mul-fields",
+    "filter": ".a * .b",
+    "input": "{\"a\":4,\"b\":3}"
+  },
+  {
+    "name": "arith-div-fields",
+    "filter": ".a / .b",
+    "input": "{\"a\":7.5,\"b\":2.5}"
+  },
+  {
+    "name": "compare-gte",
+    "filter": ".a >= .b",
+    "input": "{\"a\":2,\"b\":2}"
+  },
+  {
+    "name": "logic-and",
+    "filter": ".a and .b",
+    "input": "{\"a\":true,\"b\":false}"
+  },
+  {
+    "name": "logic-or",
+    "filter": ".a or .b",
+    "input": "{\"a\":false,\"b\":true}"
+  },
+  {
+    "name": "logic-not",
+    "filter": "not",
+    "input": "false"
+  },
+  {
+    "name": "var-binding",
+    "filter": ".a as $x | $x + 1",
+    "input": "{\"a\":1}"
+  },
+  {
+    "name": "array-literal",
+    "filter": "[.a, .b]",
+    "input": "{\"a\":1,\"b\":2}"
+  },
+  {
+    "name": "object-literal",
+    "filter": "{x: .a, y: .b}",
+    "input": "{\"a\":1,\"b\":2}"
+  },
+  {
+    "name": "contains-string",
+    "filter": "contains(\"ana\")",
+    "input": "\"banana\""
+  },
+  {
+    "name": "has-array-index",
+    "filter": "has(1)",
+    "input": "[10,20]"
+  },
+  {
+    "name": "in-array",
+    "filter": "1 | in([0,1,2])",
+    "input": "null"
+  },
+  {
+    "name": "values-null",
+    "filter": "values",
+    "input": "null"
+  },
+  {
+    "name": "scalars-array",
+    "filter": "scalars",
+    "input": "[1]"
+  },
+  {
+    "name": "add-object-values",
+    "filter": "add",
+    "input": "{\"a\":1,\"b\":2}"
+  },
+  {
+    "name": "bsearch-found",
+    "filter": "bsearch(3)",
+    "input": "[1,3,5]"
+  },
+  {
+    "name": "getpath-missing",
+    "filter": "getpath([\"a\",2])",
+    "input": "{\"a\":[10,20]}"
+  },
+  {
+    "name": "setpath-nested",
+    "filter": "setpath([\"a\",1];99)",
+    "input": "{\"a\":[10,20]}"
+  },
+  {
+    "name": "delpaths-multiple",
+    "filter": "delpaths([[\"a\"],[\"b\"]])",
+    "input": "{\"a\":1,\"b\":2,\"c\":3}"
+  },
+  {
     "name": "cli-slurp-ndjson",
     "filter": ".",
     "input": "1\n2",

@@ -178,6 +178,11 @@ test "parse logical" {
     parse_filter(".a or .b"),
     content="Or(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
   )
+  inspect(parse_filter("not"), content="Not(Identity)")
+  inspect(
+    parse_filter(".a | not"),
+    content="Pipe(Pipe(Identity, Field(\"a\")), Not(Identity))",
+  )
   inspect(parse_filter("not .a"), content="Not(Pipe(Identity, Field(\"a\")))")
 }
 
