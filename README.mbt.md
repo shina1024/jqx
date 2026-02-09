@@ -174,6 +174,6 @@ and run it directly.
 ## Notes
 
 - The CLI is native-only because stdin is implemented via native `getchar`.
-- JS/TS usage will be added as a separate library entry point.
+- JS/TS APIs are available via the MoonBit `js` package; final npm-facing entrypoint design is in progress.
 - Library users should import `shina1024/jqx/core` directly; the root package is
   a thin wrapper around core.

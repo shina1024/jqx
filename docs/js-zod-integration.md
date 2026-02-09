@@ -1,126 +1,128 @@
-# JS/TS Zod Integration Plan
+# JS/TS Zod Integration (Status + Plan)
 
-Updated: 2026-02-10
+Updated: 2026-02-09
 
 ## Goal
 
 Provide a practical, type-safe integration path between `jqx` and Zod for JS/TS users.
 
-This plan keeps MoonBit core pure and puts Zod coupling in a TS wrapper layer.
+The architecture keeps MoonBit `core/` pure and places Zod coupling in a TS adapter layer.
 
-## Current Implementation
+## Current Status
 
-Implemented scaffold:
+Implemented in `ts/zod-adapter`:
 
-1. `ts/zod-adapter/src/index.ts`
-2. Runtime-injected APIs:
+1. Adapter entrypoint:
+   - `ts/zod-adapter/src/index.ts`
+2. Dynamic/typed runtime APIs:
    - `safeRunWithZod`
    - `safeExecuteWithZod`
-   - `withZod` / `withZ`
-3. Runtime and typecheck tests:
-   - `ts/zod-adapter/test/index.test.ts`
+3. Helper/aliases:
+   - `withZod`, `withZ`
+   - `runWithZod`, `executeWithZod`
+   - `runWithZ`, `executeWithZ`
+4. Tests:
+   - runtime tests: `ts/zod-adapter/test/index.test.ts`
+   - static check: `pnpm typecheck`
+5. CI:
+   - Linux CI executes `pnpm lint`, `pnpm typecheck`, `pnpm test` in `ts/zod-adapter`
 
-Not implemented yet:
+Still pending:
 
-1. Binding this adapter to the final published `jqx` npm runtime package.
-2. CI job for TypeScript adapter tests in this repository workflow.
+1. Final npm runtime binding and import design (`import { ... } from "jqx"`).
+2. Dedicated compile-time assertion tests for inference behavior (for example `tsd` or `expectTypeOf`).
 
 ## Design Principles
 
-1. Keep `core/` and MoonBit `js/` package free from JS library dependencies.
-2. Use Zod at the boundary where unknown input enters the system.
-3. Prefer safe APIs (`Result`/`safe*`) over exception-first APIs in JS/TS.
-4. Fall back to `unknown` where static inference is not sound.
+1. Keep MoonBit runtime independent from JS validation libraries.
+2. Validate unknown input at the TS boundary using Zod.
+3. Prefer safe/result APIs over exception-first flows.
+4. Use `unknown`/`Json` fallback where static inference is unsound.
 
-## Layering
+## Runtime Shape
 
-1. MoonBit core/runtime layer:
-   - Parse/eval runtime (`parseJson`, `safeParseJson`, `execute`, `safeExecute`, `run`)
-   - Typed DSL scaffold (`Query[I, O]`) for composition semantics
-2. TS adapter layer (new):
-   - Accepts Zod schemas
-   - Validates input/output
-   - Exposes fully typed helper APIs
-
-## Proposed TS Adapter APIs
-
-The APIs below are in the TS wrapper package (not MoonBit source files).
+Current adapter API is runtime-injected and async by design:
 
 ```ts
-import type { ZodTypeAny, infer as Infer } from "zod";
+import { z } from "zod";
 
-type JqxResult<T> = { ok: true; value: T } | { ok: false; error: string };
+type JqxResult<T, E = string> = { ok: true; value: T } | { ok: false; error: E };
 
-export function safeRunWithZod<
-  InSchema extends ZodTypeAny,
-  OutSchema extends ZodTypeAny,
+interface JqxDynamicRuntime {
+  run(filter: string, input: string): JqxResult<string[]> | Promise<JqxResult<string[]>>;
+}
+
+interface JqxTypedRuntime<Q = unknown> {
+  runQuery(query: Q, input: string): JqxResult<string[]> | Promise<JqxResult<string[]>>;
+}
+
+export async function safeRunWithZod<
+  InSchema extends z.ZodTypeAny,
+  OutSchema extends z.ZodTypeAny,
 >(
-  filter: string,
-  input: unknown,
+  runtime: JqxDynamicRuntime,
   options: {
+    filter: string;
+    input: unknown;
     inputSchema: InSchema;
     outputSchema: OutSchema;
   },
-): JqxResult<Array<Infer<OutSchema>>>;
+): Promise<JqxResult<Array<z.output<OutSchema>>>>;
 
-export function safeExecuteWithZod<
-  InSchema extends ZodTypeAny,
-  OutSchema extends ZodTypeAny,
+export async function safeExecuteWithZod<
+  Q,
+  InSchema extends z.ZodTypeAny,
+  OutSchema extends z.ZodTypeAny,
 >(
-  filter: unknown, // runtime filter object, adapter-owned
-  input: unknown,
+  runtime: JqxTypedRuntime<Q>,
   options: {
+    query: Q;
+    input: unknown;
     inputSchema: InSchema;
     outputSchema: OutSchema;
   },
-): JqxResult<Array<Infer<OutSchema>>>;
+): Promise<JqxResult<Array<z.output<OutSchema>>>>;
 ```
-
-## Unknown JSON Strategy
-
-When input shape is unknown, `jqx` cannot infer strong types from jq/filter text alone.
-
-Use one of these:
-
-1. Dynamic lane:
-   - Use `run` / `safe*` APIs
-   - Treat values as `unknown`/`Json`
-2. Typed lane:
-   - Validate with `inputSchema` (Zod)
-   - Then run typed operations
-   - Optionally validate outputs with `outputSchema`
 
 ## Error Model
 
-TS adapter should normalize errors into one union:
+Adapter errors are normalized into a discriminated union:
 
-1. `InputValidationError` (Zod input parse failed)
-2. `RuntimeError` (`jqx` parse/eval failure)
-3. `OutputValidationError` (Zod output parse failed)
+1. `input_validation`
+2. `runtime`
+3. `output_parse`
+4. `output_validation`
 
-For compatibility with current APIs, expose a string-based shorthand (`error: string`) first.
+This keeps call sites explicit and stable for app-level error handling.
 
-## Phased Rollout
+## Unknown JSON Strategy
 
-1. Phase 1 (done):
-   - Introduce TS adapter package with `safeRunWithZod` (dynamic path)
-2. Phase 2 (done):
-   - Add `safeExecuteWithZod` for compiled/typed query path
-3. Phase 3:
-   - Type tests (`tsd` or `vitest` + `expectTypeOf`)
-   - Runtime tests with real Zod schemas
-4. Phase 4:
-   - Publish npm package and document import path (`import { ... } from "jqx"`)
+When input shape is unknown, jq/filter text alone cannot provide strong static types.
 
-## Naming Notes
+Use either lane:
 
-Recommended public names:
+1. Dynamic lane:
+   - run with `run`/`safe*`
+   - treat values as `unknown`/`Json`
+2. Typed lane:
+   - validate input with `inputSchema`
+   - execute query
+   - validate outputs with `outputSchema`
+
+## Next Steps
+
+1. Add compile-time type assertion tests for adapter and typed query composition.
+2. Finalize npm package layout and runtime binding so users can import from the stable public entrypoint.
+3. Add docs/examples that show end-to-end usage with real `jqx` runtime wiring.
+
+## Naming Guidance
+
+Primary names:
 
 1. `safeRunWithZod`
 2. `safeExecuteWithZod`
 
-Optional aliases:
+Convenience aliases:
 
-1. `runWithZod`
-2. `executeWithZod`
-3. `runWithZ` / `executeWithZ` (short aliases, not primary docs names)
+1. `runWithZod`, `executeWithZod`
+2. `runWithZ`, `executeWithZ`

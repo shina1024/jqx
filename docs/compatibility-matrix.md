@@ -4,8 +4,8 @@ Updated: 2026-02-09
 
 Scope:
 - Target compatibility: jq 1.7 behavior
-- Current differential smoke run: jq 1.8.1 (local)
-- Source of truth for current implementation: `core/filter_parse.mbt`, `core/eval.mbt`
+- Differential baseline used in this repo: jq 1.8.1 (local)
+- Source of truth for behavior: `core/filter_parse.mbt`, `core/eval.mbt`
 
 Legend:
 - `supported`: implemented and covered by tests
@@ -62,40 +62,22 @@ Implemented builtins/functions in `core/eval.mbt` include:
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Dynamic API | supported | exception-based (`parseJson`, `parseFilter`, `eval`) + JS-friendly aliases (`safeParseJson`, `safeParseFilter`, `execute`, `safeExecute`) + result-based (`tryParseJson`, `tryParseFilter`, `tryEval`, `run`) |
-| Typed DSL | partial | `Query[I, O]` scaffold + `identity` / `field` / `index` / `pipe` / `map`, with `evalQuery` / `runQuery` (current combinators are `Json -> Json`) |
-| TS compile-time inference tests | planned | runtime tests exist, type-level tests pending |
-| Zod adapter | partial | TS adapter scaffold in `ts/zod-adapter` (`safeRunWithZod`, `safeExecuteWithZod`); publish/runtime binding pending |
+| Dynamic API | supported | `parseJson`, `safeParseJson`, `parseFilter`, `safeParseFilter`, `execute`, `safeExecute`, `eval`, `run` |
+| Typed DSL | partial | `Query[I, O]` scaffold + `identity` / `field` / `index` / `pipe` / `map`, with `evalQuery` / `runQuery` |
+| TS compile-time inference tests | planned | runtime tests and `typecheck` exist; type-level assertion tests are pending |
+| Zod adapter | partial | `ts/zod-adapter` provides `safeRunWithZod`, `safeExecuteWithZod`, aliases, tests, and CI checks; final npm binding is pending |
 
-## Differential Testing
+## Differential Testing and CI
 
-Smoke differential scripts:
-- PowerShell: `scripts/jq_diff.ps1`
-- Bash: `scripts/jq_diff.sh`
-- Cases: `scripts/jq_compat_cases.json`
+Differential scripts:
+- Smoke: `scripts/jq_diff.ps1`, `scripts/jq_diff.sh`
+- Native `-e`: `scripts/jq_diff_native.ps1`, `scripts/jq_diff_native.sh`
+- Cases: `scripts/jq_compat_cases.json`, `scripts/jq_exit_cases.json`
 
-Native binary `-e` differential scripts:
-- PowerShell: `scripts/jq_diff_native.ps1`
-- Bash: `scripts/jq_diff_native.sh`
-- Cases: `scripts/jq_exit_cases.json`
-
-Run examples:
-
-```powershell
-./scripts/jq_diff.ps1
-```
-
-```bash
-bash ./scripts/jq_diff.sh
-```
-
-```powershell
-./scripts/jq_diff_native.ps1
-```
-
-```bash
-bash ./scripts/jq_diff_native.sh
-```
+CI coverage in `.github/workflows/ci.yml`:
+- Linux/macOS/Windows: MoonBit `check` + tests
+- Linux: `ts/zod-adapter` (`pnpm lint`, `pnpm typecheck`, `pnpm test`)
+- Linux: differential smoke and native `-e` scripts
 
 Notes:
 - `jq_diff.ps1` is the primary runner for Windows environments and can resolve
@@ -103,12 +85,10 @@ Notes:
 - `jq_diff.sh` targets Linux/macOS and falls back to `mise` when available.
 - CLI compatibility cases can specify `jq_args` / `jqx_args` and
   `jqx_use_stdin` for option-aware differential runs.
-- Native differential scripts build `cmd` and execute the produced binary
-  directly to validate `-e` exit-status parity.
 
 ## Next Execution Order
 
-1. Expand differential cases from smoke to feature coverage (per builtin/operator).
+1. Expand differential cases from smoke to feature coverage (builtins/operators/options).
 2. Add unsupported high-priority jq features (starting with assignment/update and regex family).
-3. Integrate native-binary `-e` differential checks into CI.
-4. Expand Typed lane from scaffold to richer combinators and compile-time TS tests.
+3. Expand Typed lane from scaffold to richer combinators and compile-time TS tests.
+4. Finalize npm-facing JS/TS runtime binding (including Zod adapter import path design).
