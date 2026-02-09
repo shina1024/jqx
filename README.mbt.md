@@ -118,6 +118,8 @@ The compatibility baseline and current gap list is tracked in:
 
 TS adapter scaffold:
 - `ts/zod-adapter` (`pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`)
+- `ts/yup-adapter` (`pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`)
+- `ts/valibot-adapter` (`pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`)
 
 Differential smoke test against `jq`:
 

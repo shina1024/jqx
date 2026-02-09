@@ -51,7 +51,10 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-          cache-dependency-path: ts/zod-adapter/pnpm-lock.yaml
+          cache-dependency-path: |
+            ts/zod-adapter/pnpm-lock.yaml
+            ts/yup-adapter/pnpm-lock.yaml
+            ts/valibot-adapter/pnpm-lock.yaml
 
       - name: pnpm Version (Linux)
         if: runner.os == 'Linux'
@@ -82,6 +85,24 @@ jobs:
       - name: TS Adapter (pnpm lint/typecheck/test)
         if: runner.os == 'Linux'
         working-directory: ts/zod-adapter
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint
+          pnpm typecheck
+          pnpm test
+
+      - name: TS Yup Adapter (pnpm lint/typecheck/test)
+        if: runner.os == 'Linux'
+        working-directory: ts/yup-adapter
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint
+          pnpm typecheck
+          pnpm test
+
+      - name: TS Valibot Adapter (pnpm lint/typecheck/test)
+        if: runner.os == 'Linux'
+        working-directory: ts/valibot-adapter
         run: |
           pnpm install --frozen-lockfile
           pnpm lint

@@ -1,0 +1,27 @@
+{
+  "name": "@shina1024/jqx-valibot-adapter",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Valibot adapter utilities for jqx JS/TS runtime",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "format": "oxfmt .",
+    "format:check": "oxfmt . --check",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test test/**/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.2",
+    "oxfmt": "^0.28.0",
+    "oxlint": "^1.43.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "valibot": "^1.1.0"
+  }
+}

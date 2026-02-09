@@ -66,6 +66,8 @@ Implemented builtins/functions in `core/eval.mbt` include:
 | Typed DSL | partial | `Query[I, O]` scaffold + `identity` / `field` / `index` / `pipe` / `map`, with `evalQuery` / `runQuery` |
 | TS compile-time inference tests | planned | runtime tests and `typecheck` exist; type-level assertion tests are pending |
 | Zod adapter | partial | `ts/zod-adapter` provides `safeRunWithZod`, `safeExecuteWithZod`, aliases, tests, and CI checks; final npm binding is pending |
+| Yup adapter | partial | `ts/yup-adapter` provides `safeRunWithYup`, `safeExecuteWithYup`, aliases, tests, and CI checks; final npm binding is pending |
+| Valibot adapter | partial | `ts/valibot-adapter` provides `safeRunWithValibot`, `safeExecuteWithValibot`, aliases, tests, and CI checks; final npm binding is pending |
 
 ## Differential Testing and CI
 
@@ -76,7 +78,7 @@ Differential scripts:
 
 CI coverage in `.github/workflows/ci.yml`:
 - Linux/macOS/Windows: MoonBit `check` + tests
-- Linux: `ts/zod-adapter` (`pnpm lint`, `pnpm typecheck`, `pnpm test`)
+- Linux: `ts/zod-adapter`, `ts/yup-adapter`, `ts/valibot-adapter` (`pnpm lint`, `pnpm typecheck`, `pnpm test`)
 - Linux: differential smoke and native `-e` scripts
 
 Notes:
