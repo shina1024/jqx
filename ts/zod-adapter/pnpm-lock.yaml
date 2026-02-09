@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@types/node':
-        specifier: ^24.7.2
-        version: 24.10.12
+        specifier: ^25.2.2
+        version: 25.2.2
       oxfmt:
         specifier: ^0.28.0
         version: 0.28.0
@@ -18,13 +18,13 @@ importers:
         specifier: ^1.43.0
         version: 1.43.0
       tsx:
-        specifier: ^4.20.6
+        specifier: ^4.21.0
         version: 4.21.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
       zod:
-        specifier: ^4.1.8
+        specifier: ^4.3.6
         version: 4.3.6
 
 packages:
@@ -273,8 +273,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@types/node@24.10.12':
-    resolution: {integrity: sha512-68e+T28EbdmLSTkPgs3+UacC6rzmqrcWFPQs1C8mwJhI/r5Uxr0yEuQotczNRROd1gq30NGxee+fo0rSIxpyAw==}
+  '@types/node@25.2.2':
+    resolution: {integrity: sha512-BkmoP5/FhRYek5izySdkOneRyXYN35I860MFAGupTdebyE66uZaR+bXLHq8k4DirE5DwQi3NuhvRU1jqTVwUrQ==}
 
   esbuild@0.27.3:
     resolution: {integrity: sha512-8VwMnyGCONIs6cWue2IdpHxHnAjzxnw2Zr7MkVxB2vjmQ2ivqGFb4LEG3SMnv0Gb2F/G/2yA8zUaiL1gywDCCg==}
@@ -455,7 +455,7 @@ snapshots:
   '@oxlint/win32-x64@1.43.0':
     optional: true
 
-  '@types/node@24.10.12':
+  '@types/node@25.2.2':
     dependencies:
       undici-types: 7.16.0
 
