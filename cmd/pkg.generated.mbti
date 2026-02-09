@@ -21,6 +21,7 @@ pub struct CliArgs {
   raw : Bool
   no_input : Bool
   exit_status : Bool
+  slurp : Bool
   filter : String
   input : String?
 }
