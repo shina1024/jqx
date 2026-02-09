@@ -1,0 +1,148 @@
+param(
+  [string]$CasesPath = (Join-Path $PSScriptRoot "jq_compat_cases.json"),
+  [string]$JqExecutable = "jq"
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+function Resolve-JqExecutable {
+  param([string]$Preferred)
+
+  $direct = Get-Command $Preferred -ErrorAction SilentlyContinue
+  if ($null -ne $direct) {
+    return $direct.Source
+  }
+
+  # Fallback for mise-managed jq even when PATH is not initialized.
+  $mise = Get-Command mise -ErrorAction SilentlyContinue
+  if ($null -ne $mise) {
+    $jqPath = & $mise.Source which jq 2>$null
+    if ($LASTEXITCODE -eq 0) {
+      $jqPath = [string]$jqPath
+      $jqPath = $jqPath.Trim()
+      if ($jqPath -ne "" -and (Test-Path $jqPath)) {
+        return $jqPath
+      }
+    }
+  }
+
+  return $null
+}
+
+function Resolve-MoonExecutable {
+  $direct = Get-Command moon -ErrorAction SilentlyContinue
+  if ($null -ne $direct) {
+    return $direct.Source
+  }
+
+  $directExe = Get-Command moon.exe -ErrorAction SilentlyContinue
+  if ($null -ne $directExe) {
+    return $directExe.Source
+  }
+
+  $homeMoon = Join-Path $HOME ".moon\bin\moon.exe"
+  if (Test-Path $homeMoon) {
+    return $homeMoon
+  }
+
+  return $null
+}
+
+function Normalize-Output {
+  param([AllowNull()][object]$Value)
+
+  if ($null -eq $Value) {
+    return ""
+  }
+
+  if ($Value -is [System.Array]) {
+    return (($Value | ForEach-Object { $_.ToString() }) -join "`n").TrimEnd("`r", "`n")
+  }
+
+  return $Value.ToString().TrimEnd("`r", "`n")
+}
+
+if (-not (Test-Path $CasesPath)) {
+  throw "cases file not found: $CasesPath"
+}
+
+$resolvedJq = Resolve-JqExecutable -Preferred $JqExecutable
+if ($null -eq $resolvedJq) {
+  throw "jq binary not found: $JqExecutable (also checked mise)"
+}
+
+$resolvedMoon = Resolve-MoonExecutable
+if ($null -eq $resolvedMoon) {
+  throw "moon command not found (checked moon, moon.exe, and ~/.moon/bin/moon.exe)"
+}
+
+$casesRaw = Get-Content -Raw $CasesPath
+$cases = $casesRaw | ConvertFrom-Json
+if ($cases -isnot [System.Array]) {
+  throw "invalid cases file format: expected top-level array"
+}
+
+$repoRoot = Join-Path $PSScriptRoot ".."
+
+Push-Location $repoRoot
+try {
+  & $resolvedMoon run --target native cmd -- "." "null" *> $null
+  if ($LASTEXITCODE -ne 0) {
+    throw "failed to warm up jqx command via moon run"
+  }
+
+  $total = 0
+  $passed = 0
+  $failed = 0
+
+  foreach ($case in $cases) {
+    $total += 1
+    $name = [string]$case.name
+    $filter = [string]$case.filter
+    $input = [string]$case.input
+    $expectError = $false
+    if ($case.PSObject.Properties.Name -contains "expect_error" -and $null -ne $case.expect_error) {
+      $expectError = [bool]$case.expect_error
+    }
+
+    $jqRaw = $input | & $resolvedJq -c $filter 2>&1
+    $jqStatus = $LASTEXITCODE
+    $jqOut = Normalize-Output $jqRaw
+
+    $jqxRaw = & $resolvedMoon run --target native cmd -- $filter $input 2>&1
+    $jqxStatus = $LASTEXITCODE
+    $jqxOut = Normalize-Output $jqxRaw
+
+    $ok = $false
+    if ($expectError) {
+      if ($jqStatus -ne 0 -and $jqxStatus -ne 0) {
+        $ok = $true
+      }
+    } else {
+      if ($jqStatus -eq 0 -and $jqxStatus -eq 0 -and $jqOut -eq $jqxOut) {
+        $ok = $true
+      }
+    }
+
+    if ($ok) {
+      $passed += 1
+      Write-Host "[PASS] $name"
+    } else {
+      $failed += 1
+      Write-Host "[FAIL] $name"
+      Write-Host "  filter: $filter"
+      Write-Host "  input: $input"
+      Write-Host "  jq status=$jqStatus output=$jqOut"
+      Write-Host "  jqx status=$jqxStatus output=$jqxOut"
+    }
+  }
+
+  Write-Host ""
+  Write-Host "Summary: total=$total passed=$passed failed=$failed"
+  if ($failed -ne 0) {
+    exit 1
+  }
+} finally {
+  Pop-Location
+}

@@ -1,0 +1,117 @@
+[
+  {
+    "name": "identity",
+    "filter": ".",
+    "input": "{\"foo\":1}"
+  },
+  {
+    "name": "field",
+    "filter": ".foo",
+    "input": "{\"foo\":1,\"bar\":2}"
+  },
+  {
+    "name": "missing-field",
+    "filter": ".missing",
+    "input": "{\"foo\":1}"
+  },
+  {
+    "name": "index",
+    "filter": ".[1]",
+    "input": "[10,20,30]"
+  },
+  {
+    "name": "slice",
+    "filter": ".[1:3]",
+    "input": "[10,20,30,40]"
+  },
+  {
+    "name": "iter",
+    "filter": ".[]",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "pipe-comma",
+    "filter": "(.a | .b), .c",
+    "input": "{\"a\":{\"b\":2},\"c\":3}"
+  },
+  {
+    "name": "fallback",
+    "filter": "empty // .b",
+    "input": "{\"b\":2}"
+  },
+  {
+    "name": "if-then-else",
+    "filter": "if .ok then .v else .w end",
+    "input": "{\"ok\":true,\"v\":1,\"w\":2}"
+  },
+  {
+    "name": "reduce",
+    "filter": "reduce .[] as $x (0; . + $x)",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "map",
+    "filter": "map(. + 1)",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "contains",
+    "filter": "contains([1,3])",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "split",
+    "filter": "split(\",\")",
+    "input": "\"a,b,c\""
+  },
+  {
+    "name": "join",
+    "filter": "join(\"-\")",
+    "input": "[\"a\",\"b\",\"c\"]"
+  },
+  {
+    "name": "sort-by",
+    "filter": "sort_by(.a) | map(.a)",
+    "input": "[{\"a\":2},{\"a\":1}]"
+  },
+  {
+    "name": "group-by",
+    "filter": "group_by(.)",
+    "input": "[3,1,2,1]"
+  },
+  {
+    "name": "unique-by",
+    "filter": "unique_by(.)",
+    "input": "[3,1,2,1]"
+  },
+  {
+    "name": "getpath",
+    "filter": "getpath([\"a\",1])",
+    "input": "{\"a\":[10,20,30]}"
+  },
+  {
+    "name": "setpath",
+    "filter": "setpath([\"a\"];2) | .a",
+    "input": "{\"a\":1}"
+  },
+  {
+    "name": "delpaths",
+    "filter": "delpaths([[\"a\"]]) | .b",
+    "input": "{\"a\":1,\"b\":2}"
+  },
+  {
+    "name": "tojson-fromjson",
+    "filter": "tojson | fromjson | .x | .[1]",
+    "input": "{\"x\":[1,2]}"
+  },
+  {
+    "name": "bsearch",
+    "filter": "bsearch(2)",
+    "input": "[1,3,5]"
+  },
+  {
+    "name": "indices",
+    "filter": "indices(\"na\")",
+    "input": "\"banana\""
+  }
+]

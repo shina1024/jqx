@@ -74,6 +74,29 @@ Functions:
 - `eval(filter, json)` -> Json[]
 - `evalToJsonStrings(filter, jsonText)` -> string[] (JSON strings)
 
+## Compatibility Baseline
+
+The compatibility baseline and current gap list is tracked in:
+
+- `docs/compatibility-matrix.md`
+
+Differential smoke test against `jq`:
+
+```powershell
+./scripts/jq_diff.ps1
+```
+
+```bash
+bash ./scripts/jq_diff.sh
+```
+
+Cases are defined in `scripts/jq_compat_cases.json` and are expected to be
+expanded continuously.
+
+Notes:
+- PowerShell script resolves `jq` via `mise which jq` if `jq` is not in `PATH`.
+- Bash script first uses `PATH`, then falls back to `mise` where possible.
+
 Build:
 ```bash
 moon build --target js js

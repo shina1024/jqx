@@ -60,3 +60,7 @@ jobs:
           if (-not $vs) { throw "Visual Studio with C++ tools not found." }
           $vcvars = Join-Path $vs "VC\\Auxiliary\\Build\\vcvars64.bat"
           cmd /c "`"$vcvars`" && moon test --target native core && moon test --target native cmd"
+
+      - name: Differential Smoke (jq)
+        if: runner.os == 'Linux'
+        run: bash ./scripts/jq_diff.sh
