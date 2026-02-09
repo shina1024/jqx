@@ -8,13 +8,27 @@ import {
 // Values
 pub fn eval(@core.Filter, @core.Json) -> Array[@core.Json] raise @core.EvalError
 
+pub fn evalQuery(Query[@core.Json, @core.Json], @core.Json) -> Result[Array[@core.Json], String]
+
 pub fn evalToJsonStrings(String, String) -> Result[Array[String], String]
+
+pub fn field(String) -> Query[@core.Json, @core.Json]
+
+pub fn identity() -> Query[@core.Json, @core.Json]
+
+pub fn index(Int) -> Query[@core.Json, @core.Json]
+
+pub fn map(Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
 
 pub fn parseFilter(String) -> @core.Filter raise @core.FilterError
 
 pub fn parseJson(String) -> @core.Json raise @core.ParseError
 
+pub fn pipe(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+
 pub fn run(String, String) -> Result[Array[String], String]
+
+pub fn runQuery(Query[@core.Json, @core.Json], String) -> Result[Array[String], String]
 
 pub fn tryEval(@core.Filter, @core.Json) -> Result[Array[@core.Json], String]
 
@@ -25,6 +39,12 @@ pub fn tryParseJson(String) -> Result[@core.Json, String]
 // Errors
 
 // Types and methods
+pub struct Query[I, O] {
+  filter : @core.Filter
+  _input : I?
+  _output : O?
+}
+pub fn[I, O] Query::toFilter(Self[I, O]) -> @core.Filter
 
 // Type aliases
 

@@ -91,6 +91,13 @@ Functions:
 - `tryEval(filter, json)` -> `Result<Json[], string>`
 - `run(filter, jsonText)` -> `Result<string[], string>` (Dynamic lane recommended)
 
+Typed lane (scaffold):
+- `Query[I, O]`
+- `identity`, `field`, `index`, `pipe`, `map`
+- `evalQuery(query, json)` -> `Result<Json[], string>`
+- `runQuery(query, jsonText)` -> `Result<string[], string>`
+- Current combinators are `Json -> Json`; `I/O` parameters are reserved for expansion.
+
 ## Compatibility Baseline
 
 The compatibility baseline and current gap list is tracked in:

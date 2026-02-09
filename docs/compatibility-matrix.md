@@ -63,7 +63,7 @@ Implemented builtins/functions in `core/eval.mbt` include:
 | Area | Status | Notes |
 | --- | --- | --- |
 | Dynamic API | supported | exception-based (`parseJson`, `parseFilter`, `eval`) and result-based (`tryParseJson`, `tryParseFilter`, `tryEval`, `run`) |
-| Typed DSL | planned | `Query[I, O]` style API not started yet |
+| Typed DSL | partial | `Query[I, O]` scaffold + `identity` / `field` / `index` / `pipe` / `map`, with `evalQuery` / `runQuery` (current combinators are `Json -> Json`) |
 | TS compile-time inference tests | planned | runtime tests exist, type-level tests pending |
 
 ## Differential Testing
@@ -110,4 +110,4 @@ Notes:
 1. Expand differential cases from smoke to feature coverage (per builtin/operator).
 2. Add unsupported high-priority jq features (starting with assignment/update and regex family).
 3. Integrate native-binary `-e` differential checks into CI.
-4. Split JS API into Dynamic/Typed lanes and start typed DSL scaffolding.
+4. Expand Typed lane from scaffold to richer combinators and compile-time TS tests.
