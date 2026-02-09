@@ -14,6 +14,14 @@ pub fn parseFilter(String) -> @core.Filter raise @core.FilterError
 
 pub fn parseJson(String) -> @core.Json raise @core.ParseError
 
+pub fn run(String, String) -> Result[Array[String], String]
+
+pub fn tryEval(@core.Filter, @core.Json) -> Result[Array[@core.Json], String]
+
+pub fn tryParseFilter(String) -> Result[@core.Filter, String]
+
+pub fn tryParseJson(String) -> Result[@core.Json, String]
+
 // Errors
 
 // Types and methods

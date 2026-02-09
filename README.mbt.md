@@ -86,6 +86,10 @@ Functions:
 - `eval(filter, json)` -> Json[]
 - `evalToJsonStrings(filter, jsonText)` -> `Result<string[], string>`
   (JSON strings / error message)
+- `tryParseJson(text)` -> `Result<Json, string>`
+- `tryParseFilter(text)` -> `Result<Filter, string>`
+- `tryEval(filter, json)` -> `Result<Json[], string>`
+- `run(filter, jsonText)` -> `Result<string[], string>` (Dynamic lane recommended)
 
 ## Compatibility Baseline
 

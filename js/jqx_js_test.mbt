@@ -26,3 +26,28 @@ test "js parseJson preserves large integer repr in output" {
   guard out is Ok(values) else { fail("expected Ok") }
   assert_eq(values, ["9007199254740993"])
 }
+
+///|
+test "js tryParseJson returns Err on invalid input" {
+  let out = tryParseJson("{")
+  guard out is Err(_) else { fail("expected Err") }
+}
+
+///|
+test "js tryParseFilter and tryEval" {
+  let parsed_filter = tryParseFilter(".x")
+  guard parsed_filter is Ok(filter) else { fail("expected Ok filter") }
+  let parsed_json = tryParseJson("{\"x\": 7}")
+  guard parsed_json is Ok(input) else { fail("expected Ok json") }
+  let out = tryEval(filter, input)
+  guard out is Ok(values) else { fail("expected Ok eval") }
+  assert_eq(values.length(), 1)
+  assert_eq(values[0].to_json_string(), "7")
+}
+
+///|
+test "js run aliases evalToJsonStrings" {
+  let out = run(".[]", "[1,2]")
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values, ["1", "2"])
+}

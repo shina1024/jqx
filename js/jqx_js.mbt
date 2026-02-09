@@ -8,8 +8,22 @@ pub fn parseJson(input : String) -> @core.Json raise @core.ParseError {
 }
 
 ///|
+pub fn tryParseJson(input : String) -> Result[@core.Json, String] {
+  Ok(@core.parse(input)) catch {
+    err => Err(err.to_string())
+  }
+}
+
+///|
 pub fn parseFilter(input : String) -> @core.Filter raise @core.FilterError {
   @core.parse_filter(input)
+}
+
+///|
+pub fn tryParseFilter(input : String) -> Result[@core.Filter, String] {
+  Ok(@core.parse_filter(input)) catch {
+    err => Err(err.to_string())
+  }
 }
 
 ///|
@@ -18,6 +32,16 @@ pub fn eval(
   input : @core.Json,
 ) -> Array[@core.Json] raise @core.EvalError {
   @core.eval(filter, input)
+}
+
+///|
+pub fn tryEval(
+  filter : @core.Filter,
+  input : @core.Json,
+) -> Result[Array[@core.Json], String] {
+  Ok(@core.eval(filter, input)) catch {
+    err => Err(err.to_string())
+  }
 }
 
 ///|
@@ -37,4 +61,9 @@ pub fn evalToJsonStrings(
   } catch {
     err => Err(err.to_string())
   }
+}
+
+///|
+pub fn run(filter : String, input : String) -> Result[Array[String], String] {
+  evalToJsonStrings(filter, input)
 }

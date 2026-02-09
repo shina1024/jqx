@@ -62,7 +62,7 @@ Implemented builtins/functions in `core/eval.mbt` include:
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Dynamic API | supported | `parseJson`, `parseFilter`, `eval`, `evalToJsonStrings` |
+| Dynamic API | supported | exception-based (`parseJson`, `parseFilter`, `eval`) and result-based (`tryParseJson`, `tryParseFilter`, `tryEval`, `run`) |
 | Typed DSL | planned | `Query[I, O]` style API not started yet |
 | TS compile-time inference tests | planned | runtime tests exist, type-level tests pending |
 
