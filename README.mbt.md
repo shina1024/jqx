@@ -82,8 +82,12 @@ target and import the generated bundle.
 
 Functions:
 - `parseJson(text)` -> Json
+- `safeParseJson(text)` -> `Result<Json, string>` (JS-friendly)
 - `parseFilter(text)` -> Filter
-- `eval(filter, json)` -> Json[]
+- `safeParseFilter(text)` -> `Result<Filter, string>` (JS-friendly)
+- `execute(filter, json)` -> Json[] (JS-friendly)
+- `safeExecute(filter, json)` -> `Result<Json[], string>` (JS-friendly)
+- `eval(filter, json)` -> Json[] (compat alias)
 - `evalToJsonStrings(filter, jsonText)` -> `Result<string[], string>`
   (JSON strings / error message)
 - `tryParseJson(text)` -> `Result<Json, string>`

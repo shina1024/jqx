@@ -12,6 +12,8 @@ pub fn evalQuery(Query[@core.Json, @core.Json], @core.Json) -> Result[Array[@cor
 
 pub fn evalToJsonStrings(String, String) -> Result[Array[String], String]
 
+pub fn execute(@core.Filter, @core.Json) -> Array[@core.Json] raise @core.EvalError
+
 pub fn field(String) -> Query[@core.Json, @core.Json]
 
 pub fn identity() -> Query[@core.Json, @core.Json]
@@ -29,6 +31,12 @@ pub fn pipe(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Que
 pub fn run(String, String) -> Result[Array[String], String]
 
 pub fn runQuery(Query[@core.Json, @core.Json], String) -> Result[Array[String], String]
+
+pub fn safeExecute(@core.Filter, @core.Json) -> Result[Array[@core.Json], String]
+
+pub fn safeParseFilter(String) -> Result[@core.Filter, String]
+
+pub fn safeParseJson(String) -> Result[@core.Json, String]
 
 pub fn tryEval(@core.Filter, @core.Json) -> Result[Array[@core.Json], String]
 

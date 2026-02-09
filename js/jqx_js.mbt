@@ -15,6 +15,11 @@ pub fn tryParseJson(input : String) -> Result[@core.Json, String] {
 }
 
 ///|
+pub fn safeParseJson(input : String) -> Result[@core.Json, String] {
+  tryParseJson(input)
+}
+
+///|
 pub fn parseFilter(input : String) -> @core.Filter raise @core.FilterError {
   @core.parse_filter(input)
 }
@@ -27,11 +32,24 @@ pub fn tryParseFilter(input : String) -> Result[@core.Filter, String] {
 }
 
 ///|
+pub fn safeParseFilter(input : String) -> Result[@core.Filter, String] {
+  tryParseFilter(input)
+}
+
+///|
 pub fn eval(
   filter : @core.Filter,
   input : @core.Json,
 ) -> Array[@core.Json] raise @core.EvalError {
   @core.eval(filter, input)
+}
+
+///|
+pub fn execute(
+  filter : @core.Filter,
+  input : @core.Json,
+) -> Array[@core.Json] raise @core.EvalError {
+  eval(filter, input)
 }
 
 ///|
@@ -42,6 +60,14 @@ pub fn tryEval(
   Ok(@core.eval(filter, input)) catch {
     err => Err(err.to_string())
   }
+}
+
+///|
+pub fn safeExecute(
+  filter : @core.Filter,
+  input : @core.Json,
+) -> Result[Array[@core.Json], String] {
+  tryEval(filter, input)
 }
 
 ///|

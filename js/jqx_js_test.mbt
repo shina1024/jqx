@@ -34,6 +34,12 @@ test "js tryParseJson returns Err on invalid input" {
 }
 
 ///|
+test "js safeParseJson alias" {
+  let out = safeParseJson("{")
+  guard out is Err(_) else { fail("expected Err") }
+}
+
+///|
 test "js tryParseFilter and tryEval" {
   let parsed_filter = tryParseFilter(".x")
   guard parsed_filter is Ok(filter) else { fail("expected Ok filter") }
@@ -50,4 +56,17 @@ test "js run aliases evalToJsonStrings" {
   let out = run(".[]", "[1,2]")
   guard out is Ok(values) else { fail("expected Ok") }
   assert_eq(values, ["1", "2"])
+}
+
+///|
+test "js execute and safeExecute aliases" {
+  let filter = parseFilter(".foo")
+  let input = parseJson("{\"foo\": 5}")
+  let out = execute(filter, input)
+  assert_eq(out.length(), 1)
+  assert_eq(out[0].to_json_string(), "5")
+  let safe_out = safeExecute(filter, input)
+  guard safe_out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values.length(), 1)
+  assert_eq(values[0].to_json_string(), "5")
 }
