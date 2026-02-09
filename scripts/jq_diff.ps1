@@ -52,15 +52,33 @@ function Resolve-MoonExecutable {
 function Normalize-Output {
   param([AllowNull()][object]$Value)
 
+  function Clean-Line([string]$Line) {
+    if ($Line -like "Blocking waiting for file lock *") {
+      return $null
+    }
+    return $Line
+  }
+
   if ($null -eq $Value) {
     return ""
   }
 
   if ($Value -is [System.Array]) {
-    return (($Value | ForEach-Object { $_.ToString() }) -join "`n").TrimEnd("`r", "`n")
+    $clean = @()
+    foreach ($entry in $Value) {
+      $line = Clean-Line ($entry.ToString())
+      if ($null -ne $line) {
+        $clean += $line
+      }
+    }
+    return ($clean -join "`n").TrimEnd("`r", "`n")
   }
 
-  return $Value.ToString().TrimEnd("`r", "`n")
+  $single = Clean-Line ($Value.ToString())
+  if ($null -eq $single) {
+    return ""
+  }
+  return $single.TrimEnd("`r", "`n")
 }
 
 if (-not (Test-Path $CasesPath)) {

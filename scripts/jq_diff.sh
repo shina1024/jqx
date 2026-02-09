@@ -100,6 +100,8 @@ while IFS=$'\t' read -r name filter input expect_error; do
   jqx_status=$?
   set -e
 
+  jqx_out="$(printf '%s\n' "${jqx_out}" | sed '/^Blocking waiting for file lock /d')"
+
   ok=false
   if [[ "${expect_error}" == "true" ]]; then
     if [[ ${jq_status} -ne 0 && ${jqx_status} -ne 0 ]]; then

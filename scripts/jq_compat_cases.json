@@ -113,5 +113,200 @@
     "name": "indices",
     "filter": "indices(\"na\")",
     "input": "\"banana\""
+  },
+  {
+    "name": "optional-field-on-scalar",
+    "filter": ".foo?",
+    "input": "1"
+  },
+  {
+    "name": "try-catch",
+    "filter": "try (.a + 1) catch 1",
+    "input": "{\"a\":\"hi\",\"b\":1}"
+  },
+  {
+    "name": "foreach",
+    "filter": "foreach .[] as $x (0; . + $x; .)",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "map-values",
+    "filter": "map_values(select(. > 1))",
+    "input": "{\"a\":1,\"b\":2}"
+  },
+  {
+    "name": "any-call",
+    "filter": "any(. > 2)",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "all-call",
+    "filter": "all(. > 0)",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "startswith",
+    "filter": "startswith(\"he\")",
+    "input": "\"hello\""
+  },
+  {
+    "name": "endswith",
+    "filter": "endswith(\"lo\")",
+    "input": "\"hello\""
+  },
+  {
+    "name": "ltrimstr",
+    "filter": "ltrimstr(\"foo\")",
+    "input": "\"foobar\""
+  },
+  {
+    "name": "rtrimstr",
+    "filter": "rtrimstr(\"bar\")",
+    "input": "\"foobar\""
+  },
+  {
+    "name": "has-object",
+    "filter": "has(\"a\")",
+    "input": "{\"a\":1}"
+  },
+  {
+    "name": "in-call",
+    "filter": "\"a\" | in({\"a\":1})",
+    "input": "null"
+  },
+  {
+    "name": "type",
+    "filter": "type",
+    "input": "{\"a\":1}"
+  },
+  {
+    "name": "length-null",
+    "filter": "length",
+    "input": "null"
+  },
+  {
+    "name": "tostring",
+    "filter": "tostring",
+    "input": "[1,2]"
+  },
+  {
+    "name": "tonumber",
+    "filter": "tonumber",
+    "input": "\"1.25\""
+  },
+  {
+    "name": "flatten-depth",
+    "filter": "flatten(1)",
+    "input": "[1,[2],[[3]]]"
+  },
+  {
+    "name": "transpose",
+    "filter": "transpose",
+    "input": "[[1,2],[3,4]]"
+  },
+  {
+    "name": "to-entries",
+    "filter": "to_entries",
+    "input": "{\"a\":1}"
+  },
+  {
+    "name": "from-entries",
+    "filter": "from_entries",
+    "input": "[{\"key\":\"a\",\"value\":1}]"
+  },
+  {
+    "name": "with-entries",
+    "filter": "with_entries({key: (.key + \"_x\"), value: .value})",
+    "input": "{\"a\":1}"
+  },
+  {
+    "name": "reverse",
+    "filter": "reverse",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "explode",
+    "filter": "explode",
+    "input": "\"ab\""
+  },
+  {
+    "name": "implode",
+    "filter": "implode",
+    "input": "[97,98]"
+  },
+  {
+    "name": "ascii-upcase",
+    "filter": "ascii_upcase",
+    "input": "\"AbC_z\""
+  },
+  {
+    "name": "ascii-downcase",
+    "filter": "ascii_downcase",
+    "input": "\"AbC_Z\""
+  },
+  {
+    "name": "first",
+    "filter": "first",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "last",
+    "filter": "last",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "nth-negative",
+    "filter": "nth(-1)",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "sort",
+    "filter": "sort",
+    "input": "[3,1,2]"
+  },
+  {
+    "name": "unique",
+    "filter": "unique",
+    "input": "[3,1,2,1]"
+  },
+  {
+    "name": "min",
+    "filter": "min",
+    "input": "[3,1,2]"
+  },
+  {
+    "name": "max",
+    "filter": "max",
+    "input": "[3,1,2]"
+  },
+  {
+    "name": "index-string",
+    "filter": "index(\"na\")",
+    "input": "\"banana\""
+  },
+  {
+    "name": "rindex-string",
+    "filter": "rindex(\"na\")",
+    "input": "\"banana\""
+  },
+  {
+    "name": "keys-array",
+    "filter": "keys",
+    "input": "[10,20]"
+  },
+  {
+    "name": "keys-unsorted-array",
+    "filter": "keys_unsorted",
+    "input": "[10,20]"
+  },
+  {
+    "name": "inside",
+    "filter": "inside([0,1,2,3])",
+    "input": "[1,2]"
+  },
+  {
+    "name": "map-object",
+    "filter": "map(. + 1)",
+    "input": "{\"a\":1}"
   }
 ]
