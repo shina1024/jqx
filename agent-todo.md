@@ -17,6 +17,9 @@ Updated: 2026-02-10
 - [x] upstream stage1 subsetをallowlistベースで自動生成し、CIで生成物ドリフトを検知する
 - [x] upstream stage1 subsetを拡張する（安定性を維持しつつ59→76件に増やす）
 - [ ] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ79件超へ段階追加）
+- [x] upstream失敗ケースをカテゴリ集計して台帳化する（`docs/upstream-failure-backlog.md` + snapshot）
+- [ ] upstream parser失敗クラスタを段階的に潰す（`Invalid character/number` 188件）
+- [ ] upstream unknown-function上位クラスタを潰す（`range`/`limit`/`skip`/`path`/`del`）
 - [x] Objectキー順の扱いを安定化する方針を決めて実装する（辞書順正規化で安定化）
 - [ ] エラーメッセージ差分を縮小する（`expect_error` ケース追加は進捗あり、正規化改善を継続）
 - [x] differentialケースを拡張する（`reduce`/`foreach`/`try-catch`/演算の境界系を11件追加、smoke 169→180）
