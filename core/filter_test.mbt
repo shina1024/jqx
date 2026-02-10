@@ -130,6 +130,25 @@ test "parse string key index" {
 }
 
 ///|
+test "parse dynamic bracket index" {
+  guard (try? parse_filter(".foo[.baz]")) is Ok(_) else {
+    fail("expected dynamic index parse")
+  }
+  guard (try? parse_filter("[1,2,3][$x]")) is Ok(_) else {
+    fail("expected variable index parse")
+  }
+  guard (try? parse_filter("[range(5)] | .[1.1]")) is Ok(_) else {
+    fail("expected float index parse")
+  }
+  guard (try? parse_filter("$ENV.PAGER")) is Ok(_) else {
+    fail("expected variable field postfix parse")
+  }
+  guard (try? parse_filter("env.PAGER")) is Ok(_) else {
+    fail("expected builtin field postfix parse")
+  }
+}
+
+///|
 test "parse pipe and comma" {
   inspect(
     parse_filter(".foo | .bar, .baz"),

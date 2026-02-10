@@ -2426,6 +2426,32 @@ test "eval as pattern bindings" {
 }
 
 ///|
+test "eval dynamic bracket index" {
+  assert_eq(
+    must_eval(
+      parse_filter(".foo[.baz]"),
+      must_parse("{\"foo\":{\"bar\":4},\"baz\":\"bar\"}"),
+    ),
+    [Json::number(4.0)],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("[1,2,3][] as $x | [4,5,6,7][$x]"),
+      must_parse("null"),
+    ),
+    [Json::number(5.0), Json::number(6.0), Json::number(7.0)],
+  )
+  assert_eq(
+    must_eval(parse_filter("[][.]"), must_parse("1000000000000000000")),
+    [Json::null()],
+  )
+  assert_eq(
+    must_eval(parse_filter("[range(5)] | .[1.1]"), must_parse("null")),
+    [Json::number(1.0)],
+  )
+}
+
+///|
 test "eval try" {
   let j = must_parse("{\"a\":\"hi\"}")
   assert_eq(must_eval(parse_filter("(.a + 1)?"), j), [])

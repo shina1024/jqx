@@ -398,6 +398,225 @@ fn FilterCursor::parse_number_literal(
 }
 
 ///|
+fn bracket_static_selector_from_filter(filter : Filter) -> Filter? {
+  match filter {
+    Literal(String(name)) => Some(Filter::field(name))
+    Literal(Number(n, _)) =>
+      if n == n && n != @double.infinity && n != @double.neg_infinity {
+        Some(Filter::index(n.to_int()))
+      } else {
+        None
+      }
+    _ => None
+  }
+}
+
+///|
+fn apply_optional_suffix(base : Filter, optional : Bool) -> Filter {
+  if !optional {
+    return base
+  }
+  match base {
+    Field(name) => Filter::field_opt(name)
+    Index(i) => Filter::index_opt(i)
+    Slice(start, end) => Filter::slice_opt(start, end)
+    Iter => Filter::iter_opt()
+    _ => Filter::try_(base)
+  }
+}
+
+///|
+fn FilterCursor::lower_bracket_dynamic_on_bound(
+  ctx : FilterCursor,
+  bound : Filter,
+  key : Filter,
+  optional : Bool,
+) -> Filter {
+  let key_tmp = ctx.fresh_as_tmp()
+  let key_var = Filter::var_(key_tmp)
+  let access = Filter::pipe(
+    bound,
+    Filter::call("getpath", [Filter::Array([key_var])]),
+  )
+  let access = if optional { Filter::try_(access) } else { access }
+  Filter::as_(key, key_tmp, access)
+}
+
+///|
+fn FilterCursor::lower_bracket_keys_on_base(
+  ctx : FilterCursor,
+  base : Filter,
+  keys : Array[Filter],
+  optional : Bool,
+) -> Filter {
+  let static_selectors : Array[Filter]? = {
+    let out = []
+    let mut ok = true
+    for key in keys {
+      match bracket_static_selector_from_filter(key) {
+        Some(selector) => out.push(apply_optional_suffix(selector, optional))
+        None => {
+          ok = false
+          break
+        }
+      }
+    }
+    if ok {
+      Some(out)
+    } else {
+      None
+    }
+  }
+  match static_selectors {
+    Some(selectors) => {
+      let mut combined = selectors[0]
+      for i in 1..<selectors.length() {
+        combined = Filter::comma(combined, selectors[i])
+      }
+      Filter::pipe(base, combined)
+    }
+    None =>
+      if keys.length() == 1 {
+        let base_tmp = ctx.fresh_as_tmp()
+        let base_var = Filter::var_(base_tmp)
+        Filter::as_(
+          base,
+          base_tmp,
+          ctx.lower_bracket_dynamic_on_bound(base_var, keys[0], optional),
+        )
+      } else {
+        let base_tmp = ctx.fresh_as_tmp()
+        let base_var = Filter::var_(base_tmp)
+        let mut body : Filter? = None
+        for key in keys {
+          let current = match bracket_static_selector_from_filter(key) {
+            Some(selector) =>
+              Filter::pipe(base_var, apply_optional_suffix(selector, optional))
+            None => ctx.lower_bracket_dynamic_on_bound(base_var, key, optional)
+          }
+          body = match body {
+            Some(prev) => Some(Filter::comma(prev, current))
+            None => Some(current)
+          }
+        }
+        match body {
+          Some(compiled) => Filter::as_(base, base_tmp, compiled)
+          None => abort("unreachable")
+        }
+      }
+  }
+}
+
+///|
+fn slice_index_from_filter(filter : Filter) -> Int? {
+  match filter {
+    Literal(Number(n, _)) =>
+      if n == n && n != @double.infinity && n != @double.neg_infinity {
+        Some(n.to_int())
+      } else {
+        None
+      }
+    _ => None
+  }
+}
+
+///|
+fn FilterCursor::parse_bracket_postfix(
+  ctx : FilterCursor,
+  base : Filter,
+) -> Filter raise FilterError {
+  ctx.expect_char('[')
+  ctx.skip_ws()
+  if ctx.peek_char() is Some(']') {
+    ctx.read_char() |> ignore
+    ctx.skip_ws()
+    let optional = if ctx.peek_char() is Some('?') {
+      ctx.read_char() |> ignore
+      true
+    } else {
+      false
+    }
+    return Filter::pipe(base, apply_optional_suffix(Filter::iter(), optional))
+  }
+
+  let first = if ctx.peek_char() is Some(':') {
+    None
+  } else {
+    Some(ctx.parse_update(allow_as=false))
+  }
+  ctx.skip_ws()
+
+  if ctx.peek_char() is Some(':') {
+    ctx.read_char() |> ignore
+    ctx.skip_ws()
+    let end_expr = if ctx.peek_char() is Some(']') {
+      None
+    } else {
+      Some(ctx.parse_update(allow_as=false))
+    }
+    ctx.skip_ws()
+    ctx.expect_char(']')
+    ctx.skip_ws()
+    let optional = if ctx.peek_char() is Some('?') {
+      ctx.read_char() |> ignore
+      true
+    } else {
+      false
+    }
+    let start = match first {
+      Some(v) => slice_index_from_filter(v)
+      None => None
+    }
+    let end = match end_expr {
+      Some(v) => slice_index_from_filter(v)
+      None => None
+    }
+    if start is None && end is None {
+      ctx.invalid_char()
+    }
+    return match (first, end_expr) {
+      (Some(_), None) if start is None => ctx.invalid_char()
+      (None, Some(_)) if end is None => ctx.invalid_char()
+      (Some(_), Some(_)) if start is None || end is None => ctx.invalid_char()
+      _ =>
+        Filter::pipe(
+          base,
+          apply_optional_suffix(Filter::slice(start, end), optional),
+        )
+    }
+  }
+
+  let keys = []
+  match first {
+    Some(v) => keys.push(v)
+    None => ctx.invalid_char()
+  }
+  for {
+    ctx.skip_ws()
+    match ctx.peek_char() {
+      Some(',') => {
+        ctx.read_char() |> ignore
+        keys.push(ctx.parse_update(allow_as=false))
+      }
+      Some(']') => {
+        ctx.read_char() |> ignore
+        break
+      }
+      Some(_) => ctx.invalid_char()
+      None => raise InvalidEof
+    }
+  }
+  ctx.skip_ws()
+  let optional = if ctx.peek_char() is Some('?') {
+    ctx.read_char() |> ignore
+    true
+  } else {
+    false
+  }
+  ctx.lower_bracket_keys_on_base(base, keys, optional)
+}
+
+///|
 fn FilterCursor::parse_dot_suffix(
   ctx : FilterCursor,
 ) -> Filter raise FilterError {
@@ -507,15 +726,25 @@ fn FilterCursor::parse_dot_expr(ctx : FilterCursor) -> Filter raise FilterError 
     return Filter::recurse()
   }
   let mut current = Filter::identity()
-  let first = match ctx.peek_char() {
-    Some('[' | '\"' | '.') => ctx.parse_dot_suffix()
-    Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') => ctx.parse_dot_suffix()
-    _ => Filter::identity()
-  }
-  if first is Identity {
-    ()
-  } else {
-    current = Filter::pipe(current, first)
+  match ctx.peek_char() {
+    Some('[') => current = ctx.parse_bracket_postfix(current)
+    Some('\"' | '.') => {
+      let first = ctx.parse_dot_suffix()
+      if first is Identity {
+        ()
+      } else {
+        current = Filter::pipe(current, first)
+      }
+    }
+    Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') => {
+      let first = ctx.parse_dot_suffix()
+      if first is Identity {
+        ()
+      } else {
+        current = Filter::pipe(current, first)
+      }
+    }
+    _ => ()
   }
   for {
     ctx.skip_ws()
@@ -529,14 +758,7 @@ fn FilterCursor::parse_dot_expr(ctx : FilterCursor) -> Filter raise FilterError 
           current = Filter::pipe(current, suffix)
         }
       }
-      Some('[') => {
-        let suffix = ctx.parse_dot_suffix()
-        if suffix is Identity {
-          continue
-        } else {
-          current = Filter::pipe(current, suffix)
-        }
-      }
+      Some('[') => current = ctx.parse_bracket_postfix(current)
       _ => break
     }
   }
@@ -551,7 +773,9 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
     for {
       ctx.skip_ws()
       match ctx.peek_char() {
-        Some('[') => {
+        Some('[') => base = ctx.parse_bracket_postfix(base)
+        Some('.') => {
+          ctx.read_char() |> ignore
           let suffix = ctx.parse_dot_suffix()
           if suffix is Identity {
             continue

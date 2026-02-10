@@ -11,16 +11,15 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 602
-- failed: 75
+- passed: 617
+- failed: 60
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `parser-invalid-character` | 74 | parser grammar gaps (`[`, `{`, `$`, `,`, etc.) |
-| `parser-invalid-number` | 1 | remaining unary/special numeric parse gap |
+| `parser-invalid-character` | 60 | parser grammar gaps (`(`, `{`, update path forms, interpolation, format prefix, etc.) |
 
 ## Top Unknown Functions
 
@@ -66,11 +65,16 @@ From current snapshot (`unknown-function` subset):
   - extended `reduce`/`foreach` to accept `as` array/object patterns in addition to `$var`
   - lowered non-`$var` loop patterns to existing AST via internal temporary binding + pattern destructuring
 - Parser cluster reduced from 80 to 75 (`-5`) in upstream full diff.
-- Current remaining failures are parser-only (`Invalid character/number`: 75 total).
+- Parser pass 5 completed on 2026-02-10:
+  - extended bracket index parsing to accept general expressions (`.[expr]`, `[...][$x]`, `.[1.1]`, `.[nan]` など)
+  - added base-aware lowering for dynamic bracket access so key式は元入力コンテキストで評価
+  - enabled general postfix field chaining on non-dot bases (`$ENV.PAGER`, `env.PAGER`)
+- Parser cluster reduced from 75 to 60 (`-15`) in upstream full diff.
+- Current remaining failures are parser-only (`Invalid character`: 60 total).
 
 ## Priority Plan
 
-1. Parser cluster first: reduce `parser-invalid-character` + `parser-invalid-number` (75 total).
+1. Parser cluster first: reduce `parser-invalid-character` (60 total).
 2. Re-run upstream full diff after each parser slice to surface newly unblocked non-parser gaps.
 3. Expand stage1 allowlist incrementally with newly stable parser features.
 
