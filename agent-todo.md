@@ -19,10 +19,10 @@ Updated: 2026-02-10
 - [ ] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ79件超へ段階追加）
 - [x] upstream失敗ケースをカテゴリ集計して台帳化する（`docs/upstream-failure-backlog.md` + snapshot）
 - [x] upstream parser失敗クラスタの第1段を実施する（188→147、`=`/`%`/単項`-`/`."..."`/`foreach`2句/object shorthand/`.[1,2]`）
-- [ ] upstream parser失敗クラスタを段階的に潰す（残り `Invalid character/number` 147件）
+- [ ] upstream parser失敗クラスタを段階的に潰す（残り `Invalid character/number` 145件）
 - [x] upstream unknown-functionクラスタの第1段を実施する（127→87、`range`/`limit`/`skip`/`IN`/`nth(i; expr)`）
 - [x] upstream unknown-functionクラスタの第2段を実施する（87→77、`path`/`del`/再帰下降 `..`）
-- [ ] upstream unknown-function上位クラスタを潰す（残り上位: `have_decnum`/`splits`/`abs`/`isempty`/`pick`）
+- [x] upstream unknown-function上位クラスタを潰す（77→0、`have_decnum`/`abs`/`isempty`/`trimstr`/`trim`系を実装）
 - [x] Objectキー順の扱いを安定化する方針を決めて実装する（辞書順正規化で安定化）
 - [ ] エラーメッセージ差分を縮小する（`expect_error` ケース追加は進捗あり、正規化改善を継続）
 - [x] differentialケースを拡張する（`reduce`/`foreach`/`try-catch`/演算の境界系を11件追加、smoke 169→180）

@@ -370,6 +370,13 @@ fn eval_call(
       } else {
         raise UnknownFunction("all")
       }
+    "isempty" =>
+      if args.length() != 1 {
+        raise UnknownFunction("isempty")
+      } else {
+        let values = eval_with_env_prefix(args[0], input, env, 1)
+        [Json::boolean(values.length() == 0)]
+      }
     "flatten" =>
       if args.length() != 1 {
         raise UnknownFunction("flatten")
@@ -507,6 +514,34 @@ fn eval_call(
                 out.push(Json::string(h))
               }
             _ => raise TypeError("ltrimstr() requires string inputs")
+          }
+        }
+        out
+      }
+    "trimstr" =>
+      if args.length() != 1 {
+        raise UnknownFunction("trimstr")
+      } else {
+        let needles = eval_with_env(args[0], input, env)
+        let out = []
+        for needle in needles {
+          match (input, needle) {
+            (String(h), String(n)) => {
+              let mut trimmed = h
+              if trimmed.has_prefix(n) {
+                trimmed = trimmed.view(start_offset=n.length()).to_string()
+              }
+              if trimmed.has_suffix(n) {
+                trimmed = trimmed
+                  .view(
+                    start_offset=0,
+                    end_offset=trimmed.length() - n.length(),
+                  )
+                  .to_string()
+              }
+              out.push(Json::string(trimmed))
+            }
+            _ => raise TypeError("startswith() requires string inputs")
           }
         }
         out

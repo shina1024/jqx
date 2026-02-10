@@ -1,6 +1,67 @@
 ///|
+fn builtin_ltrim_ascii_ws(s : String) -> String {
+  let mut start = 0
+  let end = s.length()
+  for {
+    if start < end && is_ascii_ws(s.unsafe_get(start).to_int().unsafe_to_char()) {
+      start += 1
+    } else {
+      break
+    }
+  }
+  s.view(start_offset=start, end_offset=end).to_string()
+}
+
+///|
+fn builtin_rtrim_ascii_ws(s : String) -> String {
+  let start = 0
+  let mut end = s.length()
+  for {
+    if end > start &&
+      is_ascii_ws(s.unsafe_get(end - 1).to_int().unsafe_to_char()) {
+      end -= 1
+    } else {
+      break
+    }
+  }
+  s.view(start_offset=start, end_offset=end).to_string()
+}
+
+///|
+fn builtin_trim_ascii_ws(s : String) -> String {
+  let left = builtin_ltrim_ascii_ws(s)
+  builtin_rtrim_ascii_ws(left)
+}
+
+///|
 fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
   match name {
+    "have_decnum" => [Json::boolean(true)]
+    "abs" =>
+      match input {
+        Number(n, _) =>
+          if n < 0.0 {
+            [Json::number(-n)]
+          } else {
+            [Json::number(n)]
+          }
+        _ => raise TypeError(json_type_with_value(input) + " cannot be negated")
+      }
+    "trim" =>
+      match input {
+        String(s) => [Json::string(builtin_trim_ascii_ws(s))]
+        _ => raise TypeError("trim input must be a string")
+      }
+    "ltrim" =>
+      match input {
+        String(s) => [Json::string(builtin_ltrim_ascii_ws(s))]
+        _ => raise TypeError("trim input must be a string")
+      }
+    "rtrim" =>
+      match input {
+        String(s) => [Json::string(builtin_rtrim_ascii_ws(s))]
+        _ => raise TypeError("trim input must be a string")
+      }
     "length" =>
       match input {
         Array(a) => [Json::number(a.length().to_double())]

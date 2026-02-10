@@ -1,6 +1,7 @@
 param(
   [string]$CasesPath = (Join-Path $PSScriptRoot "jq_compat_cases.json"),
-  [string]$JqExecutable = "jq"
+  [string]$JqExecutable = "jq",
+  [string]$SnapshotPath = ""
 )
 
 Set-StrictMode -Version Latest
@@ -94,6 +95,58 @@ function Normalize-ErrorMessage {
   return $normalized
 }
 
+function Classify-Failure {
+  param(
+    [int]$JqStatus,
+    [int]$JqxStatus,
+    [string]$JqOut,
+    [string]$JqxOut
+  )
+
+  if ($JqxOut -match "Invalid character ") {
+    return "parser-invalid-character"
+  }
+  if ($JqxOut -match "Invalid number") {
+    return "parser-invalid-number"
+  }
+  if ($JqxOut -match "Unknown function: ") {
+    return "unknown-function"
+  }
+  if ($JqxOut -match "Unknown variable: ") {
+    return "unknown-variable"
+  }
+  if ($JqStatus -eq 0 -and ($JqxOut.StartsWith("jqx: error") -or $JqxStatus -ne 0)) {
+    return "runtime-error-vs-jq-success"
+  }
+  return "output-mismatch"
+}
+
+function Invoke-NativeCapture {
+  param([scriptblock]$Action)
+
+  $prevErrorActionPreference = $ErrorActionPreference
+  $hasNativeErrorPreference = Test-Path Variable:PSNativeCommandUseErrorActionPreference
+  $prevNativeErrorPreference = $false
+  if ($hasNativeErrorPreference) {
+    $prevNativeErrorPreference = $PSNativeCommandUseErrorActionPreference
+    $PSNativeCommandUseErrorActionPreference = $false
+  }
+  $ErrorActionPreference = "Continue"
+  try {
+    $raw = & $Action
+    $status = $LASTEXITCODE
+    return [PSCustomObject]@{
+      Raw = $raw
+      Status = $status
+    }
+  } finally {
+    $ErrorActionPreference = $prevErrorActionPreference
+    if ($hasNativeErrorPreference) {
+      $PSNativeCommandUseErrorActionPreference = $prevNativeErrorPreference
+    }
+  }
+}
+
 if (-not (Test-Path $CasesPath)) {
   throw "cases file not found: $CasesPath"
 }
@@ -118,15 +171,18 @@ $repoRoot = Join-Path $PSScriptRoot ".."
 
 Push-Location $repoRoot
 try {
-  & $resolvedMoon run --target native cmd -- "." "null" *> $null
-  if ($LASTEXITCODE -ne 0) {
-    throw "failed to warm up jqx command via moon run"
+  $warmup = Invoke-NativeCapture {
+    & $resolvedMoon run --target native cmd -- "." "null" 2>&1
+  }
+  if ($warmup.Status -ne 0) {
+    throw "failed to warm up jqx command via moon run: $(Normalize-Output $warmup.Raw)"
   }
 
   $total = 0
   $passed = 0
   $failed = 0
   $skipped = 0
+  $failureRecords = @()
 
   foreach ($case in $cases) {
     $total += 1
@@ -169,18 +225,22 @@ try {
     }
 
     $jqCmd = @("-c") + $jqArgs + @($filter)
-    $jqRaw = $input | & $resolvedJq @jqCmd 2>&1
-    $jqStatus = $LASTEXITCODE
-    $jqOut = Normalize-Output $jqRaw
+    $jqRun = Invoke-NativeCapture {
+      $input | & $resolvedJq @jqCmd 2>&1
+    }
+    $jqStatus = $jqRun.Status
+    $jqOut = Normalize-Output $jqRun.Raw
 
     $jqxCmd = @("run", "--target", "native", "cmd", "--") + $jqxArgs + @($filter)
-    $jqxRaw = if ($jqxUseStdin) {
-      $input | & $resolvedMoon @jqxCmd 2>&1
-    } else {
-      & $resolvedMoon @jqxCmd $input 2>&1
+    $jqxRun = Invoke-NativeCapture {
+      if ($jqxUseStdin) {
+        $input | & $resolvedMoon @jqxCmd 2>&1
+      } else {
+        & $resolvedMoon @jqxCmd $input 2>&1
+      }
     }
-    $jqxStatus = $LASTEXITCODE
-    $jqxOut = Normalize-Output $jqxRaw
+    $jqxStatus = $jqxRun.Status
+    $jqxOut = Normalize-Output $jqxRun.Raw
 
     $ok = $false
     if ($expectError) {
@@ -210,6 +270,14 @@ try {
       Write-Host "[PASS] $name"
     } else {
       $failed += 1
+      $failureRecords += [PSCustomObject]@{
+        name = $name
+        category = Classify-Failure -JqStatus $jqStatus -JqxStatus $jqxStatus -JqOut $jqOut -JqxOut $jqxOut
+        jq_status = [string]$jqStatus
+        jqx_status = [string]$jqxStatus
+        jq_out = $jqOut
+        jqx_out = $jqxOut
+      }
       Write-Host "[FAIL] $name"
       Write-Host "  filter: $filter"
       Write-Host "  input: $input"
@@ -223,6 +291,19 @@ try {
 
   Write-Host ""
   Write-Host "Summary: total=$total passed=$passed failed=$failed skipped=$skipped"
+  if ($SnapshotPath -ne "") {
+    $snapshotFile = if ([System.IO.Path]::IsPathRooted($SnapshotPath)) {
+      $SnapshotPath
+    } else {
+      Join-Path $repoRoot $SnapshotPath
+    }
+    $snapshotDir = Split-Path -Parent $snapshotFile
+    if ($snapshotDir -ne "" -and -not (Test-Path $snapshotDir)) {
+      New-Item -ItemType Directory -Path $snapshotDir | Out-Null
+    }
+    $failureRecords | ConvertTo-Json -Depth 5 | Set-Content -Path $snapshotFile -Encoding UTF8
+    Write-Host "Wrote snapshot: $snapshotFile"
+  }
   if ($failed -ne 0) {
     exit 1
   }

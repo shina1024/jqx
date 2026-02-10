@@ -2509,6 +2509,29 @@ test "eval trimstr compatibility" {
 }
 
 ///|
+test "eval trim/ltrim/rtrim compatibility" {
+  assert_eq(
+    must_eval(parse_filter("trim, ltrim, rtrim"), must_parse("\" abc \"")),
+    [Json::string("abc"), Json::string("abc "), Json::string(" abc")],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("[.[]|trimstr(\"foo\")]"),
+      must_parse("[\"fo\",\"foo\",\"barfoo\",\"foobarfoo\",\"foob\"]"),
+    ),
+    [
+      Json::array([
+        Json::string("fo"),
+        Json::string(""),
+        Json::string("bar"),
+        Json::string("bar"),
+        Json::string("b"),
+      ]),
+    ],
+  )
+}
+
+///|
 test "eval trimstr errors" {
   guard (try? eval(parse_filter("ltrimstr(\"1\")"), must_parse("1")))
     is Err(err) &&
@@ -2524,6 +2547,67 @@ test "eval trimstr errors" {
     is Err(err) &&
     err.to_string() == "rtrimstr() requires string inputs" else {
     fail("expected rtrimstr separator type error")
+  }
+  guard (try? eval(parse_filter("trim"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "trim input must be a string" else {
+    fail("expected trim input type error")
+  }
+  guard (try? eval(parse_filter("ltrim"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "trim input must be a string" else {
+    fail("expected ltrim input type error")
+  }
+  guard (try? eval(parse_filter("rtrim"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "trim input must be a string" else {
+    fail("expected rtrim input type error")
+  }
+  guard (try? eval(parse_filter("trimstr(\"1\")"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "startswith() requires string inputs" else {
+    fail("expected trimstr input type error")
+  }
+  guard (try? eval(parse_filter("trimstr(1)"), must_parse("\"x\""))) is Err(err) &&
+    err.to_string() == "startswith() requires string inputs" else {
+    fail("expected trimstr separator type error")
+  }
+}
+
+///|
+test "eval abs/have_decnum/isempty compatibility" {
+  assert_eq(
+    must_eval(parse_filter("map(abs)"), must_parse("[-10,-1.1,-1e-1]")),
+    [Json::array([Json::number(10.0), Json::number(1.1), Json::number(0.1)])],
+  )
+  assert_eq(must_eval(parse_filter("have_decnum"), must_parse("null")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("isempty(empty)"), must_parse("null")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("isempty(.[])"), must_parse("[]")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("isempty(.[])"), must_parse("[1,2,3]")), [
+    Json::boolean(false),
+  ])
+  assert_eq(
+    must_eval(parse_filter("isempty((1,error(\"x\")))"), must_parse("null")),
+    [Json::boolean(false)],
+  )
+}
+
+///|
+test "eval abs/isempty errors" {
+  guard (try? eval(parse_filter("abs"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "null (null) cannot be negated" else {
+    fail("expected abs null type error")
+  }
+  guard (try? eval(parse_filter("abs"), must_parse("true"))) is Err(err) &&
+    err.to_string() == "boolean (true) cannot be negated" else {
+    fail("expected abs boolean type error")
+  }
+  guard (try? eval(parse_filter("isempty(.[0])"), must_parse("{\"a\":1}")))
+    is Err(err) &&
+    err.to_string() == "Cannot index object with number" else {
+    fail("expected isempty to propagate pre-first error")
   }
 }
 
