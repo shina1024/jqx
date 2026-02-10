@@ -96,7 +96,7 @@ Notes:
   `scripts/jq_compat_cases.upstream.json` using sidecar config in
   `scripts/jq_upstream_import.json` (skip patterns + per-case overrides).
 - `scripts/jq_compat_cases.upstream.stage1.json` is the current CI-safe subset
-  (60 passing cases as of 2026-02-10).
+  (59 passing cases as of 2026-02-10).
 - CLI compatibility cases can specify `jq_args` / `jqx_args` and
   `jqx_use_stdin` for option-aware differential runs.
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.

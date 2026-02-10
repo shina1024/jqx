@@ -336,15 +336,6 @@
     "source_expected_count": 1
   },
   {
-    "name": "upstream-jq-test-l516",
-    "filter": "\"x\" as $x | \"a\"+\"y\" as $y | $x+\",\"+$y",
-    "input": "null",
-    "source_file": "jq.test",
-    "source_line": 516,
-    "source_kind": "runtime",
-    "source_expected_count": 1
-  },
-  {
     "name": "upstream-jq-test-l520",
     "filter": "1 as $x | [$x,$x,$x as $x | $x]",
     "input": "null",
