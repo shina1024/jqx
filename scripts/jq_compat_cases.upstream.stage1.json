@@ -336,15 +336,6 @@
     "source_expected_count": 1
   },
   {
-    "name": "upstream-jq-test-l516",
-    "filter": "\"x\" as $x | \"a\"+\"y\" as $y | $x+\",\"+$y",
-    "input": "null",
-    "source_file": "jq.test",
-    "source_line": 516,
-    "source_kind": "runtime",
-    "source_expected_count": 1
-  },
-  {
     "name": "upstream-jq-test-l520",
     "filter": "1 as $x | [$x,$x,$x as $x | $x]",
     "input": "null",
@@ -638,24 +629,6 @@
     "input": "[1,2,4]",
     "source_file": "jq.test",
     "source_line": 890,
-    "source_kind": "runtime",
-    "source_expected_count": 1
-  },
-  {
-    "name": "upstream-jq-test-l906",
-    "filter": "[reduce .[] / .[] as $i (0; . + $i)]",
-    "input": "[1,2]",
-    "source_file": "jq.test",
-    "source_line": 906,
-    "source_kind": "runtime",
-    "source_expected_count": 1
-  },
-  {
-    "name": "upstream-jq-test-l910",
-    "filter": "reduce .[] as $x (0; . + $x) as $x | $x",
-    "input": "[1,2,3]",
-    "source_file": "jq.test",
-    "source_line": 910,
     "source_kind": "runtime",
     "source_expected_count": 1
   },
