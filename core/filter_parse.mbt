@@ -446,6 +446,14 @@ fn FilterCursor::parse_dot_expr(ctx : FilterCursor) -> Filter raise FilterError 
           current = Filter::pipe(current, suffix)
         }
       }
+      Some('[') => {
+        let suffix = ctx.parse_dot_suffix()
+        if suffix is Identity {
+          continue
+        } else {
+          current = Filter::pipe(current, suffix)
+        }
+      }
       _ => break
     }
   }

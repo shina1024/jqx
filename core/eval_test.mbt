@@ -75,6 +75,15 @@ test "eval index and iter" {
 }
 
 ///|
+test "eval chained index without extra dot" {
+  let j = must_parse("{\"a\":[10,20,30]}")
+  assert_eq(must_eval(parse_filter(".a[1]"), j), [Json::number(20.0)])
+  assert_eq(must_eval(parse_filter(".a[1:3]"), j), [
+    Json::array([Json::number(20.0), Json::number(30.0)]),
+  ])
+}
+
+///|
 test "eval string index jq compatibility" {
   let s = must_parse("\"abc\"")
   guard (try? eval(parse_filter(".[0]"), s)) is Err(err) &&

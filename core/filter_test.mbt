@@ -22,6 +22,22 @@ test "parse index" {
 }
 
 ///|
+test "parse chained index without extra dot" {
+  inspect(
+    parse_filter(".a[0]"),
+    content="Pipe(Pipe(Identity, Field(\"a\")), Index(0))",
+  )
+  inspect(
+    parse_filter(".a[0]?"),
+    content="Pipe(Pipe(Identity, Field(\"a\")), IndexOpt(0))",
+  )
+  inspect(
+    parse_filter(".a[1:3]"),
+    content="Pipe(Pipe(Identity, Field(\"a\")), Slice(Some(1), Some(3)))",
+  )
+}
+
+///|
 test "parse slice" {
   inspect(
     parse_filter(".[1:3]"),
