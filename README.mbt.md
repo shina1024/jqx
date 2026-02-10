@@ -105,9 +105,10 @@ Lanes:
 Typed lane (scaffold):
 - `Query[I, O]`
 - `identity`, `field`, `index`, `pipe`, `map`
+- `iter`, `comma`, `literal`, `call`, `select`, `eq`, `add`, `fallback`, `try_catch`
 - `evalQuery(query, json)` -> `Result<Json[], string>`
 - `runQuery(query, jsonText)` -> `Result<string[], string>`
-- Current combinators are `Json -> Json`; `I/O` parameters are reserved for expansion.
+- Current combinators focus on `Json -> Json`; `I/O` parameters are reserved for further typed expansion.
 
 ## Compatibility Baseline
 

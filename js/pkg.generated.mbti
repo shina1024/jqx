@@ -6,6 +6,14 @@ import {
 }
 
 // Values
+pub fn add(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+
+pub fn call(String, Array[Query[@core.Json, @core.Json]]) -> Query[@core.Json, @core.Json]
+
+pub fn comma(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+
+pub fn eq(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+
 pub fn eval(@core.Filter, @core.Json) -> Array[@core.Json] raise @core.EvalError
 
 pub fn evalQuery(Query[@core.Json, @core.Json], @core.Json) -> Result[Array[@core.Json], String]
@@ -14,11 +22,17 @@ pub fn evalToJsonStrings(String, String) -> Result[Array[String], String]
 
 pub fn execute(@core.Filter, @core.Json) -> Array[@core.Json] raise @core.EvalError
 
+pub fn fallback(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+
 pub fn field(String) -> Query[@core.Json, @core.Json]
 
 pub fn identity() -> Query[@core.Json, @core.Json]
 
 pub fn index(Int) -> Query[@core.Json, @core.Json]
+
+pub fn iter() -> Query[@core.Json, @core.Json]
+
+pub fn literal(@core.Json) -> Query[@core.Json, @core.Json]
 
 pub fn map(Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
 
@@ -44,11 +58,15 @@ pub fn safeParseJson(String) -> Result[@core.Json, String]
 
 pub fn safeRunValues(String, String) -> Result[Array[@core.Json], String]
 
+pub fn select(Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+
 pub fn tryEval(@core.Filter, @core.Json) -> Result[Array[@core.Json], String]
 
 pub fn tryParseFilter(String) -> Result[@core.Filter, String]
 
 pub fn tryParseJson(String) -> Result[@core.Json, String]
+
+pub fn try_catch(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
 
 // Errors
 

@@ -54,6 +54,75 @@ pub fn map(
 }
 
 ///|
+/// Additional typed-lane combinators (still Json -> Json focused).
+/// These keep typed DSL authoring practical without exposing raw AST builders.
+
+///|
+pub fn literal(value : @core.Json) -> Query[@core.Json, @core.Json] {
+  query_of_filter(@core.Filter::literal(value))
+}
+
+///|
+pub fn iter() -> Query[@core.Json, @core.Json] {
+  query_of_filter(@core.Filter::iter())
+}
+
+///|
+pub fn comma(
+  left : Query[@core.Json, @core.Json],
+  right : Query[@core.Json, @core.Json],
+) -> Query[@core.Json, @core.Json] {
+  query_of_filter(@core.Filter::comma(left.filter, right.filter))
+}
+
+///|
+pub fn call(
+  name : String,
+  args : Array[Query[@core.Json, @core.Json]],
+) -> Query[@core.Json, @core.Json] {
+  query_of_filter(@core.Filter::call(name, args.map(q => q.filter)))
+}
+
+///|
+pub fn select(
+  pred : Query[@core.Json, @core.Json],
+) -> Query[@core.Json, @core.Json] {
+  call("select", [pred])
+}
+
+///|
+pub fn eq(
+  left : Query[@core.Json, @core.Json],
+  right : Query[@core.Json, @core.Json],
+) -> Query[@core.Json, @core.Json] {
+  query_of_filter(@core.Filter::eq(left.filter, right.filter))
+}
+
+///|
+pub fn add(
+  left : Query[@core.Json, @core.Json],
+  right : Query[@core.Json, @core.Json],
+) -> Query[@core.Json, @core.Json] {
+  query_of_filter(@core.Filter::add(left.filter, right.filter))
+}
+
+///|
+pub fn fallback(
+  left : Query[@core.Json, @core.Json],
+  right : Query[@core.Json, @core.Json],
+) -> Query[@core.Json, @core.Json] {
+  query_of_filter(@core.Filter::fallback(left.filter, right.filter))
+}
+
+///|
+pub fn try_catch(
+  inner : Query[@core.Json, @core.Json],
+  handler : Query[@core.Json, @core.Json],
+) -> Query[@core.Json, @core.Json] {
+  query_of_filter(@core.Filter::try_catch(inner.filter, handler.filter))
+}
+
+///|
 pub fn evalQuery(
   query : Query[@core.Json, @core.Json],
   input : @core.Json,

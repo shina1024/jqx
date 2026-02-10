@@ -35,3 +35,56 @@ test "typed evalQuery" {
   assert_eq(values.length(), 1)
   assert_eq(values[0].to_json_string(), "7")
 }
+
+///|
+test "typed comma query" {
+  let out = runQuery(comma(field("a"), field("b")), "{\"a\":1,\"b\":2}")
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values, ["1", "2"])
+}
+
+///|
+test "typed select + iter query" {
+  let q = pipe(
+    iter(),
+    pipe(
+      select(eq(field("kind"), literal(@core.Json::string("ok")))),
+      field("v"),
+    ),
+  )
+  let out = runQuery(q, "[{\"kind\":\"ok\",\"v\":1},{\"kind\":\"ng\",\"v\":2}]")
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values, ["1"])
+}
+
+///|
+test "typed add query" {
+  let q = add(field("x"), literal(@core.Json::number(1.0)))
+  let out = runQuery(q, "{\"x\":41}")
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values, ["42"])
+}
+
+///|
+test "typed fallback query" {
+  let q = fallback(field("a"), field("b"))
+  let out = runQuery(q, "{\"b\":2}")
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values, ["2"])
+}
+
+///|
+test "typed try_catch query" {
+  let q = try_catch(field("x"), literal(@core.Json::string("err")))
+  let out = runQuery(q, "1")
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values, ["\"err\""])
+}
+
+///|
+test "typed generic call query" {
+  let q = call("contains", [literal(@core.Json::string("ab"))])
+  let out = runQuery(q, "\"abc\"")
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values, ["true"])
+}
