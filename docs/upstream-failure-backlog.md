@@ -11,15 +11,19 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 617
-- failed: 60
+- passed: 445
+- failed: 232
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `parser-invalid-character` | 60 | parser grammar gaps (`(`, `{`, update path forms, interpolation, format prefix, etc.) |
+| `output-mismatch` | 102 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
+| `parser-invalid-character` | 62 | parser grammar gaps (`(`, `{`, update path forms, interpolation, format prefix, etc.) |
+| `unknown-function` | 56 | builtin/function coverage gaps |
+| `runtime-error-vs-jq-success` | 6 | jqx runtime errors where jq succeeds |
+| `unknown-variable` | 6 | variable binding/scoping coverage gaps |
 
 ## Top Unknown Functions
 
@@ -27,7 +31,16 @@ From current snapshot (`unknown-function` subset):
 
 | Function | Count |
 | --- | ---: |
-| (none) | 0 |
+| `splits` | 6 |
+| `pick` | 5 |
+| `builtins` | 4 |
+| `nan` | 4 |
+| `add` | 3 |
+| `sqrt` | 3 |
+| `modulemeta` | 3 |
+| `infinite` | 3 |
+| `floor` | 2 |
+| `toboolean` | 2 |
 
 ## Latest Progress
 
@@ -70,13 +83,18 @@ From current snapshot (`unknown-function` subset):
   - added base-aware lowering for dynamic bracket access so key式は元入力コンテキストで評価
   - enabled general postfix field chaining on non-dot bases (`$ENV.PAGER`, `env.PAGER`)
 - Parser cluster reduced from 75 to 60 (`-15`) in upstream full diff.
-- Current remaining failures are parser-only (`Invalid character`: 60 total).
+- Differential runner parity fix completed on 2026-02-10:
+  - fixed `scripts/jq_diff.ps1` exit-code capture so PowerShell and bash results align
+  - after parity fix, full upstream baseline is `445 pass / 232 fail / 147 skip` (not parser-only)
 
 ## Priority Plan
 
-1. Parser cluster first: reduce `parser-invalid-character` (60 total).
-2. Re-run upstream full diff after each parser slice to surface newly unblocked non-parser gaps.
-3. Expand stage1 allowlist incrementally with newly stable parser features.
+1. Parser cluster first: reduce `parser-invalid-character` (`62` total).
+2. Unknown-function cluster next: implement top functions (`splits`, `pick`, numeric/time/meta helpers).
+3. Triage `output-mismatch` (`102`) by subcategory:
+   - intentional policy differences (e.g. object key order)
+   - real behavioral regressions (streaming/error semantics).
+4. Expand stage1 allowlist incrementally with newly stable parser/eval features.
 
 ## Representative Failing Cases
 
