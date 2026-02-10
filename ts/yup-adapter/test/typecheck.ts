@@ -2,11 +2,14 @@ import { expectTypeOf } from "expect-type";
 import * as yup from "yup";
 
 import {
+  type InferJqOutput,
   type JqxDynamicRuntime,
+  type Json,
   type JqxResult,
   type JqxTypedRuntime,
   type YupAdapterError,
   executeWithYup,
+  runWithInferred,
   runWithYup,
   safeExecuteWithYup,
   safeRunWithYup,
@@ -41,6 +44,14 @@ const outputSchema = yup
   })
   .defined();
 
+type InputData = {
+  user: {
+    name: string;
+    tags: string[];
+  };
+  list: Array<{ id: number }>;
+};
+
 const runResult = safeRunWithYup(dynamicRuntime, {
   filter: ".user",
   input: { user: { name: "alice" } },
@@ -74,3 +85,37 @@ expectTypeOf(helperRunResult).toEqualTypeOf<
 
 expectTypeOf(runWithYup).toEqualTypeOf<typeof safeRunWithYup>();
 expectTypeOf(executeWithYup).toEqualTypeOf<typeof safeExecuteWithYup>();
+
+const inferredIdentity = runWithInferred(dynamicRuntime, {
+  filter: ".",
+  input: {} as InputData,
+});
+expectTypeOf(inferredIdentity).toEqualTypeOf<Promise<JqxResult<InputData[], string>>>();
+
+const inferredField = runWithInferred(dynamicRuntime, {
+  filter: ".user.name",
+  input: {} as InputData,
+});
+expectTypeOf(inferredField).toEqualTypeOf<Promise<JqxResult<string[], string>>>();
+
+const inferredIter = runWithInferred(dynamicRuntime, {
+  filter: ".list[]",
+  input: {} as InputData,
+});
+expectTypeOf(inferredIter).toEqualTypeOf<Promise<JqxResult<Array<{ id: number }>, string>>>();
+
+const inferredFallbackUnknown = runWithInferred(dynamicRuntime, {
+  filter: ".user | .name",
+  input: {} as InputData,
+});
+expectTypeOf(inferredFallbackUnknown).toEqualTypeOf<Promise<JqxResult<unknown[], string>>>();
+
+const inferredFallbackJson = runWithInferred(dynamicRuntime, {
+  filter: ".user | .name",
+  input: {} as InputData,
+  fallback: "json" as const,
+});
+expectTypeOf(inferredFallbackJson).toEqualTypeOf<Promise<JqxResult<Json[], string>>>();
+
+expectTypeOf<InferJqOutput<InputData, ".user.name">>().toEqualTypeOf<string>();
+expectTypeOf<InferJqOutput<InputData, ".missing", "json">>().toEqualTypeOf<Json>();

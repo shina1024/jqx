@@ -64,6 +64,7 @@ Implemented builtins/functions in `core/eval.mbt` include:
 | --- | --- | --- |
 | Dynamic API | supported | compatibility lane: `run`/`runCompat`/`evalToJsonStrings` (JSON text); convenience lane: `runValues`/`safeRunValues` (core `Json` values) |
 | Typed DSL | partial | `Query[I, O]` scaffold + `identity` / `field` / `index` / `pipe` / `map`, with `evalQuery` / `runQuery` |
+| jq string partial inference layer | supported | `runWithInferred` + `InferJqOutput` are available in `ts/zod-adapter`, `ts/yup-adapter`, `ts/valibot-adapter`; unsupported jq syntax falls back to `unknown` (default) or `Json` |
 | TS compile-time inference tests | supported | `expectTypeOf`-based compile-time assertions are present in `ts/zod-adapter`, `ts/yup-adapter`, and `ts/valibot-adapter` |
 | Zod adapter | partial | `ts/zod-adapter` provides `safeRunWithZod`, `safeExecuteWithZod`, aliases, tests, and CI checks; final npm binding is pending |
 | Yup adapter | partial | `ts/yup-adapter` provides `safeRunWithYup`, `safeExecuteWithYup`, aliases, tests, and CI checks; final npm binding is pending |

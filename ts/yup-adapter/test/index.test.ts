@@ -6,6 +6,7 @@ import * as yup from "yup";
 import {
   type JqxDynamicRuntime,
   type JqxTypedRuntime,
+  runWithInferred,
   safeExecuteWithYup,
   safeRunWithYup,
   withY,
@@ -182,5 +183,39 @@ test("withY helper delegates to safeRunWithYup", async () => {
   assert.equal(result.ok, true);
   if (result.ok) {
     assert.deepEqual(result.value, [2]);
+  }
+});
+
+test("runWithInferred parses JSON outputs", async () => {
+  const runtime: JqxDynamicRuntime = {
+    run(filter, input) {
+      assert.equal(filter, ".user.name");
+      assert.equal(input, '{"user":{"name":"alice"}}');
+      return { ok: true, value: ['"alice"'] };
+    },
+  };
+  const result = await runWithInferred(runtime, {
+    filter: ".user.name",
+    input: { user: { name: "alice" } },
+  });
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.deepEqual(result.value, ["alice"]);
+  }
+});
+
+test("runWithInferred returns output_parse error for invalid JSON", async () => {
+  const runtime: JqxDynamicRuntime = {
+    run() {
+      return { ok: true, value: ["not-json"] };
+    },
+  };
+  const result = await runWithInferred(runtime, {
+    filter: ".",
+    input: { x: 1 },
+  });
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.match(result.error, /output_parse at index 0/);
   }
 });

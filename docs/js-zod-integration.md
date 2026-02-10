@@ -23,6 +23,9 @@ Implemented adapters:
    - Helpers/aliases: `withValibot`, `withV`, `runWithValibot`, `executeWithValibot`, `runWithV`, `executeWithV`
 
 Each adapter includes runtime tests, `pnpm typecheck`, `expectTypeOf`-based compile-time assertions, and Linux CI coverage.
+Each adapter also provides jq-string partial inference via:
+- `InferJqOutput<Input, Filter, Mode>`
+- `runWithInferred(runtime, { filter, input, fallback? })`
 
 Still pending:
 
@@ -73,6 +76,36 @@ When input shape is unknown, jq/filter text alone cannot provide strong static t
    - validate input with schema
    - execute query
    - validate outputs with schema
+
+## jq String Partial Inference Rules
+
+The inference layer is intentionally conservative. It infers only a safe subset
+of jq filter strings and falls back for the rest.
+
+Inferable subset:
+
+1. `.`
+2. `.foo`
+3. `.foo.bar`
+4. `.[n]` (`n` is an integer literal)
+5. `.[]`
+6. simple combinations of the above (for example `.items[].name`)
+
+Fallback behavior:
+
+1. Default fallback is `unknown` for non-inferable syntax.
+2. `fallback: "json"` switches non-inferable outputs to `Json`.
+3. Non-inferable examples include operators/pipes/functions/conditionals and
+   other complex jq forms such as:
+   `.a | .b`, `.a + 1`, `map(.)`, `if ... then ... else ... end`, `.foo?`.
+
+Type-level examples:
+
+```ts
+type A = InferJqOutput<{ user: { name: string } }, ".user.name">; // string
+type B = InferJqOutput<{ user: { name: string } }, ".user | .name">; // unknown
+type C = InferJqOutput<{ user: { name: string } }, ".user | .name", "json">; // Json
+```
 
 ## Next Steps
 
