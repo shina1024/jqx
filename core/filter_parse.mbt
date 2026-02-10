@@ -49,6 +49,7 @@ priv enum UpdateAssignOp {
   Sub
   Mul
   Div
+  Mod
   Fallback
 }
 
@@ -360,6 +361,18 @@ fn FilterCursor::parse_dot_suffix(
   ctx : FilterCursor,
 ) -> Filter raise FilterError {
   ctx.skip_ws()
+  fn parse_index_or_field_item() -> Filter raise FilterError {
+    ctx.skip_ws()
+    match ctx.peek_char() {
+      Some('\"') => Filter::field(ctx.parse_string_literal())
+      _ =>
+        match ctx.parse_optional_int() {
+          Some(idx) => Filter::index(idx)
+          None => ctx.invalid_char()
+        }
+    }
+  }
+
   let base = match ctx.peek_char() {
     Some('[') => {
       ctx.read_char() |> ignore
@@ -369,30 +382,50 @@ fn FilterCursor::parse_dot_suffix(
           ctx.read_char() |> ignore
           Filter::iter()
         }
-        Some('\"') => {
-          let name = ctx.parse_string_literal()
-          ctx.skip_ws()
-          ctx.expect_char(']')
-          Filter::field(name)
-        }
         _ => {
-          let start = ctx.parse_optional_int()
+          let first_opt = if ctx.peek_char() is Some(':') {
+            None
+          } else {
+            Some(parse_index_or_field_item())
+          }
           ctx.skip_ws()
           if ctx.peek_char() is Some(':') {
             ctx.read_char() |> ignore
             ctx.skip_ws()
             let end = ctx.parse_optional_int()
-            ctx.skip_ws()
+            let start = match first_opt {
+              Some(Index(start_i)) => Some(start_i)
+              Some(_) => ctx.invalid_char()
+              None => None
+            }
             if start is None && end is None {
               ctx.invalid_char()
             }
+            ctx.skip_ws()
             ctx.expect_char(']')
             Filter::slice(start, end)
           } else {
-            match start {
-              Some(idx) => {
-                ctx.expect_char(']')
-                Filter::index(idx)
+            match first_opt {
+              Some(first) => {
+                let mut combined = first
+                for {
+                  ctx.skip_ws()
+                  match ctx.peek_char() {
+                    Some(',') => {
+                      ctx.read_char() |> ignore
+                      let next = parse_index_or_field_item()
+                      combined = Filter::comma(combined, next)
+                      continue
+                    }
+                    Some(']') => {
+                      ctx.read_char() |> ignore
+                      break
+                    }
+                    Some(_) => ctx.invalid_char()
+                    None => raise InvalidEof
+                  }
+                }
+                combined
               }
               None => ctx.invalid_char()
             }
@@ -400,6 +433,7 @@ fn FilterCursor::parse_dot_suffix(
         }
       }
     }
+    Some('\"') => Filter::field(ctx.parse_string_literal())
     Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') =>
       Filter::field(ctx.parse_identifier())
     Some('.') => {
@@ -498,8 +532,12 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
     let update = ctx.parse_comma()
     if is_foreach {
       ctx.skip_ws()
-      ctx.expect_char(';')
-      let extract = ctx.parse_comma()
+      let extract = if ctx.peek_char() is Some(';') {
+        ctx.read_char() |> ignore
+        ctx.parse_comma()
+      } else {
+        Filter::identity()
+      }
       ctx.skip_ws()
       ctx.expect_char(')')
       Filter::foreach(source, name, init, update, extract)
@@ -695,8 +733,13 @@ fn FilterCursor::parse_object_literal(
       Some(_) => ctx.invalid_char()
       None => raise InvalidEof
     }
-    ctx.expect_char(':')
-    let value = ctx.parse_pipe()
+    ctx.skip_ws()
+    let value = if ctx.peek_char() is Some(':') {
+      ctx.read_char() |> ignore
+      ctx.parse_pipe()
+    } else {
+      Filter::pipe(Filter::identity(), Filter::field(key))
+    }
     items.push((key, value))
     ctx.skip_ws()
     match ctx.peek_char() {
@@ -716,8 +759,30 @@ fn FilterCursor::parse_object_literal(
 }
 
 ///|
+fn FilterCursor::parse_unary(ctx : FilterCursor) -> Filter raise FilterError {
+  ctx.skip_ws()
+  match ctx.peek_char() {
+    Some('-') => {
+      let saved = ctx.offset
+      ctx.read_char() |> ignore
+      match ctx.peek_char() {
+        Some(c) if c is ('0'..='9') => {
+          ctx.offset = saved
+          ctx.parse_primary()
+        }
+        _ => {
+          let right = ctx.parse_unary()
+          Filter::sub(Filter::literal(Json::number(0.0)), right)
+        }
+      }
+    }
+    _ => ctx.parse_primary()
+  }
+}
+
+///|
 fn FilterCursor::parse_mul(ctx : FilterCursor) -> Filter raise FilterError {
-  let mut left = ctx.parse_primary()
+  let mut left = ctx.parse_unary()
   for {
     ctx.skip_ws()
     match ctx.peek_char() {
@@ -728,7 +793,7 @@ fn FilterCursor::parse_mul(ctx : FilterCursor) -> Filter raise FilterError {
           ctx.offset = saved
           break
         }
-        let right = ctx.parse_primary()
+        let right = ctx.parse_unary()
         left = Filter::mul(left, right)
       }
       Some('/') => {
@@ -742,8 +807,18 @@ fn FilterCursor::parse_mul(ctx : FilterCursor) -> Filter raise FilterError {
           }
           _ => ()
         }
-        let right = ctx.parse_primary()
+        let right = ctx.parse_unary()
         left = Filter::div(left, right)
+      }
+      Some('%') => {
+        let saved = ctx.offset
+        ctx.read_char() |> ignore
+        if ctx.peek_char() is Some('=') {
+          ctx.offset = saved
+          break
+        }
+        let right = ctx.parse_unary()
+        left = Filter::mod_(left, right)
       }
       _ => break
     }
@@ -821,6 +896,7 @@ fn apply_update_assign_op(op : UpdateAssignOp, right : Filter) -> Filter {
     Sub => Filter::sub(Filter::identity(), right)
     Mul => Filter::mul(Filter::identity(), right)
     Div => Filter::div(Filter::identity(), right)
+    Mod => Filter::mod_(Filter::identity(), right)
     Fallback => Filter::fallback(Filter::identity(), right)
   }
 }
@@ -891,6 +967,7 @@ fn FilterCursor::try_parse_update_assign_op(
   ctx.skip_ws()
   let saved = ctx.offset
   match ctx.read_char() {
+    Some('=') => Some(Assign)
     Some('|') =>
       match ctx.read_char() {
         Some('=') => Some(Assign)
@@ -939,6 +1016,14 @@ fn FilterCursor::try_parse_update_assign_op(
           None
         }
       }
+    Some('%') =>
+      match ctx.read_char() {
+        Some('=') => Some(Mod)
+        _ => {
+          ctx.offset = saved
+          None
+        }
+      }
     _ => {
       ctx.offset = saved
       None
@@ -974,14 +1059,18 @@ fn FilterCursor::parse_compare(
     ctx.skip_ws()
     match ctx.peek_char() {
       Some('=') => {
+        let saved = ctx.offset
         ctx.read_char() |> ignore
-        match ctx.read_char() {
+        match ctx.peek_char() {
           Some('=') => {
+            ctx.read_char() |> ignore
             let right = ctx.parse_pipe(allow_as~)
             left = Filter::eq(left, right)
           }
-          Some(_) => ctx.invalid_char(shift=-1)
-          None => raise InvalidEof
+          _ => {
+            ctx.offset = saved
+            break
+          }
         }
       }
       Some('!') => {

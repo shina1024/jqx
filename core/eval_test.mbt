@@ -25,8 +25,10 @@ test "eval field and missing field" {
   let j = must_parse("{\"a\":1}")
   let f1 = parse_filter(".a")
   let f2 = parse_filter(".b")
+  let f3 = parse_filter(".\"a\"")
   assert_eq(must_eval(f1, j), [Json::number(1.0)])
   assert_eq(must_eval(f2, j), [Json::null()])
+  assert_eq(must_eval(f3, j), [Json::number(1.0)])
 }
 
 ///|
@@ -66,12 +68,14 @@ test "eval index and iter" {
   let j = must_parse("[1,2,3]")
   let f1 = parse_filter(".[1]")
   let f2 = parse_filter(".[]")
+  let f3 = parse_filter(".[1,2]")
   assert_eq(must_eval(f1, j), [Json::number(2.0)])
   assert_eq(must_eval(f2, j), [
     Json::number(1.0),
     Json::number(2.0),
     Json::number(3.0),
   ])
+  assert_eq(must_eval(f3, j), [Json::number(2.0), Json::number(3.0)])
 }
 
 ///|
@@ -131,11 +135,15 @@ test "eval array and object literals" {
   let j = must_parse("{\"a\":1,\"b\":2}")
   let f1 = parse_filter("[.a, .b]")
   let f2 = parse_filter("{\"x\": .a, y: .b}")
+  let f3 = parse_filter("{a, \"b\"}")
   assert_eq(must_eval(f1, j), [
     Json::array([Json::number(1.0), Json::number(2.0)]),
   ])
   assert_eq(must_eval(f2, j), [
     Json::object({ "x": Json::number(1.0), "y": Json::number(2.0) }),
+  ])
+  assert_eq(must_eval(f3, j), [
+    Json::object({ "a": Json::number(1.0), "b": Json::number(2.0) }),
   ])
 }
 
@@ -1862,6 +1870,8 @@ test "eval arithmetic" {
   assert_eq(must_eval(parse_filter(".c - .a"), j), [Json::number(2.0)])
   assert_eq(must_eval(parse_filter(".a * .b"), j), [Json::number(2.0)])
   assert_eq(must_eval(parse_filter(".c / .a"), j), [Json::number(3.0)])
+  assert_eq(must_eval(parse_filter("10 % 3"), j), [Json::number(1.0)])
+  assert_eq(must_eval(parse_filter("-."), must_parse("3")), [Json::number(-3.0)])
   let inf_out = must_eval(parse_filter(". + 1"), must_parse("1e309"))
   assert_eq(inf_out.length(), 1)
   assert_eq(inf_out[0].to_json_string(), "1.7976931348623157e+308")
@@ -1928,6 +1938,11 @@ test "eval division by zero compatibility" {
     err.to_string() ==
     "number (1) and number (0) cannot be divided because the divisor is zero" else {
     fail("expected jq-compatible division by zero error")
+  }
+  guard (try? eval(parse_filter("1 % 0"), j)) is Err(err) &&
+    err.to_string() ==
+    "number (1) and number (0) cannot be divided because the divisor is zero" else {
+    fail("expected jq-compatible modulo by zero error")
   }
 }
 
@@ -1996,6 +2011,12 @@ test "eval update assignment compatibility" {
   ])
   assert_eq(must_eval(parse_filter(".[-1] += 1"), must_parse("[1,2,3]")), [
     Json::array([Json::number(1.0), Json::number(2.0), Json::number(4.0)]),
+  ])
+  assert_eq(must_eval(parse_filter(".a = 9"), must_parse("{\"a\":1}")), [
+    Json::object({ "a": Json::number(9.0) }),
+  ])
+  assert_eq(must_eval(parse_filter(".a %= 4"), must_parse("{\"a\":9}")), [
+    Json::object({ "a": Json::number(1.0) }),
   ])
 }
 
@@ -2110,6 +2131,11 @@ test "eval try/catch" {
 test "eval reduce/foreach" {
   let j = must_parse("[1,2,3]")
   assert_eq(must_eval(parse_filter("reduce .[] as $x (0; . + $x)"), j), [
+    Json::number(6.0),
+  ])
+  assert_eq(must_eval(parse_filter("foreach .[] as $x (0; . + $x)"), j), [
+    Json::number(1.0),
+    Json::number(3.0),
     Json::number(6.0),
   ])
   assert_eq(must_eval(parse_filter("foreach .[] as $x (0; . + $x; .)"), j), [

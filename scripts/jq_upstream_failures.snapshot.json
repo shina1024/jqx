@@ -5,7 +5,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"a\":1,\"b\":2,\"c\":1,\"e\":2}",
-    "jqx_out": "jqx: error (at <stdin>:1:3): Invalid character ','"
+    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character '('"
   },
   {
     "name": "upstream-jq-test-l122",
@@ -13,15 +13,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"a\":1,\"b\":2,\"a$2\":4}",
-    "jqx_out": "jqx: error (at <stdin>:1:5): Invalid character ','"
-  },
-  {
-    "name": "upstream-jq-test-l168",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "20",
-    "jqx_out": "jqx: error (at <stdin>:1:2): Invalid character '\"'"
+    "jqx_out": "jqx: error (at <stdin>:1:12): Invalid character '('"
   },
   {
     "name": "upstream-jq-test-l187",
@@ -49,43 +41,27 @@
   },
   {
     "name": "upstream-jq-test-l213",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"Out of bounds negative array index\"",
-    "jqx_out": "jqx: error (at <stdin>:1:16): Invalid character ' '"
+    "jqx_out": "null"
   },
   {
     "name": "upstream-jq-test-l217",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"Out of bounds negative array index\"",
-    "jqx_out": "jqx: error (at <stdin>:1:16): Invalid character ' '"
-  },
-  {
-    "name": "upstream-jq-test-l221",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,1,5]",
-    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character ' '"
-  },
-  {
-    "name": "upstream-jq-test-l225",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,5,2]",
-    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character ' '"
+    "jqx_out": "null"
   },
   {
     "name": "upstream-jq-test-l229",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"Array index too large\"",
-    "jqx_out": "jqx: error (at <stdin>:1:20): Invalid character ' '"
+    "jqx_out": ""
   },
   {
     "name": "upstream-jq-test-l273",
@@ -102,14 +78,6 @@
     "jqx_status": "0",
     "jq_out": "1",
     "jqx_out": "{\"x\":1}"
-  },
-  {
-    "name": "upstream-jq-test-l283",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[null,1,2,3,1,2,3,null]",
-    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character ','"
   },
   {
     "name": "upstream-jq-test-l287",
@@ -161,11 +129,11 @@
   },
   {
     "name": "upstream-jq-test-l337",
-    "category": "parser-invalid-character",
+    "category": "unknown-function",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[0,1,2,3,4]",
-    "jqx_out": "jqx: error (at <stdin>:1:37): Invalid character ')'"
+    "jqx_out": "jqx: error: Unknown function: range"
   },
   {
     "name": "upstream-jq-test-l341",
@@ -182,30 +150,6 @@
     "jqx_status": "0",
     "jq_out": "[-1,-1,-4]",
     "jqx_out": "jqx: error (at <stdin>:1:17): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l349",
-    "category": "parser-invalid-number",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,3,6]",
-    "jqx_out": "jqx: error (at <stdin>:1:2): Invalid number -"
-  },
-  {
-    "name": "upstream-jq-test-l353",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,3,3.5,4.5]",
-    "jqx_out": "jqx: error (at <stdin>:1:36): Invalid character ')'"
-  },
-  {
-    "name": "upstream-jq-test-l357",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,3,6]",
-    "jqx_out": "jqx: error (at <stdin>:1:30): Invalid character ')'"
   },
   {
     "name": "upstream-jq-test-l361",
@@ -357,7 +301,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[0,1,4,5,6,7]",
-    "jqx_out": "jqx: error (at <stdin>:1:9): Invalid character ' '"
+    "jqx_out": "jqx: error (at <stdin>:1:40): Invalid character '�'"
   },
   {
     "name": "upstream-jq-test-l490",
@@ -374,14 +318,6 @@
     "jqx_status": "0",
     "jq_out": "[5]",
     "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character '['"
-  },
-  {
-    "name": "upstream-jq-test-l512",
-    "category": "parser-invalid-number",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "-3",
-    "jqx_out": "jqx: error (at <stdin>:1:15): Invalid number -"
   },
   {
     "name": "upstream-jq-test-l524",
@@ -448,36 +384,20 @@
     "jqx_out": "9E999999999"
   },
   {
-    "name": "upstream-jq-test-l681",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "4",
-    "jqx_out": "jqx: error (at <stdin>:1:4): Invalid character '%'"
-  },
-  {
-    "name": "upstream-jq-test-l685",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "172",
-    "jqx_out": "jqx: error (at <stdin>:1:7): Invalid character '%'"
-  },
-  {
     "name": "upstream-jq-test-l689",
-    "category": "parser-invalid-number",
+    "category": "unknown-function",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[0,0,0,0,0,-1]",
-    "jqx_out": "jqx: error (at <stdin>:1:13): Invalid number -"
+    "jqx_out": "jqx: error: Unknown function: infinite"
   },
   {
     "name": "upstream-jq-test-l693",
-    "category": "parser-invalid-character",
+    "category": "unknown-function",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[true,true]",
-    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character '%'"
+    "jqx_out": "jqx: error: Unknown function: nan"
   },
   {
     "name": "upstream-jq-test-l701",
@@ -529,11 +449,11 @@
   },
   {
     "name": "upstream-jq-test-l762",
-    "category": "parser-invalid-character",
+    "category": "unknown-function",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"arr\":[],\"sum\":null}",
-    "jqx_out": "jqx: error (at <stdin>:1:7): Invalid character ' '"
+    "jqx_out": "jqx: error: Unknown function: add"
   },
   {
     "name": "upstream-jq-test-l766",
@@ -606,14 +526,6 @@
     "jqx_status": "0",
     "jq_out": "14",
     "jqx_out": "jqx: error (at <stdin>:1:28): Invalid character '['"
-  },
-  {
-    "name": "upstream-jq-test-l902",
-    "category": "parser-invalid-number",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[6]",
-    "jqx_out": "jqx: error (at <stdin>:1:2): Invalid number -"
   },
   {
     "name": "upstream-jq-test-l915",
@@ -825,11 +737,11 @@
   },
   {
     "name": "upstream-jq-test-l1101",
-    "category": "parser-invalid-character",
+    "category": "unknown-function",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[\"foo\",0]",
-    "jqx_out": "jqx: error (at <stdin>:1:12): Invalid character ','"
+    "jqx_out": "jqx: error: Unknown function: path"
   },
   {
     "name": "upstream-jq-test-l1106",
@@ -913,11 +825,11 @@
   },
   {
     "name": "upstream-jq-test-l1168",
-    "category": "parser-invalid-character",
+    "category": "unknown-function",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "null",
-    "jqx_out": "jqx: error (at <stdin>:1:47): Invalid character ','"
+    "jqx_out": "jqx: error: Unknown function: del"
   },
   {
     "name": "upstream-jq-test-l1175",
@@ -960,20 +872,12 @@
     "jqx_out": "[1,2]"
   },
   {
-    "name": "upstream-jq-test-l1204",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"message\":\"goodbye\"}",
-    "jqx_out": "jqx: error (at <stdin>:1:11): Invalid character ' '"
-  },
-  {
     "name": "upstream-jq-test-l1208",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"bar\":42,\"foo\":42}",
-    "jqx_out": "jqx: error (at <stdin>:1:7): Invalid character ' '"
+    "jqx_out": "{\"bar\":42,\"foo\":null}"
   },
   {
     "name": "upstream-jq-test-l1216",
@@ -982,14 +886,6 @@
     "jqx_status": "0",
     "jq_out": "[3,5,7]",
     "jqx_out": "jqx: error (at <stdin>:1:9): Invalid character ','"
-  },
-  {
-    "name": "upstream-jq-test-l1224",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,0]",
-    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character '%'"
   },
   {
     "name": "upstream-jq-test-l1228",
@@ -1029,7 +925,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[0,2,4]",
-    "jqx_out": "jqx: error (at <stdin>:1:17): Invalid character '%'"
+    "jqx_out": "jqx: error (at <stdin>:1:26): Invalid character '�'"
   },
   {
     "name": "upstream-jq-test-l1261",
@@ -1037,23 +933,15 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"foo\":[0,5]}",
-    "jqx_out": "jqx: error (at <stdin>:1:7): Invalid character ','"
-  },
-  {
-    "name": "upstream-jq-test-l1265",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[4,null,[null,null,null,1]]",
-    "jqx_out": "jqx: error (at <stdin>:1:10): Invalid character ' '"
+    "jqx_out": "jqx: error (at <stdin>:1:23): Invalid character '�'"
   },
   {
     "name": "upstream-jq-test-l1269",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"foo\":[11,null,{\"bar\":1}],\"bar\":42}",
-    "jqx_out": "jqx: error (at <stdin>:1:14): Invalid character ' '"
+    "jqx_out": "{\"bar\":42,\"foo\":[11,null,{\"bar\":1}]}"
   },
   {
     "name": "upstream-jq-test-l1273",
@@ -1077,7 +965,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[1,1,1,1,1,1]",
-    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character ' '"
+    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character '�'"
   },
   {
     "name": "upstream-jq-test-l1301",
@@ -1142,14 +1030,6 @@
     "jqx_status": "0",
     "jq_out": "[7]",
     "jqx_out": "jqx: error (at <stdin>:1:18): Invalid character 'e'"
-  },
-  {
-    "name": "upstream-jq-test-l1341",
-    "category": "parser-invalid-number",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[-1]",
-    "jqx_out": "jqx: error (at <stdin>:1:2): Invalid number -"
   },
   {
     "name": "upstream-jq-test-l1349",
@@ -1272,20 +1152,12 @@
     "jqx_out": "3"
   },
   {
-    "name": "upstream-jq-test-l1460",
-    "category": "parser-invalid-number",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[-1]",
-    "jqx_out": "jqx: error (at <stdin>:1:2): Invalid number -"
-  },
-  {
     "name": "upstream-jq-test-l1464",
-    "category": "parser-invalid-number",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"string (\\\"foo\\\") cannot be negated\"",
-    "jqx_out": "jqx: error (at <stdin>:1:5): Invalid number -."
+    "jqx_out": "\"foo\""
   },
   {
     "name": "upstream-jq-test-l1468",
@@ -1377,11 +1249,11 @@
   },
   {
     "name": "upstream-jq-test-l1603",
-    "category": "parser-invalid-number",
+    "category": "unknown-function",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[null,null]",
-    "jqx_out": "jqx: error (at <stdin>:1:11): Invalid number -"
+    "jqx_out": "jqx: error: Unknown function: nan"
   },
   {
     "name": "upstream-jq-test-l1615",
@@ -1429,7 +1301,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"error\":\"no, it's OK\"}",
-    "jqx_out": "jqx: error (at <stdin>:1:15): Invalid character ' '"
+    "jqx_out": "jqx: error (at <stdin>:1:29): Invalid character '�'"
   },
   {
     "name": "upstream-jq-test-l1683",
@@ -1437,7 +1309,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"a\":999}",
-    "jqx_out": "jqx: error (at <stdin>:1:20): Invalid character '9'"
+    "jqx_out": "jqx: error (at <stdin>:1:23): Invalid character '�'"
   },
   {
     "name": "upstream-jq-test-l1707",
@@ -1513,11 +1385,11 @@
   },
   {
     "name": "upstream-jq-test-l1967",
-    "category": "parser-invalid-number",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"string (\\\"very-long-...) cannot be negated\"",
-    "jqx_out": "jqx: error (at <stdin>:1:5): Invalid number -."
+    "jqx_out": ""
   },
   {
     "name": "upstream-jq-test-l1971",
@@ -1529,11 +1401,11 @@
   },
   {
     "name": "upstream-jq-test-l1975",
-    "category": "parser-invalid-number",
+    "category": "unknown-function",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"string (\\\"☆☆☆...) cannot be negated\"",
-    "jqx_out": "jqx: error (at <stdin>:1:39): Invalid number -."
+    "jqx_out": "jqx: error: Unknown function: range"
   },
   {
     "name": "upstream-jq-test-l2000",
@@ -1577,19 +1449,19 @@
   },
   {
     "name": "upstream-jq-test-l2024",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"number (1) and number (0) cannot be divided (remainder) because the divisor is zero\"",
-    "jqx_out": "jqx: error (at <stdin>:1:7): Invalid character '%'"
+    "jqx_out": "0"
   },
   {
     "name": "upstream-jq-test-l2028",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"number (1) and number (0) cannot be divided (remainder) because the divisor is zero\"",
-    "jqx_out": "jqx: error (at <stdin>:1:7): Invalid character '%'"
+    "jqx_out": "0"
   },
   {
     "name": "upstream-jq-test-l2033",
@@ -1669,7 +1541,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"a\":null,\"b\":\"b\"}",
-    "jqx_out": "jqx: error (at <stdin>:1:18): Invalid character ' '"
+    "jqx_out": "jqx: error (at <stdin>:1:22): Invalid character '�'"
   },
   {
     "name": "upstream-jq-test-l2101",
@@ -1761,19 +1633,19 @@
   },
   {
     "name": "upstream-jq-test-l2190",
-    "category": "parser-invalid-number",
+    "category": "unknown-function",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "true",
-    "jqx_out": "jqx: error (at <stdin>:1:1): Invalid number -."
+    "jqx_out": "jqx: error: Unknown function: have_decnum"
   },
   {
     "name": "upstream-jq-test-l2194",
-    "category": "parser-invalid-number",
+    "category": "unknown-function",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "true",
-    "jqx_out": "jqx: error (at <stdin>:1:1): Invalid number -."
+    "jqx_out": "jqx: error: Unknown function: have_decnum"
   },
   {
     "name": "upstream-jq-test-l2198",
@@ -1877,7 +1749,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"a\":[1,2,3],\"__loc__\":{\"file\":\"<top-level>\",\"line\":1},\"c\":{\"hi\":\"hey\"}}",
-    "jqx_out": "jqx: error (at <stdin>:1:4): Invalid character ','"
+    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character '$'"
   },
   {
     "name": "upstream-jq-test-l2274",
@@ -2169,11 +2041,11 @@
   },
   {
     "name": "upstream-jq-test-l2504",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "1",
-    "jqx_out": "jqx: error (at <stdin>:1:32): Invalid character ')'"
+    "jqx_out": "1"
   },
   {
     "name": "upstream-jq-test-l2524",
@@ -2376,22 +2248,6 @@
     "jqx_out": "{\"good\":true,\"name\":\"JSON\"}"
   },
   {
-    "name": "upstream-man-test-l115",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"e\"",
-    "jqx_out": "jqx: error (at <stdin>:1:4): Invalid character ','"
-  },
-  {
-    "name": "upstream-man-test-l137",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"user\":\"stedolan\",\"title\":\"JQ Primer\"}",
-    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character ','"
-  },
-  {
     "name": "upstream-man-test-l142",
     "category": "parser-invalid-character",
     "jq_status": "0",
@@ -2473,11 +2329,11 @@
   },
   {
     "name": "upstream-man-test-l272",
-    "category": "parser-invalid-character",
+    "category": "unknown-function",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[\"foo\"]",
-    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character ','"
+    "jqx_out": "jqx: error: Unknown function: del"
   },
   {
     "name": "upstream-man-test-l337",
@@ -2888,14 +2744,6 @@
     "jqx_out": "jqx: error (at <stdin>:1:15): Invalid character '{'"
   },
   {
-    "name": "upstream-man-test-l923",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "1",
-    "jqx_out": "jqx: error (at <stdin>:1:35): Invalid character ')'"
-  },
-  {
     "name": "upstream-man-test-l939",
     "category": "parser-invalid-character",
     "jq_status": "0",
@@ -2937,11 +2785,11 @@
   },
   {
     "name": "upstream-man-test-l977",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"a\":20,\"b\":20}",
-    "jqx_out": "jqx: error (at <stdin>:1:5): Invalid character ' '"
+    "jqx_out": "{\"a\":10,\"b\":20}"
   },
   {
     "name": "upstream-man-test-l985",
@@ -2949,7 +2797,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"a\":0,\"b\":0}",
-    "jqx_out": "jqx: error (at <stdin>:1:11): Invalid character ' '"
+    "jqx_out": "jqx: error (at <stdin>:1:20): Invalid character '�'"
   },
   {
     "name": "upstream-man-test-l991",

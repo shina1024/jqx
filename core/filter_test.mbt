@@ -100,11 +100,19 @@ test "parse reduce/foreach" {
     parse_filter("foreach .[] as $x (0; . + $x; .)"),
     content="Foreach(Pipe(Identity, Iter), \"x\", Literal(Number(0)), Add(Identity, Var(\"x\")), Identity)",
   )
+  inspect(
+    parse_filter("foreach .[] as $x (0; . + $x)"),
+    content="Foreach(Pipe(Identity, Iter), \"x\", Literal(Number(0)), Add(Identity, Var(\"x\")), Identity)",
+  )
 }
 
 ///|
 test "parse string key index" {
   inspect(parse_filter(".[\"foo\"]"), content="Pipe(Identity, Field(\"foo\"))")
+  inspect(
+    parse_filter(".\"foo\".\"bar\""),
+    content="Pipe(Pipe(Identity, Field(\"foo\")), Field(\"bar\"))",
+  )
 }
 
 ///|
@@ -220,6 +228,15 @@ test "parse arithmetic" {
     parse_filter("(.a - .b) / 2"),
     content="Div(Sub(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\"))), Literal(Number(2)))",
   )
+  inspect(
+    parse_filter("10 % 3"),
+    content="Mod(Literal(Number(10)), Literal(Number(3)))",
+  )
+  inspect(parse_filter("-."), content="Sub(Literal(Number(0)), Identity)")
+  inspect(
+    parse_filter("-(.a + 1)"),
+    content="Sub(Literal(Number(0)), Add(Pipe(Identity, Field(\"a\")), Literal(Number(1))))",
+  )
 }
 
 ///|
@@ -257,6 +274,14 @@ test "parse update assignment operators" {
     parse_filter(".[0] *= 3"),
     content="Call(\"setpath\", [Literal(Array([Number(0)])), Pipe(Call(\"getpath\", [Literal(Array([Number(0)]))]), Mul(Identity, Literal(Number(3))))])",
   )
+  inspect(
+    parse_filter(".a = 1"),
+    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Pipe(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Literal(Number(1)))])",
+  )
+  inspect(
+    parse_filter(".a %= 2"),
+    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Pipe(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Mod(Identity, Literal(Number(2))))])",
+  )
 }
 
 ///|
@@ -275,6 +300,18 @@ test "parse array and object literals" {
   inspect(
     parse_filter("{\"a\": .b, c: .d}"),
     content="Object([(\"a\", Pipe(Identity, Field(\"b\"))), (\"c\", Pipe(Identity, Field(\"d\")))])",
+  )
+  inspect(
+    parse_filter("{a, \"b\", c: .d}"),
+    content="Object([(\"a\", Pipe(Identity, Field(\"a\"))), (\"b\", Pipe(Identity, Field(\"b\"))), (\"c\", Pipe(Identity, Field(\"d\")))])",
+  )
+  inspect(
+    parse_filter(".[1,2]"),
+    content="Pipe(Identity, Comma(Index(1), Index(2)))",
+  )
+  inspect(
+    parse_filter(".[\"a\", \"b\"]"),
+    content="Pipe(Identity, Comma(Field(\"a\"), Field(\"b\")))",
   )
 }
 

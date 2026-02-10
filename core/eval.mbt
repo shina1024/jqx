@@ -1093,6 +1093,7 @@ fn eval_with_env(
     Sub(left, right) => eval_arith("-", left, right, input, env)
     Mul(left, right) => eval_arith("*", left, right, input, env)
     Div(left, right) => eval_arith("/", left, right, input, env)
+    Mod(left, right) => eval_arith("%", left, right, input, env)
     IfElse(cond, then_branch, else_branch) =>
       if eval_to_bool(cond, input, env) {
         eval_with_env(then_branch, input, env)
@@ -1209,6 +1210,17 @@ fn eval_arith(
           let v = match op {
             "-" => x - y
             "*" => x * y
+            "%" =>
+              if y == 0.0 {
+                raise TypeError(
+                  json_type_with_value(a) +
+                  " and " +
+                  json_type_with_value(b) +
+                  " cannot be divided because the divisor is zero",
+                )
+              } else {
+                x.mod(y)
+              }
             _ =>
               if y == 0.0 {
                 raise TypeError(

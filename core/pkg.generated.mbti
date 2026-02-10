@@ -72,6 +72,7 @@ pub enum Filter {
   Sub(Filter, Filter)
   Mul(Filter, Filter)
   Div(Filter, Filter)
+  Mod(Filter, Filter)
   IfElse(Filter, Filter, Filter)
   Fallback(Filter, Filter)
   Empty
@@ -100,6 +101,7 @@ pub fn Filter::iter_opt() -> Self
 pub fn Filter::literal(Json) -> Self
 pub fn Filter::lt(Self, Self) -> Self
 pub fn Filter::lte(Self, Self) -> Self
+pub fn Filter::mod_(Self, Self) -> Self
 pub fn Filter::mul(Self, Self) -> Self
 pub fn Filter::neq(Self, Self) -> Self
 pub fn Filter::not(Self) -> Self

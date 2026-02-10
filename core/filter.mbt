@@ -49,6 +49,7 @@ pub enum Filter {
   Sub(Filter, Filter)
   Mul(Filter, Filter)
   Div(Filter, Filter)
+  Mod(Filter, Filter)
   IfElse(Filter, Filter, Filter)
   Fallback(Filter, Filter)
   Empty
@@ -228,6 +229,11 @@ pub fn Filter::mul(left : Filter, right : Filter) -> Filter {
 ///|
 pub fn Filter::div(left : Filter, right : Filter) -> Filter {
   Div(left, right)
+}
+
+///|
+pub fn Filter::mod_(left : Filter, right : Filter) -> Filter {
+  Mod(left, right)
 }
 
 ///|
