@@ -775,6 +775,51 @@
     "input": "[1,3,5]"
   },
   {
+    "name": "reduce-empty",
+    "filter": "reduce .[] as $x (0; . + $x)",
+    "input": "[]"
+  },
+  {
+    "name": "reduce-single",
+    "filter": "reduce .[] as $x (0; . + $x)",
+    "input": "[7]"
+  },
+  {
+    "name": "reduce-try-catch",
+    "filter": "reduce .[] as $x (0; try (. + $x) catch .)",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "foreach-empty",
+    "filter": "foreach .[] as $x (0; . + $x; .)",
+    "input": "[]"
+  },
+  {
+    "name": "foreach-mixed-sign",
+    "filter": "foreach .[] as $x (0; . + $x; .)",
+    "input": "[-1,2,-3]"
+  },
+  {
+    "name": "try-catch-div-zero",
+    "filter": "try (.a / .b) catch \"divzero\"",
+    "input": "{\"a\":1,\"b\":0}"
+  },
+  {
+    "name": "try-fallback",
+    "filter": "(try .a.b catch empty) // \"fallback\"",
+    "input": "{\"a\":1}"
+  },
+  {
+    "name": "try-catch-reduce-scalar",
+    "filter": "try (reduce .[] as $x (0; . + $x)) catch \"noiter\"",
+    "input": "1"
+  },
+  {
+    "name": "arith-mixed",
+    "filter": "(.a + .b) * .c - .d / .e",
+    "input": "{\"a\":4,\"b\":2,\"c\":3,\"d\":10,\"e\":5}"
+  },
+  {
     "name": "err-reverse-string",
     "filter": "reverse",
     "input": "\"abc\"",
@@ -821,6 +866,20 @@
     "filter": "1 / 0",
     "input": "null",
     "expect_error": true
+  },
+  {
+    "name": "err-setpath-bad-path",
+    "filter": "setpath(\"a\";1)",
+    "input": "{}",
+    "expect_error": true,
+    "expect_error_mode": "any"
+  },
+  {
+    "name": "err-delpaths-bad-path",
+    "filter": "delpaths([1])",
+    "input": "{}",
+    "expect_error": true,
+    "expect_error_mode": "any"
   },
   {
     "name": "cli-compact-explicit",

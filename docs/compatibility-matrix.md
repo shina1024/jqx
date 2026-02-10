@@ -102,6 +102,7 @@ Notes:
 - CLI compatibility cases can specify `jq_args` / `jqx_args` and
   `jqx_use_stdin` for option-aware differential runs.
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.
+- Smoke differential currently covers 180 cases (as of 2026-02-10).
 - `expect_error: true` in smoke differential cases compares normalized jq/jqx
   error messages and accepts jqx `moon run` wrapper status behavior.
 - `expect_error_mode` can be `strict` (default) or `any`.
