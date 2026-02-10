@@ -66,7 +66,7 @@ pub impl Show for ParseError with output(self, logger) {
       ..write_string(" at line ")
       ..write_object(line)
       ..write_string(", column ")
-      ..write_object(column)
+      .write_object(column)
     InvalidEof => logger.write_string("Unexpected end of file")
     DepthLimitExceeded =>
       logger.write_string(
@@ -522,12 +522,12 @@ fn ParseContext::lex_value(
       match ctx.read_char() {
         Some('0') => {
           let (n, repr) = ctx.lex_zero(start=ctx.offset - 2)
-          return Number(n, repr.map(_.to_string()))
+          return Number(n, repr.map(s => s.to_string()))
         }
         Some(c2) => {
           if c2 is ('1'..='9') {
             let (n, repr) = ctx.lex_decimal_integer(start=ctx.offset - 2)
-            return Number(n, repr.map(_.to_string()))
+            return Number(n, repr.map(s => s.to_string()))
           }
           ctx.invalid_char(shift=-1)
         }
@@ -535,11 +535,11 @@ fn ParseContext::lex_value(
       }
     Some('0') => {
       let (n, repr) = ctx.lex_zero(start=ctx.offset - 1)
-      return Number(n, repr.map(_.to_string()))
+      return Number(n, repr.map(s => s.to_string()))
     }
     Some('1'..='9') => {
       let (n, repr) = ctx.lex_decimal_integer(start=ctx.offset - 1)
-      return Number(n, repr.map(_.to_string()))
+      return Number(n, repr.map(s => s.to_string()))
     }
     Some('"') => {
       let s = ctx.lex_string()

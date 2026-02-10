@@ -22,7 +22,7 @@ pub impl Show for FilterError with output(self, logger) {
       ..write_string(" at line ")
       ..write_object(line)
       ..write_string(", column ")
-      ..write_object(column)
+      .write_object(column)
     InvalidEof => logger.write_string("Unexpected end of file")
     InvalidNumber({ line, column }, s) =>
       logger
@@ -31,7 +31,7 @@ pub impl Show for FilterError with output(self, logger) {
       ..write_string(" at line ")
       ..write_object(line)
       ..write_string(", column ")
-      ..write_object(column)
+      .write_object(column)
   }
 }
 
