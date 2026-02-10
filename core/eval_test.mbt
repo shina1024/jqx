@@ -1776,6 +1776,33 @@ test "eval add builtin errors" {
 }
 
 ///|
+test "eval add call compatibility" {
+  assert_eq(
+    must_eval(
+      parse_filter(
+        "[add(null), add(range(range(10))), add(empty), add(10,range(10))]",
+      ),
+      must_parse("null"),
+    ),
+    [
+      Json::array([
+        Json::null(),
+        Json::number(120.0),
+        Json::null(),
+        Json::number(55.0),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("add(.[].a)"),
+      must_parse("[{\"a\":3}, {\"a\":5}, {\"b\":6}]"),
+    ),
+    [Json::number(8.0)],
+  )
+}
+
+///|
 test "eval sort compatibility" {
   assert_eq(must_eval(parse_filter("sort"), must_parse("[3,1,2]")), [
     Json::array([Json::number(1.0), Json::number(2.0), Json::number(3.0)]),

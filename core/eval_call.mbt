@@ -370,6 +370,24 @@ fn eval_call(
       } else {
         raise UnknownFunction("all")
       }
+    "add" =>
+      if args.length() == 0 {
+        raise UnknownFunction("add")
+      } else {
+        let mut acc = Json::null()
+        let mut seen = false
+        for arg in args {
+          for value in eval_with_env(arg, input, env) {
+            if !seen {
+              acc = value
+              seen = true
+            } else {
+              acc = json_add_pair(acc, value)
+            }
+          }
+        }
+        [acc]
+      }
     "isempty" =>
       if args.length() != 1 {
         raise UnknownFunction("isempty")
