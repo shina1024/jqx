@@ -44,6 +44,25 @@ pub fn Json::object(o : Map[String, Json]) -> Json {
 }
 
 ///|
+fn object_keys_sorted(o : Map[String, Json]) -> Array[String] {
+  let keys = Array::from_iter(o.keys())
+  keys.sort()
+  keys
+}
+
+///|
+fn object_entries_sorted(o : Map[String, Json]) -> Array[(String, Json)] {
+  let out = []
+  for key in object_keys_sorted(o) {
+    match o.get(key) {
+      Some(value) => out.push((key, value))
+      None => ()
+    }
+  }
+  out
+}
+
+///|
 pub struct Position {
   line : Int // 1-based
   column : Int // 1-based
@@ -183,7 +202,7 @@ pub fn Json::to_json_string(self : Json) -> String {
       Object(o) => {
         buf.write_char('{')
         let mut first = true
-        for kv in o.iter() {
+        for kv in object_entries_sorted(o) {
           let k = kv.0
           let v = kv.1
           if first {

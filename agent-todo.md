@@ -17,7 +17,7 @@ Updated: 2026-02-10
 - [x] upstream stage1 subsetをallowlistベースで自動生成し、CIで生成物ドリフトを検知する
 - [x] upstream stage1 subsetを拡張する（安定性を維持しつつ59→76件に増やす）
 - [ ] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ79件超へ段階追加）
-- [ ] Objectキー順の扱いを安定化する方針を決めて実装する（順序保持または明示仕様）
+- [x] Objectキー順の扱いを安定化する方針を決めて実装する（辞書順正規化で安定化）
 - [ ] エラーメッセージ差分を縮小する（`expect_error` ケース追加 + 正規化改善）
 - [ ] differentialケースを拡張する（`reduce`/`foreach`/`try-catch`/演算の境界系）
 

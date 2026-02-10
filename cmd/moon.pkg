@@ -1,0 +1,15 @@
+import {
+  "shina1024/jqx/core" @lib,
+  "moonbitlang/core/env",
+  "moonbitlang/core/strconv",
+}
+
+options(
+  "is-main": true,
+  targets: {
+    "exit_native.mbt": [ "native", "llvm" ],
+    "exit_wasm.mbt": [ "wasm", "wasm-gc" ],
+    "stdin_native.mbt": [ "native", "llvm" ],
+    "stdin_wasm.mbt": [ "wasm", "wasm-gc" ],
+  },
+)

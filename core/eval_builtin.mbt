@@ -20,10 +20,8 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
     "keys" =>
       match input {
         Object(o) => {
-          let keys = Array::from_iter(o.keys())
-          keys.sort()
           let out = []
-          for k in keys {
+          for k in object_keys_sorted(o) {
             out.push(Json::string(k))
           }
           [Json::array(out)]
@@ -41,8 +39,8 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
       match input {
         Object(o) => {
           let out = []
-          for kv in o.iter() {
-            out.push(Json::string(kv.0))
+          for k in object_keys_sorted(o) {
+            out.push(Json::string(k))
           }
           [Json::array(out)]
         }
@@ -112,7 +110,7 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
         }
         Object(o) => {
           let mut acc = Json::null()
-          for kv in o.iter() {
+          for kv in object_entries_sorted(o) {
             acc = json_add_pair(acc, kv.1)
           }
           [acc]

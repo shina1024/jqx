@@ -266,7 +266,7 @@ fn setpath_on_input(
           }
           let updated = setpath_on_input(child, rest, value)
           let out = Map::new()
-          for kv in o.iter() {
+          for kv in object_entries_sorted(o) {
             out[kv.0] = kv.1
           }
           out[name] = updated
@@ -449,7 +449,7 @@ fn delpaths_on_input(
         }
       }
       let out = Map::new()
-      for kv in o.iter() {
+      for kv in object_entries_sorted(o) {
         let name = kv.0
         let value = kv.1
         match groups.get(name) {
@@ -523,7 +523,7 @@ fn collect_paths(
 
   match input {
     Object(o) =>
-      for kv in o.iter() {
+      for kv in object_entries_sorted(o) {
         let key = kv.0
         let value = kv.1
         let p = prefix.copy()
@@ -558,7 +558,7 @@ fn collection_values(input : Json) -> Array[Json] raise EvalError {
     Array(a) => a
     Object(o) => {
       let out = []
-      for kv in o.iter() {
+      for kv in object_entries_sorted(o) {
         out.push(kv.1)
       }
       out
@@ -748,7 +748,7 @@ fn to_entries_json(input : Json) -> Json raise EvalError {
   match input {
     Object(o) => {
       let out = []
-      for kv in o.iter() {
+      for kv in object_entries_sorted(o) {
         out.push(Json::object({ "key": Json::string(kv.0), "value": kv.1 }))
       }
       Json::array(out)
@@ -899,7 +899,7 @@ fn eval_with_env(
         Array(a) => a
         Object(o) => {
           let out = []
-          for kv in o.iter() {
+          for kv in object_entries_sorted(o) {
             out.push(kv.1)
           }
           out
@@ -912,7 +912,7 @@ fn eval_with_env(
         Array(a) => a
         Object(o) => {
           let out = []
-          for kv in o.iter() {
+          for kv in object_entries_sorted(o) {
             out.push(kv.1)
           }
           out

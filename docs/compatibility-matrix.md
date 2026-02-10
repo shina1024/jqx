@@ -53,7 +53,7 @@ Implemented builtins/functions in `core/eval.mbt` include:
 
 | Topic | Status | Notes |
 | --- | --- | --- |
-| Object key order | partial | `Map` iteration order is not guaranteed |
+| Object key order | partial | jqx canonicalizes object-key traversal/serialization in lexicographic order for deterministic outputs (jqの挿入順とは差分あり) |
 | Number edge behavior | partial | parser/evaluator now avoid non-finite JSON output (`NaN -> null`, `±Infinity -> ±MAX_DOUBLE` in numeric ops), but full jq decnum parity is still out of scope |
 | Exact error text | partial | close to jq style but not byte-for-byte compatible |
 | CLI option coverage | partial | currently `-r`, `-R`, `-c`, `-n`, `-s`, `-e` (`-R` is line-based without full JSON-stream parity) |

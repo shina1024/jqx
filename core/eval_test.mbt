@@ -444,26 +444,16 @@ test "eval keys compatibility errors and keys_unsorted" {
     Json::array([Json::number(0.0), Json::number(1.0)]),
   ])
   let obj = must_parse("{\"b\":2,\"a\":1}")
-  let unsorted = must_eval(parse_filter("keys_unsorted"), obj)
-  guard unsorted.length() == 1 else {
-    fail("expected one output from keys_unsorted")
-  }
-  guard unsorted[0] is Array(keys_arr) else {
-    fail("expected array result from keys_unsorted")
-  }
-  assert_eq(keys_arr.length(), 2)
-  let mut saw_a = false
-  let mut saw_b = false
-  for k in keys_arr {
-    if k == Json::string("a") {
-      saw_a = true
-    } else if k == Json::string("b") {
-      saw_b = true
-    } else {
-      fail("unexpected key from keys_unsorted")
-    }
-  }
-  guard saw_a && saw_b else { fail("keys_unsorted missing keys") }
+  assert_eq(must_eval(parse_filter("keys_unsorted"), obj), [
+    Json::array([Json::string("a"), Json::string("b")]),
+  ])
+  assert_eq(must_eval(parse_filter(".[]"), obj), [
+    Json::number(1.0),
+    Json::number(2.0),
+  ])
+  assert_eq(must_eval(parse_filter("tojson"), obj), [
+    Json::string("{\"a\":1,\"b\":2}"),
+  ])
   guard (try? eval(parse_filter("keys"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) has no keys" else {
     fail("expected jq-compatible keys error")
@@ -1994,9 +1984,10 @@ test "eval update assignment compatibility" {
   assert_eq(must_eval(parse_filter(".[1] *= 10"), must_parse("[1,2,3]")), [
     Json::array([Json::number(1.0), Json::number(20.0), Json::number(3.0)]),
   ])
-  assert_eq(must_eval(parse_filter(".a.b |= . + 1"), must_parse("{\"a\":{\"b\":1}}")), [
-    Json::object({ "a": Json::object({ "b": Json::number(2.0) }) }),
-  ])
+  assert_eq(
+    must_eval(parse_filter(".a.b |= . + 1"), must_parse("{\"a\":{\"b\":1}}")),
+    [Json::object({ "a": Json::object({ "b": Json::number(2.0) }) })],
+  )
   assert_eq(must_eval(parse_filter(".a.b //= 9"), must_parse("{\"a\":{}}")), [
     Json::object({ "a": Json::object({ "b": Json::number(9.0) }) }),
   ])

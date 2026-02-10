@@ -38,7 +38,7 @@ fn eval_call(
           Object(o) => {
             let out = []
             let f = args[0]
-            for kv in o.iter() {
+            for kv in object_entries_sorted(o) {
               for v2 in eval_with_env(f, kv.1, env) {
                 out.push(v2)
               }
@@ -59,7 +59,7 @@ fn eval_call(
           Object(o) => {
             let out = Map::new()
             let f = args[0]
-            for kv in o.iter() {
+            for kv in object_entries_sorted(o) {
               let vals = eval_with_env(f, kv.1, env)
               if vals.length() > 0 {
                 out[kv.0] = vals[0]
