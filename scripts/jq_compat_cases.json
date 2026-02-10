@@ -555,6 +555,143 @@
     "input": "[9,8,7]"
   },
   {
+    "name": "compare-eq",
+    "filter": ".a == .b",
+    "input": "{\"a\":[1,2],\"b\":[1,2]}"
+  },
+  {
+    "name": "compare-neq",
+    "filter": ".a != .b",
+    "input": "{\"a\":1,\"b\":2}"
+  },
+  {
+    "name": "compare-lt",
+    "filter": ".a < .b",
+    "input": "{\"a\":1,\"b\":2}"
+  },
+  {
+    "name": "compare-lte",
+    "filter": ".a <= .b",
+    "input": "{\"a\":1,\"b\":1}"
+  },
+  {
+    "name": "compare-gt",
+    "filter": ".a > .b",
+    "input": "{\"a\":3,\"b\":2}"
+  },
+  {
+    "name": "map-values-array",
+    "filter": "map_values(. + 1)",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "select-stream",
+    "filter": ".[] | select(. > 1)",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "add-strings-array",
+    "filter": "add",
+    "input": "[\"a\",\"b\",\"c\"]"
+  },
+  {
+    "name": "length-array",
+    "filter": "length",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "length-object",
+    "filter": "length",
+    "input": "{\"a\":1,\"b\":2}"
+  },
+  {
+    "name": "nth-positive",
+    "filter": "nth(1)",
+    "input": "[9,8,7]"
+  },
+  {
+    "name": "group-by-field",
+    "filter": "group_by(.a) | map(length)",
+    "input": "[{\"a\":1},{\"a\":2},{\"a\":1}]"
+  },
+  {
+    "name": "unique-by-field",
+    "filter": "unique_by(.a) | map(.a)",
+    "input": "[{\"a\":1},{\"a\":2},{\"a\":1}]"
+  },
+  {
+    "name": "tojson-object",
+    "filter": "tojson",
+    "input": "{\"a\":[1,2]}"
+  },
+  {
+    "name": "fromjson-object",
+    "filter": "fromjson",
+    "input": "\"{\\\"a\\\":1}\""
+  },
+  {
+    "name": "split-empty-sep",
+    "filter": "split(\"\")",
+    "input": "\"ab\""
+  },
+  {
+    "name": "join-numbers",
+    "filter": "join(\"-\")",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "transpose-ragged",
+    "filter": "transpose",
+    "input": "[[1,2],[3]]"
+  },
+  {
+    "name": "paths-scalars",
+    "filter": "paths(scalars)",
+    "input": "{\"a\":[1,{\"b\":2}]}"
+  },
+  {
+    "name": "map-values-object-inc",
+    "filter": "map_values(. + 1)",
+    "input": "{\"a\":1,\"b\":2}"
+  },
+  {
+    "name": "contains-array-false",
+    "filter": "contains([4])",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "inside-array-false",
+    "filter": "inside([1,2])",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "index-array-missing",
+    "filter": "index(9)",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "rindex-array-missing",
+    "filter": "rindex(9)",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "indices-array-empty",
+    "filter": "indices(9)",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "bsearch-missing",
+    "filter": "bsearch(2)",
+    "input": "[1,3,5]"
+  },
+  {
+    "name": "cli-compact-explicit",
+    "filter": ".",
+    "input": "{\"a\":1}",
+    "jq_args": ["-c"],
+    "jqx_args": ["-c"]
+  },
+  {
     "name": "cli-raw-string-output",
     "filter": ".foo",
     "input": "{\"foo\":\"bar\"}",
