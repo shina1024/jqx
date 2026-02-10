@@ -29,7 +29,12 @@ function Write-JsonFile {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
   }
   $json = $Value | ConvertTo-Json -Depth 30
-  Set-Content -Path $Path -Value $json -Encoding UTF8
+  $normalized = ($json -replace "`r?`n", "`r`n")
+  if (-not $normalized.EndsWith("`r`n")) {
+    $normalized += "`r`n"
+  }
+  $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+  [System.IO.File]::WriteAllText($Path, $normalized, $utf8NoBom)
 }
 
 function Read-AllowList {
