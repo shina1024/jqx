@@ -145,6 +145,21 @@
     "input": "[1,2,3]"
   },
   {
+    "name": "any-generator",
+    "filter": "any(.[]; . > 2)",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "all-generator",
+    "filter": "all(.[]; . > 0)",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "all-generator-false",
+    "filter": "all(.[]; . > 2)",
+    "input": "[1,2,3]"
+  },
+  {
     "name": "startswith",
     "filter": "startswith(\"he\")",
     "input": "\"hello\""

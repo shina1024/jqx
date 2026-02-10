@@ -1383,6 +1383,18 @@ test "eval any/all compatibility" {
     must_eval(parse_filter("all(. > 0)"), must_parse("{\"a\":1,\"b\":0}")),
     [Json::boolean(false)],
   )
+  assert_eq(must_eval(parse_filter("any(.[]; . > 2)"), must_parse("[1,2,3]")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("all(.[]; . > 0)"), must_parse("[1,2,3]")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter("all(.[]; . > 2)"), must_parse("[1,2,3]")), [
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("any(.[]; . > 9)"), must_parse("[1,2,3]")), [
+    Json::boolean(false),
+  ])
 }
 
 ///|

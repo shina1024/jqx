@@ -118,9 +118,7 @@ fn eval_call(
         out
       }
     "any" =>
-      if args.length() != 1 {
-        raise UnknownFunction("any")
-      } else {
+      if args.length() == 1 {
         let values = collection_values(input)
         let cond = args[0]
         let mut ok = false
@@ -136,11 +134,27 @@ fn eval_call(
           }
         }
         [Json::boolean(ok)]
+      } else if args.length() == 2 {
+        let values = eval_with_env(args[0], input, env)
+        let cond = args[1]
+        let mut ok = false
+        for v in values {
+          for cond_out in eval_with_env(cond, v, env) {
+            if is_truthy(cond_out) {
+              ok = true
+              break
+            }
+          }
+          if ok {
+            break
+          }
+        }
+        [Json::boolean(ok)]
+      } else {
+        raise UnknownFunction("any")
       }
     "all" =>
-      if args.length() != 1 {
-        raise UnknownFunction("all")
-      } else {
+      if args.length() == 1 {
         let values = collection_values(input)
         let cond = args[0]
         let mut ok = true
@@ -156,6 +170,24 @@ fn eval_call(
           }
         }
         [Json::boolean(ok)]
+      } else if args.length() == 2 {
+        let values = eval_with_env(args[0], input, env)
+        let cond = args[1]
+        let mut ok = true
+        for v in values {
+          for cond_out in eval_with_env(cond, v, env) {
+            if !is_truthy(cond_out) {
+              ok = false
+              break
+            }
+          }
+          if !ok {
+            break
+          }
+        }
+        [Json::boolean(ok)]
+      } else {
+        raise UnknownFunction("all")
       }
     "flatten" =>
       if args.length() != 1 {
