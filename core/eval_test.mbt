@@ -194,6 +194,11 @@ test "eval first/last/nth compatibility" {
   assert_eq(must_eval(parse_filter("last((1,2,3))"), scalar), [
     Json::number(3.0),
   ])
+  let null_json2 = must_parse("null")
+  assert_eq(must_eval(parse_filter("nth(1; 0,1,error(\"foo\"))"), null_json2), [
+    Json::number(1.0),
+  ])
+  assert_eq(must_eval(parse_filter("nth(5; empty)"), null_json2), [])
 }
 
 ///|
@@ -869,6 +874,138 @@ test "eval bsearch compatibility" {
   assert_eq(must_eval(parse_filter("bsearch([2])"), must_parse("[1,3,5]")), [
     Json::number(-4.0),
   ])
+}
+
+///|
+test "eval range/limit/skip/IN compatibility" {
+  let null_json = must_parse("null")
+  assert_eq(must_eval(parse_filter("[range(0;10)]"), null_json), [
+    Json::array([
+      Json::number(0.0),
+      Json::number(1.0),
+      Json::number(2.0),
+      Json::number(3.0),
+      Json::number(4.0),
+      Json::number(5.0),
+      Json::number(6.0),
+      Json::number(7.0),
+      Json::number(8.0),
+      Json::number(9.0),
+    ]),
+  ])
+  assert_eq(must_eval(parse_filter("[range(0;10;3)]"), null_json), [
+    Json::array([
+      Json::number(0.0),
+      Json::number(3.0),
+      Json::number(6.0),
+      Json::number(9.0),
+    ]),
+  ])
+  assert_eq(must_eval(parse_filter("[range(3,5)]"), null_json), [
+    Json::array([
+      Json::number(0.0),
+      Json::number(1.0),
+      Json::number(2.0),
+      Json::number(0.0),
+      Json::number(1.0),
+      Json::number(2.0),
+      Json::number(3.0),
+      Json::number(4.0),
+    ]),
+  ])
+
+  assert_eq(
+    must_eval(
+      parse_filter("[limit(3; .[])]"),
+      must_parse("[11,22,33,44,55,66,77,88,99]"),
+    ),
+    [Json::array([Json::number(11.0), Json::number(22.0), Json::number(33.0)])],
+  )
+  assert_eq(must_eval(parse_filter("[limit(0; error)]"), null_json), [
+    Json::array([]),
+  ])
+  assert_eq(
+    must_eval(parse_filter("[limit(1; 1,error(\"foo\"))]"), null_json),
+    [Json::array([Json::number(1.0)])],
+  )
+
+  assert_eq(
+    must_eval(parse_filter("[skip(3; .[])]"), must_parse("[1,2,3,4,5,6,7,8,9]")),
+    [
+      Json::array([
+        Json::number(4.0),
+        Json::number(5.0),
+        Json::number(6.0),
+        Json::number(7.0),
+        Json::number(8.0),
+        Json::number(9.0),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("[skip(0,2,3,4; .[])]"),
+      must_parse("[1,2,3,4,5,6,7,8,9]"),
+    ),
+    [
+      Json::array([
+        Json::number(1.0),
+        Json::number(2.0),
+        Json::number(3.0),
+        Json::number(4.0),
+        Json::number(5.0),
+        Json::number(6.0),
+        Json::number(7.0),
+        Json::number(8.0),
+        Json::number(9.0),
+        Json::number(3.0),
+        Json::number(4.0),
+        Json::number(5.0),
+        Json::number(6.0),
+        Json::number(7.0),
+        Json::number(8.0),
+        Json::number(9.0),
+        Json::number(4.0),
+        Json::number(5.0),
+        Json::number(6.0),
+        Json::number(7.0),
+        Json::number(8.0),
+        Json::number(9.0),
+        Json::number(5.0),
+        Json::number(6.0),
+        Json::number(7.0),
+        Json::number(8.0),
+        Json::number(9.0),
+      ]),
+    ],
+  )
+
+  assert_eq(must_eval(parse_filter("range(5;10)|IN(range(10))"), null_json), [
+    Json::boolean(true),
+    Json::boolean(true),
+    Json::boolean(true),
+    Json::boolean(true),
+    Json::boolean(true),
+  ])
+}
+
+///|
+test "eval range/limit/skip/nth stream errors" {
+  let null_json = must_parse("null")
+  guard (try? eval(parse_filter("limit(-1; .[])"), must_parse("[1,2,3]")))
+    is Err(err) &&
+    err.to_string() == "limit doesn't support negative count" else {
+    fail("expected limit negative count error")
+  }
+  guard (try? eval(parse_filter("skip(-1; .[])"), must_parse("[1,2,3]")))
+    is Err(err) &&
+    err.to_string() == "skip doesn't support negative count" else {
+    fail("expected skip negative count error")
+  }
+  guard (try? eval(parse_filter("nth(-1; range(10))"), null_json)) is Err(err) &&
+    err.to_string() == "nth doesn't support negative indices" else {
+    fail("expected nth negative index error")
+  }
 }
 
 ///|

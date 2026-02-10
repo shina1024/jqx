@@ -37,7 +37,8 @@ Implemented builtins/functions in `core/eval.mbt` include:
 - `length`, `type`, `keys`, `keys_unsorted`
 - `values`, `nulls`, `booleans`, `numbers`, `strings`, `arrays`, `objects`, `iterables`, `scalars`
 - `paths`, `add`, `tostring`, `tojson`, `tonumber`, `fromjson`
-- `first`, `last`, `nth`, `any`, `all`
+- `first`, `last`, `nth`（`nth(index)` と `nth(index; stream)`）, `any`, `all`
+- `range`, `limit`, `skip`, `IN`
 - `flatten`, `transpose`
 - `to_entries`, `from_entries`, `with_entries`, `map`, `map_values`, `select`
 - `contains`, `inside`, `has`, `in`

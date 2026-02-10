@@ -1,4 +1,84 @@
 ///|
+
+///|
+fn call_require_number(name : String, value : Json) -> Double raise EvalError {
+  match value {
+    Number(n, _) => n
+    _ => raise TypeError(name + "() requires numeric arguments")
+  }
+}
+
+///|
+fn call_parse_non_negative_count(
+  value : Json,
+  negative_msg : String,
+) -> Int? raise EvalError {
+  match value {
+    Number(n, _) =>
+      if n != n || n == @double.neg_infinity || n < 0.0 {
+        raise TypeError(negative_msg)
+      } else if n == @double.infinity || n > 2147483647.0 {
+        None
+      } else {
+        let count = n.to_int()
+        if count < 0 {
+          raise TypeError(negative_msg)
+        } else {
+          Some(count)
+        }
+      }
+    _ => raise TypeError("count must be a number")
+  }
+}
+
+///|
+fn call_parse_nth_index(value : Json) -> Int? raise EvalError {
+  match value {
+    Number(n, _) =>
+      if n != n || n == @double.neg_infinity || n < 0.0 {
+        raise TypeError("nth doesn't support negative indices")
+      } else if n == @double.infinity || n > 2147483647.0 {
+        None
+      } else {
+        Some(n.to_int())
+      }
+    _ => raise TypeError("nth index must be a number")
+  }
+}
+
+///|
+fn append_range_outputs(
+  out : Array[Json],
+  start : Double,
+  end : Double,
+  step : Double,
+) -> Unit raise EvalError {
+  if step == 0.0 || step != step {
+    raise TypeError("range() step cannot be zero")
+  }
+  let mut current = start
+  if step > 0.0 {
+    for {
+      if current < end {
+        out.push(json_number_value(current))
+        current += step
+        continue
+      }
+      break
+    }
+  } else {
+    for {
+      if current > end {
+        out.push(json_number_value(current))
+        current += step
+        continue
+      }
+      break
+    }
+  }
+}
+
+///|
 fn eval_call(
   name : String,
   args : Array[Filter],
@@ -88,7 +168,7 @@ fn eval_call(
       if args.length() != 1 {
         raise UnknownFunction("first")
       } else {
-        let values = eval_with_env(args[0], input, env)
+        let values = eval_with_env_prefix(args[0], input, env, 1)
         if values.length() == 0 {
           []
         } else {
@@ -107,13 +187,114 @@ fn eval_call(
         }
       }
     "nth" =>
-      if args.length() != 1 {
-        raise UnknownFunction("nth")
-      } else {
+      if args.length() == 1 {
         let keys = eval_with_env(args[0], input, env)
         let out = []
         for key in keys {
           out.push(nth_on_input(input, key))
+        }
+        out
+      } else if args.length() == 2 {
+        let indexes = eval_with_env(args[0], input, env)
+        let stream = args[1]
+        let out = []
+        for index in indexes {
+          match call_parse_nth_index(index) {
+            Some(i) => {
+              let values = eval_with_env_prefix(stream, input, env, i + 1)
+              if i < values.length() {
+                out.push(values[i])
+              }
+            }
+            None => ()
+          }
+        }
+        out
+      } else {
+        raise UnknownFunction("nth")
+      }
+    "range" =>
+      if args.length() == 0 || args.length() > 3 {
+        raise UnknownFunction("range")
+      } else {
+        let starts = if args.length() == 1 {
+          [Json::number(0.0)]
+        } else {
+          eval_with_env(args[0], input, env)
+        }
+        let ends = if args.length() == 1 {
+          eval_with_env(args[0], input, env)
+        } else {
+          eval_with_env(args[1], input, env)
+        }
+        let steps = if args.length() >= 3 {
+          eval_with_env(args[2], input, env)
+        } else {
+          [Json::number(1.0)]
+        }
+        let out = []
+        for start_value in starts {
+          let start = call_require_number("range", start_value)
+          for end_value in ends {
+            let end = call_require_number("range", end_value)
+            for step_value in steps {
+              let step = call_require_number("range", step_value)
+              append_range_outputs(out, start, end, step)
+            }
+          }
+        }
+        out
+      }
+    "limit" =>
+      if args.length() != 2 {
+        raise UnknownFunction("limit")
+      } else {
+        let counts = eval_with_env(args[0], input, env)
+        let stream = args[1]
+        let out = []
+        for count_value in counts {
+          match
+            call_parse_non_negative_count(
+              count_value, "limit doesn't support negative count",
+            ) {
+            Some(0) => ()
+            Some(count) =>
+              for v in eval_with_env_prefix(stream, input, env, count) {
+                out.push(v)
+              }
+            None =>
+              for v in eval_with_env(stream, input, env) {
+                out.push(v)
+              }
+          }
+        }
+        out
+      }
+    "skip" =>
+      if args.length() != 2 {
+        raise UnknownFunction("skip")
+      } else {
+        let counts = eval_with_env(args[0], input, env)
+        let stream = args[1]
+        let out = []
+        for count_value in counts {
+          let values = eval_with_env(stream, input, env)
+          match
+            call_parse_non_negative_count(
+              count_value, "skip doesn't support negative count",
+            ) {
+            Some(skip_count) => {
+              let start = if skip_count < values.length() {
+                skip_count
+              } else {
+                values.length()
+              }
+              for i in start..<values.length() {
+                out.push(values[i])
+              }
+            }
+            None => ()
+          }
         }
         out
       }
@@ -264,6 +445,20 @@ fn eval_call(
           out.push(Json::boolean(has_key(collection, input)))
         }
         out
+      }
+    "IN" =>
+      if args.length() != 1 {
+        raise UnknownFunction("IN")
+      } else {
+        let candidates = eval_with_env(args[0], input, env)
+        let mut found = false
+        for candidate in candidates {
+          if candidate == input {
+            found = true
+            break
+          }
+        }
+        [Json::boolean(found)]
       }
     "startswith" =>
       if args.length() != 1 {

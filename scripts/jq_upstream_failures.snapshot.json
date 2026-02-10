@@ -80,62 +80,6 @@
     "jqx_out": "{\"x\":1}"
   },
   {
-    "name": "upstream-jq-test-l287",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,1,2,3,4,5,6,7,8,9]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-jq-test-l291",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,1,2,0,1,2,3,1,2,1,2,3]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-jq-test-l295",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,3,6,9]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-jq-test-l299",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-jq-test-l303",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,-1,-2,-3,-4]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-jq-test-l307",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,1,2,3,0,2,0,1,2,3,4,0,2,4,1,2,3,1,3,1,2,3,4,1,3]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-jq-test-l337",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,1,2,3,4]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
     "name": "upstream-jq-test-l341",
     "category": "parser-invalid-character",
     "jq_status": "0",
@@ -152,60 +96,12 @@
     "jqx_out": "jqx: error (at <stdin>:1:17): Invalid character '{'"
   },
   {
-    "name": "upstream-jq-test-l361",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[11,22,33]",
-    "jqx_out": "jqx: error: Unknown function: limit"
-  },
-  {
-    "name": "upstream-jq-test-l365",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[]",
-    "jqx_out": "jqx: error: Unknown function: limit"
-  },
-  {
-    "name": "upstream-jq-test-l369",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1]",
-    "jqx_out": "jqx: error: Unknown function: limit"
-  },
-  {
     "name": "upstream-jq-test-l373",
     "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"limit doesn't support negative count\"",
     "jqx_out": "null"
-  },
-  {
-    "name": "upstream-jq-test-l377",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[4,5,6,7,8,9]",
-    "jqx_out": "jqx: error: Unknown function: skip"
-  },
-  {
-    "name": "upstream-jq-test-l381",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,2,3,3]",
-    "jqx_out": "jqx: error: Unknown function: skip"
-  },
-  {
-    "name": "upstream-jq-test-l385",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[]",
-    "jqx_out": "jqx: error: Unknown function: skip"
   },
   {
     "name": "upstream-jq-test-l389",
@@ -216,76 +112,12 @@
     "jqx_out": "null"
   },
   {
-    "name": "upstream-jq-test-l393",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "1",
-    "jqx_out": "jqx: error: Unknown function: nth"
-  },
-  {
-    "name": "upstream-jq-test-l397",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,9]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-jq-test-l401",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
     "name": "upstream-jq-test-l405",
-    "category": "unknown-function",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[0,5,9,\"nth doesn't support negative indices\"]",
-    "jqx_out": "jqx: error: Unknown function: nth"
-  },
-  {
-    "name": "upstream-jq-test-l410",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "1",
-    "jqx_out": "jqx: error: Unknown function: error"
-  },
-  {
-    "name": "upstream-jq-test-l420",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,1,2,3,4,0,1,2,3,4,5,6]",
-    "jqx_out": "jqx: error: Unknown function: limit"
-  },
-  {
-    "name": "upstream-jq-test-l425",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[4,2]",
-    "jqx_out": "jqx: error: Unknown function: nth"
-  },
-  {
-    "name": "upstream-jq-test-l430",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,2,0,3,0,2,0,0,0,1,3,1,1,1,1,1,2,2,2,2]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-jq-test-l435",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,1,2,0,1,2,3,4]",
-    "jqx_out": "jqx: error: Unknown function: range"
+    "jqx_out": "[0,5,9,10]"
   },
   {
     "name": "upstream-jq-test-l474",
@@ -501,7 +333,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[1,0.996917,0.987688,0.972369,0.951056,0.923879,0.891006,0.85264,0.809017,0.760406,0.707106,0.649448,0.587785,0.522498,0.45399,0.382683,0.309017,0.233445,0.156434,0.078459]",
-    "jqx_out": "jqx: error: Unknown function: range"
+    "jqx_out": "jqx: error: Unknown function: cos"
   },
   {
     "name": "upstream-jq-test-l846",
@@ -509,7 +341,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[0,0.078459,0.156434,0.233445,0.309016,0.382683,0.45399,0.522498,0.587785,0.649447,0.707106,0.760405,0.809016,0.85264,0.891006,0.923879,0.951056,0.972369,0.987688,0.996917]",
-    "jqx_out": "jqx: error: Unknown function: range"
+    "jqx_out": "jqx: error: Unknown function: sin"
   },
   {
     "name": "upstream-jq-test-l894",
@@ -1401,11 +1233,11 @@
   },
   {
     "name": "upstream-jq-test-l1975",
-    "category": "unknown-function",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"string (\\\"☆☆☆...) cannot be negated\"",
-    "jqx_out": "jqx: error: Unknown function: range"
+    "jqx_out": ""
   },
   {
     "name": "upstream-jq-test-l2000",
@@ -1494,30 +1326,6 @@
     "jqx_status": "0",
     "jq_out": "{\"0\":[0,\"foo0\"],\"1\":[1,\"foo1\"],\"2\":[2,\"foo2\"],\"3\":[3,\"foo3\"],\"4\":[4,\"foo4\"]}",
     "jqx_out": "jqx: error (at <stdin>:1:25): Invalid character '('"
-  },
-  {
-    "name": "upstream-jq-test-l2063",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-jq-test-l2071",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "false",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-jq-test-l2082",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "false",
-    "jqx_out": "jqx: error: Unknown function: range"
   },
   {
     "name": "upstream-jq-test-l2087",
@@ -1812,7 +1620,7 @@
     "category": "parser-invalid-character",
     "jq_status": "5",
     "jqx_status": "0",
-    "jq_out": "jq: error (at <stdin>:1): ho",
+    "jq_out": "\"hi there!\"",
     "jqx_out": "jqx: error (at <stdin>:1:18): Invalid character '('"
   },
   {
@@ -2049,27 +1857,27 @@
   },
   {
     "name": "upstream-jq-test-l2524",
-    "category": "unknown-function",
+    "category": "output-mismatch",
     "jq_status": "5",
     "jqx_status": "0",
     "jq_out": "jq: error (at <stdin>:1): Invalid numeric literal at line 1, column 266 (while parsing '[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[<skipped: too deep>]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]')",
-    "jqx_out": "jqx: error: Unknown function: range"
+    "jqx_out": ""
   },
   {
     "name": "upstream-jq-test-l2529",
-    "category": "unknown-function",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "false",
-    "jqx_out": "jqx: error: Unknown function: range"
+    "jqx_out": ""
   },
   {
     "name": "upstream-jq-test-l2534",
-    "category": "unknown-function",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "true",
-    "jqx_out": "jqx: error: Unknown function: range"
+    "jqx_out": ""
   },
   {
     "name": "upstream-base64-test-l13",
@@ -2360,54 +2168,6 @@
     "jqx_out": "jqx: error: Unknown function: add"
   },
   {
-    "name": "upstream-man-test-l409",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "2",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-man-test-l414",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[2,3]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-man-test-l418",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,1,2,3]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-man-test-l422",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,3,6,9]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-man-test-l426",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-man-test-l430",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,-1,-2,-3,-4]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
     "name": "upstream-man-test-l434",
     "category": "unknown-function",
     "jq_status": "0",
@@ -2686,46 +2446,6 @@
     "jqx_status": "0",
     "jq_out": "false",
     "jqx_out": "jqx: error: Unknown function: isempty"
-  },
-  {
-    "name": "upstream-man-test-l891",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,1,2]",
-    "jqx_out": "jqx: error: Unknown function: limit"
-  },
-  {
-    "name": "upstream-man-test-l895",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[3,4,5,6,7,8,9]",
-    "jqx_out": "jqx: error: Unknown function: skip"
-  },
-  {
-    "name": "upstream-man-test-l899",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,9,5]",
-    "jqx_out": "jqx: error: Unknown function: range"
-  },
-  {
-    "name": "upstream-man-test-l903",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[]",
-    "jqx_out": "jqx: error: Unknown function: nth"
-  },
-  {
-    "name": "upstream-man-test-l907",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,9,5]",
-    "jqx_out": "jqx: error: Unknown function: range"
   },
   {
     "name": "upstream-man-test-l915",

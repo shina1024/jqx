@@ -1119,6 +1119,54 @@ fn eval_with_env(
 }
 
 ///|
+fn eval_with_env_prefix(
+  filter : Filter,
+  input : Json,
+  env : Map[String, Json],
+  max_count : Int,
+) -> Array[Json] raise EvalError {
+  if max_count <= 0 {
+    return []
+  }
+
+  let out = []
+  fn collect(current : Filter, value : Json) -> Unit raise EvalError {
+    if out.length() >= max_count {
+      return
+    }
+    match current {
+      Comma(left, right) => {
+        collect(left, value)
+        if out.length() < max_count {
+          collect(right, value)
+        }
+      }
+      Pipe(left, right) => {
+        let left_values = eval_with_env(left, value, env)
+        for next in left_values {
+          if out.length() >= max_count {
+            break
+          }
+          collect(right, next)
+        }
+      }
+      _ => {
+        let values = eval_with_env(current, value, env)
+        for v in values {
+          if out.length() >= max_count {
+            break
+          }
+          out.push(v)
+        }
+      }
+    }
+  }
+
+  collect(filter, input)
+  out
+}
+
+///|
 fn is_truthy(j : Json) -> Bool {
   match j {
     JNull => false

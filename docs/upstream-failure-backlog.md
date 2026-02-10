@@ -11,8 +11,8 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 326
-- failed: 351
+- passed: 361
+- failed: 316
 - skipped: 147
 
 ## Failure Categories (Current)
@@ -20,8 +20,8 @@ This document tracks failing upstream differential cases so they do not stay
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
 | `parser-invalid-character` | 146 | parser grammar gaps (`[`, `{`, `$`, `,`, etc.) |
-| `unknown-function` | 127 | builtin not implemented yet |
-| `output-mismatch` | 70 | evaluator semantics mismatch |
+| `unknown-function` | 87 | builtin not implemented yet |
+| `output-mismatch` | 75 | evaluator semantics mismatch |
 | `runtime-error-vs-jq-success` | 4 | behavior diverges (jq succeeds, jqx raises error) |
 | `unknown-variable` | 3 | variable scope/binding mismatch |
 | `parser-invalid-number` | 1 | remaining unary/special numeric parse gap |
@@ -32,17 +32,17 @@ From current snapshot (`unknown-function` subset):
 
 | Function | Count |
 | --- | ---: |
-| `range` | 28 |
 | `have_decnum` | 9 |
 | `splits` | 6 |
 | `abs` | 6 |
 | `isempty` | 6 |
-| `pick` | 5 |
-| `limit` | 5 |
-| `del` | 5 |
 | `path` | 5 |
-| `nth` | 4 |
-| `skip` | 4 |
+| `pick` | 5 |
+| `del` | 5 |
+| `sqrt` | 3 |
+| `add` | 3 |
+| `infinite` | 3 |
+| `trimstr` | 3 |
 
 ## Latest Progress
 
@@ -54,11 +54,15 @@ From current snapshot (`unknown-function` subset):
   - added object-literal shorthand keys (`{a, "b"}`)
   - added multi-index bracket form (`.[1,2]`, `.[\"a\", \"b\"]`)
 - Parser cluster reduced from 188 to 147 (`-41`) in upstream full diff.
+- Builtin/function pass 1 completed on 2026-02-10:
+  - implemented `range`, `limit`, `skip`, `IN`, and stream-form `nth(i; expr)`
+  - added lazy-prefix evaluation for stream consumers (`first`, `limit`, `nth`) to avoid unnecessary tail evaluation
+- Unknown-function cluster reduced from 127 to 87 (`-40`) in upstream full diff.
 
 ## Priority Plan
 
 1. Parser cluster first: reduce `parser-invalid-character` + `parser-invalid-number` (147 total).
-2. Builtin cluster second: implement high-frequency unknown functions (`range`, `limit`, `skip`, `path`, `del`).
+2. Builtin cluster second: implement remaining high-frequency unknown functions (`have_decnum`, `splits`, `abs`, `isempty`, `path`, `del`).
 3. Semantics cluster third: resolve high-impact `output-mismatch` cases.
 4. Remaining runtime/variable gaps.
 
@@ -69,8 +73,8 @@ From current snapshot (`unknown-function` subset):
   - `upstream-jq-test-l122`
   - `upstream-jq-test-l168`
 - Unknown functions:
-  - `upstream-jq-test-l287` (`range`)
-  - `upstream-jq-test-l361` (`limit`)
+  - `upstream-jq-test-l1101` (`path`)
+  - `upstream-man-test-l879` (`isempty`)
   - `upstream-jq-test-l474` (`del`)
 - Semantics mismatch:
   - `upstream-jq-test-l187`
