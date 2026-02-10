@@ -25,6 +25,7 @@ pub enum Filter {
   SliceOpt(Int?, Int?)
   Iter
   IterOpt
+  Recurse
   Literal(Json)
   Array(Array[Filter])
   Object(Array[(String, Filter)])
@@ -98,6 +99,11 @@ pub fn Filter::iter() -> Filter {
 ///|
 pub fn Filter::iter_opt() -> Filter {
   IterOpt
+}
+
+///|
+pub fn Filter::recurse() -> Filter {
+  Recurse
 }
 
 ///|

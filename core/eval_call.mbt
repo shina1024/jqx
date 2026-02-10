@@ -763,6 +763,31 @@ fn eval_call(
         }
         out
       }
+    "path" =>
+      if args.length() != 1 {
+        raise UnknownFunction("path")
+      } else {
+        eval_path_expression(args[0], input, env)
+      }
+    "del" =>
+      if args.length() == 0 {
+        raise UnknownFunction("del")
+      } else {
+        let normalized_paths = []
+        for arg in args {
+          for path_json in eval_path_expression(arg, input, env) {
+            match path_json {
+              Array(parts) => normalized_paths.push(parts)
+              _ => raise TypeError("Path must be specified as an array")
+            }
+          }
+        }
+        if normalized_paths.length() == 0 {
+          [input]
+        } else {
+          [delpaths_on_input(input, normalized_paths)]
+        }
+      }
     "paths" =>
       if args.length() != 1 {
         raise UnknownFunction("paths")

@@ -16,7 +16,7 @@ Legend:
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Identity / field / index / iter | supported | `.`, `.foo`, `.[n]`, `.[]`, optional forms |
+| Identity / field / index / iter / recurse | supported | `.`, `.foo`, `.[n]`, `.[]`, `..`, optional forms |
 | Slice | supported | `.[start:end]`, optional form |
 | Pipe / comma | supported | stream composition |
 | Literals | supported | number/string/bool/null, array/object literals |
@@ -48,6 +48,7 @@ Implemented builtins/functions in `core/eval.mbt` include:
 - `reverse`, `explode`, `implode`, `ascii_upcase`, `ascii_downcase`
 - `bsearch`
 - `getpath`, `setpath`, `delpaths`
+- `path`, `del`
 - `index`, `rindex`, `indices`
 
 ## Known Differences (Current)

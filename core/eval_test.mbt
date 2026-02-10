@@ -1405,6 +1405,143 @@ test "eval delpaths errors" {
 }
 
 ///|
+test "eval path compatibility" {
+  assert_eq(must_eval(parse_filter("path(.foo[0,1])"), must_parse("null")), [
+    Json::array([Json::string("foo"), Json::number(0.0)]),
+    Json::array([Json::string("foo"), Json::number(1.0)]),
+  ])
+  assert_eq(
+    must_eval(parse_filter("path(.[] | select(.>3))"), must_parse("[1,5,3]")),
+    [Json::array([Json::number(1.0)])],
+  )
+  assert_eq(must_eval(parse_filter("path(.)"), must_parse("42")), [
+    Json::array([]),
+  ])
+  assert_eq(must_eval(parse_filter("path(.a[0].b)"), must_parse("null")), [
+    Json::array([Json::string("a"), Json::number(0.0), Json::string("b")]),
+  ])
+  assert_eq(
+    must_eval(parse_filter("[path(..)]"), must_parse("{\"a\":[{\"b\":1}]}")),
+    [
+      Json::array([
+        Json::array([]),
+        Json::array([Json::string("a")]),
+        Json::array([Json::string("a"), Json::number(0.0)]),
+        Json::array([Json::string("a"), Json::number(0.0), Json::string("b")]),
+      ]),
+    ],
+  )
+}
+
+///|
+test "eval path invalid expression errors" {
+  guard (try? eval(
+      parse_filter("path(.a | map(select(.b == 0)))"),
+      must_parse("{\"a\":[{\"b\":0}]}"),
+    ))
+    is Err(err) &&
+    err.to_string() == "Invalid path expression with result [{\"b\":0}]" else {
+    fail("expected invalid path expression result error")
+  }
+  guard (try? eval(
+      parse_filter("path(.a | map(select(.b == 0)) | .[0])"),
+      must_parse("{\"a\":[{\"b\":0}]}"),
+    ))
+    is Err(err) &&
+    err.to_string() ==
+    "Invalid path expression near attempt to access element 0 of [{\"b\":0}]" else {
+    fail("expected invalid path expression index access error")
+  }
+  guard (try? eval(
+      parse_filter("path(.a | map(select(.b == 0)) | .c)"),
+      must_parse("{\"a\":[{\"b\":0}]}"),
+    ))
+    is Err(err) &&
+    err.to_string() ==
+    "Invalid path expression near attempt to access element \"c\" of [{\"b\":0}]" else {
+    fail("expected invalid path expression field access error")
+  }
+  guard (try? eval(
+      parse_filter("path(.a | map(select(.b == 0)) | .[])"),
+      must_parse("{\"a\":[{\"b\":0}]}"),
+    ))
+    is Err(err) &&
+    err.to_string() ==
+    "Invalid path expression near attempt to iterate through [{\"b\":0}]" else {
+    fail("expected invalid path expression iterate error")
+  }
+}
+
+///|
+test "eval del compatibility" {
+  assert_eq(
+    must_eval(
+      parse_filter("del(.[2:4],.[0],.[-2:])"),
+      must_parse("[0,1,2,3,4,5,6,7]"),
+    ),
+    [Json::array([Json::number(1.0), Json::number(4.0), Json::number(5.0)])],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter(
+        "del(.), del(empty), del((.foo,.bar,.baz) | .[2,3,0]), del(.foo[0], .bar[0], .foo, .baz.bar[0].x)",
+      ),
+      must_parse("{\"foo\": [0,1,2,3,4], \"bar\": [0,1]}"),
+    ),
+    [
+      Json::null(),
+      Json::object({
+        "bar": Json::array([Json::number(0.0), Json::number(1.0)]),
+        "foo": Json::array([
+          Json::number(0.0),
+          Json::number(1.0),
+          Json::number(2.0),
+          Json::number(3.0),
+          Json::number(4.0),
+        ]),
+      }),
+      Json::object({
+        "bar": Json::array([Json::number(1.0)]),
+        "foo": Json::array([Json::number(1.0), Json::number(4.0)]),
+      }),
+      Json::object({ "bar": Json::array([Json::number(1.0)]) }),
+    ],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("del(.[1], .[-6], .[2], .[-3:9])"),
+      must_parse("[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]"),
+    ),
+    [
+      Json::array([
+        Json::number(0.0),
+        Json::number(3.0),
+        Json::number(5.0),
+        Json::number(6.0),
+        Json::number(9.0),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("del(.foo)"),
+      must_parse("{\"foo\": 42, \"bar\": 9001, \"baz\": 42}"),
+    ),
+    [Json::object({ "bar": Json::number(9001.0), "baz": Json::number(42.0) })],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("del(.[1, 2])"),
+      must_parse("[\"foo\", \"bar\", \"baz\"]"),
+    ),
+    [Json::array([Json::string("foo")])],
+  )
+  assert_eq(must_eval(parse_filter("del(empty)"), must_parse("1")), [
+    Json::number(1.0),
+  ])
+}
+
+///|
 test "eval paths compatibility" {
   let obj = must_parse("{\"a\":1,\"b\":[2,3]}")
   assert_eq(must_eval(parse_filter("paths"), obj), [

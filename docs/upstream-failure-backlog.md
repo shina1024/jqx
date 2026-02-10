@@ -11,8 +11,8 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 361
-- failed: 316
+- passed: 372
+- failed: 305
 - skipped: 147
 
 ## Failure Categories (Current)
@@ -20,8 +20,8 @@ This document tracks failing upstream differential cases so they do not stay
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
 | `parser-invalid-character` | 146 | parser grammar gaps (`[`, `{`, `$`, `,`, etc.) |
-| `unknown-function` | 87 | builtin not implemented yet |
-| `output-mismatch` | 75 | evaluator semantics mismatch |
+| `unknown-function` | 77 | builtin not implemented yet |
+| `output-mismatch` | 74 | evaluator semantics mismatch |
 | `runtime-error-vs-jq-success` | 4 | behavior diverges (jq succeeds, jqx raises error) |
 | `unknown-variable` | 3 | variable scope/binding mismatch |
 | `parser-invalid-number` | 1 | remaining unary/special numeric parse gap |
@@ -33,16 +33,17 @@ From current snapshot (`unknown-function` subset):
 | Function | Count |
 | --- | ---: |
 | `have_decnum` | 9 |
-| `splits` | 6 |
 | `abs` | 6 |
+| `splits` | 6 |
 | `isempty` | 6 |
-| `path` | 5 |
 | `pick` | 5 |
-| `del` | 5 |
-| `sqrt` | 3 |
-| `add` | 3 |
-| `infinite` | 3 |
 | `trimstr` | 3 |
+| `trim` | 3 |
+| `sqrt` | 3 |
+| `nan` | 3 |
+| `modulemeta` | 3 |
+| `infinite` | 3 |
+| `add` | 3 |
 
 ## Latest Progress
 
@@ -58,11 +59,15 @@ From current snapshot (`unknown-function` subset):
   - implemented `range`, `limit`, `skip`, `IN`, and stream-form `nth(i; expr)`
   - added lazy-prefix evaluation for stream consumers (`first`, `limit`, `nth`) to avoid unnecessary tail evaluation
 - Unknown-function cluster reduced from 127 to 87 (`-40`) in upstream full diff.
+- Builtin/function pass 2 completed on 2026-02-10:
+  - implemented `path`, `del`, and recursive descent (`..`) used by path expressions
+  - upstream `path`/`del` runtime cases now mostly pass; remaining mismatches are tied to existing `try/catch` semantics and object key-order policy
+- Unknown-function cluster reduced from 87 to 77 (`-10`) in upstream full diff.
 
 ## Priority Plan
 
 1. Parser cluster first: reduce `parser-invalid-character` + `parser-invalid-number` (147 total).
-2. Builtin cluster second: implement remaining high-frequency unknown functions (`have_decnum`, `splits`, `abs`, `isempty`, `path`, `del`).
+2. Builtin cluster second: implement remaining high-frequency unknown functions (`have_decnum`, `splits`, `abs`, `isempty`, `pick`).
 3. Semantics cluster third: resolve high-impact `output-mismatch` cases.
 4. Remaining runtime/variable gaps.
 
@@ -71,12 +76,12 @@ From current snapshot (`unknown-function` subset):
 - Parser:
   - `upstream-jq-test-l118`
   - `upstream-jq-test-l122`
-  - `upstream-jq-test-l168`
+  - `upstream-jq-test-l273`
 - Unknown functions:
-  - `upstream-jq-test-l1101` (`path`)
+  - `upstream-man-test-l9` (`have_decnum`)
   - `upstream-man-test-l879` (`isempty`)
-  - `upstream-jq-test-l474` (`del`)
+  - `upstream-man-test-l252` (`pick`)
 - Semantics mismatch:
-  - `upstream-jq-test-l187`
+  - `upstream-jq-test-l1114`
   - `upstream-jq-test-l200`
-  - `upstream-jq-test-l205`
+  - `upstream-jq-test-l1168`

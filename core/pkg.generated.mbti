@@ -48,6 +48,7 @@ pub enum Filter {
   SliceOpt(Int?, Int?)
   Iter
   IterOpt
+  Recurse
   Literal(Json)
   Array(Array[Filter])
   Object(Array[(String, Filter)])
@@ -107,6 +108,7 @@ pub fn Filter::neq(Self, Self) -> Self
 pub fn Filter::not(Self) -> Self
 pub fn Filter::or_(Self, Self) -> Self
 pub fn Filter::pipe(Self, Self) -> Self
+pub fn Filter::recurse() -> Self
 pub fn Filter::reduce(Self, String, Self, Self) -> Self
 pub fn Filter::slice(Int?, Int?) -> Self
 pub fn Filter::slice_opt(Int?, Int?) -> Self

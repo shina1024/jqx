@@ -4,6 +4,11 @@ test "parse identity" {
 }
 
 ///|
+test "parse recurse" {
+  inspect(parse_filter(".."), content="Recurse")
+}
+
+///|
 test "parse field" {
   inspect(parse_filter(".foo"), content="Pipe(Identity, Field(\"foo\"))")
 }

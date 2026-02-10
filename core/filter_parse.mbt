@@ -461,6 +461,10 @@ fn FilterCursor::parse_dot_suffix(
 ///|
 fn FilterCursor::parse_dot_expr(ctx : FilterCursor) -> Filter raise FilterError {
   ctx.expect_char('.')
+  if ctx.peek_char() is Some('.') {
+    ctx.read_char() |> ignore
+    return Filter::recurse()
+  }
   let mut current = Filter::identity()
   let first = ctx.parse_dot_suffix()
   if first is Identity {

@@ -553,6 +553,319 @@ fn collect_paths(
 }
 
 ///|
+priv struct PathEvalState {
+  value : Json
+  path : Array[Json]
+  valid : Bool
+}
+
+///|
+fn path_eval_state(
+  value : Json,
+  path : Array[Json],
+  valid : Bool,
+) -> PathEvalState {
+  PathEvalState::{ value, path, valid }
+}
+
+///|
+fn path_with_segment(path : Array[Json], segment : Json) -> Array[Json] {
+  let out = path.copy()
+  out.push(segment)
+  out
+}
+
+///|
+fn path_invalid_access_message(segment : String, value : Json) -> String {
+  "Invalid path expression near attempt to access element " +
+  segment +
+  " of " +
+  value.to_json_string()
+}
+
+///|
+fn path_invalid_iter_message(value : Json) -> String {
+  "Invalid path expression near attempt to iterate through " +
+  value.to_json_string()
+}
+
+///|
+fn eval_path_fallback_states(
+  filter : Filter,
+  state : PathEvalState,
+  env : Map[String, Json],
+) -> Array[PathEvalState] raise EvalError {
+  let values = eval_with_env(filter, state.value, env)
+  let out = []
+  for value in values {
+    out.push(path_eval_state(value, state.path.copy(), false))
+  }
+  out
+}
+
+///|
+fn eval_path_field_state(
+  state : PathEvalState,
+  name : String,
+  optional : Bool,
+) -> Array[PathEvalState] raise EvalError {
+  if !state.valid {
+    raise TypeError(
+      path_invalid_access_message(
+        Json::string(name).to_json_string(),
+        state.value,
+      ),
+    )
+  }
+  let next_path = path_with_segment(state.path, Json::string(name))
+  match state.value {
+    Object(o) =>
+      match o.get(name) {
+        Some(v) => [path_eval_state(v, next_path, true)]
+        None => [path_eval_state(Json::null(), next_path, true)]
+      }
+    JNull => [path_eval_state(Json::null(), next_path, true)]
+    _ =>
+      if optional {
+        []
+      } else {
+        index_type_error(state.value, Json::string(name))
+      }
+  }
+}
+
+///|
+fn eval_path_index_state(
+  state : PathEvalState,
+  index : Int,
+  optional : Bool,
+) -> Array[PathEvalState] raise EvalError {
+  if !state.valid {
+    raise TypeError(path_invalid_access_message(index.to_string(), state.value))
+  }
+  let next_path = path_with_segment(state.path, Json::number(index.to_double()))
+  match state.value {
+    Array(a) => {
+      let resolved = if index < 0 { a.length() + index } else { index }
+      if resolved >= 0 && resolved < a.length() {
+        [path_eval_state(a[resolved], next_path, true)]
+      } else {
+        [path_eval_state(Json::null(), next_path, true)]
+      }
+    }
+    JNull => [path_eval_state(Json::null(), next_path, true)]
+    _ =>
+      if optional {
+        []
+      } else {
+        index_type_error(state.value, Json::number(index.to_double()))
+      }
+  }
+}
+
+///|
+fn eval_path_slice_state(
+  state : PathEvalState,
+  start : Int?,
+  end : Int?,
+  optional : Bool,
+) -> Array[PathEvalState] raise EvalError {
+  if !state.valid {
+    raise TypeError(
+      "Invalid path expression with result " + state.value.to_json_string(),
+    )
+  }
+  match state.value {
+    Array(a) => {
+      let len = a.length()
+      let lo = normalize_slice_index(start, len, 0)
+      let hi = normalize_slice_index(end, len, len)
+      if hi <= lo {
+        []
+      } else {
+        let out = []
+        for i in lo..<hi {
+          let next_path = path_with_segment(
+            state.path,
+            Json::number(i.to_double()),
+          )
+          out.push(path_eval_state(a[i], next_path, true))
+        }
+        out
+      }
+    }
+    JNull => []
+    _ =>
+      if optional {
+        []
+      } else {
+        raise TypeError(
+          "Cannot index " + json_type_name(state.value) + " with object",
+        )
+      }
+  }
+}
+
+///|
+fn eval_path_iter_state(
+  state : PathEvalState,
+  optional : Bool,
+) -> Array[PathEvalState] raise EvalError {
+  if !state.valid {
+    raise TypeError(path_invalid_iter_message(state.value))
+  }
+  match state.value {
+    Array(a) => {
+      let out = []
+      for i in 0..<a.length() {
+        let next_path = path_with_segment(
+          state.path,
+          Json::number(i.to_double()),
+        )
+        out.push(path_eval_state(a[i], next_path, true))
+      }
+      out
+    }
+    Object(o) => {
+      let out = []
+      for kv in object_entries_sorted(o) {
+        let next_path = path_with_segment(state.path, Json::string(kv.0))
+        out.push(path_eval_state(kv.1, next_path, true))
+      }
+      out
+    }
+    _ =>
+      if optional {
+        []
+      } else {
+        raise TypeError(
+          "Cannot iterate over " + json_type_with_value(state.value),
+        )
+      }
+  }
+}
+
+///|
+fn append_recurse_path_states(
+  value : Json,
+  path : Array[Json],
+  out : Array[PathEvalState],
+) -> Unit {
+  out.push(path_eval_state(value, path, true))
+  match value {
+    Object(o) =>
+      for kv in object_entries_sorted(o) {
+        append_recurse_path_states(
+          kv.1,
+          path_with_segment(path, Json::string(kv.0)),
+          out,
+        )
+      }
+    Array(a) =>
+      for i in 0..<a.length() {
+        append_recurse_path_states(
+          a[i],
+          path_with_segment(path, Json::number(i.to_double())),
+          out,
+        )
+      }
+    _ => ()
+  }
+}
+
+///|
+fn eval_path_filter_state(
+  filter : Filter,
+  state : PathEvalState,
+  env : Map[String, Json],
+) -> Array[PathEvalState] raise EvalError {
+  match filter {
+    Identity => [state]
+    Pipe(left, right) => {
+      let out = []
+      for left_state in eval_path_filter_state(left, state, env) {
+        for right_state in eval_path_filter_state(right, left_state, env) {
+          out.push(right_state)
+        }
+      }
+      out
+    }
+    Comma(left, right) => {
+      let out = eval_path_filter_state(left, state, env)
+      for right_state in eval_path_filter_state(right, state, env) {
+        out.push(right_state)
+      }
+      out
+    }
+    Field(name) => eval_path_field_state(state, name, false)
+    FieldOpt(name) => eval_path_field_state(state, name, true)
+    Index(index) => eval_path_index_state(state, index, false)
+    IndexOpt(index) => eval_path_index_state(state, index, true)
+    Slice(start, end) => eval_path_slice_state(state, start, end, false)
+    SliceOpt(start, end) => eval_path_slice_state(state, start, end, true)
+    Iter => eval_path_iter_state(state, false)
+    IterOpt => eval_path_iter_state(state, true)
+    Recurse => {
+      if !state.valid {
+        raise TypeError(path_invalid_iter_message(state.value))
+      }
+      let out = []
+      append_recurse_path_states(state.value, state.path, out)
+      out
+    }
+    Call("select", args) =>
+      if args.length() != 1 {
+        raise UnknownFunction("select")
+      } else if eval_to_bool(args[0], state.value, env) {
+        [state]
+      } else {
+        []
+      }
+    Empty => []
+    _ => eval_path_fallback_states(filter, state, env)
+  }
+}
+
+///|
+fn eval_path_expression(
+  filter : Filter,
+  input : Json,
+  env : Map[String, Json],
+) -> Array[Json] raise EvalError {
+  let states = eval_path_filter_state(
+    filter,
+    path_eval_state(input, [], true),
+    env,
+  )
+  let out = []
+  for state in states {
+    if !state.valid {
+      raise TypeError(
+        "Invalid path expression with result " + state.value.to_json_string(),
+      )
+    }
+    out.push(Json::array(state.path))
+  }
+  out
+}
+
+///|
+fn append_recurse_values(input : Json, out : Array[Json]) -> Unit {
+  out.push(input)
+  match input {
+    Object(o) =>
+      for kv in object_entries_sorted(o) {
+        append_recurse_values(kv.1, out)
+      }
+    Array(a) =>
+      for v in a {
+        append_recurse_values(v, out)
+      }
+    _ => ()
+  }
+}
+
+///|
 fn collection_values(input : Json) -> Array[Json] raise EvalError {
   match input {
     Array(a) => a
@@ -919,6 +1232,11 @@ fn eval_with_env(
         }
         _ => []
       }
+    Recurse => {
+      let out = []
+      append_recurse_values(input, out)
+      out
+    }
     Var(name) =>
       match env.get(name) {
         Some(v) => [v]
