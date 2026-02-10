@@ -122,7 +122,12 @@ function Classify-Failure {
 }
 
 function Invoke-NativeCapture {
-  param([scriptblock]$Action)
+  param(
+    [string]$Exe,
+    [string[]]$CmdArgs = @(),
+    [string]$Stdin = "",
+    [switch]$UseStdin
+  )
 
   $prevErrorActionPreference = $ErrorActionPreference
   $hasNativeErrorPreference = Test-Path Variable:PSNativeCommandUseErrorActionPreference
@@ -133,7 +138,11 @@ function Invoke-NativeCapture {
   }
   $ErrorActionPreference = "Continue"
   try {
-    $raw = & $Action
+    if ($UseStdin) {
+      $raw = $Stdin | & $Exe @CmdArgs 2>&1
+    } else {
+      $raw = & $Exe @CmdArgs 2>&1
+    }
     $status = $LASTEXITCODE
     return [PSCustomObject]@{
       Raw = $raw
@@ -171,9 +180,9 @@ $repoRoot = Join-Path $PSScriptRoot ".."
 
 Push-Location $repoRoot
 try {
-  $warmup = Invoke-NativeCapture {
-    & $resolvedMoon run --target native cmd -- "." "null" 2>&1
-  }
+  $warmup = Invoke-NativeCapture `
+    -Exe $resolvedMoon `
+    -CmdArgs @("run", "--target", "native", "cmd", "--", ".", "null")
   if ($warmup.Status -ne 0) {
     throw "failed to warm up jqx command via moon run: $(Normalize-Output $warmup.Raw)"
   }
@@ -225,19 +234,25 @@ try {
     }
 
     $jqCmd = @("-c") + $jqArgs + @($filter)
-    $jqRun = Invoke-NativeCapture {
-      $input | & $resolvedJq @jqCmd 2>&1
-    }
+    $jqRun = Invoke-NativeCapture `
+      -Exe $resolvedJq `
+      -CmdArgs $jqCmd `
+      -Stdin $input `
+      -UseStdin
     $jqStatus = $jqRun.Status
     $jqOut = Normalize-Output $jqRun.Raw
 
     $jqxCmd = @("run", "--target", "native", "cmd", "--") + $jqxArgs + @($filter)
-    $jqxRun = Invoke-NativeCapture {
-      if ($jqxUseStdin) {
-        $input | & $resolvedMoon @jqxCmd 2>&1
-      } else {
-        & $resolvedMoon @jqxCmd $input 2>&1
-      }
+    $jqxRun = if ($jqxUseStdin) {
+      Invoke-NativeCapture `
+        -Exe $resolvedMoon `
+        -CmdArgs $jqxCmd `
+        -Stdin $input `
+        -UseStdin
+    } else {
+      Invoke-NativeCapture `
+        -Exe $resolvedMoon `
+        -CmdArgs ($jqxCmd + @($input))
     }
     $jqxStatus = $jqxRun.Status
     $jqxOut = Normalize-Output $jqxRun.Raw
