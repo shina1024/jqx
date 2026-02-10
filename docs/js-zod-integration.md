@@ -30,6 +30,7 @@ Each adapter also provides jq-string partial inference via:
 Still pending:
 
 1. Final npm runtime binding and import design (`import { ... } from "jqx"`).
+2. Keep expanding end-to-end usage examples for app integration patterns.
 
 ## Design Principles
 
@@ -106,6 +107,13 @@ type A = InferJqOutput<{ user: { name: string } }, ".user.name">; // string
 type B = InferJqOutput<{ user: { name: string } }, ".user | .name">; // unknown
 type C = InferJqOutput<{ user: { name: string } }, ".user | .name", "json">; // Json
 ```
+
+## End-to-End Usage Examples
+
+Practical E2E examples (schema input validation + jq string execution + output
+schema validation) are documented in:
+
+- `docs/js-schema-e2e.md`
 
 ## Next Steps
 

@@ -115,6 +115,7 @@ The compatibility baseline and current gap list is tracked in:
 
 - `docs/compatibility-matrix.md`
 - `docs/js-zod-integration.md` (JS/TS Zod adapter plan)
+- `docs/js-schema-e2e.md` (schema input + jq string + output schema validation examples)
 
 TS adapter scaffold:
 - `ts/zod-adapter` (`pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`)
