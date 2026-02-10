@@ -1,6 +1,6 @@
 # jqx Compatibility Matrix (Baseline)
 
-Updated: 2026-02-09
+Updated: 2026-02-10
 
 Scope:
 - Target compatibility: jq 1.7 behavior
@@ -64,7 +64,7 @@ Implemented builtins/functions in `core/eval.mbt` include:
 | --- | --- | --- |
 | Dynamic API | supported | compatibility lane: `run`/`runCompat`/`evalToJsonStrings` (JSON text); convenience lane: `runValues`/`safeRunValues` (core `Json` values) |
 | Typed DSL | partial | `Query[I, O]` scaffold + `identity` / `field` / `index` / `pipe` / `map`, with `evalQuery` / `runQuery` |
-| TS compile-time inference tests | planned | runtime tests and `typecheck` exist; type-level assertion tests are pending |
+| TS compile-time inference tests | supported | `expectTypeOf`-based compile-time assertions are present in `ts/zod-adapter`, `ts/yup-adapter`, and `ts/valibot-adapter` |
 | Zod adapter | partial | `ts/zod-adapter` provides `safeRunWithZod`, `safeExecuteWithZod`, aliases, tests, and CI checks; final npm binding is pending |
 | Yup adapter | partial | `ts/yup-adapter` provides `safeRunWithYup`, `safeExecuteWithYup`, aliases, tests, and CI checks; final npm binding is pending |
 | Valibot adapter | partial | `ts/valibot-adapter` provides `safeRunWithValibot`, `safeExecuteWithValibot`, aliases, tests, and CI checks; final npm binding is pending |

@@ -1,6 +1,6 @@
 # JS/TS Schema Integration (Zod/Yup/Valibot)
 
-Updated: 2026-02-09
+Updated: 2026-02-10
 
 ## Goal
 
@@ -22,12 +22,11 @@ Implemented adapters:
    - APIs: `safeRunWithValibot`, `safeExecuteWithValibot`
    - Helpers/aliases: `withValibot`, `withV`, `runWithValibot`, `executeWithValibot`, `runWithV`, `executeWithV`
 
-Each adapter includes runtime tests, `pnpm typecheck`, and Linux CI coverage.
+Each adapter includes runtime tests, `pnpm typecheck`, `expectTypeOf`-based compile-time assertions, and Linux CI coverage.
 
 Still pending:
 
 1. Final npm runtime binding and import design (`import { ... } from "jqx"`).
-2. Dedicated compile-time assertion tests for inference behavior (for example `tsd` or `expectTypeOf`).
 
 ## Design Principles
 
@@ -77,6 +76,6 @@ When input shape is unknown, jq/filter text alone cannot provide strong static t
 
 ## Next Steps
 
-1. Add compile-time type assertion tests for adapter and typed query composition.
+1. Expand compile-time assertions from adapter surfaces to richer typed-query composition scenarios.
 2. Finalize npm package layout and runtime binding so users can import from the stable public entrypoint.
 3. Add docs/examples showing end-to-end runtime wiring for each validator.
