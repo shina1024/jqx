@@ -445,6 +445,123 @@
     "input": "{\"a\":1,\"b\":2,\"c\":3}"
   },
   {
+    "name": "type-filter-nulls",
+    "filter": ".[] | nulls",
+    "input": "[null,true,1]"
+  },
+  {
+    "name": "type-filter-booleans",
+    "filter": ".[] | booleans",
+    "input": "[null,true,1,false]"
+  },
+  {
+    "name": "type-filter-numbers",
+    "filter": ".[] | numbers",
+    "input": "[null,true,1,2.5,\"x\"]"
+  },
+  {
+    "name": "type-filter-strings",
+    "filter": ".[] | strings",
+    "input": "[null,\"x\",1,\"y\"]"
+  },
+  {
+    "name": "type-filter-arrays",
+    "filter": ".[] | arrays",
+    "input": "[[],{},[1],2]"
+  },
+  {
+    "name": "type-filter-objects",
+    "filter": ".[] | objects",
+    "input": "[[],{}, {\"a\":1},2]"
+  },
+  {
+    "name": "type-filter-iterables",
+    "filter": ".[] | iterables",
+    "input": "[[],{},1,\"x\"]"
+  },
+  {
+    "name": "type-filter-scalars",
+    "filter": ".[] | scalars",
+    "input": "[[],{},1,\"x\",null,true]"
+  },
+  {
+    "name": "min-by-pipe",
+    "filter": "min_by(.a) | .a",
+    "input": "[{\"a\":2},{\"a\":1}]"
+  },
+  {
+    "name": "max-by-pipe",
+    "filter": "max_by(.a) | .a",
+    "input": "[{\"a\":2},{\"a\":1}]"
+  },
+  {
+    "name": "flatten-default",
+    "filter": "flatten",
+    "input": "[1,[2,[3]]]"
+  },
+  {
+    "name": "paths-basic",
+    "filter": "paths",
+    "input": "{\"a\":[1],\"b\":2}"
+  },
+  {
+    "name": "add-array",
+    "filter": "add",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "values-array",
+    "filter": ".[] | values",
+    "input": "[null,1,false,true]"
+  },
+  {
+    "name": "contains-object",
+    "filter": "contains({\"a\":1})",
+    "input": "{\"a\":1,\"b\":2}"
+  },
+  {
+    "name": "inside-object",
+    "filter": "inside({\"a\":1,\"b\":2})",
+    "input": "{\"a\":1}"
+  },
+  {
+    "name": "index-array",
+    "filter": "index(2)",
+    "input": "[1,2,3,2]"
+  },
+  {
+    "name": "rindex-array",
+    "filter": "rindex(2)",
+    "input": "[1,2,3,2]"
+  },
+  {
+    "name": "indices-array",
+    "filter": "indices(2)",
+    "input": "[1,2,3,2]"
+  },
+  {
+    "name": "keys-object",
+    "filter": "keys",
+    "input": "{\"b\":1,\"a\":2}"
+  },
+  {
+    "name": "first-stream",
+    "filter": "first(.[])",
+    "input": "[9,8,7]"
+  },
+  {
+    "name": "last-stream",
+    "filter": "last(.[])",
+    "input": "[9,8,7]"
+  },
+  {
+    "name": "cli-raw-string-output",
+    "filter": ".foo",
+    "input": "{\"foo\":\"bar\"}",
+    "jq_args": ["-r"],
+    "jqx_args": ["-r"]
+  },
+  {
     "name": "cli-slurp-ndjson",
     "filter": ".",
     "input": "1\n2",
