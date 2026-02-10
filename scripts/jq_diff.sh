@@ -92,6 +92,7 @@ fi
 total=0
 passed=0
 failed=0
+skipped=0
 
 while IFS= read -r case_json; do
   total=$((total + 1))
@@ -99,14 +100,24 @@ while IFS= read -r case_json; do
   filter="$("${JQ_BIN_RESOLVED}" -r '.filter' <<<"${case_json}")"
   input="$("${JQ_BIN_RESOLVED}" -r '.input' <<<"${case_json}")"
   expect_error="$("${JQ_BIN_RESOLVED}" -r '(.expect_error // false) | tostring' <<<"${case_json}")"
+  expect_error_mode="$("${JQ_BIN_RESOLVED}" -r '(.expect_error_mode // "strict") | tostring' <<<"${case_json}")"
   expect_status="$("${JQ_BIN_RESOLVED}" -r 'if has("expect_status") then (.expect_status | tostring) else "" end' <<<"${case_json}")"
+  skip_reason="$("${JQ_BIN_RESOLVED}" -r 'if has("skip_reason") and .skip_reason != null then (.skip_reason | tostring) else "" end' <<<"${case_json}")"
   jqx_use_stdin="$("${JQ_BIN_RESOLVED}" -r '(.jqx_use_stdin // false) | tostring' <<<"${case_json}")"
   name="${name%$'\r'}"
   filter="${filter%$'\r'}"
   input="${input%$'\r'}"
   expect_error="${expect_error%$'\r'}"
+  expect_error_mode="${expect_error_mode%$'\r'}"
   expect_status="${expect_status%$'\r'}"
+  skip_reason="${skip_reason%$'\r'}"
   jqx_use_stdin="${jqx_use_stdin%$'\r'}"
+
+  if [[ -n "${skip_reason}" ]]; then
+    skipped=$((skipped + 1))
+    printf '[SKIP] %s (%s)\n' "${name}" "${skip_reason}"
+    continue
+  fi
 
   mapfile -t jq_args < <("${JQ_BIN_RESOLVED}" -r '.jq_args // [] | .[]' <<<"${case_json}")
   mapfile -t jqx_args < <("${JQ_BIN_RESOLVED}" -r '.jqx_args // [] | .[]' <<<"${case_json}")
@@ -143,8 +154,14 @@ while IFS= read -r case_json; do
     if [[ ${jqx_status} -ne 0 || "${jqx_out}" == jqx:\ error* ]]; then
       jqx_has_error=true
     fi
-    if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" && "${jq_msg}" == "${jqx_msg}" ]]; then
-      ok=true
+    if [[ "${expect_error_mode}" == "any" || "${expect_error_mode}" == "ignore_msg" ]]; then
+      if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" ]]; then
+        ok=true
+      fi
+    else
+      if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" && "${jq_msg}" == "${jqx_msg}" ]]; then
+        ok=true
+      fi
     fi
   elif [[ -n "${expect_status}" ]]; then
     if [[ ${jq_status} -eq ${expect_status} && ${jqx_status} -eq ${expect_status} && "${jq_out}" == "${jqx_out}" ]]; then
@@ -164,12 +181,15 @@ while IFS= read -r case_json; do
     printf '[FAIL] %s\n' "${name}"
     printf '  filter: %s\n' "${filter}"
     printf '  input: %s\n' "${input}"
+    if [[ "${expect_error}" == "true" ]]; then
+      printf '  expect_error_mode=%s\n' "${expect_error_mode}"
+    fi
     printf '  jq status=%s output=%s\n' "${jq_status}" "${jq_out}"
     printf '  jqx status=%s output=%s\n' "${jqx_status}" "${jqx_out}"
   fi
 done < <("${JQ_BIN_RESOLVED}" -c '.[]' "${CASES_PATH_FOR_JQ}")
 
-printf '\nSummary: total=%s passed=%s failed=%s\n' "${total}" "${passed}" "${failed}"
+printf '\nSummary: total=%s passed=%s failed=%s skipped=%s\n' "${total}" "${passed}" "${failed}" "${skipped}"
 if [[ ${failed} -ne 0 ]]; then
   exit 1
 fi

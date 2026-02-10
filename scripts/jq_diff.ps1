@@ -126,6 +126,7 @@ try {
   $total = 0
   $passed = 0
   $failed = 0
+  $skipped = 0
 
   foreach ($case in $cases) {
     $total += 1
@@ -136,9 +137,17 @@ try {
     if ($case.PSObject.Properties.Name -contains "expect_error" -and $null -ne $case.expect_error) {
       $expectError = [bool]$case.expect_error
     }
+    $expectErrorMode = "strict"
+    if ($case.PSObject.Properties.Name -contains "expect_error_mode" -and $null -ne $case.expect_error_mode) {
+      $expectErrorMode = ([string]$case.expect_error_mode).ToLowerInvariant()
+    }
     $expectStatus = $null
     if ($case.PSObject.Properties.Name -contains "expect_status" -and $null -ne $case.expect_status) {
       $expectStatus = [int]$case.expect_status
+    }
+    $skipReason = ""
+    if ($case.PSObject.Properties.Name -contains "skip_reason" -and $null -ne $case.skip_reason) {
+      $skipReason = [string]$case.skip_reason
     }
     $jqArgs = @()
     if ($case.PSObject.Properties.Name -contains "jq_args" -and $null -ne $case.jq_args) {
@@ -151,6 +160,12 @@ try {
     $jqxUseStdin = $false
     if ($case.PSObject.Properties.Name -contains "jqx_use_stdin" -and $null -ne $case.jqx_use_stdin) {
       $jqxUseStdin = [bool]$case.jqx_use_stdin
+    }
+
+    if ($skipReason -ne "") {
+      $skipped += 1
+      Write-Host "[SKIP] $name ($skipReason)"
+      continue
     }
 
     $jqCmd = @("-c") + $jqArgs + @($filter)
@@ -173,7 +188,11 @@ try {
       $jqxMessage = Normalize-ErrorMessage $jqxOut
       $jqHasError = $jqStatus -ne 0 -or $jqOut.StartsWith("jq: error")
       $jqxHasError = $jqxStatus -ne 0 -or $jqxOut.StartsWith("jqx: error")
-      if ($jqHasError -and $jqxHasError -and $jqMessage -eq $jqxMessage) {
+      if ($expectErrorMode -eq "any" -or $expectErrorMode -eq "ignore_msg") {
+        if ($jqHasError -and $jqxHasError) {
+          $ok = $true
+        }
+      } elseif ($jqHasError -and $jqxHasError -and $jqMessage -eq $jqxMessage) {
         $ok = $true
       }
     } elseif ($null -ne $expectStatus) {
@@ -194,13 +213,16 @@ try {
       Write-Host "[FAIL] $name"
       Write-Host "  filter: $filter"
       Write-Host "  input: $input"
+      if ($expectError) {
+        Write-Host "  expect_error_mode=$expectErrorMode"
+      }
       Write-Host "  jq status=$jqStatus output=$jqOut"
       Write-Host "  jqx status=$jqxStatus output=$jqxOut"
     }
   }
 
   Write-Host ""
-  Write-Host "Summary: total=$total passed=$passed failed=$failed"
+  Write-Host "Summary: total=$total passed=$passed failed=$failed skipped=$skipped"
   if ($failed -ne 0) {
     exit 1
   }

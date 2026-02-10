@@ -12,7 +12,8 @@ Updated: 2026-02-10
 ## P1: 互換性の精度と回帰検知を強化する
 
 - [x] jq公式テストをコピー方式でvendorする基盤を追加する（`third_party/jq-tests`, `scripts/update_jq_tests.*`）
-- [ ] vendored jq tests（`*.test`）から `jq_diff` 用ケースJSONを自動生成する importer を実装する
+- [x] vendored jq tests（`*.test`）から `jq_diff` 用ケースJSONを自動生成する importer を実装する（`scripts/jq_upstream_import.*`）
+- [ ] upstream importerで生成したケース群のうち、安定パス集合を選定してCIに段階導入する
 - [ ] Objectキー順の扱いを安定化する方針を決めて実装する（順序保持または明示仕様）
 - [ ] エラーメッセージ差分を縮小する（`expect_error` ケース追加 + 正規化改善）
 - [ ] differentialケースを拡張する（`reduce`/`foreach`/`try-catch`/演算の境界系）

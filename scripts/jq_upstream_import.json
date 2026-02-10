@@ -1,0 +1,51 @@
+{
+  "source_root": "third_party/jq-tests/tests",
+  "enabled_test_files": [
+    "jq.test",
+    "base64.test",
+    "uri.test",
+    "optional.test",
+    "onig.test",
+    "manonig.test",
+    "man.test"
+  ],
+  "include_compile_fail": false,
+  "skip_program_patterns": [
+    {
+      "pattern": "^@",
+      "reason": "unsupported:format-filter"
+    },
+    {
+      "pattern": "\\b(def|label|break|module|import|include)\\b",
+      "reason": "unsupported:core-language"
+    },
+    {
+      "pattern": "\\b(recurse|walk|while|until)\\b",
+      "reason": "unsupported:recursion"
+    },
+    {
+      "pattern": "\\b(test|match|capture|scan|sub|gsub)\\s*\\(",
+      "reason": "unsupported:regex"
+    },
+    {
+      "pattern": "\\b(now|strptime|strftime|strflocaltime|mktime|gmtime|localtime)\\b",
+      "reason": "unsupported:time-builtin"
+    },
+    {
+      "pattern": "\\b(input|inputs|debug|stderr|halt|halt_error)\\b",
+      "reason": "unsupported:io-control"
+    }
+  ],
+  "default_case_fields": {},
+  "overrides": {
+    "jq.test:39": {
+      "skip_reason": "unsupported:number-literal-dash-dot"
+    },
+    "jq.test:48": {
+      "skip_reason": "unsupported:input-bom"
+    },
+    "jq.test:68": {
+      "skip_reason": "unsupported:string-interpolation-literal"
+    }
+  }
+}
