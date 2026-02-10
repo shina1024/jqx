@@ -155,7 +155,8 @@ bash ./scripts/jq_diff.sh scripts/jq_compat_cases.upstream.stage1.json
 `jq_upstream_import` reads vendored `third_party/jq-tests/tests/*.test` and
 applies sidecar rules from `scripts/jq_upstream_import.json` (skip patterns and
 per-case overrides).
-`scripts/jq_compat_cases.upstream.stage1.json` is the current stable CI subset.
+`scripts/jq_compat_cases.upstream.stage1.json` is generated from
+`scripts/jq_upstream_stage1_allowlist.txt` and used as the stable CI subset.
 
 Native binary differential test for `-e` exit status parity:
 

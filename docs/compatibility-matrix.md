@@ -83,6 +83,7 @@ Differential scripts:
 CI coverage in `.github/workflows/ci.yml`:
 - Linux/macOS/Windows: MoonBit `check` + tests
 - Linux: `ts/zod-adapter`, `ts/yup-adapter`, `ts/valibot-adapter` (`pnpm lint`, `pnpm typecheck`, `pnpm test`)
+- Linux: imported upstream case drift check (`jq_upstream_import` + `git diff --exit-code`)
 - Linux: differential smoke, upstream stage1 subset, and native `-e` scripts
 
 Notes:
@@ -95,7 +96,8 @@ Notes:
 - `scripts/jq_upstream_import.ps1` converts vendored `*.test` fixtures into
   `scripts/jq_compat_cases.upstream.json` using sidecar config in
   `scripts/jq_upstream_import.json` (skip patterns + per-case overrides).
-- `scripts/jq_compat_cases.upstream.stage1.json` is the current CI-safe subset
+- `scripts/jq_compat_cases.upstream.stage1.json` is auto-generated from
+  `scripts/jq_upstream_stage1_allowlist.txt` and is the current CI-safe subset
   (59 passing cases as of 2026-02-10).
 - CLI compatibility cases can specify `jq_args` / `jqx_args` and
   `jqx_use_stdin` for option-aware differential runs.

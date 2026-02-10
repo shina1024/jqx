@@ -6,6 +6,56 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+function Resolve-PathOrRelative {
+  param(
+    [string]$BaseDir,
+    [string]$PathValue
+  )
+
+  if ([System.IO.Path]::IsPathRooted($PathValue)) {
+    return [System.IO.Path]::GetFullPath($PathValue)
+  }
+  return [System.IO.Path]::GetFullPath((Join-Path $BaseDir $PathValue))
+}
+
+function Write-JsonFile {
+  param(
+    [string]$Path,
+    [object]$Value
+  )
+
+  $dir = Split-Path -Parent $Path
+  if (-not (Test-Path $dir)) {
+    New-Item -ItemType Directory -Force -Path $dir | Out-Null
+  }
+  $json = $Value | ConvertTo-Json -Depth 30
+  Set-Content -Path $Path -Value $json -Encoding UTF8
+}
+
+function Read-AllowList {
+  param([string]$Path)
+
+  if (-not (Test-Path $Path)) {
+    throw "allowlist file not found: $Path"
+  }
+
+  $names = @()
+  $seen = @{}
+  foreach ($rawLine in Get-Content $Path) {
+    $line = [string]$rawLine
+    $trimmed = $line.Trim()
+    if ($trimmed -eq "" -or $trimmed.StartsWith("#")) {
+      continue
+    }
+    if ($seen.ContainsKey($trimmed)) {
+      throw "duplicate allowlist entry: $trimmed"
+    }
+    $seen[$trimmed] = $true
+    $names += $trimmed
+  }
+  return $names
+}
+
 function Is-SkipLine {
   param([string]$Line)
   $trimmed = $Line.Trim()
@@ -138,11 +188,7 @@ $sourceRootRel = [string]$config.source_root
 if ($sourceRootRel -eq "") {
   throw "source_root is required in config: $ConfigPath"
 }
-$sourceRoot = if ([System.IO.Path]::IsPathRooted($sourceRootRel)) {
-  [System.IO.Path]::GetFullPath($sourceRootRel)
-} else {
-  [System.IO.Path]::GetFullPath((Join-Path $repoRoot $sourceRootRel))
-}
+$sourceRoot = Resolve-PathOrRelative -BaseDir $repoRoot -PathValue $sourceRootRel
 if (-not (Test-Path $sourceRoot)) {
   throw "source_root not found: $sourceRoot"
 }
@@ -178,6 +224,11 @@ if ($config.PSObject.Properties.Name -contains "overrides" -and $null -ne $confi
       $overrideMap[$property.Name] = $property.Value
     }
   }
+}
+
+$stage1Config = $null
+if ($config.PSObject.Properties.Name -contains "stage1" -and $null -ne $config.stage1) {
+  $stage1Config = $config.stage1
 }
 
 $allParsed = @()
@@ -264,17 +315,59 @@ foreach ($item in $allParsed) {
   $statsEmitted += 1
 }
 
-$outputJson = $outputCases | ConvertTo-Json -Depth 30
-$outputPathAbs = if ([System.IO.Path]::IsPathRooted($OutputPath)) {
-  [System.IO.Path]::GetFullPath($OutputPath)
-} else {
-  [System.IO.Path]::GetFullPath((Join-Path $repoRoot $OutputPath))
-}
-$outputDir = Split-Path -Parent $outputPathAbs
-if (-not (Test-Path $outputDir)) {
-  New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
-}
-Set-Content -Path $outputPathAbs -Value $outputJson -Encoding UTF8
+$outputPathAbs = Resolve-PathOrRelative -BaseDir $repoRoot -PathValue $OutputPath
+Write-JsonFile -Path $outputPathAbs -Value $outputCases
 
 Write-Host "Generated upstream cases: $outputPathAbs"
 Write-Host "summary total=$statsTotal emitted=$statsEmitted compile_fail_skipped=$statsCompileFailSkipped pattern_skipped=$statsPatternSkipped"
+
+if ($null -ne $stage1Config) {
+  $allowlistRel = [string]$stage1Config.allowlist_path
+  if ($allowlistRel -eq "") {
+    throw "stage1.allowlist_path is required in config: $ConfigPath"
+  }
+
+  $stage1OutputRel = [string]$stage1Config.output_path
+  if ($stage1OutputRel -eq "") {
+    throw "stage1.output_path is required in config: $ConfigPath"
+  }
+
+  $allowlistPath = Resolve-PathOrRelative -BaseDir $repoRoot -PathValue $allowlistRel
+  $stage1OutputPath = Resolve-PathOrRelative -BaseDir $repoRoot -PathValue $stage1OutputRel
+  $allowNames = Read-AllowList -Path $allowlistPath
+
+  $caseByName = @{}
+  foreach ($case in $outputCases) {
+    $caseName = [string]$case.name
+    if ($caseByName.ContainsKey($caseName)) {
+      throw "duplicate generated case name: $caseName"
+    }
+    $caseByName[$caseName] = $case
+  }
+
+  $missingNames = @()
+  $stage1Cases = @()
+  foreach ($name in $allowNames) {
+    if (-not $caseByName.ContainsKey($name)) {
+      $missingNames += $name
+      continue
+    }
+    $stage1Cases += $caseByName[$name]
+  }
+
+  if ($missingNames.Count -gt 0) {
+    throw "stage1 allowlist references unknown case names: $($missingNames -join ', ')"
+  }
+
+  $stage1Invalid = @($stage1Cases | Where-Object {
+      $_.PSObject.Properties.Name -contains "skip_reason" -and [string]$_.skip_reason -ne ""
+    })
+  if ($stage1Invalid.Count -gt 0) {
+    $names = @($stage1Invalid | ForEach-Object { [string]$_.name })
+    throw "stage1 includes skipped cases: $($names -join ', ')"
+  }
+
+  Write-JsonFile -Path $stage1OutputPath -Value $stage1Cases
+  Write-Host "Generated stage1 cases: $stage1OutputPath"
+  Write-Host "stage1 summary count=$($stage1Cases.Count)"
+}
