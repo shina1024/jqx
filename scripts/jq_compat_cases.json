@@ -610,6 +610,41 @@
     "input": "{\"a\":null}"
   },
   {
+    "name": "assign-nested-field",
+    "filter": ".a.b |= . + 1",
+    "input": "{\"a\":{\"b\":1}}"
+  },
+  {
+    "name": "assign-nested-fallback",
+    "filter": ".a.b //= 9",
+    "input": "{\"a\":{}}"
+  },
+  {
+    "name": "assign-nested-add",
+    "filter": ".a.b += 2",
+    "input": "{\"a\":{\"b\":3}}"
+  },
+  {
+    "name": "assign-array-inside-object",
+    "filter": ".a.[1] *= 10",
+    "input": "{\"a\":[1,2,3]}"
+  },
+  {
+    "name": "assign-create-object-path",
+    "filter": ".a.b |= . + 1",
+    "input": "{}"
+  },
+  {
+    "name": "assign-create-array-path",
+    "filter": ".[2] += 5",
+    "input": "[]"
+  },
+  {
+    "name": "assign-neg-index",
+    "filter": ".[-1] += 1",
+    "input": "[1,2,3]"
+  },
+  {
     "name": "map-values-array",
     "filter": "map_values(. + 1)",
     "input": "[1,2,3]"

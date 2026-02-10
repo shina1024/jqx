@@ -1973,6 +1973,18 @@ test "eval update assignment compatibility" {
   assert_eq(must_eval(parse_filter(".[1] *= 10"), must_parse("[1,2,3]")), [
     Json::array([Json::number(1.0), Json::number(20.0), Json::number(3.0)]),
   ])
+  assert_eq(must_eval(parse_filter(".a.b |= . + 1"), must_parse("{\"a\":{\"b\":1}}")), [
+    Json::object({ "a": Json::object({ "b": Json::number(2.0) }) }),
+  ])
+  assert_eq(must_eval(parse_filter(".a.b //= 9"), must_parse("{\"a\":{}}")), [
+    Json::object({ "a": Json::object({ "b": Json::number(9.0) }) }),
+  ])
+  assert_eq(must_eval(parse_filter(".[2] += 5"), must_parse("[]")), [
+    Json::array([Json::null(), Json::null(), Json::number(5.0)]),
+  ])
+  assert_eq(must_eval(parse_filter(".[-1] += 1"), must_parse("[1,2,3]")), [
+    Json::array([Json::number(1.0), Json::number(2.0), Json::number(4.0)]),
+  ])
 }
 
 ///|

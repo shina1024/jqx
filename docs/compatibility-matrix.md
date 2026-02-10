@@ -28,7 +28,7 @@ Legend:
 | User-defined functions (`def`) | planned | parser/evaluator not implemented |
 | Labels / break | planned | parser/evaluator not implemented |
 | Module system (`import`/`include`) | planned | parser/evaluator not implemented |
-| Update assignment (`|=`, `+=`, `-=`, `*=`, `/=`, `//=`) | partial | minimal lowering via `setpath(getpath(...))` for static path LHS (`.foo`, `.[n]`) |
+| Update assignment (`|=`, `+=`, `-=`, `*=`, `/=`, `//=`) | partial | minimal lowering via `setpath(getpath(...))` for static path LHS (`.foo`, `.[n]`, `.a.b`, `.a.[1]`) |
 
 ## Builtins and Functions (Implemented)
 
