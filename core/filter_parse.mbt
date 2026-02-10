@@ -585,13 +585,7 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
     let source = ctx.parse_comma(allow_as=false)
     ctx.skip_ws()
     guard ctx.try_keyword("as") else { ctx.invalid_char() }
-    ctx.skip_ws()
-    match ctx.read_char() {
-      Some('$') => ()
-      Some(_) => ctx.invalid_char(shift=-1)
-      None => raise InvalidEof
-    }
-    let name = ctx.parse_identifier()
+    let pattern = ctx.parse_as_pattern()
     ctx.skip_ws()
     ctx.expect_char('(')
     let init = ctx.parse_comma()
@@ -608,11 +602,36 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
       }
       ctx.skip_ws()
       ctx.expect_char(')')
-      Filter::foreach(source, name, init, update, extract)
+      match pattern {
+        Var(name) => Filter::foreach(source, name, init, update, extract)
+        _ => {
+          let tmp = ctx.fresh_as_tmp()
+          let source_var = Filter::var_(tmp)
+          Filter::foreach(
+            source,
+            tmp,
+            init,
+            ctx.lower_as_pattern_with_source(source_var, pattern, update),
+            ctx.lower_as_pattern_with_source(source_var, pattern, extract),
+          )
+        }
+      }
     } else {
       ctx.skip_ws()
       ctx.expect_char(')')
-      Filter::reduce(source, name, init, update)
+      match pattern {
+        Var(name) => Filter::reduce(source, name, init, update)
+        _ => {
+          let tmp = ctx.fresh_as_tmp()
+          let source_var = Filter::var_(tmp)
+          Filter::reduce(
+            source,
+            tmp,
+            init,
+            ctx.lower_as_pattern_with_source(source_var, pattern, update),
+          )
+        }
+      }
     }
   }
 

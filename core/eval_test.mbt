@@ -2457,6 +2457,20 @@ test "eval reduce/foreach" {
     Json::number(3.0),
     Json::number(6.0),
   ])
+  assert_eq(
+    must_eval(
+      parse_filter("reduce .[] as [$i,$j] (0; . + $i * $j)"),
+      must_parse("[[1,2],[3,4],[5,6]]"),
+    ),
+    [Json::number(44.0)],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("foreach .[] as [$i,$j] (0; . + $i * $j; [$i,$j,.])"),
+      must_parse("[[1,2],[3,4]]"),
+    ),
+    [must_parse("[1,2,2]"), must_parse("[3,4,14]")],
+  )
 }
 
 ///|

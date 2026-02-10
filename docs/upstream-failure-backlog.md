@@ -11,15 +11,15 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 597
-- failed: 80
+- passed: 602
+- failed: 75
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `parser-invalid-character` | 79 | parser grammar gaps (`[`, `{`, `$`, `,`, etc.) |
+| `parser-invalid-character` | 74 | parser grammar gaps (`[`, `{`, `$`, `,`, etc.) |
 | `parser-invalid-number` | 1 | remaining unary/special numeric parse gap |
 
 ## Top Unknown Functions
@@ -62,11 +62,15 @@ From current snapshot (`unknown-function` subset):
   - added `as ... ?// ...` destructuring fallback parsing/lowering via `try/catch`
   - supported object-pattern key forms: identifier/string/`$var` shorthand and `(<expr>): ...`
 - Parser cluster reduced from 108 to 80 (`-28`) in upstream full diff.
-- Current remaining failures are parser-only (`Invalid character/number`: 80 total).
+- Parser pass 4 completed on 2026-02-10:
+  - extended `reduce`/`foreach` to accept `as` array/object patterns in addition to `$var`
+  - lowered non-`$var` loop patterns to existing AST via internal temporary binding + pattern destructuring
+- Parser cluster reduced from 80 to 75 (`-5`) in upstream full diff.
+- Current remaining failures are parser-only (`Invalid character/number`: 75 total).
 
 ## Priority Plan
 
-1. Parser cluster first: reduce `parser-invalid-character` + `parser-invalid-number` (80 total).
+1. Parser cluster first: reduce `parser-invalid-character` + `parser-invalid-number` (75 total).
 2. Re-run upstream full diff after each parser slice to surface newly unblocked non-parser gaps.
 3. Expand stage1 allowlist incrementally with newly stable parser features.
 
@@ -75,4 +79,4 @@ From current snapshot (`unknown-function` subset):
 - Parser:
   - `upstream-jq-test-l118`
   - `upstream-jq-test-l122`
-  - `upstream-jq-test-l273`
+  - `upstream-jq-test-l478`

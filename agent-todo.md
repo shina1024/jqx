@@ -21,7 +21,8 @@ Updated: 2026-02-10
 - [x] upstream parser失敗クラスタの第1段を実施する（188→147、`=`/`%`/単項`-`/`."..."`/`foreach`2句/object shorthand/`.[1,2]`）
 - [x] upstream parser失敗クラスタの第2段を実施する（145→108、`if/elif/else/end`拡張・`else`省略・任意式`[]`後置・配列/オブジェクト値で比較式）
 - [x] upstream parser失敗クラスタの第3段を実施する（108→80、`as`配列/オブジェクトパターン束縛と`?//` destructuring fallback）
-- [ ] upstream parser失敗クラスタを段階的に潰す（残り `Invalid character/number` 80件）
+- [x] upstream parser失敗クラスタの第4段を実施する（80→75、`reduce/foreach` の `as` パターン束縛対応）
+- [ ] upstream parser失敗クラスタを段階的に潰す（残り `Invalid character/number` 75件）
 - [x] upstream unknown-functionクラスタの第1段を実施する（127→87、`range`/`limit`/`skip`/`IN`/`nth(i; expr)`）
 - [x] upstream unknown-functionクラスタの第2段を実施する（87→77、`path`/`del`/再帰下降 `..`）
 - [x] upstream unknown-function上位クラスタを潰す（77→0、`have_decnum`/`abs`/`isempty`/`trimstr`/`trim`系を実装）

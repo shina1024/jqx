@@ -109,6 +109,15 @@ test "parse reduce/foreach" {
     parse_filter("foreach .[] as $x (0; . + $x)"),
     content="Foreach(Pipe(Identity, Iter), \"x\", Literal(Number(0)), Add(Identity, Var(\"x\")), Identity)",
   )
+  guard (try? parse_filter("reduce .[] as [$i,$j] (0; . + $i * $j)")) is Ok(_) else {
+    fail("expected reduce as-pattern parse")
+  }
+  guard (try? parse_filter(
+      "foreach .[] as {x:$x,y:$y} (0; . + $x + $y; [$x,$y,.])",
+    ))
+    is Ok(_) else {
+    fail("expected foreach as-pattern parse")
+  }
 }
 
 ///|
