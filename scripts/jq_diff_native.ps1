@@ -65,7 +65,9 @@ function Resolve-JqxExecutable {
 
   $candidates = @(
     (Join-Path $RepoRoot "_build/native/release/build/cmd/cmd.exe"),
-    (Join-Path $RepoRoot "_build/native/release/build/cmd/cmd")
+    (Join-Path $RepoRoot "_build/native/release/build/cmd/cmd"),
+    (Join-Path $RepoRoot "_build/native/debug/build/cmd/cmd.exe"),
+    (Join-Path $RepoRoot "_build/native/debug/build/cmd/cmd")
   )
   foreach ($candidate in $candidates) {
     if (Test-Path $candidate) {
@@ -139,7 +141,7 @@ try {
 
   $resolvedJqx = Resolve-JqxExecutable -Preferred $JqxExecutable -RepoRoot $repoRoot
   if ($null -eq $resolvedJqx) {
-    throw "jqx native executable not found under _build/native/release/build/cmd"
+    throw "jqx native executable not found under _build/native/{release,debug}/build/cmd"
   }
 
   $total = 0

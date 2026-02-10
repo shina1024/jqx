@@ -61,18 +61,19 @@ resolve_jqx_bin() {
     return 1
   fi
 
+  local candidates=(
+    "${REPO_ROOT}/_build/native/release/build/cmd/cmd"
+    "${REPO_ROOT}/_build/native/release/build/cmd/cmd.exe"
+    "${REPO_ROOT}/_build/native/debug/build/cmd/cmd"
+    "${REPO_ROOT}/_build/native/debug/build/cmd/cmd.exe"
+  )
   local candidate
-  candidate="${REPO_ROOT}/_build/native/release/build/cmd/cmd"
-  if [[ -x "${candidate}" ]]; then
-    printf '%s\n' "${candidate}"
-    return 0
-  fi
-
-  candidate="${REPO_ROOT}/_build/native/release/build/cmd/cmd.exe"
-  if [[ -x "${candidate}" ]]; then
-    printf '%s\n' "${candidate}"
-    return 0
-  fi
+  for candidate in "${candidates[@]}"; do
+    if [[ -x "${candidate}" ]]; then
+      printf '%s\n' "${candidate}"
+      return 0
+    fi
+  done
 
   return 1
 }
@@ -109,7 +110,7 @@ if ! "${MOON_BIN_RESOLVED}" build --target native cmd >/dev/null 2>&1; then
 fi
 
 JQX_BIN_RESOLVED="$(resolve_jqx_bin)" || {
-  echo "jqx native executable not found under _build/native/release/build/cmd" >&2
+  echo "jqx native executable not found under _build/native/{release,debug}/build/cmd" >&2
   exit 2
 }
 
