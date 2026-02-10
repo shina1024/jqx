@@ -92,6 +92,8 @@ Notes:
 - `jq_diff.ps1` is the primary runner for Windows environments and can resolve
   `jq` from `mise`.
 - `jq_diff.sh` targets Linux/macOS and falls back to `mise` when available.
+- Differential runner parity was fixed on 2026-02-10 (`jq_diff.ps1` exit-code capture),
+  and PowerShell/bash now report the same full-upstream baseline.
 - Upstream jq test fixtures are copied into `third_party/jq-tests` via
   `scripts/update_jq_tests.ps1` or `scripts/update_jq_tests.sh` (copy strategy,
   not git submodule).
@@ -107,6 +109,9 @@ Notes:
   `jqx_use_stdin` for option-aware differential runs.
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.
 - Smoke differential currently covers 180 cases (as of 2026-02-10).
+- Full upstream differential baseline is currently:
+  total 824 / passed 445 / failed 232 / skipped 147
+  (see `scripts/jq_upstream_failures.snapshot.json` and `docs/upstream-failure-backlog.md`).
 - `expect_error: true` in smoke differential cases compares normalized jq/jqx
   error messages and accepts jqx `moon run` wrapper status behavior.
 - `expect_error_mode` can be `strict` (default) or `any`.
