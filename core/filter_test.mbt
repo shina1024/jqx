@@ -167,6 +167,10 @@ test "parse variables and as" {
     parse_filter(".a as $x | $x"),
     content="As(Pipe(Identity, Field(\"a\")), \"x\", Var(\"x\"))",
   )
+  inspect(
+    parse_filter(". as $x | $x[]"),
+    content="As(Identity, \"x\", Pipe(Var(\"x\"), Iter))",
+  )
 }
 
 ///|
@@ -250,6 +254,14 @@ test "parse if-then-else" {
     parse_filter("if .a then .b else .c end"),
     content="IfElse(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")), Pipe(Identity, Field(\"c\")))",
   )
+  inspect(
+    parse_filter("if .a then .b elif .c then .d else .e end"),
+    content="IfElse(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")), IfElse(Pipe(Identity, Field(\"c\")), Pipe(Identity, Field(\"d\")), Pipe(Identity, Field(\"e\"))))",
+  )
+  inspect(
+    parse_filter("if .a then .b end"),
+    content="IfElse(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")), Empty)",
+  )
 }
 
 ///|
@@ -303,8 +315,16 @@ test "parse array and object literals" {
     content="Array([Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\"))])",
   )
   inspect(
+    parse_filter("[10 > 0, 1 == 2]"),
+    content="Array([Gt(Literal(Number(10)), Literal(Number(0))), Eq(Literal(Number(1)), Literal(Number(2)))])",
+  )
+  inspect(
     parse_filter("{\"a\": .b, c: .d}"),
     content="Object([(\"a\", Pipe(Identity, Field(\"b\"))), (\"c\", Pipe(Identity, Field(\"d\")))])",
+  )
+  inspect(
+    parse_filter("{\"ok\": (10 > 0)}"),
+    content="Object([(\"ok\", Gt(Literal(Number(10)), Literal(Number(0))))])",
   )
   inspect(
     parse_filter("{a, \"b\", c: .d}"),
@@ -317,6 +337,10 @@ test "parse array and object literals" {
   inspect(
     parse_filter(".[\"a\", \"b\"]"),
     content="Pipe(Identity, Comma(Field(\"a\"), Field(\"b\")))",
+  )
+  inspect(
+    parse_filter("[1,2][]"),
+    content="Pipe(Array([Literal(Number(1)), Literal(Number(2))]), Iter)",
   )
 }
 

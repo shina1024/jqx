@@ -466,7 +466,11 @@ fn FilterCursor::parse_dot_expr(ctx : FilterCursor) -> Filter raise FilterError 
     return Filter::recurse()
   }
   let mut current = Filter::identity()
-  let first = ctx.parse_dot_suffix()
+  let first = match ctx.peek_char() {
+    Some('[' | '\"' | '.') => ctx.parse_dot_suffix()
+    Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') => ctx.parse_dot_suffix()
+    _ => Filter::identity()
+  }
   if first is Identity {
     ()
   } else {
@@ -501,6 +505,25 @@ fn FilterCursor::parse_dot_expr(ctx : FilterCursor) -> Filter raise FilterError 
 ///|
 fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
   ctx.skip_ws()
+  fn parse_postfix(base0 : Filter) -> Filter raise FilterError {
+    let mut base = base0
+    for {
+      ctx.skip_ws()
+      match ctx.peek_char() {
+        Some('[') => {
+          let suffix = ctx.parse_dot_suffix()
+          if suffix is Identity {
+            continue
+          } else {
+            base = Filter::pipe(base, suffix)
+          }
+        }
+        _ => break
+      }
+    }
+    base
+  }
+
   fn parse_not_operand_or_identity() -> Filter raise FilterError {
     ctx.skip_ws()
     let saved = ctx.offset
@@ -608,16 +631,37 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
     Some('i') =>
       if ctx.try_keyword("if") {
         ctx.skip_ws()
-        let cond = ctx.parse_comma()
+        let cond0 = ctx.parse_comma()
         ctx.skip_ws()
         guard ctx.try_keyword("then") else { ctx.invalid_char() }
-        let then_branch = ctx.parse_comma()
-        ctx.skip_ws()
-        guard ctx.try_keyword("else") else { ctx.invalid_char() }
-        let else_branch = ctx.parse_comma()
+        let then0 = ctx.parse_comma()
+        let branches = [(cond0, then0)]
+        for {
+          ctx.skip_ws()
+          if ctx.try_keyword("elif") {
+            let elif_cond = ctx.parse_comma()
+            ctx.skip_ws()
+            guard ctx.try_keyword("then") else { ctx.invalid_char() }
+            let elif_then = ctx.parse_comma()
+            branches.push((elif_cond, elif_then))
+            continue
+          }
+          break
+        }
+        let else_branch = if ctx.try_keyword("else") {
+          ctx.parse_comma()
+        } else {
+          Filter::empty()
+        }
         ctx.skip_ws()
         guard ctx.try_keyword("end") else { ctx.invalid_char() }
-        Filter::if_else(cond, then_branch, else_branch)
+        let mut out = else_branch
+        for i in 0..<branches.length() {
+          let idx = branches.length() - 1 - i
+          let (c, t) = branches[idx]
+          out = Filter::if_else(c, t, out)
+        }
+        out
       } else {
         ctx.parse_identifier_or_call()
       }
@@ -627,6 +671,7 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
     Some(_) => ctx.invalid_char()
     None => raise InvalidEof
   }
+  let base = parse_postfix(base)
   ctx.skip_ws()
   match ctx.peek_char() {
     Some('?') => {
@@ -699,7 +744,7 @@ fn FilterCursor::parse_array_literal(
   }
   let items = []
   for {
-    let elem = ctx.parse_pipe()
+    let elem = ctx.parse_update()
     items.push(elem)
     ctx.skip_ws()
     match ctx.peek_char() {
@@ -740,7 +785,7 @@ fn FilterCursor::parse_object_literal(
     ctx.skip_ws()
     let value = if ctx.peek_char() is Some(':') {
       ctx.read_char() |> ignore
-      ctx.parse_pipe()
+      ctx.parse_update()
     } else {
       Filter::pipe(Filter::identity(), Filter::field(key))
     }

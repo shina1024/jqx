@@ -2383,6 +2383,11 @@ test "eval as and variable" {
   assert_eq(must_eval(parse_filter(".a as $x | $x"), j), [Json::number(1.0)])
   assert_eq(must_eval(parse_filter(".a as $x | .b"), j), [Json::number(2.0)])
   assert_eq(must_eval(parse_filter(".a as $x | $x + 1"), j), [Json::number(2.0)])
+  assert_eq(must_eval(parse_filter(". as $x | $x[]"), must_parse("[1,2,3]")), [
+    Json::number(1.0),
+    Json::number(2.0),
+    Json::number(3.0),
+  ])
 }
 
 ///|
@@ -2429,6 +2434,12 @@ test "eval if-then-else" {
   assert_eq(must_eval(parse_filter("if .a then .b else .c end"), j2), [
     Json::number(2.0),
   ])
+  let j3 = must_parse("{\"a\":false,\"c\":true,\"d\":3,\"e\":4}")
+  assert_eq(
+    must_eval(parse_filter("if .a then .b elif .c then .d else .e end"), j3),
+    [Json::number(3.0)],
+  )
+  assert_eq(must_eval(parse_filter("if .a then .b end"), j2), [])
 }
 
 ///|

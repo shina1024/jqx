@@ -19,7 +19,8 @@ Updated: 2026-02-10
 - [ ] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ79件超へ段階追加）
 - [x] upstream失敗ケースをカテゴリ集計して台帳化する（`docs/upstream-failure-backlog.md` + snapshot）
 - [x] upstream parser失敗クラスタの第1段を実施する（188→147、`=`/`%`/単項`-`/`."..."`/`foreach`2句/object shorthand/`.[1,2]`）
-- [ ] upstream parser失敗クラスタを段階的に潰す（残り `Invalid character/number` 145件）
+- [x] upstream parser失敗クラスタの第2段を実施する（145→108、`if/elif/else/end`拡張・`else`省略・任意式`[]`後置・配列/オブジェクト値で比較式）
+- [ ] upstream parser失敗クラスタを段階的に潰す（残り `Invalid character/number` 108件）
 - [x] upstream unknown-functionクラスタの第1段を実施する（127→87、`range`/`limit`/`skip`/`IN`/`nth(i; expr)`）
 - [x] upstream unknown-functionクラスタの第2段を実施する（87→77、`path`/`del`/再帰下降 `..`）
 - [x] upstream unknown-function上位クラスタを潰す（77→0、`have_decnum`/`abs`/`isempty`/`trimstr`/`trim`系を実装）

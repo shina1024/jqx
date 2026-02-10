@@ -11,15 +11,15 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 532
-- failed: 145
+- passed: 569
+- failed: 108
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `parser-invalid-character` | 144 | parser grammar gaps (`[`, `{`, `$`, `,`, etc.) |
+| `parser-invalid-character` | 107 | parser grammar gaps (`[`, `{`, `$`, `,`, etc.) |
 | `parser-invalid-number` | 1 | remaining unary/special numeric parse gap |
 
 ## Top Unknown Functions
@@ -51,11 +51,17 @@ From current snapshot (`unknown-function` subset):
 - Builtin/function pass 3 completed on 2026-02-10:
   - implemented `have_decnum`, `abs`, `isempty`, `trimstr`, `trim`, `ltrim`, `rtrim`
   - unknown-function cluster reduced from 77 to 0 (`-77`) in upstream full diff
-- Current remaining failures are parser-only (`Invalid character/number`: 145 total).
+- Parser pass 2 completed on 2026-02-10:
+  - added `if/elif/else/end` parsing (including `else` omission as `empty`)
+  - allowed postfix bracket access on general expressions (`$x[]`, `[1,2][]`, etc.)
+  - parsed array/object literal values with full expression precedence (comparison/logical included)
+  - fixed `. as $x` spacing ambiguity (`.as` field accessとの誤解釈を回避)
+- Parser cluster reduced from 145 to 108 (`-37`) in upstream full diff.
+- Current remaining failures are parser-only (`Invalid character/number`: 108 total).
 
 ## Priority Plan
 
-1. Parser cluster first: reduce `parser-invalid-character` + `parser-invalid-number` (145 total).
+1. Parser cluster first: reduce `parser-invalid-character` + `parser-invalid-number` (108 total).
 2. Re-run upstream full diff after each parser slice to surface newly unblocked non-parser gaps.
 3. Expand stage1 allowlist incrementally with newly stable parser features.
 
