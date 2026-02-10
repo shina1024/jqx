@@ -174,6 +174,19 @@ test "parse variables and as" {
 }
 
 ///|
+test "parse as pattern bindings" {
+  guard (try? parse_filter(".[] as [$a, {j:$j}] | [$a, $j]")) is Ok(_) else {
+    fail("expected array/object as-pattern parse")
+  }
+  guard (try? parse_filter(". as {$a, $b:[$c,$d]} | [$a, $b, $c, $d]")) is Ok(_) else {
+    fail("expected object as-pattern parse")
+  }
+  guard (try? parse_filter(".[] | . as {a:$a} ?// [$a] | $a")) is Ok(_) else {
+    fail("expected ?// parse")
+  }
+}
+
+///|
 test "parse compare" {
   inspect(
     parse_filter(".a == .b"),

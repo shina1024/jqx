@@ -2391,6 +2391,41 @@ test "eval as and variable" {
 }
 
 ///|
+test "eval as pattern bindings" {
+  assert_eq(
+    must_eval(
+      parse_filter(".[] as [$a,$b] | [$b,$a]"),
+      must_parse("[[1],[1,2,3]]"),
+    ),
+    [
+      Json::array([Json::null(), Json::number(1.0)]),
+      Json::array([Json::number(2.0), Json::number(1.0)]),
+    ],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter(". as {$a, $b:[$c,$d]} | [$a, $b, $c, $d]"),
+      must_parse("{\"a\":1,\"b\":[2,{\"d\":3}]}"),
+    ),
+    [must_parse("[1,[2,{\"d\":3}],2,{\"d\":3}]")],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter(".[] | . as {a:$a} ?// [$a] | $a"),
+      must_parse("[{\"a\":1},[2]]"),
+    ),
+    [Json::number(1.0), Json::number(2.0)],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter(". as {(\"e\"+\"x\"+\"p\"):$exp} | $exp"),
+      must_parse("{\"exp\":3}"),
+    ),
+    [Json::number(3.0)],
+  )
+}
+
+///|
 test "eval try" {
   let j = must_parse("{\"a\":\"hi\"}")
   assert_eq(must_eval(parse_filter("(.a + 1)?"), j), [])

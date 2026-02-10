@@ -56,46 +56,6 @@
     "jqx_out": "jqx: error (at <stdin>:1:30): Invalid character '$'"
   },
   {
-    "name": "upstream-jq-test-l524",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:20): Invalid character '['"
-  },
-  {
-    "name": "upstream-jq-test-l530",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l534",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character '['"
-  },
-  {
-    "name": "upstream-jq-test-l539",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:16): Invalid character '['"
-  },
-  {
-    "name": "upstream-jq-test-l543",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character '['"
-  },
-  {
     "name": "upstream-jq-test-l766",
     "category": "parser-invalid-character",
     "jq_status": "0",
@@ -118,158 +78,6 @@
     "jqx_status": "0",
     "jq_out": "",
     "jqx_out": "jqx: error (at <stdin>:1:34): Invalid character '['"
-  },
-  {
-    "name": "upstream-jq-test-l920",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l924",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l929",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:12): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l936",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:12): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l940",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l944",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:26): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l948",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:26): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l952",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:12): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l959",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l966",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:26): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l973",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:26): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l980",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:12): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l987",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l994",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:26): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l1001",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:26): Invalid character '{'"
-  },
-  {
-    "name": "upstream-jq-test-l1008",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:15): Invalid character '?'"
-  },
-  {
-    "name": "upstream-jq-test-l1015",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:11): Invalid character '?'"
-  },
-  {
-    "name": "upstream-jq-test-l1022",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:29): Invalid character '?'"
-  },
-  {
-    "name": "upstream-jq-test-l1029",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:29): Invalid character '?'"
   },
   {
     "name": "upstream-jq-test-l1130",
@@ -656,22 +464,6 @@
     "jqx_out": "jqx: error (at <stdin>:1:20): Invalid character '.'"
   },
   {
-    "name": "upstream-jq-test-l2482",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character '['"
-  },
-  {
-    "name": "upstream-jq-test-l2489",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character '['"
-  },
-  {
     "name": "upstream-base64-test-l13",
     "category": "parser-invalid-character",
     "jq_status": "0",
@@ -776,28 +568,12 @@
     "jqx_out": "jqx: error (at <stdin>:1:39): Invalid number -"
   },
   {
-    "name": "upstream-man-test-l847",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character '['"
-  },
-  {
-    "name": "upstream-man-test-l851",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character '['"
-  },
-  {
     "name": "upstream-man-test-l857",
     "category": "parser-invalid-character",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character '{'"
+    "jqx_out": "jqx: error (at <stdin>:1:61): Invalid character '$'"
   },
   {
     "name": "upstream-man-test-l862",
@@ -805,7 +581,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character '{'"
+    "jqx_out": "jqx: error (at <stdin>:1:53): Invalid character '$'"
   },
   {
     "name": "upstream-man-test-l867",
@@ -813,7 +589,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character '['"
+    "jqx_out": "jqx: error (at <stdin>:1:56): Invalid character '('"
   },
   {
     "name": "upstream-man-test-l915",

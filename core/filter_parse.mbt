@@ -40,6 +40,7 @@ priv struct FilterCursor {
   mut offset : Int
   input : StringView
   end_offset : Int
+  mut gensym : Int
 }
 
 ///|
@@ -54,8 +55,21 @@ priv enum UpdateAssignOp {
 }
 
 ///|
+priv enum AsPattern {
+  Var(String)
+  Array(Array[AsPattern])
+  Object(Array[AsObjectPatternEntry])
+}
+
+///|
+priv struct AsObjectPatternEntry {
+  key : Filter
+  bindings : Array[AsPattern]
+}
+
+///|
 fn FilterCursor::make(input : StringView) -> FilterCursor {
-  { offset: 0, input, end_offset: input.length() }
+  { offset: 0, input, end_offset: input.length(), gensym: 0 }
 }
 
 ///|
@@ -128,6 +142,33 @@ fn FilterCursor::try_keyword(ctx : FilterCursor, kw : String) -> Bool {
       false
     }
     _ => true
+  }
+}
+
+///|
+fn FilterCursor::try_qslash_fallback_sep(ctx : FilterCursor) -> Bool {
+  ctx.skip_ws()
+  let saved = ctx.offset
+  match ctx.read_char() {
+    Some('?') =>
+      match ctx.read_char() {
+        Some('/') =>
+          match ctx.read_char() {
+            Some('/') => true
+            _ => {
+              ctx.offset = saved
+              false
+            }
+          }
+        _ => {
+          ctx.offset = saved
+          false
+        }
+      }
+    _ => {
+      ctx.offset = saved
+      false
+    }
   }
 }
 
@@ -808,6 +849,191 @@ fn FilterCursor::parse_object_literal(
 }
 
 ///|
+fn FilterCursor::fresh_as_tmp(ctx : FilterCursor) -> String {
+  let n = ctx.gensym
+  ctx.gensym += 1
+  "__jqx_as_" + n.to_string()
+}
+
+///|
+fn as_pattern_key_access(base : Filter, key : Filter) -> Filter {
+  Filter::pipe(base, Filter::call("getpath", [Filter::Array([key])]))
+}
+
+///|
+fn FilterCursor::parse_as_pattern(
+  ctx : FilterCursor,
+) -> AsPattern raise FilterError {
+  ctx.skip_ws()
+  match ctx.peek_char() {
+    Some('$') => {
+      ctx.read_char() |> ignore
+      AsPattern::Var(ctx.parse_identifier())
+    }
+    Some('[') => {
+      ctx.expect_char('[')
+      ctx.skip_ws()
+      if ctx.peek_char() is Some(']') {
+        ctx.read_char() |> ignore
+        AsPattern::Array([])
+      } else {
+        let items = []
+        for {
+          items.push(ctx.parse_as_pattern())
+          ctx.skip_ws()
+          match ctx.peek_char() {
+            Some(',') => {
+              ctx.read_char() |> ignore
+              continue
+            }
+            Some(']') => {
+              ctx.read_char() |> ignore
+              break
+            }
+            Some(_) => ctx.invalid_char()
+            None => raise InvalidEof
+          }
+        }
+        AsPattern::Array(items)
+      }
+    }
+    Some('{') => {
+      ctx.expect_char('{')
+      ctx.skip_ws()
+      if ctx.peek_char() is Some('}') {
+        ctx.read_char() |> ignore
+        AsPattern::Object([])
+      } else {
+        let entries = []
+        for {
+          ctx.skip_ws()
+          let mut key = Filter::identity()
+          let bindings = []
+          match ctx.peek_char() {
+            Some('$') => {
+              ctx.read_char() |> ignore
+              let name = ctx.parse_identifier()
+              key = Filter::literal(Json::string(name))
+              bindings.push(AsPattern::Var(name))
+              ctx.skip_ws()
+              if ctx.peek_char() is Some(':') {
+                ctx.read_char() |> ignore
+                bindings.push(ctx.parse_as_pattern())
+              }
+            }
+            Some('\"') => {
+              let name = ctx.parse_string_literal()
+              key = Filter::literal(Json::string(name))
+              ctx.skip_ws()
+              ctx.expect_char(':')
+              bindings.push(ctx.parse_as_pattern())
+            }
+            Some('(') => {
+              ctx.read_char() |> ignore
+              let key_expr = ctx.parse_comma()
+              ctx.skip_ws()
+              ctx.expect_char(')')
+              key = key_expr
+              ctx.skip_ws()
+              ctx.expect_char(':')
+              bindings.push(ctx.parse_as_pattern())
+            }
+            Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') => {
+              let name = ctx.parse_identifier()
+              key = Filter::literal(Json::string(name))
+              ctx.skip_ws()
+              if ctx.peek_char() is Some(':') {
+                ctx.read_char() |> ignore
+                bindings.push(ctx.parse_as_pattern())
+              } else {
+                bindings.push(AsPattern::Var(name))
+              }
+            }
+            Some(_) => ctx.invalid_char()
+            None => raise InvalidEof
+          }
+          entries.push({ key, bindings })
+          ctx.skip_ws()
+          match ctx.peek_char() {
+            Some(',') => {
+              ctx.read_char() |> ignore
+              continue
+            }
+            Some('}') => {
+              ctx.read_char() |> ignore
+              break
+            }
+            Some(_) => ctx.invalid_char()
+            None => raise InvalidEof
+          }
+        }
+        AsPattern::Object(entries)
+      }
+    }
+    _ => ctx.invalid_char()
+  }
+}
+
+///|
+fn FilterCursor::lower_as_pattern_on_bound(
+  ctx : FilterCursor,
+  bound : Filter,
+  pattern : AsPattern,
+  body : Filter,
+) -> Filter {
+  match pattern {
+    Var(name) => Filter::as_(bound, name, body)
+    Array(items) => {
+      let mut out = body
+      for i in 0..<items.length() {
+        let idx = items.length() - 1 - i
+        let value_filter = Filter::pipe(bound, Filter::index(idx))
+        out = ctx.lower_as_pattern_with_source(value_filter, items[idx], out)
+      }
+      out
+    }
+    Object(entries) => {
+      let mut out = body
+      for i in 0..<entries.length() {
+        let idx = entries.length() - 1 - i
+        let entry = entries[idx]
+        let value_filter = as_pattern_key_access(bound, entry.key)
+        for j in 0..<entry.bindings.length() {
+          let bidx = entry.bindings.length() - 1 - j
+          out = ctx.lower_as_pattern_with_source(
+            value_filter,
+            entry.bindings[bidx],
+            out,
+          )
+        }
+      }
+      out
+    }
+  }
+}
+
+///|
+fn FilterCursor::lower_as_pattern_with_source(
+  ctx : FilterCursor,
+  value_filter : Filter,
+  pattern : AsPattern,
+  body : Filter,
+) -> Filter {
+  match pattern {
+    Var(name) => Filter::as_(value_filter, name, body)
+    _ => {
+      let tmp = ctx.fresh_as_tmp()
+      let tmp_var = Filter::var_(tmp)
+      Filter::as_(
+        value_filter,
+        tmp,
+        ctx.lower_as_pattern_on_bound(tmp_var, pattern, body),
+      )
+    }
+  }
+}
+
+///|
 fn FilterCursor::parse_unary(ctx : FilterCursor) -> Filter raise FilterError {
   ctx.skip_ws()
   match ctx.peek_char() {
@@ -979,17 +1205,41 @@ fn FilterCursor::parse_pipe(
   for {
     ctx.skip_ws()
     if allow_as && ctx.try_keyword("as") {
+      let pattern = ctx.parse_as_pattern()
       ctx.skip_ws()
-      match ctx.read_char() {
-        Some('$') => {
-          let name = ctx.parse_identifier()
-          ctx.skip_ws()
-          ctx.expect_char('|')
-          let right = ctx.parse_pipe()
-          return Filter::as_(left, name, right)
+      if ctx.try_qslash_fallback_sep() {
+        let patterns = [pattern]
+        for {
+          patterns.push(ctx.parse_as_pattern())
+          if ctx.try_qslash_fallback_sep() {
+            continue
+          }
+          break
         }
-        Some(_) => ctx.invalid_char(shift=-1)
-        None => raise InvalidEof
+        ctx.skip_ws()
+        ctx.expect_char('|')
+        let body = ctx.parse_pipe()
+        let source_tmp = ctx.fresh_as_tmp()
+        let source_var = Filter::var_(source_tmp)
+        let mut branch = ctx.lower_as_pattern_with_source(
+          source_var,
+          patterns[patterns.length() - 1],
+          body,
+        )
+        for i in 0..<(patterns.length() - 1) {
+          let idx = patterns.length() - 2 - i
+          let candidate = ctx.lower_as_pattern_with_source(
+            source_var,
+            patterns[idx],
+            body,
+          )
+          branch = Filter::try_catch(candidate, branch)
+        }
+        return Filter::as_(left, source_tmp, branch)
+      } else {
+        ctx.expect_char('|')
+        let right = ctx.parse_pipe()
+        return ctx.lower_as_pattern_with_source(left, pattern, right)
       }
     }
     match ctx.peek_char() {
@@ -1212,6 +1462,27 @@ fn FilterCursor::parse_fallback(
   for {
     ctx.skip_ws()
     match ctx.peek_char() {
+      Some('?') => {
+        let saved = ctx.offset
+        ctx.read_char() |> ignore
+        match ctx.read_char() {
+          Some('/') =>
+            match ctx.read_char() {
+              Some('/') => {
+                let right = ctx.parse_or(allow_as~)
+                left = Filter::fallback(Filter::try_(left), right)
+              }
+              _ => {
+                ctx.offset = saved
+                break
+              }
+            }
+          _ => {
+            ctx.offset = saved
+            break
+          }
+        }
+      }
       Some('/') => {
         let saved = ctx.offset
         ctx.read_char() |> ignore
