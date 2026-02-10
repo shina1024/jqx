@@ -2681,6 +2681,71 @@ test "eval abs/have_decnum/isempty compatibility" {
 }
 
 ///|
+test "eval numeric/meta builtins compatibility" {
+  assert_eq(
+    must_eval(
+      parse_filter("map(toboolean)"),
+      must_parse("[\"false\",\"true\",false,true]"),
+    ),
+    [
+      Json::array([
+        Json::boolean(false),
+        Json::boolean(true),
+        Json::boolean(false),
+        Json::boolean(true),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_eval(parse_filter("[.[]|floor]"), must_parse("[-1.1,1.1,1.9]")),
+    [Json::array([Json::number(-2.0), Json::number(1.0), Json::number(1.0)])],
+  )
+  assert_eq(must_eval(parse_filter("[.[]|sqrt]"), must_parse("[4,9]")), [
+    Json::array([Json::number(2.0), Json::number(3.0)]),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("atan * 4 * 1000000|floor / 1000000"),
+      must_parse("1"),
+    ),
+    [Json::number(3.141592)],
+  )
+  assert_eq(
+    must_eval(parse_filter("infinite | type, nan | type"), must_parse("null")),
+    [Json::string("number"), Json::string("number")],
+  )
+  assert_eq(
+    must_eval(parse_filter("modulemeta | .deps | length"), must_parse("\"c\"")),
+    [Json::number(0.0)],
+  )
+  assert_eq(
+    must_eval(parse_filter("modulemeta | .defs | length"), must_parse("\"c\"")),
+    [Json::number(0.0)],
+  )
+  assert_eq(
+    must_eval(parse_filter("builtins|length > 10"), must_parse("null")),
+    [Json::boolean(true)],
+  )
+}
+
+///|
+test "eval numeric/meta builtins errors" {
+  guard (try? eval(parse_filter("toboolean"), must_parse("\"tru\"")))
+    is Err(err) &&
+    err.to_string() == "string (\"tru\") cannot be parsed as a boolean" else {
+    fail("expected toboolean parse error")
+  }
+  guard (try? eval(parse_filter("sqrt"), must_parse("\"x\""))) is Err(err) &&
+    err.to_string() == "string (\"x\") only numbers have sqrt" else {
+    fail("expected sqrt type error")
+  }
+  guard (try? eval(parse_filter("floor"), must_parse("true"))) is Err(err) &&
+    err.to_string() == "boolean (true) only numbers have floor" else {
+    fail("expected floor type error")
+  }
+}
+
+///|
 test "eval abs/isempty errors" {
   guard (try? eval(parse_filter("abs"), must_parse("null"))) is Err(err) &&
     err.to_string() == "null (null) cannot be negated" else {

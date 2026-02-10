@@ -34,9 +34,116 @@ fn builtin_trim_ascii_ws(s : String) -> String {
 }
 
 ///|
+fn builtin_to_boolean(input : Json) -> Json raise EvalError {
+  match input {
+    JTrue | JFalse => input
+    String(s) =>
+      if s == "true" {
+        Json::boolean(true)
+      } else if s == "false" {
+        Json::boolean(false)
+      } else {
+        raise TypeError(
+          json_type_with_value(input) + " cannot be parsed as a boolean",
+        )
+      }
+    _ =>
+      raise TypeError(
+        json_type_with_value(input) + " cannot be parsed as a boolean",
+      )
+  }
+}
+
+///|
+fn builtin_list() -> Array[Json] {
+  let names = [
+    "abs/0", "add/0", "all/0", "any/0", "ascii_downcase/0", "ascii_upcase/0", "atan/0",
+    "builtins/0", "cos/0", "endswith/1", "explode/0", "first/0", "flatten/0", "floor/0",
+    "from_entries/0", "fromjson/0", "group_by/1", "implode/0", "infinite/0", "inside/1",
+    "isfinite/0", "isinfinite/0", "isempty/0", "isnan/0", "join/1", "keys/0", "last/0",
+    "length/0", "ltrim/0", "map/1", "map_values/1", "max/0", "min/0", "modulemeta/0",
+    "nan/0", "paths/0", "reverse/0", "rtrim/0", "sin/0", "sort/0", "split/1", "sqrt/0",
+    "startswith/1", "to_entries/0", "toboolean/0", "tojson/0", "tonumber/0", "tostring/0",
+    "transpose/0", "trim/0", "type/0", "unique/0", "values/0",
+  ]
+  let out = []
+  for name in names {
+    out.push(Json::string(name))
+  }
+  out
+}
+
+///|
 fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
   match name {
     "have_decnum" => [Json::boolean(true)]
+    "modulemeta" =>
+      [Json::object({ "deps": Json::array([]), "defs": Json::object({}) })]
+    "builtins" => [Json::array(builtin_list())]
+    "nan" => [Json::number(@double.infinity - @double.infinity)]
+    "infinite" => [Json::number(@double.infinity)]
+    "isnan" =>
+      match input {
+        Number(n, _) => [Json::boolean(n != n)]
+        _ => [Json::boolean(false)]
+      }
+    "isfinite" =>
+      match input {
+        Number(n, _) =>
+          [
+            Json::boolean(
+              n == n && n != @double.infinity && n != @double.neg_infinity,
+            ),
+          ]
+        _ => [Json::boolean(false)]
+      }
+    "isinfinite" =>
+      match input {
+        Number(n, _) =>
+          [Json::boolean(n == @double.infinity || n == @double.neg_infinity)]
+        _ => [Json::boolean(false)]
+      }
+    "toboolean" => [builtin_to_boolean(input)]
+    "floor" =>
+      match input {
+        Number(n, _) => [json_number_value(n.floor())]
+        _ =>
+          raise TypeError(
+            json_type_with_value(input) + " only numbers have floor",
+          )
+      }
+    "sqrt" =>
+      match input {
+        Number(n, _) => [json_number_value(n.sqrt())]
+        _ =>
+          raise TypeError(
+            json_type_with_value(input) + " only numbers have sqrt",
+          )
+      }
+    "sin" =>
+      match input {
+        Number(n, _) => [json_number_value(@math.sin(n))]
+        _ =>
+          raise TypeError(
+            json_type_with_value(input) + " only numbers have sin",
+          )
+      }
+    "cos" =>
+      match input {
+        Number(n, _) => [json_number_value(@math.cos(n))]
+        _ =>
+          raise TypeError(
+            json_type_with_value(input) + " only numbers have cos",
+          )
+      }
+    "atan" =>
+      match input {
+        Number(n, _) => [json_number_value(@math.atan(n))]
+        _ =>
+          raise TypeError(
+            json_type_with_value(input) + " only numbers have atan",
+          )
+      }
     "abs" =>
       match input {
         Number(n, _) =>
