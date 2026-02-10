@@ -34,6 +34,24 @@ fn builtin_trim_ascii_ws(s : String) -> String {
 }
 
 ///|
+fn builtin_utf8_byte_length(s : String) -> Int {
+  let mut total = 0
+  for ch in s {
+    let code = ch.to_int()
+    if code <= 0x7f {
+      total += 1
+    } else if code <= 0x7ff {
+      total += 2
+    } else if code <= 0xffff {
+      total += 3
+    } else {
+      total += 4
+    }
+  }
+  total
+}
+
+///|
 fn builtin_to_boolean(input : Json) -> Json raise EvalError {
   match input {
     JTrue | JFalse => input
@@ -64,7 +82,7 @@ fn builtin_list() -> Array[Json] {
     "length/0", "ltrim/0", "map/1", "map_values/1", "max/0", "min/0", "modulemeta/0",
     "nan/0", "paths/0", "reverse/0", "rtrim/0", "sin/0", "sort/0", "split/1", "sqrt/0",
     "startswith/1", "to_entries/0", "toboolean/0", "tojson/0", "tonumber/0", "tostring/0",
-    "transpose/0", "trim/0", "type/0", "unique/0", "values/0",
+    "utf8bytelength/0", "transpose/0", "trim/0", "type/0", "unique/0", "values/0",
   ]
   let out = []
   for name in names {
@@ -142,6 +160,14 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
         _ =>
           raise TypeError(
             json_type_with_value(input) + " only numbers have atan",
+          )
+      }
+    "utf8bytelength" =>
+      match input {
+        String(s) => [Json::number(builtin_utf8_byte_length(s).to_double())]
+        _ =>
+          raise TypeError(
+            json_type_with_value(input) + " only strings have UTF-8 byte length",
           )
       }
     "abs" =>

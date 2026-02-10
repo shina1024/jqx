@@ -2814,6 +2814,34 @@ test "eval ascii case errors" {
 }
 
 ///|
+test "eval utf8bytelength compatibility" {
+  assert_eq(
+    must_eval(parse_filter("utf8bytelength"), must_parse("\"asdf\\u03bc\"")),
+    [Json::number(6.0)],
+  )
+  assert_eq(
+    must_eval(parse_filter("utf8bytelength"), must_parse("\"\\u03bc\"")),
+    [Json::number(2.0)],
+  )
+}
+
+///|
+test "eval utf8bytelength errors" {
+  guard (try? eval(parse_filter("utf8bytelength"), must_parse("[]"))) is Err(err) &&
+    err.to_string() == "array ([]) only strings have UTF-8 byte length" else {
+    fail("expected utf8bytelength array type error")
+  }
+  guard (try? eval(parse_filter("utf8bytelength"), must_parse("{}"))) is Err(err) &&
+    err.to_string() == "object ({}) only strings have UTF-8 byte length" else {
+    fail("expected utf8bytelength object type error")
+  }
+  guard (try? eval(parse_filter("utf8bytelength"), must_parse("55"))) is Err(err) &&
+    err.to_string() == "number (55) only strings have UTF-8 byte length" else {
+    fail("expected utf8bytelength number type error")
+  }
+}
+
+///|
 test "eval contains jq semantics" {
   let array_input = must_parse("[1,{\"x\":2},3]")
   assert_eq(must_eval(parse_filter("contains([1,3])"), array_input), [
