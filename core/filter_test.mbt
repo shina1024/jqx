@@ -224,6 +224,33 @@ test "parse fallback and empty" {
 }
 
 ///|
+test "parse update assignment operators" {
+  inspect(
+    parse_filter(".a |= . + 1"),
+    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Pipe(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Add(Identity, Literal(Number(1))))])",
+  )
+  inspect(
+    parse_filter(".a += 2"),
+    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Pipe(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Add(Identity, Literal(Number(2))))])",
+  )
+  inspect(
+    parse_filter(".a //= 0"),
+    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Pipe(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Fallback(Identity, Literal(Number(0))))])",
+  )
+  inspect(
+    parse_filter(".[0] *= 3"),
+    content="Call(\"setpath\", [Literal(Array([Number(0)])), Pipe(Call(\"getpath\", [Literal(Array([Number(0)]))]), Mul(Identity, Literal(Number(3))))])",
+  )
+}
+
+///|
+test "parse update assignment invalid lhs" {
+  guard (try? parse_filter(".[] |= . + 1")) is Err(_) else {
+    fail("expected parse error for invalid update assignment lhs")
+  }
+}
+
+///|
 test "parse array and object literals" {
   inspect(
     parse_filter("[.a, .b]"),

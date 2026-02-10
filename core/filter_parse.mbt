@@ -43,6 +43,16 @@ priv struct FilterCursor {
 }
 
 ///|
+priv enum UpdateAssignOp {
+  Assign
+  Add
+  Sub
+  Mul
+  Div
+  Fallback
+}
+
+///|
 fn FilterCursor::make(input : StringView) -> FilterCursor {
   { offset: 0, input, end_offset: input.length() }
 }
@@ -704,16 +714,21 @@ fn FilterCursor::parse_mul(ctx : FilterCursor) -> Filter raise FilterError {
     ctx.skip_ws()
     match ctx.peek_char() {
       Some('*') => {
+        let saved = ctx.offset
         ctx.read_char() |> ignore
+        if ctx.peek_char() is Some('=') {
+          ctx.offset = saved
+          break
+        }
         let right = ctx.parse_primary()
         left = Filter::mul(left, right)
       }
       Some('/') => {
-        // Don't consume '//' here; it's handled by fallback.
+        // Don't consume '/=' or '//' / '//=' here; update/fallback handle them.
         let saved = ctx.offset
         ctx.read_char() |> ignore
         match ctx.peek_char() {
-          Some('/') => {
+          Some('/' | '=') => {
             ctx.offset = saved
             break
           }
@@ -735,12 +750,22 @@ fn FilterCursor::parse_add(ctx : FilterCursor) -> Filter raise FilterError {
     ctx.skip_ws()
     match ctx.peek_char() {
       Some('+') => {
+        let saved = ctx.offset
         ctx.read_char() |> ignore
+        if ctx.peek_char() is Some('=') {
+          ctx.offset = saved
+          break
+        }
         let right = ctx.parse_mul()
         left = Filter::add(left, right)
       }
       Some('-') => {
+        let saved = ctx.offset
         ctx.read_char() |> ignore
+        if ctx.peek_char() is Some('=') {
+          ctx.offset = saved
+          break
+        }
         let right = ctx.parse_mul()
         left = Filter::sub(left, right)
       }
@@ -748,6 +773,68 @@ fn FilterCursor::parse_add(ctx : FilterCursor) -> Filter raise FilterError {
     }
   }
   left
+}
+
+///|
+fn update_path_segment(filter : Filter) -> Json? {
+  match filter {
+    Field(name) => Some(Json::string(name))
+    Index(i) => Some(Json::number(i.to_double()))
+    _ => None
+  }
+}
+
+///|
+fn update_path_from_filter(filter : Filter) -> Array[Json]? {
+  match filter {
+    Identity => Some([])
+    Pipe(left, right) =>
+      match update_path_from_filter(left) {
+        Some(segments) =>
+          match update_path_segment(right) {
+            Some(segment) => {
+              let out = segments.copy()
+              out.push(segment)
+              Some(out)
+            }
+            None => None
+          }
+        None => None
+      }
+    _ => None
+  }
+}
+
+///|
+fn apply_update_assign_op(op : UpdateAssignOp, right : Filter) -> Filter {
+  match op {
+    Assign => right
+    Add => Filter::add(Filter::identity(), right)
+    Sub => Filter::sub(Filter::identity(), right)
+    Mul => Filter::mul(Filter::identity(), right)
+    Div => Filter::div(Filter::identity(), right)
+    Fallback => Filter::fallback(Filter::identity(), right)
+  }
+}
+
+///|
+fn lower_update_assignment(
+  left : Filter,
+  op : UpdateAssignOp,
+  right : Filter,
+) -> Filter? {
+  match update_path_from_filter(left) {
+    Some(path) => {
+      let getpath_arg = Filter::literal(Json::array(path.copy()))
+      let setpath_arg = Filter::literal(Json::array(path))
+      let updated_value = Filter::pipe(
+        Filter::call("getpath", [getpath_arg]),
+        apply_update_assign_op(op, right),
+      )
+      Some(Filter::call("setpath", [setpath_arg, updated_value]))
+    }
+    None => None
+  }
 }
 
 ///|
@@ -774,7 +861,12 @@ fn FilterCursor::parse_pipe(
     }
     match ctx.peek_char() {
       Some('|') => {
+        let saved = ctx.offset
         ctx.read_char() |> ignore
+        if ctx.peek_char() is Some('=') {
+          ctx.offset = saved
+          break
+        }
         let right = ctx.parse_add()
         left = Filter::pipe(left, right)
       }
@@ -782,6 +874,86 @@ fn FilterCursor::parse_pipe(
     }
   }
   left
+}
+
+///|
+fn FilterCursor::try_parse_update_assign_op(
+  ctx : FilterCursor,
+) -> UpdateAssignOp? {
+  ctx.skip_ws()
+  let saved = ctx.offset
+  match ctx.read_char() {
+    Some('|') =>
+      match ctx.read_char() {
+        Some('=') => Some(Assign)
+        _ => {
+          ctx.offset = saved
+          None
+        }
+      }
+    Some('+') =>
+      match ctx.read_char() {
+        Some('=') => Some(Add)
+        _ => {
+          ctx.offset = saved
+          None
+        }
+      }
+    Some('-') =>
+      match ctx.read_char() {
+        Some('=') => Some(Sub)
+        _ => {
+          ctx.offset = saved
+          None
+        }
+      }
+    Some('*') =>
+      match ctx.read_char() {
+        Some('=') => Some(Mul)
+        _ => {
+          ctx.offset = saved
+          None
+        }
+      }
+    Some('/') =>
+      match ctx.read_char() {
+        Some('=') => Some(Div)
+        Some('/') =>
+          match ctx.read_char() {
+            Some('=') => Some(Fallback)
+            _ => {
+              ctx.offset = saved
+              None
+            }
+          }
+        _ => {
+          ctx.offset = saved
+          None
+        }
+      }
+    _ => {
+      ctx.offset = saved
+      None
+    }
+  }
+}
+
+///|
+fn FilterCursor::parse_update(
+  ctx : FilterCursor,
+  allow_as? : Bool = true,
+) -> Filter raise FilterError {
+  let left = ctx.parse_fallback(allow_as~)
+  match ctx.try_parse_update_assign_op() {
+    Some(op) => {
+      let right = ctx.parse_fallback(allow_as~)
+      match lower_update_assignment(left, op, right) {
+        Some(lowered) => lowered
+        None => ctx.invalid_char()
+      }
+    }
+    None => left
+  }
 }
 
 ///|
@@ -895,15 +1067,20 @@ fn FilterCursor::parse_fallback(
     ctx.skip_ws()
     match ctx.peek_char() {
       Some('/') => {
+        let saved = ctx.offset
         ctx.read_char() |> ignore
         match ctx.peek_char() {
           Some('/') => {
             ctx.read_char() |> ignore
+            if ctx.peek_char() is Some('=') {
+              ctx.offset = saved
+              break
+            }
             let right = ctx.parse_or(allow_as~)
             left = Filter::fallback(left, right)
           }
           _ => {
-            ctx.offset -= 1
+            ctx.offset = saved
             break
           }
         }
@@ -919,13 +1096,13 @@ fn FilterCursor::parse_comma(
   ctx : FilterCursor,
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
-  let mut left = ctx.parse_fallback(allow_as~)
+  let mut left = ctx.parse_update(allow_as~)
   for {
     ctx.skip_ws()
     match ctx.peek_char() {
       Some(',') => {
         ctx.read_char() |> ignore
-        let right = ctx.parse_fallback(allow_as~)
+        let right = ctx.parse_update(allow_as~)
         left = Filter::comma(left, right)
       }
       _ => break

@@ -580,6 +580,36 @@
     "input": "{\"a\":3,\"b\":2}"
   },
   {
+    "name": "assign-update-field",
+    "filter": ".a |= . + 1",
+    "input": "{\"a\":1,\"b\":2}"
+  },
+  {
+    "name": "assign-add-field",
+    "filter": ".a += 4",
+    "input": "{\"a\":1}"
+  },
+  {
+    "name": "assign-sub-field",
+    "filter": ".a -= 3",
+    "input": "{\"a\":10}"
+  },
+  {
+    "name": "assign-mul-index",
+    "filter": ".[1] *= 10",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "assign-div-field",
+    "filter": ".a /= 2",
+    "input": "{\"a\":9}"
+  },
+  {
+    "name": "assign-fallback-field",
+    "filter": ".a //= 9",
+    "input": "{\"a\":null}"
+  },
+  {
     "name": "map-values-array",
     "filter": "map_values(. + 1)",
     "input": "[1,2,3]"

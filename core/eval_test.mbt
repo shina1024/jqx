@@ -1959,6 +1959,23 @@ test "eval add null identity compatibility" {
 }
 
 ///|
+test "eval update assignment compatibility" {
+  let obj = must_parse("{\"a\":1,\"b\":2}")
+  assert_eq(must_eval(parse_filter(".a |= . + 1"), obj), [
+    Json::object({ "a": Json::number(2.0), "b": Json::number(2.0) }),
+  ])
+  assert_eq(must_eval(parse_filter(".a += 4"), must_parse("{\"a\":1}")), [
+    Json::object({ "a": Json::number(5.0) }),
+  ])
+  assert_eq(must_eval(parse_filter(".a //= 9"), must_parse("{\"a\":null}")), [
+    Json::object({ "a": Json::number(9.0) }),
+  ])
+  assert_eq(must_eval(parse_filter(".[1] *= 10"), must_parse("[1,2,3]")), [
+    Json::array([Json::number(1.0), Json::number(20.0), Json::number(3.0)]),
+  ])
+}
+
+///|
 test "eval object literal stream product" {
   let j = must_parse("null")
   assert_eq(must_eval(parse_filter("{a:(1,2)}"), j), [

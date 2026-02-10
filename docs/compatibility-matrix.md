@@ -28,7 +28,7 @@ Legend:
 | User-defined functions (`def`) | planned | parser/evaluator not implemented |
 | Labels / break | planned | parser/evaluator not implemented |
 | Module system (`import`/`include`) | planned | parser/evaluator not implemented |
-| Update assignment (`|=`, `+=`, `*=` etc.) | planned | parser/evaluator not implemented |
+| Update assignment (`|=`, `+=`, `-=`, `*=`, `/=`, `//=`) | partial | minimal lowering via `setpath(getpath(...))` for static path LHS (`.foo`, `.[n]`) |
 
 ## Builtins and Functions (Implemented)
 
@@ -94,6 +94,6 @@ Notes:
 ## Next Execution Order
 
 1. Expand differential cases from smoke to feature coverage (builtins/operators/options).
-2. Add unsupported high-priority jq features (starting with assignment/update and regex family).
+2. Expand high-priority jq features (broaden update-assignment coverage and add regex family).
 3. Expand Typed lane from scaffold to richer combinators and compile-time TS tests.
 4. Finalize npm-facing JS/TS runtime binding (including Zod adapter import path design).
