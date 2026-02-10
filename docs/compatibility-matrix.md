@@ -76,6 +76,7 @@ Differential scripts:
 - Smoke: `scripts/jq_diff.ps1`, `scripts/jq_diff.sh`
 - Native `-e`: `scripts/jq_diff_native.ps1`, `scripts/jq_diff_native.sh`
 - Cases: `scripts/jq_compat_cases.json`, `scripts/jq_exit_cases.json`
+- Upstream fixtures (vendored copy): `third_party/jq-tests/tests/*.test`
 
 CI coverage in `.github/workflows/ci.yml`:
 - Linux/macOS/Windows: MoonBit `check` + tests
@@ -86,6 +87,9 @@ Notes:
 - `jq_diff.ps1` is the primary runner for Windows environments and can resolve
   `jq` from `mise`.
 - `jq_diff.sh` targets Linux/macOS and falls back to `mise` when available.
+- Upstream jq test fixtures are copied into `third_party/jq-tests` via
+  `scripts/update_jq_tests.ps1` or `scripts/update_jq_tests.sh` (copy strategy,
+  not git submodule).
 - CLI compatibility cases can specify `jq_args` / `jqx_args` and
   `jqx_use_stdin` for option-aware differential runs.
 - `expect_error: true` in smoke differential cases compares normalized jq/jqx
