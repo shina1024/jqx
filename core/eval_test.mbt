@@ -1711,6 +1711,47 @@ test "eval any/all errors" {
 }
 
 ///|
+test "eval pick compatibility" {
+  assert_eq(must_eval(parse_filter("pick(.a.b.c)"), must_parse("null")), [
+    Json::object({
+      "a": Json::object({ "b": Json::object({ "c": Json::null() }) }),
+    }),
+  ])
+  assert_eq(must_eval(parse_filter("pick(first)"), must_parse("[1,2]")), [
+    Json::array([Json::number(1.0)]),
+  ])
+  assert_eq(
+    must_eval(parse_filter("pick(first|first)"), must_parse("[[10,20],30]")),
+    [Json::array([Json::array([Json::number(10.0)])])],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("pick(.a, .b.c, .x)"),
+      must_parse("{\"a\":1, \"b\":{\"c\":2,\"d\":3}, \"e\":4}"),
+    ),
+    [
+      Json::object({
+        "a": Json::number(1.0),
+        "b": Json::object({ "c": Json::number(2.0) }),
+        "x": Json::null(),
+      }),
+    ],
+  )
+  assert_eq(
+    must_eval(parse_filter("pick(.[2], .[0], .[0])"), must_parse("[1,2,3,4]")),
+    [Json::array([Json::number(1.0), Json::null(), Json::number(3.0)])],
+  )
+}
+
+///|
+test "eval pick errors" {
+  guard (try? eval(parse_filter("pick(last)"), must_parse("[1,2]"))) is Err(err) &&
+    err.to_string() == "Out of bounds negative array index" else {
+    fail("expected pick(last) negative index error")
+  }
+}
+
+///|
 test "eval jq type-filter builtins" {
   assert_eq(must_eval(parse_filter("values"), must_parse("null")), [])
   assert_eq(must_eval(parse_filter("values"), must_parse("1")), [

@@ -143,6 +143,27 @@ fn eval_all_with_short_circuit(
 }
 
 ///|
+fn pick_static_path_segments(filter : Filter) -> Array[Json]? {
+  match filter {
+    Builtin("first") => Some([Json::number(0.0)])
+    Builtin("last") => Some([Json::number(-1.0)])
+    Pipe(left, right) =>
+      match
+        (pick_static_path_segments(left), pick_static_path_segments(right)) {
+        (Some(l), Some(r)) => {
+          let out = l.copy()
+          for segment in r {
+            out.push(segment)
+          }
+          Some(out)
+        }
+        _ => None
+      }
+    _ => None
+  }
+}
+
+///|
 fn eval_call(
   name : String,
   args : Array[Filter],
@@ -897,6 +918,35 @@ fn eval_call(
         } else {
           [delpaths_on_input(input, normalized_paths)]
         }
+      }
+    "pick" =>
+      if args.length() == 0 {
+        raise UnknownFunction("pick")
+      } else {
+        let normalized_paths = []
+        for arg in args {
+          let path_values = try eval_path_expression(arg, input, env) catch {
+            err =>
+              match pick_static_path_segments(arg) {
+                Some(parts) => [Json::array(parts)]
+                None => raise err
+              }
+          } noraise {
+            values => values
+          }
+          for path_json in path_values {
+            match path_json {
+              Array(parts) => normalized_paths.push(parts)
+              _ => raise TypeError("Path must be specified as an array")
+            }
+          }
+        }
+        let mut out = Json::null()
+        for parts in normalized_paths {
+          let value = getpath_on_input(input, Json::array(parts))
+          out = setpath_on_input(out, parts, value)
+        }
+        [out]
       }
     "paths" =>
       if args.length() != 1 {
