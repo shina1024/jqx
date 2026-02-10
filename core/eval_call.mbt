@@ -79,6 +79,70 @@ fn append_range_outputs(
 }
 
 ///|
+fn[T] raise_error_value(value : Json) -> T raise EvalError {
+  match value {
+    String(s) => raise TypeError(s)
+    _ => raise TypeError(value.to_json_string())
+  }
+}
+
+///|
+fn eval_any_with_short_circuit(
+  source : Filter,
+  cond : Filter,
+  input : Json,
+  env : Map[String, Json],
+) -> Bool raise EvalError {
+  match source {
+    Comma(left, right) =>
+      if eval_any_with_short_circuit(left, cond, input, env) {
+        true
+      } else {
+        eval_any_with_short_circuit(right, cond, input, env)
+      }
+    _ => {
+      let values = eval_with_env(source, input, env)
+      for v in values {
+        for cond_out in eval_with_env(cond, v, env) {
+          if is_truthy(cond_out) {
+            return true
+          }
+        }
+      }
+      false
+    }
+  }
+}
+
+///|
+fn eval_all_with_short_circuit(
+  source : Filter,
+  cond : Filter,
+  input : Json,
+  env : Map[String, Json],
+) -> Bool raise EvalError {
+  match source {
+    Comma(left, right) =>
+      if !eval_all_with_short_circuit(left, cond, input, env) {
+        false
+      } else {
+        eval_all_with_short_circuit(right, cond, input, env)
+      }
+    _ => {
+      let values = eval_with_env(source, input, env)
+      for v in values {
+        for cond_out in eval_with_env(cond, v, env) {
+          if !is_truthy(cond_out) {
+            return false
+          }
+        }
+      }
+      true
+    }
+  }
+}
+
+///|
 fn eval_call(
   name : String,
   args : Array[Filter],
@@ -86,6 +150,19 @@ fn eval_call(
   env : Map[String, Json],
 ) -> Array[Json] raise EvalError {
   match name {
+    "error" =>
+      if args.length() == 0 {
+        raise_error_value(input)
+      } else if args.length() == 1 {
+        let values = eval_with_env(args[0], input, env)
+        if values.length() == 0 {
+          raise_error_value(input)
+        } else {
+          raise_error_value(values[0])
+        }
+      } else {
+        raise UnknownFunction("error")
+      }
     "select" =>
       if args.length() != 1 {
         raise UnknownFunction("select")
@@ -316,21 +393,11 @@ fn eval_call(
         }
         [Json::boolean(ok)]
       } else if args.length() == 2 {
-        let values = eval_with_env(args[0], input, env)
-        let cond = args[1]
-        let mut ok = false
-        for v in values {
-          for cond_out in eval_with_env(cond, v, env) {
-            if is_truthy(cond_out) {
-              ok = true
-              break
-            }
-          }
-          if ok {
-            break
-          }
-        }
-        [Json::boolean(ok)]
+        [
+          Json::boolean(
+            eval_any_with_short_circuit(args[0], args[1], input, env),
+          ),
+        ]
       } else {
         raise UnknownFunction("any")
       }
@@ -352,21 +419,11 @@ fn eval_call(
         }
         [Json::boolean(ok)]
       } else if args.length() == 2 {
-        let values = eval_with_env(args[0], input, env)
-        let cond = args[1]
-        let mut ok = true
-        for v in values {
-          for cond_out in eval_with_env(cond, v, env) {
-            if !is_truthy(cond_out) {
-              ok = false
-              break
-            }
-          }
-          if !ok {
-            break
-          }
-        }
-        [Json::boolean(ok)]
+        [
+          Json::boolean(
+            eval_all_with_short_circuit(args[0], args[1], input, env),
+          ),
+        ]
       } else {
         raise UnknownFunction("all")
       }

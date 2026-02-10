@@ -1667,6 +1667,14 @@ test "eval any/all compatibility" {
   assert_eq(must_eval(parse_filter("any(.[]; . > 9)"), must_parse("[1,2,3]")), [
     Json::boolean(false),
   ])
+  assert_eq(
+    must_eval(parse_filter("any(true, error; .)"), must_parse("\"badness\"")),
+    [Json::boolean(true)],
+  )
+  assert_eq(
+    must_eval(parse_filter("all(false, error; .)"), must_parse("\"badness\"")),
+    [Json::boolean(false)],
+  )
 }
 
 ///|
@@ -1690,6 +1698,15 @@ test "eval any/all errors" {
   guard (try? eval(parse_filter("all(.)"), must_parse("null"))) is Err(err) &&
     err.to_string() == "Cannot iterate over null (null)" else {
     fail("expected all(cond) null iterate error")
+  }
+  guard (try? eval(parse_filter("error"), must_parse("\"x\""))) is Err(err) &&
+    err.to_string() == "\"x\"" else {
+    fail("expected error builtin")
+  }
+  guard (try? eval(parse_filter("error(\"boom\")"), must_parse("null")))
+    is Err(err) &&
+    err.to_string() == "boom" else {
+    fail("expected error(msg) call")
   }
 }
 
@@ -2827,15 +2844,18 @@ test "eval utf8bytelength compatibility" {
 
 ///|
 test "eval utf8bytelength errors" {
-  guard (try? eval(parse_filter("utf8bytelength"), must_parse("[]"))) is Err(err) &&
+  guard (try? eval(parse_filter("utf8bytelength"), must_parse("[]")))
+    is Err(err) &&
     err.to_string() == "array ([]) only strings have UTF-8 byte length" else {
     fail("expected utf8bytelength array type error")
   }
-  guard (try? eval(parse_filter("utf8bytelength"), must_parse("{}"))) is Err(err) &&
+  guard (try? eval(parse_filter("utf8bytelength"), must_parse("{}")))
+    is Err(err) &&
     err.to_string() == "object ({}) only strings have UTF-8 byte length" else {
     fail("expected utf8bytelength object type error")
   }
-  guard (try? eval(parse_filter("utf8bytelength"), must_parse("55"))) is Err(err) &&
+  guard (try? eval(parse_filter("utf8bytelength"), must_parse("55")))
+    is Err(err) &&
     err.to_string() == "number (55) only strings have UTF-8 byte length" else {
     fail("expected utf8bytelength number type error")
   }
