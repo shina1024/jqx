@@ -81,6 +81,19 @@ function Normalize-Output {
   return $single.TrimEnd("`r", "`n")
 }
 
+function Normalize-ErrorMessage {
+  param([AllowNull()][string]$Value)
+
+  if ($null -eq $Value) {
+    return ""
+  }
+
+  $normalized = $Value.Trim()
+  $normalized = $normalized -replace '^jq: error(?: \(at <stdin>:[0-9:]+\))?:\s*', ''
+  $normalized = $normalized -replace '^jqx: error(?: \(at <stdin>:[0-9:]+\))?:\s*', ''
+  return $normalized
+}
+
 if (-not (Test-Path $CasesPath)) {
   throw "cases file not found: $CasesPath"
 }
@@ -156,7 +169,11 @@ try {
 
     $ok = $false
     if ($expectError) {
-      if ($jqStatus -ne 0 -and $jqxStatus -ne 0) {
+      $jqMessage = Normalize-ErrorMessage $jqOut
+      $jqxMessage = Normalize-ErrorMessage $jqxOut
+      $jqHasError = $jqStatus -ne 0 -or $jqOut.StartsWith("jq: error")
+      $jqxHasError = $jqxStatus -ne 0 -or $jqxOut.StartsWith("jqx: error")
+      if ($jqHasError -and $jqxHasError -and $jqMessage -eq $jqxMessage) {
         $ok = $true
       }
     } elseif ($null -ne $expectStatus) {

@@ -88,6 +88,8 @@ Notes:
 - `jq_diff.sh` targets Linux/macOS and falls back to `mise` when available.
 - CLI compatibility cases can specify `jq_args` / `jqx_args` and
   `jqx_use_stdin` for option-aware differential runs.
+- `expect_error: true` in smoke differential cases compares normalized jq/jqx
+  error messages and accepts jqx `moon run` wrapper status behavior.
 
 ## Next Execution Order
 

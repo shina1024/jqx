@@ -51,6 +51,13 @@ resolve_moon_bin() {
   return 1
 }
 
+normalize_error_message() {
+  local text="$1"
+  printf '%s' "${text}" | sed -E \
+    -e 's/^jq: error( \(at <stdin>:[0-9:]+\))?:[[:space:]]*//' \
+    -e 's/^jqx: error( \(at <stdin>:[0-9:]+\))?:[[:space:]]*//'
+}
+
 JQ_BIN_RESOLVED="$(resolve_jq_bin)" || {
   echo "jq binary not found: ${JQ_BIN} (also checked mise)" >&2
   exit 2
@@ -126,7 +133,17 @@ while IFS= read -r case_json; do
 
   ok=false
   if [[ "${expect_error}" == "true" ]]; then
-    if [[ ${jq_status} -ne 0 && ${jqx_status} -ne 0 ]]; then
+    jq_msg="$(normalize_error_message "${jq_out}")"
+    jqx_msg="$(normalize_error_message "${jqx_out}")"
+    jq_has_error=false
+    jqx_has_error=false
+    if [[ ${jq_status} -ne 0 || "${jq_out}" == jq:\ error* ]]; then
+      jq_has_error=true
+    fi
+    if [[ ${jqx_status} -ne 0 || "${jqx_out}" == jqx:\ error* ]]; then
+      jqx_has_error=true
+    fi
+    if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" && "${jq_msg}" == "${jqx_msg}" ]]; then
       ok=true
     fi
   elif [[ -n "${expect_status}" ]]; then
