@@ -336,6 +336,15 @@
     "source_expected_count": 1
   },
   {
+    "name": "upstream-jq-test-l516",
+    "filter": "\"x\" as $x | \"a\"+\"y\" as $y | $x+\",\"+$y",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 516,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
     "name": "upstream-jq-test-l520",
     "filter": "1 as $x | [$x,$x,$x as $x | $x]",
     "input": "null",
@@ -532,5 +541,176 @@
     "source_line": 674,
     "source_kind": "runtime",
     "source_expected_count": 4
+  },
+  {
+    "name": "upstream-jq-test-l697",
+    "filter": "1 + tonumber + (\"10\" | tonumber)",
+    "input": "4",
+    "source_file": "jq.test",
+    "source_line": 697,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l728",
+    "filter": "[.[] | length]",
+    "input": "[[], {}, [1,2], {\"a\":42}, \"asdf\", \"\\u03bc\"]",
+    "source_file": "jq.test",
+    "source_line": 728,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l741",
+    "filter": "map(keys)",
+    "input": "[{}, {\"abcd\":1,\"abc\":2,\"abcde\":3}, {\"x\":1, \"z\": 3, \"y\":2}]",
+    "source_file": "jq.test",
+    "source_line": 741,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l745",
+    "filter": "[1,2,empty,3,empty,4]",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 745,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l749",
+    "filter": "map(add)",
+    "input": "[[], [1,2,3], [\"a\",\"b\",\"c\"], [[3],[4,5],[6]], [{\"a\":1}, {\"b\":2}, {\"a\":3}]]",
+    "source_file": "jq.test",
+    "source_line": 749,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l753",
+    "filter": "map_values(.+1)",
+    "input": "[0,1,2]",
+    "source_file": "jq.test",
+    "source_line": 753,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l803",
+    "filter": "([1,2] + [4,5])",
+    "input": "[1,2,3]",
+    "source_file": "jq.test",
+    "source_line": 803,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l807",
+    "filter": "true",
+    "input": "[1]",
+    "source_file": "jq.test",
+    "source_line": 807,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l811",
+    "filter": "null,1,null",
+    "input": "\"hello\"",
+    "source_file": "jq.test",
+    "source_line": 811,
+    "source_kind": "runtime",
+    "source_expected_count": 3
+  },
+  {
+    "name": "upstream-jq-test-l817",
+    "filter": "[1,2,3]",
+    "input": "[5,6]",
+    "source_file": "jq.test",
+    "source_line": 817,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l890",
+    "filter": "reduce .[] as $x (0; . + $x)",
+    "input": "[1,2,4]",
+    "source_file": "jq.test",
+    "source_line": 890,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l906",
+    "filter": "[reduce .[] / .[] as $i (0; . + $i)]",
+    "input": "[1,2]",
+    "source_file": "jq.test",
+    "source_line": 906,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l910",
+    "filter": "reduce .[] as $x (0; . + $x) as $x | $x",
+    "input": "[1,2,3]",
+    "source_file": "jq.test",
+    "source_line": 910,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l1061",
+    "filter": "any(not)",
+    "input": "[]",
+    "source_file": "jq.test",
+    "source_line": 1061,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l1065",
+    "filter": "all(not)",
+    "input": "[]",
+    "source_file": "jq.test",
+    "source_line": 1065,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l1069",
+    "filter": "any(not)",
+    "input": "[false]",
+    "source_file": "jq.test",
+    "source_line": 1069,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l1073",
+    "filter": "all(not)",
+    "input": "[false]",
+    "source_file": "jq.test",
+    "source_line": 1073,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l1077",
+    "filter": "[any,all]",
+    "input": "[]",
+    "source_file": "jq.test",
+    "source_line": 1077,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l1081",
+    "filter": "[any,all]",
+    "input": "[true]",
+    "source_file": "jq.test",
+    "source_line": 1081,
+    "source_kind": "runtime",
+    "source_expected_count": 1
   }
 ]
