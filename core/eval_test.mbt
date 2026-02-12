@@ -136,6 +136,7 @@ test "eval array and object literals" {
   let f1 = parse_filter("[.a, .b]")
   let f2 = parse_filter("{\"x\": .a, y: .b}")
   let f3 = parse_filter("{a, \"b\"}")
+  let f4 = parse_filter("1 as $x | \"dyn\" as $k | { $x, $k: .b, a }")
   assert_eq(must_eval(f1, j), [
     Json::array([Json::number(1.0), Json::number(2.0)]),
   ])
@@ -144,6 +145,13 @@ test "eval array and object literals" {
   ])
   assert_eq(must_eval(f3, j), [
     Json::object({ "a": Json::number(1.0), "b": Json::number(2.0) }),
+  ])
+  assert_eq(must_eval(f4, j), [
+    Json::object({
+      "x": Json::number(1.0),
+      "dyn": Json::number(2.0),
+      "a": Json::number(1.0),
+    }),
   ])
 }
 

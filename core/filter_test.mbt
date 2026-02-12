@@ -371,6 +371,7 @@ test "parse array and object literals" {
     parse_filter("{a, \"b\", c: .d}"),
     content="Object([(\"a\", Pipe(Identity, Field(\"a\"))), (\"b\", Pipe(Identity, Field(\"b\"))), (\"c\", Pipe(Identity, Field(\"d\")))])",
   )
+  inspect(parse_filter("{ $x }"), content="Object([(\"x\", Var(\"x\"))])")
   inspect(
     parse_filter(".[1,2]"),
     content="Pipe(Identity, Comma(Index(1), Index(2)))",
@@ -388,6 +389,15 @@ test "parse array and object literals" {
   }
   guard (try? parse_filter("{\"a\",b,\"a$\\(1+1)\"}")) is Ok(_) else {
     fail("expected interpolated object key parse")
+  }
+  guard (try? parse_filter("{a,$__loc__,c}")) is Ok(_) else {
+    fail("expected variable shorthand object key parse")
+  }
+  guard (try? parse_filter(
+      "1 as $x | \"2\" as $y | \"3\" as $z | { $x, as, $y: 4, ($z): 5, if: 6, foo: 7 }",
+    ))
+    is Ok(_) else {
+    fail("expected variable object key parse")
   }
 }
 

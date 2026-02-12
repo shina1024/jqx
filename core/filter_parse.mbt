@@ -1177,27 +1177,44 @@ fn FilterCursor::parse_object_literal(
   let mut use_dynamic_lowering = false
   for {
     ctx.skip_ws()
-    let key_filter = match ctx.peek_char() {
-      Some('\"') => ctx.parse_string_expr()
-      Some('(') => ctx.parse_paren_expr()
+    let (key_filter0, var_key_name) = match ctx.peek_char() {
+      Some('\"') => (ctx.parse_string_expr(), None)
+      Some('(') => (ctx.parse_paren_expr(), None)
+      Some('$') => {
+        ctx.read_char() |> ignore
+        let name = ctx.parse_identifier()
+        (Filter::literal(Json::string(name)), Some(name))
+      }
       Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') =>
-        Filter::literal(Json::string(ctx.parse_identifier()))
+        (Filter::literal(Json::string(ctx.parse_identifier())), None)
       Some(_) => ctx.invalid_char()
       None => raise InvalidEof
     }
-    let static_key = filter_string_literal_value(key_filter)
+    let mut key_filter = key_filter0
+    let mut static_key = filter_string_literal_value(key_filter)
     ctx.skip_ws()
     let mut shorthand_dynamic = false
     let value = if ctx.peek_char() is Some(':') {
       ctx.read_char() |> ignore
+      match var_key_name {
+        Some(name) => {
+          key_filter = Filter::var_(name)
+          static_key = None
+        }
+        None => ()
+      }
       ctx.parse_update()
     } else {
-      match static_key {
-        Some(name) => Filter::pipe(Filter::identity(), Filter::field(name))
-        None => {
-          shorthand_dynamic = true
-          Filter::identity()
-        }
+      match var_key_name {
+        Some(name) => Filter::var_(name)
+        None =>
+          match static_key {
+            Some(name) => Filter::pipe(Filter::identity(), Filter::field(name))
+            None => {
+              shorthand_dynamic = true
+              Filter::identity()
+            }
+          }
       }
     }
 
