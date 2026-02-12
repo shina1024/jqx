@@ -444,6 +444,7 @@ fn FilterCursor::parse_number_literal(
   let start = ctx.offset
   match ctx.read_char() {
     Some('-') => ()
+    Some('.') => ()
     Some(c) if c is ('0'..='9') => ()
     Some(_) => ctx.invalid_char(shift=-1)
     None => raise InvalidEof
@@ -473,9 +474,17 @@ fn FilterCursor::parse_number_literal(
   let end = ctx.offset
   let s = ctx.input.view(start_offset=start, end_offset=end)
   let s_str = s.to_string()
-  let parsed = try? parse(s)
+  let starts_with_dot = s_str.length() > 0 &&
+    s_str.unsafe_get(0).to_int().unsafe_to_char() == '.'
+  let parse_input = if starts_with_dot { "0" + s_str } else { s_str }
+  let parsed = try? parse(parse_input.view())
   match parsed {
-    Ok(Number(n, repr)) => Json::number(n, repr?)
+    Ok(Number(n, repr)) =>
+      if starts_with_dot {
+        Json::number(n)
+      } else {
+        Json::number(n, repr?)
+      }
     Ok(_) =>
       raise InvalidNumber(filter_offset_to_position(ctx.input, start), s_str)
     Err(_) =>
@@ -992,7 +1001,17 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
   }
 
   let base = match ctx.peek_char() {
-    Some('.') => ctx.parse_dot_expr()
+    Some('.') => {
+      let saved = ctx.offset
+      ctx.read_char() |> ignore
+      let next = ctx.peek_char()
+      ctx.offset = saved
+      match next {
+        Some(c) if c is ('0'..='9') =>
+          Filter::literal(ctx.parse_number_literal())
+        _ => ctx.parse_dot_expr()
+      }
+    }
     Some('[') => ctx.parse_array_literal()
     Some('{') => ctx.parse_object_literal()
     Some('(') => ctx.parse_paren_expr()

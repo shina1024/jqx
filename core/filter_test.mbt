@@ -183,6 +183,12 @@ test "parse literals" {
   guard (try? parse_filter("(@uri|@urid)")) is Ok(_) else {
     fail("expected format filter parse")
   }
+  guard (try? parse_filter(".00005")) is Ok(_) else {
+    fail("expected leading-dot number literal parse")
+  }
+  guard (try? parse_filter("select(.>.00005)")) is Ok(_) else {
+    fail("expected leading-dot number literal parse in comparison")
+  }
 }
 
 ///|

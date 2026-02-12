@@ -2252,6 +2252,12 @@ test "eval compare order and logical" {
   let j = must_parse("{\"a\":1,\"b\":2}")
   assert_eq(must_eval(parse_filter(".a < .b"), j), [Json::boolean(true)])
   assert_eq(must_eval(parse_filter(".a >= .b"), j), [Json::boolean(false)])
+  assert_eq(must_eval(parse_filter(". > .00005"), must_parse("0.0001")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_eval(parse_filter(". > .00005"), must_parse("0.0")), [
+    Json::boolean(false),
+  ])
   assert_eq(must_eval(parse_filter(".a and .b"), j), [Json::boolean(true)])
   assert_eq(must_eval(parse_filter("not .b"), j), [Json::boolean(false)])
   assert_eq(must_eval(parse_filter(".a or .b"), j), [Json::boolean(true)])
