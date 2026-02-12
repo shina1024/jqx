@@ -1,7 +1,9 @@
 param(
   [string]$CasesPath = (Join-Path $PSScriptRoot "jq_exit_cases.json"),
   [string]$JqExecutable = "jq",
-  [string]$JqxExecutable = ""
+  [string]$JqxExecutable = "",
+  [ValidateSet("debug", "release")]
+  [string]$BuildProfile = "debug"
 )
 
 Set-StrictMode -Version Latest
@@ -53,7 +55,8 @@ function Resolve-MoonExecutable {
 function Resolve-JqxExecutable {
   param(
     [string]$Preferred,
-    [string]$RepoRoot
+    [string]$RepoRoot,
+    [string]$BuildProfile
   )
 
   if ($Preferred -ne "") {
@@ -63,12 +66,21 @@ function Resolve-JqxExecutable {
     throw "jqx executable not found: $Preferred"
   }
 
-  $candidates = @(
-    (Join-Path $RepoRoot "_build/native/release/build/cmd/cmd.exe"),
-    (Join-Path $RepoRoot "_build/native/release/build/cmd/cmd"),
-    (Join-Path $RepoRoot "_build/native/debug/build/cmd/cmd.exe"),
-    (Join-Path $RepoRoot "_build/native/debug/build/cmd/cmd")
-  )
+  $candidates = if ($BuildProfile -eq "release") {
+    @(
+      (Join-Path $RepoRoot "_build/native/release/build/cmd/cmd.exe"),
+      (Join-Path $RepoRoot "_build/native/release/build/cmd/cmd"),
+      (Join-Path $RepoRoot "_build/native/debug/build/cmd/cmd.exe"),
+      (Join-Path $RepoRoot "_build/native/debug/build/cmd/cmd")
+    )
+  } else {
+    @(
+      (Join-Path $RepoRoot "_build/native/debug/build/cmd/cmd.exe"),
+      (Join-Path $RepoRoot "_build/native/debug/build/cmd/cmd"),
+      (Join-Path $RepoRoot "_build/native/release/build/cmd/cmd.exe"),
+      (Join-Path $RepoRoot "_build/native/release/build/cmd/cmd")
+    )
+  }
   foreach ($candidate in $candidates) {
     if (Test-Path $candidate) {
       return (Resolve-Path $candidate).Path
@@ -134,12 +146,20 @@ $repoRoot = Join-Path $PSScriptRoot ".."
 
 Push-Location $repoRoot
 try {
-  & $resolvedMoon build --target native cmd *> $null
+  $buildArgs = @("build", "--target", "native")
+  if ($BuildProfile -eq "release") {
+    $buildArgs += "--release"
+  }
+  $buildArgs += "cmd"
+  & $resolvedMoon @buildArgs *> $null
   if ($LASTEXITCODE -ne 0) {
     throw "failed to build native jqx executable"
   }
 
-  $resolvedJqx = Resolve-JqxExecutable -Preferred $JqxExecutable -RepoRoot $repoRoot
+  $resolvedJqx = Resolve-JqxExecutable `
+    -Preferred $JqxExecutable `
+    -RepoRoot $repoRoot `
+    -BuildProfile $BuildProfile
   if ($null -eq $resolvedJqx) {
     throw "jqx native executable not found under _build/native/{release,debug}/build/cmd"
   }

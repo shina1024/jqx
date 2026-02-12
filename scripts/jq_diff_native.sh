@@ -7,6 +7,8 @@ CASES_PATH="${1:-${SCRIPT_DIR}/jq_exit_cases.json}"
 JQ_BIN="${JQ_BIN:-jq}"
 MOON_BIN="${MOON_BIN:-moon}"
 JQX_BIN="${JQX_BIN:-}"
+JQX_PROFILE="${JQX_PROFILE:-debug}"
+JQX_PROFILE_LOWER="${JQX_PROFILE,,}"
 
 resolve_jq_bin() {
   if command -v "${JQ_BIN}" >/dev/null 2>&1; then
@@ -61,12 +63,22 @@ resolve_jqx_bin() {
     return 1
   fi
 
-  local candidates=(
-    "${REPO_ROOT}/_build/native/release/build/cmd/cmd"
-    "${REPO_ROOT}/_build/native/release/build/cmd/cmd.exe"
-    "${REPO_ROOT}/_build/native/debug/build/cmd/cmd"
-    "${REPO_ROOT}/_build/native/debug/build/cmd/cmd.exe"
-  )
+  local candidates=()
+  if [[ "${JQX_PROFILE_LOWER}" == "release" ]]; then
+    candidates=(
+      "${REPO_ROOT}/_build/native/release/build/cmd/cmd"
+      "${REPO_ROOT}/_build/native/release/build/cmd/cmd.exe"
+      "${REPO_ROOT}/_build/native/debug/build/cmd/cmd"
+      "${REPO_ROOT}/_build/native/debug/build/cmd/cmd.exe"
+    )
+  else
+    candidates=(
+      "${REPO_ROOT}/_build/native/debug/build/cmd/cmd"
+      "${REPO_ROOT}/_build/native/debug/build/cmd/cmd.exe"
+      "${REPO_ROOT}/_build/native/release/build/cmd/cmd"
+      "${REPO_ROOT}/_build/native/release/build/cmd/cmd.exe"
+    )
+  fi
   local candidate
   for candidate in "${candidates[@]}"; do
     if [[ -x "${candidate}" ]]; then
@@ -93,6 +105,11 @@ if [[ ! -f "${CASES_PATH}" ]]; then
   exit 2
 fi
 
+if [[ "${JQX_PROFILE_LOWER}" != "debug" && "${JQX_PROFILE_LOWER}" != "release" ]]; then
+  echo "invalid JQX_PROFILE: ${JQX_PROFILE} (expected debug or release)" >&2
+  exit 2
+fi
+
 CASES_PATH_FOR_JQ="${CASES_PATH}"
 if [[ "${JQ_BIN_RESOLVED}" == *.exe ]] && command -v wslpath >/dev/null 2>&1; then
   CASES_PATH_FOR_JQ="$(wslpath -w "${CASES_PATH}")"
@@ -104,7 +121,13 @@ if ! "${JQ_BIN_RESOLVED}" -e 'type == "array" and all(.[]; has("name") and has("
 fi
 
 cd "${REPO_ROOT}"
-if ! "${MOON_BIN_RESOLVED}" build --target native cmd >/dev/null 2>&1; then
+build_cmd=("${MOON_BIN_RESOLVED}" build --target native)
+if [[ "${JQX_PROFILE_LOWER}" == "release" ]]; then
+  build_cmd+=(--release)
+fi
+build_cmd+=(cmd)
+
+if ! "${build_cmd[@]}" >/dev/null 2>&1; then
   echo "failed to build native jqx executable" >&2
   exit 2
 fi
