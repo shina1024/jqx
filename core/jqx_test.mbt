@@ -22,6 +22,36 @@ test "parse numbers and arrays" {
 }
 
 ///|
+test "parse non-finite number tokens" {
+  guard (try? parse("Infinity")) is Ok(Number(n, _)) && n == @double.infinity else {
+    fail("expected Infinity parse")
+  }
+  guard (try? parse("-Infinity")) is Ok(Number(n, _)) &&
+    n == @double.neg_infinity else {
+    fail("expected -Infinity parse")
+  }
+  guard (try? parse("NaN")) is Ok(Number(n, _)) && n != n else {
+    fail("expected NaN parse")
+  }
+  guard (try? parse("-NaN")) is Ok(Number(n, _)) && n != n else {
+    fail("expected -NaN parse")
+  }
+  guard (try? parse("inf")) is Ok(Number(n, _)) && n == @double.infinity else {
+    fail("expected inf parse")
+  }
+  guard (try? parse("+nan")) is Ok(Number(n, _)) && n != n else {
+    fail("expected +nan parse")
+  }
+  let obj = parse("{\"a\":nan,\"b\":-NaN,\"c\":inf,\"d\":-infinity}") catch {
+    err => fail("parse failed: " + err.to_string())
+  }
+  assert_eq(
+    obj.to_json_string(),
+    "{\"a\":null,\"b\":null,\"c\":1.7976931348623157e+308,\"d\":-1.7976931348623157e+308}",
+  )
+}
+
+///|
 test "parse large integer keeps repr" {
   let json = try? parse("9007199254740993")
   assert_eq(json, Ok(Json::number(9007199254740992.0, repr="9007199254740993")))

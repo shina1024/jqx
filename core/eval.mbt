@@ -929,7 +929,20 @@ fn parse_fromjson_string(s : String) -> Json raise EvalError {
           raise TypeError(err.to_string() + " (while parsing '" + s + "')")
       }
   } noraise {
-    j => j
+    j =>
+      match j {
+        Number(n, _) =>
+          if n != n {
+            Json::null()
+          } else if n == @double.infinity {
+            Json::number(1.7976931348623157e+308)
+          } else if n == @double.neg_infinity {
+            Json::number(-1.7976931348623157e+308)
+          } else {
+            j
+          }
+        _ => j
+      }
   }
 }
 

@@ -411,6 +411,66 @@ fn ParseContext::read_char(ctx : ParseContext) -> Char? {
 }
 
 ///|
+fn ParseContext::peek_char(ctx : ParseContext) -> Char? {
+  let saved = ctx.offset
+  let c = ctx.read_char()
+  ctx.offset = saved
+  c
+}
+
+///|
+fn is_ascii_alpha(c : Char) -> Bool {
+  c is ('a'..='z' | 'A'..='Z')
+}
+
+///|
+fn parse_ascii_downcase_char(c : Char) -> Char {
+  if c is ('A'..='Z') {
+    (c.to_int() + 32).unsafe_to_char()
+  } else {
+    c
+  }
+}
+
+///|
+fn parse_ascii_downcase_string(s : String) -> String {
+  let buf = StringBuilder::new()
+  for ch in s {
+    buf.write_char(parse_ascii_downcase_char(ch))
+  }
+  buf.to_string()
+}
+
+///|
+fn ParseContext::lex_nonfinite_number(
+  ctx : ParseContext,
+  start~ : Int,
+) -> Token raise ParseError {
+  for {
+    match ctx.read_char() {
+      Some(c) if is_ascii_alpha(c) => continue
+      Some(c) => {
+        ctx.offset -= c.utf16_len()
+        break
+      }
+      None => break
+    }
+  }
+  let token = ctx.input
+    .view(start_offset=start, end_offset=ctx.offset)
+    .to_string()
+  match parse_ascii_downcase_string(token) {
+    "inf" | "+inf" | "infinity" | "+infinity" => Number(@double.infinity, None)
+    "-inf" | "-infinity" => Number(@double.neg_infinity, None)
+    "nan" | "+nan" | "-nan" => Number(@double.infinity - @double.infinity, None)
+    _ => {
+      let shift = -(ctx.offset - start)
+      ctx.invalid_char(shift~)
+    }
+  }
+}
+
+///|
 
 ///|
 fn ParseContext::expect_ascii_char(
@@ -518,12 +578,25 @@ fn ParseContext::lex_value(
       } else {
         ctx.invalid_char(shift=-1)
       }
-    Some('n') => {
-      ctx.expect_ascii_char('u')
-      ctx.expect_ascii_char('l')
-      ctx.expect_ascii_char('l')
-      return Null
-    }
+    Some('n') =>
+      match ctx.peek_char() {
+        Some('u') => {
+          ctx.expect_ascii_char('u')
+          ctx.expect_ascii_char('l')
+          ctx.expect_ascii_char('l')
+          return Null
+        }
+        _ => return ctx.lex_nonfinite_number(start=ctx.offset - 1)
+      }
+    Some('N' | 'i' | 'I') =>
+      return ctx.lex_nonfinite_number(start=ctx.offset - 1)
+    Some('+') =>
+      match ctx.read_char() {
+        Some('i' | 'I' | 'n' | 'N') =>
+          return ctx.lex_nonfinite_number(start=ctx.offset - 2)
+        Some(_) => ctx.invalid_char(shift=-1)
+        None => raise InvalidEof
+      }
     Some('t') => {
       ctx.expect_ascii_char('r')
       ctx.expect_ascii_char('u')
@@ -547,6 +620,8 @@ fn ParseContext::lex_value(
           if c2 is ('1'..='9') {
             let (n, repr) = ctx.lex_decimal_integer(start=ctx.offset - 2)
             return Number(n, repr.map(s => s.to_string()))
+          } else if c2 is ('i' | 'I' | 'n' | 'N') {
+            return ctx.lex_nonfinite_number(start=ctx.offset - 2)
           }
           ctx.invalid_char(shift=-1)
         }
