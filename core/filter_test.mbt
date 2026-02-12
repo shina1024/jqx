@@ -163,6 +163,10 @@ test "parse literals" {
   inspect(parse_filter("false"), content="Literal(False)")
   inspect(parse_filter("\"hi\""), content="Literal(String(\"hi\"))")
   inspect(parse_filter("123"), content="Literal(Number(123))")
+  inspect(parse_filter("@uri"), content="Builtin(\"@uri\")")
+  guard (try? parse_filter("(@uri|@urid)")) is Ok(_) else {
+    fail("expected format filter parse")
+  }
 }
 
 ///|

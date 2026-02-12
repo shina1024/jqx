@@ -573,6 +573,33 @@ test "eval tojson/fromjson compatibility" {
 }
 
 ///|
+test "eval format filter compatibility" {
+  assert_eq(
+    must_eval(parse_filter("(@uri|@urid)"), must_parse("\"<>&'\\\"\\t\"")),
+    [Json::string("<>&'\"\t")],
+  )
+  assert_eq(
+    must_eval(parse_filter("(@base64|@base64d)"), must_parse("\"<>&'\\\"\\t\"")),
+    [Json::string("<>&'\"\t")],
+  )
+  guard (try? eval(parse_filter("@base64d"), must_parse("\"Not base64 data\"")))
+    is Err(err) &&
+    err.to_string() == "string (\"Not base64...\") is not valid base64 data" else {
+    fail("expected @base64d invalid data error")
+  }
+  guard (try? eval(parse_filter("@base64d"), must_parse("\"QUJDa\"")))
+    is Err(err) &&
+    err.to_string() == "string (\"QUJDa\") trailing base64 byte found" else {
+    fail("expected @base64d trailing byte error")
+  }
+  guard (try? eval(parse_filter("@urid"), must_parse("\"%FX%9F%98%8E\"")))
+    is Err(err) &&
+    err.to_string() == "string (\"%FX%9F%98%8E\") is not a valid uri encoding" else {
+    fail("expected @urid invalid encoding error")
+  }
+}
+
+///|
 test "eval fromjson errors" {
   guard (try? eval(parse_filter("fromjson"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) only strings can be parsed" else {

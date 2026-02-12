@@ -73,6 +73,387 @@ fn builtin_to_boolean(input : Json) -> Json raise EvalError {
 }
 
 ///|
+fn format_filter_input_string(input : Json) -> String {
+  match input {
+    String(s) => s
+    _ => input.to_json_string()
+  }
+}
+
+///|
+fn format_filter_string_preview(s : String) -> String {
+  let max_preview = 10
+  if s.length() <= max_preview {
+    s
+  } else {
+    s.view(start_offset=0, end_offset=max_preview).to_string() + "..."
+  }
+}
+
+///|
+fn format_filter_string_type_with_value(s : String) -> String {
+  "string (" + Json::string(s).to_json_string() + ")"
+}
+
+///|
+fn format_filter_string_type_with_preview(s : String) -> String {
+  "string (" +
+  Json::string(format_filter_string_preview(s)).to_json_string() +
+  ")"
+}
+
+///|
+fn hex_upper_digit(d : Int) -> Char {
+  if d < 10 {
+    (d + '0'.to_int()).unsafe_to_char()
+  } else {
+    (d - 10 + 'A'.to_int()).unsafe_to_char()
+  }
+}
+
+///|
+fn append_utf8_codepoint_bytes(out : Array[Int], code : Int) -> Unit {
+  if code <= 0x7F {
+    out.push(code)
+  } else if code <= 0x7FF {
+    out.push(0xC0 | (code >> 6))
+    out.push(0x80 | (code & 0x3F))
+  } else if code <= 0xFFFF {
+    out.push(0xE0 | (code >> 12))
+    out.push(0x80 | ((code >> 6) & 0x3F))
+    out.push(0x80 | (code & 0x3F))
+  } else {
+    out.push(0xF0 | (code >> 18))
+    out.push(0x80 | ((code >> 12) & 0x3F))
+    out.push(0x80 | ((code >> 6) & 0x3F))
+    out.push(0x80 | (code & 0x3F))
+  }
+}
+
+///|
+fn utf8_bytes_of_string(s : String) -> Array[Int] {
+  let out = []
+  for ch in s {
+    append_utf8_codepoint_bytes(out, ch.to_int())
+  }
+  out
+}
+
+///|
+fn is_utf8_continuation_byte(b : Int) -> Bool {
+  b >= 0x80 && b <= 0xBF
+}
+
+///|
+fn utf8_decode_next_strict(bytes : Array[Int], i : Int) -> (Int, Int)? {
+  guard i < bytes.length() else { return None }
+  let b0 = bytes[i]
+  if b0 <= 0x7F {
+    return Some((b0, 1))
+  }
+  if b0 < 0xC2 || b0 > 0xF4 {
+    return None
+  }
+  if b0 <= 0xDF {
+    guard i + 1 < bytes.length() else { return None }
+    let b1 = bytes[i + 1]
+    guard is_utf8_continuation_byte(b1) else { return None }
+    let code = ((b0 & 0x1F) << 6) | (b1 & 0x3F)
+    return Some((code, 2))
+  }
+  if b0 <= 0xEF {
+    guard i + 2 < bytes.length() else { return None }
+    let b1 = bytes[i + 1]
+    let b2 = bytes[i + 2]
+    guard is_utf8_continuation_byte(b1) && is_utf8_continuation_byte(b2) else {
+      return None
+    }
+    if b0 == 0xE0 && b1 < 0xA0 {
+      return None
+    }
+    if b0 == 0xED && b1 > 0x9F {
+      return None
+    }
+    let code = ((b0 & 0x0F) << 12) | ((b1 & 0x3F) << 6) | (b2 & 0x3F)
+    return Some((code, 3))
+  }
+  guard i + 3 < bytes.length() else { return None }
+  let b1 = bytes[i + 1]
+  let b2 = bytes[i + 2]
+  let b3 = bytes[i + 3]
+  guard is_utf8_continuation_byte(b1) &&
+    is_utf8_continuation_byte(b2) &&
+    is_utf8_continuation_byte(b3) else {
+    return None
+  }
+  if b0 == 0xF0 && b1 < 0x90 {
+    return None
+  }
+  if b0 == 0xF4 && b1 > 0x8F {
+    return None
+  }
+  let code = ((b0 & 0x07) << 18) |
+    ((b1 & 0x3F) << 12) |
+    ((b2 & 0x3F) << 6) |
+    (b3 & 0x3F)
+  Some((code, 4))
+}
+
+///|
+fn utf8_decode_bytes_strict(bytes : Array[Int]) -> String? {
+  let buf = StringBuilder::new()
+  let mut i = 0
+  for {
+    if i >= bytes.length() {
+      break
+    }
+    match utf8_decode_next_strict(bytes, i) {
+      Some((code, width)) => {
+        buf.write_char(code.unsafe_to_char())
+        i += width
+      }
+      None => return None
+    }
+  }
+  Some(buf.to_string())
+}
+
+///|
+fn utf8_decode_bytes_lossy(bytes : Array[Int]) -> String {
+  let buf = StringBuilder::new()
+  let mut i = 0
+  for {
+    if i >= bytes.length() {
+      break
+    }
+    match utf8_decode_next_strict(bytes, i) {
+      Some((code, width)) => {
+        buf.write_char(code.unsafe_to_char())
+        i += width
+      }
+      None => {
+        buf.write_char('\u{fffd}')
+        i += 1
+      }
+    }
+  }
+  buf.to_string()
+}
+
+///|
+fn is_uri_unreserved_byte(b : Int) -> Bool {
+  (b >= 'A'.to_int() && b <= 'Z'.to_int()) ||
+  (b >= 'a'.to_int() && b <= 'z'.to_int()) ||
+  (b >= '0'.to_int() && b <= '9'.to_int()) ||
+  b == '-'.to_int() ||
+  b == '_'.to_int() ||
+  b == '.'.to_int() ||
+  b == '~'.to_int()
+}
+
+///|
+fn uri_hex_nibble(ch : Char) -> Int? {
+  if ch is ('0'..='9') {
+    Some(ch.to_int() - '0'.to_int())
+  } else if ch is ('A'..='F') {
+    Some(ch.to_int() - 'A'.to_int() + 10)
+  } else if ch is ('a'..='f') {
+    Some(ch.to_int() - 'a'.to_int() + 10)
+  } else {
+    None
+  }
+}
+
+///|
+fn format_uri_encode(input : String) -> String {
+  let bytes = utf8_bytes_of_string(input)
+  let buf = StringBuilder::new()
+  for b in bytes {
+    if is_uri_unreserved_byte(b) {
+      buf.write_char(b.unsafe_to_char())
+    } else {
+      buf.write_char('%')
+      buf.write_char(hex_upper_digit((b >> 4) & 0xF))
+      buf.write_char(hex_upper_digit(b & 0xF))
+    }
+  }
+  buf.to_string()
+}
+
+///|
+fn format_uri_decode(input : String) -> String? {
+  let bytes = []
+  let mut i = 0
+  for {
+    if i >= input.length() {
+      break
+    }
+    let ch = input.unsafe_get(i).to_int().unsafe_to_char()
+    if ch == '%' {
+      guard i + 2 < input.length() else { return None }
+      let h1 = input.unsafe_get(i + 1).to_int().unsafe_to_char()
+      let h2 = input.unsafe_get(i + 2).to_int().unsafe_to_char()
+      match (uri_hex_nibble(h1), uri_hex_nibble(h2)) {
+        (Some(d1), Some(d2)) => {
+          bytes.push((d1 << 4) | d2)
+          i += 3
+        }
+        _ => return None
+      }
+    } else {
+      append_utf8_codepoint_bytes(bytes, ch.to_int())
+      i += 1
+    }
+  }
+  utf8_decode_bytes_strict(bytes)
+}
+
+///|
+fn base64_value_of_char(ch : Char) -> Int? {
+  if ch is ('A'..='Z') {
+    Some(ch.to_int() - 'A'.to_int())
+  } else if ch is ('a'..='z') {
+    Some(ch.to_int() - 'a'.to_int() + 26)
+  } else if ch is ('0'..='9') {
+    Some(ch.to_int() - '0'.to_int() + 52)
+  } else if ch == '+' {
+    Some(62)
+  } else if ch == '/' {
+    Some(63)
+  } else {
+    None
+  }
+}
+
+///|
+fn format_base64_encode(input : String) -> String {
+  let bytes = utf8_bytes_of_string(input)
+  let alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+  let buf = StringBuilder::new()
+  let mut i = 0
+  for {
+    if i >= bytes.length() {
+      break
+    }
+    let b0 = bytes[i]
+    let has_b1 = i + 1 < bytes.length()
+    let has_b2 = i + 2 < bytes.length()
+    let b1 = if has_b1 { bytes[i + 1] } else { 0 }
+    let b2 = if has_b2 { bytes[i + 2] } else { 0 }
+    let v0 = b0 >> 2
+    let v1 = ((b0 & 0x03) << 4) | (b1 >> 4)
+    let v2 = ((b1 & 0x0F) << 2) | (b2 >> 6)
+    let v3 = b2 & 0x3F
+    buf.write_char(alpha.unsafe_get(v0).to_int().unsafe_to_char())
+    buf.write_char(alpha.unsafe_get(v1).to_int().unsafe_to_char())
+    if has_b1 {
+      buf.write_char(alpha.unsafe_get(v2).to_int().unsafe_to_char())
+    } else {
+      buf.write_char('=')
+    }
+    if has_b2 {
+      buf.write_char(alpha.unsafe_get(v3).to_int().unsafe_to_char())
+    } else {
+      buf.write_char('=')
+    }
+    i += 3
+  }
+  buf.to_string()
+}
+
+///|
+priv enum Base64DecodeError {
+  InvalidData
+  TrailingByte
+}
+
+///|
+fn format_base64_decode(
+  input : String,
+) -> Result[Array[Int], Base64DecodeError] {
+  let chars = []
+  for ch in input {
+    chars.push(ch)
+  }
+  let out = []
+  let len = chars.length()
+  let full_groups = len / 4
+  for g in 0..<full_groups {
+    let i = g * 4
+    let c0 = chars[i]
+    let c1 = chars[i + 1]
+    let c2 = chars[i + 2]
+    let c3 = chars[i + 3]
+    guard c0 != '=' && c1 != '=' else { return Err(InvalidData) }
+    let v0 = match base64_value_of_char(c0) {
+      Some(v) => v
+      None => return Err(InvalidData)
+    }
+    let v1 = match base64_value_of_char(c1) {
+      Some(v) => v
+      None => return Err(InvalidData)
+    }
+    if c2 == '=' {
+      guard c3 == '=' && i + 4 == len else { return Err(InvalidData) }
+      out.push((v0 << 2) | (v1 >> 4))
+      return Ok(out)
+    }
+    let v2 = match base64_value_of_char(c2) {
+      Some(v) => v
+      None => return Err(InvalidData)
+    }
+    if c3 == '=' {
+      guard i + 4 == len else { return Err(InvalidData) }
+      out.push((v0 << 2) | (v1 >> 4))
+      out.push(((v1 & 0x0F) << 4) | (v2 >> 2))
+      return Ok(out)
+    }
+    let v3 = match base64_value_of_char(c3) {
+      Some(v) => v
+      None => return Err(InvalidData)
+    }
+    out.push((v0 << 2) | (v1 >> 4))
+    out.push(((v1 & 0x0F) << 4) | (v2 >> 2))
+    out.push(((v2 & 0x03) << 6) | v3)
+  }
+
+  let rem = len % 4
+  if rem == 0 {
+    return Ok(out)
+  }
+  let start = full_groups * 4
+  if rem == 1 {
+    match base64_value_of_char(chars[start]) {
+      Some(_) => Err(TrailingByte)
+      None => Err(InvalidData)
+    }
+  } else {
+    for i in start..<len {
+      if chars[i] == '=' {
+        return Err(InvalidData)
+      }
+    }
+    let v0 = match base64_value_of_char(chars[start]) {
+      Some(v) => v
+      None => return Err(InvalidData)
+    }
+    let v1 = match base64_value_of_char(chars[start + 1]) {
+      Some(v) => v
+      None => return Err(InvalidData)
+    }
+    out.push((v0 << 2) | (v1 >> 4))
+    if rem == 3 {
+      let v2 = match base64_value_of_char(chars[start + 2]) {
+        Some(v) => v
+        None => return Err(InvalidData)
+      }
+      out.push(((v1 & 0x0F) << 4) | (v2 >> 2))
+    }
+    Ok(out)
+  }
+}
+
+///|
 fn builtin_list() -> Array[Json] {
   let names = [
     "abs/0", "add/0", "all/0", "any/0", "ascii_downcase/0", "ascii_upcase/0", "atan/0",
@@ -319,6 +700,37 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
         String(_) => [input]
         _ => [Json::string(input.to_json_string())]
       }
+    "@uri" =>
+      [Json::string(format_uri_encode(format_filter_input_string(input)))]
+    "@urid" => {
+      let s = format_filter_input_string(input)
+      match format_uri_decode(s) {
+        Some(decoded) => [Json::string(decoded)]
+        None =>
+          raise TypeError(
+            format_filter_string_type_with_value(s) +
+            " is not a valid uri encoding",
+          )
+      }
+    }
+    "@base64" =>
+      [Json::string(format_base64_encode(format_filter_input_string(input)))]
+    "@base64d" => {
+      let s = format_filter_input_string(input)
+      match format_base64_decode(s) {
+        Ok(bytes) => [Json::string(utf8_decode_bytes_lossy(bytes))]
+        Err(InvalidData) =>
+          raise TypeError(
+            format_filter_string_type_with_preview(s) +
+            " is not valid base64 data",
+          )
+        Err(TrailingByte) =>
+          raise TypeError(
+            format_filter_string_type_with_preview(s) +
+            " trailing base64 byte found",
+          )
+      }
+    }
     "tojson" => [Json::string(input.to_json_string())]
     "tonumber" =>
       match input {

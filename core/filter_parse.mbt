@@ -954,6 +954,11 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
       ctx.read_char() |> ignore
       Filter::var_(ctx.parse_identifier())
     }
+    Some('@') => {
+      ctx.read_char() |> ignore
+      let name = ctx.parse_identifier()
+      Filter::builtin("@" + name)
+    }
     Some('\"') => ctx.parse_string_expr()
     Some('t') =>
       if ctx.try_keyword("true") {
