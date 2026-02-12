@@ -945,6 +945,25 @@ fn eval_call(
         }
         out
       }
+    "_set_slice" =>
+      if args.length() != 3 {
+        raise UnknownFunction("_set_slice")
+      } else {
+        let starts = eval_with_env(args[0], input, env)
+        let ends = eval_with_env(args[1], input, env)
+        let values = eval_with_env(args[2], input, env)
+        let out = []
+        for start_value in starts {
+          let start = call_parse_slice_index(start_value)
+          for end_value in ends {
+            let end = call_parse_slice_index(end_value)
+            for value in values {
+              out.push(set_slice_on_input(input, start, end, value))
+            }
+          }
+        }
+        out
+      }
     "del" =>
       if args.length() == 0 {
         raise UnknownFunction("del")

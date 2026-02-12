@@ -2263,6 +2263,50 @@ fn eval_slice_array(a : Array[Json], start : Int?, end : Int?) -> Array[Json] {
 }
 
 ///|
+fn set_slice_array(
+  a : Array[Json],
+  start : Int?,
+  end : Int?,
+  replacement : Array[Json],
+) -> Array[Json] {
+  let len = a.length()
+  let lo = normalize_slice_index(start, len, 0)
+  let hi0 = normalize_slice_index(end, len, len)
+  let hi = if hi0 < lo { lo } else { hi0 }
+  let out = []
+  for i in 0..<lo {
+    out.push(a[i])
+  }
+  for v in replacement {
+    out.push(v)
+  }
+  for i in hi..<len {
+    out.push(a[i])
+  }
+  out
+}
+
+///|
+fn set_slice_on_input(
+  input : Json,
+  start : Int?,
+  end : Int?,
+  value : Json,
+) -> Json raise EvalError {
+  let replacement = match value {
+    Array(a) => a
+    _ =>
+      raise TypeError("A slice of an array can only be assigned another array")
+  }
+  match input {
+    Array(a) => Json::array(set_slice_array(a, start, end, replacement))
+    JNull => Json::array(set_slice_array([], start, end, replacement))
+    String(_) => raise TypeError("Cannot update string slices")
+    _ => index_type_error(input, Json::object(Map::new()))
+  }
+}
+
+///|
 fn eval_slice_string(s : String, start : Int?, end : Int?) -> String {
   let len = s.length()
   let lo = normalize_slice_index(start, len, 0)

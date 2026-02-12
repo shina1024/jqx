@@ -1657,6 +1657,26 @@ fn update_path_from_filter(filter : Filter) -> Array[Json]? {
 }
 
 ///|
+fn update_static_slice_target(filter : Filter) -> (Array[Json], Int?, Int?)? {
+  match filter {
+    Pipe(base, Slice(start, end)) =>
+      match update_path_from_filter(base) {
+        Some(path) => Some((path, start, end))
+        None => None
+      }
+    _ => None
+  }
+}
+
+///|
+fn update_slice_bound_filter(index : Int?) -> Filter {
+  match index {
+    Some(v) => Filter::literal(Json::number(v.to_double()))
+    None => Filter::literal(Json::null())
+  }
+}
+
+///|
 fn lower_update_assign_op(
   op : UpdateAssignOp,
   current : Filter,
@@ -1681,6 +1701,47 @@ fn FilterCursor::lower_update_assignment(
   op : UpdateAssignOp,
   right : Filter,
 ) -> Filter {
+  match update_static_slice_target(left) {
+    Some((base_path, start, end)) => {
+      let input_tmp = ctx.fresh_as_tmp()
+      let value_tmp = ctx.fresh_as_tmp()
+      let input_var = Filter::var_(input_tmp)
+      let value_var = Filter::var_(value_tmp)
+      let start_arg = update_slice_bound_filter(start)
+      let end_arg = update_slice_bound_filter(end)
+      let base_for_getpath = Filter::literal(Json::array(base_path.copy()))
+      let base_for_setpath = Filter::literal(Json::array(base_path))
+      let base_value = if base_path.length() == 0 {
+        input_var
+      } else {
+        Filter::call("getpath", [base_for_getpath])
+      }
+      let current_slice = Filter::pipe(
+        base_value,
+        Filter::call("_slice", [start_arg, end_arg]),
+      )
+      let updated_slice = lower_update_assign_op(op, current_slice, right)
+      let updated_base = Filter::pipe(
+        base_value,
+        Filter::call("_set_slice", [start_arg, end_arg, value_var]),
+      )
+      let updated_root = if base_path.length() == 0 {
+        updated_base
+      } else {
+        Filter::pipe(
+          input_var,
+          Filter::call("setpath", [base_for_setpath, updated_base]),
+        )
+      }
+      return Filter::as_(
+        Filter::identity(),
+        input_tmp,
+        Filter::as_(updated_slice, value_tmp, updated_root),
+      )
+    }
+    None => ()
+  }
+
   match update_path_from_filter(left) {
     Some(path) => {
       let getpath_arg = Filter::literal(Json::array(path.copy()))

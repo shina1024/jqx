@@ -2475,6 +2475,48 @@ test "eval update assignment compatibility" {
   assert_eq(must_eval(parse_filter(".[] += .[0]"), must_parse("[1,2]")), [
     Json::array([Json::number(2.0), Json::number(3.0)]),
   ])
+  assert_eq(
+    must_eval(
+      parse_filter(".[2:4] = ([], [\"a\",\"b\"], [\"a\",\"b\",\"c\"])"),
+      must_parse("[0,1,2,3,4,5,6,7]"),
+    ),
+    [
+      Json::array([
+        Json::number(0.0),
+        Json::number(1.0),
+        Json::number(4.0),
+        Json::number(5.0),
+        Json::number(6.0),
+        Json::number(7.0),
+      ]),
+      Json::array([
+        Json::number(0.0),
+        Json::number(1.0),
+        Json::string("a"),
+        Json::string("b"),
+        Json::number(4.0),
+        Json::number(5.0),
+        Json::number(6.0),
+        Json::number(7.0),
+      ]),
+      Json::array([
+        Json::number(0.0),
+        Json::number(1.0),
+        Json::string("a"),
+        Json::string("b"),
+        Json::string("c"),
+        Json::number(4.0),
+        Json::number(5.0),
+        Json::number(6.0),
+        Json::number(7.0),
+      ]),
+    ],
+  )
+  guard (try? eval(parse_filter(".[1:3] = 9"), must_parse("[0,1,2,3]")))
+    is Err(err) &&
+    err.to_string() == "A slice of an array can only be assigned another array" else {
+    fail("expected slice assignment array-only error")
+  }
   assert_eq(must_eval(parse_filter(".a %= 4"), must_parse("{\"a\":9}")), [
     Json::object({ "a": Json::number(1.0) }),
   ])
