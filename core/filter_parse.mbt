@@ -607,6 +607,72 @@ fn slice_index_from_filter(filter : Filter) -> Int? {
 }
 
 ///|
+fn slice_endpoint_filter(expr : Filter?) -> Filter {
+  match expr {
+    Some(v) => v
+    None => Filter::literal(Json::null())
+  }
+}
+
+///|
+fn FilterCursor::lower_bracket_slice_on_base(
+  ctx : FilterCursor,
+  base : Filter,
+  start_expr : Filter?,
+  end_expr : Filter?,
+  optional : Bool,
+) -> Filter raise FilterError {
+  if start_expr is None && end_expr is None {
+    ctx.invalid_char()
+  }
+
+  let start_static = match start_expr {
+    Some(v) => slice_index_from_filter(v)
+    None => None
+  }
+  let end_static = match end_expr {
+    Some(v) => slice_index_from_filter(v)
+    None => None
+  }
+  let start_is_static = match start_expr {
+    Some(_) => start_static is Some(_)
+    None => true
+  }
+  let end_is_static = match end_expr {
+    Some(_) => end_static is Some(_)
+    None => true
+  }
+  let can_lower_static = start_is_static && end_is_static
+  if can_lower_static {
+    return Filter::pipe(
+      base,
+      apply_optional_suffix(Filter::slice(start_static, end_static), optional),
+    )
+  }
+
+  let base_tmp = ctx.fresh_as_tmp()
+  let start_tmp = ctx.fresh_as_tmp()
+  let end_tmp = ctx.fresh_as_tmp()
+  let base_var = Filter::var_(base_tmp)
+  let start_var = Filter::var_(start_tmp)
+  let end_var = Filter::var_(end_tmp)
+  let access0 = Filter::pipe(
+    base_var,
+    Filter::call("_slice", [start_var, end_var]),
+  )
+  let access = if optional { Filter::try_(access0) } else { access0 }
+  Filter::as_(
+    base,
+    base_tmp,
+    Filter::as_(
+      slice_endpoint_filter(start_expr),
+      start_tmp,
+      Filter::as_(slice_endpoint_filter(end_expr), end_tmp, access),
+    ),
+  )
+}
+
+///|
 fn FilterCursor::parse_bracket_postfix(
   ctx : FilterCursor,
   base : Filter,
@@ -649,27 +715,7 @@ fn FilterCursor::parse_bracket_postfix(
     } else {
       false
     }
-    let start = match first {
-      Some(v) => slice_index_from_filter(v)
-      None => None
-    }
-    let end = match end_expr {
-      Some(v) => slice_index_from_filter(v)
-      None => None
-    }
-    if start is None && end is None {
-      ctx.invalid_char()
-    }
-    return match (first, end_expr) {
-      (Some(_), None) if start is None => ctx.invalid_char()
-      (None, Some(_)) if end is None => ctx.invalid_char()
-      (Some(_), Some(_)) if start is None || end is None => ctx.invalid_char()
-      _ =>
-        Filter::pipe(
-          base,
-          apply_optional_suffix(Filter::slice(start, end), optional),
-        )
-    }
+    return ctx.lower_bracket_slice_on_base(base, first, end_expr, optional)
   }
 
   let keys = []

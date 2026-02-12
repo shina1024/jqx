@@ -3208,6 +3208,42 @@ test "eval slice compatibility" {
 }
 
 ///|
+test "eval dynamic slice compatibility" {
+  assert_eq(
+    must_eval(parse_filter(".[:rindex(\"x\")]"), must_parse("\"正xyz\"")),
+    [Json::string("正")],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("map([1,2][0:.])"),
+      must_parse("[-1, 1, 2, 3, 1000000000000000000]"),
+    ),
+    [
+      Json::array([
+        Json::array([Json::number(1.0)]),
+        Json::array([Json::number(1.0)]),
+        Json::array([Json::number(1.0), Json::number(2.0)]),
+        Json::array([Json::number(1.0), Json::number(2.0)]),
+        Json::array([Json::number(1.0), Json::number(2.0)]),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_eval(parse_filter("[range(3)] | .[nan:1]"), must_parse("null")),
+    [Json::array([Json::number(0.0)])],
+  )
+  assert_eq(
+    must_eval(parse_filter("[range(3)] | .[1:nan]"), must_parse("null")),
+    [Json::array([Json::number(1.0), Json::number(2.0)])],
+  )
+  guard (try? eval(parse_filter("[range(3)] | .[\"x\":1]"), must_parse("null")))
+    is Err(err) &&
+    err.to_string() == "Array/string slice indices must be integers" else {
+    fail("expected dynamic slice endpoint type error")
+  }
+}
+
+///|
 test "eval length compatibility" {
   assert_eq(must_eval(parse_filter("length"), must_parse("null")), [
     Json::number(0.0),

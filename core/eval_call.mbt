@@ -47,6 +47,33 @@ fn call_parse_nth_index(value : Json) -> Int? raise EvalError {
 }
 
 ///|
+fn call_parse_slice_index(value : Json) -> Int? raise EvalError {
+  let int_min = -2147483647 - 1
+  let int_max = 2147483647
+  match value {
+    JNull => None
+    Number(n, _) =>
+      if n != n {
+        None
+      } else if n == @double.infinity {
+        Some(int_max)
+      } else if n == @double.neg_infinity {
+        Some(int_min)
+      } else {
+        let index = if n > int_max.to_double() {
+          int_max
+        } else if n < int_min.to_double() {
+          int_min
+        } else {
+          n.to_int()
+        }
+        Some(index)
+      }
+    _ => raise TypeError("Array/string slice indices must be integers")
+  }
+}
+
+///|
 fn append_range_outputs(
   out : Array[Json],
   start : Double,
@@ -899,6 +926,24 @@ fn eval_call(
         raise UnknownFunction("path")
       } else {
         eval_path_expression(args[0], input, env)
+      }
+    "_slice" =>
+      if args.length() != 2 {
+        raise UnknownFunction("_slice")
+      } else {
+        let starts = eval_with_env(args[0], input, env)
+        let ends = eval_with_env(args[1], input, env)
+        let out = []
+        for start_value in starts {
+          let start = call_parse_slice_index(start_value)
+          for end_value in ends {
+            let end = call_parse_slice_index(end_value)
+            for v in eval_slice(start, end, input, optional=false) {
+              out.push(v)
+            }
+          }
+        }
+        out
       }
     "del" =>
       if args.length() == 0 {

@@ -149,6 +149,22 @@ test "parse dynamic bracket index" {
 }
 
 ///|
+test "parse dynamic slice bounds" {
+  guard (try? parse_filter(".[:rindex(\"x\")]")) is Ok(_) else {
+    fail("expected dynamic end slice parse")
+  }
+  guard (try? parse_filter("map([1,2][0:.])")) is Ok(_) else {
+    fail("expected identity end slice parse")
+  }
+  guard (try? parse_filter("[range(3)] | .[nan:1]")) is Ok(_) else {
+    fail("expected nan start slice parse")
+  }
+  guard (try? parse_filter("[range(3)] | .[1:nan]")) is Ok(_) else {
+    fail("expected nan end slice parse")
+  }
+}
+
+///|
 test "parse pipe and comma" {
   inspect(
     parse_filter(".foo | .bar, .baz"),
