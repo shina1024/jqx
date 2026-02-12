@@ -703,7 +703,7 @@ fn FilterCursor::parse_bracket_postfix(
   let first = if ctx.peek_char() is Some(':') {
     None
   } else {
-    Some(ctx.parse_update(allow_as=false))
+    Some(ctx.parse_pipe(allow_as=false))
   }
   ctx.skip_ws()
 
@@ -713,7 +713,7 @@ fn FilterCursor::parse_bracket_postfix(
     let end_expr = if ctx.peek_char() is Some(']') {
       None
     } else {
-      Some(ctx.parse_update(allow_as=false))
+      Some(ctx.parse_pipe(allow_as=false))
     }
     ctx.skip_ws()
     ctx.expect_char(']')
@@ -737,7 +737,7 @@ fn FilterCursor::parse_bracket_postfix(
     match ctx.peek_char() {
       Some(',') => {
         ctx.read_char() |> ignore
-        keys.push(ctx.parse_update(allow_as=false))
+        keys.push(ctx.parse_pipe(allow_as=false))
       }
       Some(']') => {
         ctx.read_char() |> ignore
@@ -1184,7 +1184,7 @@ fn FilterCursor::parse_array_literal(
   }
   let items = []
   for {
-    let elem = ctx.parse_update()
+    let elem = ctx.parse_pipe()
     items.push(elem)
     ctx.skip_ws()
     match ctx.peek_char() {
@@ -1273,7 +1273,7 @@ fn FilterCursor::parse_object_literal(
         }
         None => ()
       }
-      ctx.parse_update()
+      ctx.parse_pipe()
     } else {
       match var_key_name {
         Some(name) => Filter::var_(name)
@@ -1712,7 +1712,7 @@ fn FilterCursor::parse_pipe(
   ctx : FilterCursor,
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
-  let mut left = ctx.parse_add()
+  let mut left = ctx.parse_fallback(allow_as~)
   for {
     ctx.skip_ws()
     if allow_as && ctx.try_keyword("as") {
@@ -1761,7 +1761,7 @@ fn FilterCursor::parse_pipe(
           ctx.offset = saved
           break
         }
-        let right = ctx.parse_add()
+        let right = ctx.parse_fallback(allow_as~)
         left = Filter::pipe(left, right)
       }
       _ => break
@@ -1846,10 +1846,10 @@ fn FilterCursor::parse_update(
   ctx : FilterCursor,
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
-  let left = ctx.parse_fallback(allow_as~)
+  let left = ctx.parse_or(allow_as~)
   match ctx.try_parse_update_assign_op() {
     Some(op) => {
-      let right = ctx.parse_fallback(allow_as~)
+      let right = ctx.parse_or(allow_as~)
       ctx.lower_update_assignment(left, op, right)
     }
     None => left
@@ -1861,7 +1861,8 @@ fn FilterCursor::parse_compare(
   ctx : FilterCursor,
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
-  let mut left = ctx.parse_pipe(allow_as~)
+  allow_as |> ignore
+  let mut left = ctx.parse_add()
   for {
     ctx.skip_ws()
     match ctx.peek_char() {
@@ -1871,7 +1872,7 @@ fn FilterCursor::parse_compare(
         match ctx.peek_char() {
           Some('=') => {
             ctx.read_char() |> ignore
-            let right = ctx.parse_pipe(allow_as~)
+            let right = ctx.parse_add()
             left = Filter::eq(left, right)
           }
           _ => {
@@ -1884,7 +1885,7 @@ fn FilterCursor::parse_compare(
         ctx.read_char() |> ignore
         match ctx.read_char() {
           Some('=') => {
-            let right = ctx.parse_pipe(allow_as~)
+            let right = ctx.parse_add()
             left = Filter::neq(left, right)
           }
           Some(_) => ctx.invalid_char(shift=-1)
@@ -1896,11 +1897,11 @@ fn FilterCursor::parse_compare(
         match ctx.peek_char() {
           Some('=') => {
             ctx.read_char() |> ignore
-            let right = ctx.parse_pipe(allow_as~)
+            let right = ctx.parse_add()
             left = Filter::lte(left, right)
           }
           _ => {
-            let right = ctx.parse_pipe(allow_as~)
+            let right = ctx.parse_add()
             left = Filter::lt(left, right)
           }
         }
@@ -1910,11 +1911,11 @@ fn FilterCursor::parse_compare(
         match ctx.peek_char() {
           Some('=') => {
             ctx.read_char() |> ignore
-            let right = ctx.parse_pipe(allow_as~)
+            let right = ctx.parse_add()
             left = Filter::gte(left, right)
           }
           _ => {
-            let right = ctx.parse_pipe(allow_as~)
+            let right = ctx.parse_add()
             left = Filter::gt(left, right)
           }
         }
@@ -1966,7 +1967,7 @@ fn FilterCursor::parse_fallback(
   ctx : FilterCursor,
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
-  let mut left = ctx.parse_or(allow_as~)
+  let mut left = ctx.parse_update(allow_as~)
   for {
     ctx.skip_ws()
     match ctx.peek_char() {
@@ -1977,7 +1978,7 @@ fn FilterCursor::parse_fallback(
           Some('/') =>
             match ctx.read_char() {
               Some('/') => {
-                let right = ctx.parse_or(allow_as~)
+                let right = ctx.parse_update(allow_as~)
                 left = Filter::fallback(Filter::try_(left), right)
               }
               _ => {
@@ -2001,7 +2002,7 @@ fn FilterCursor::parse_fallback(
               ctx.offset = saved
               break
             }
-            let right = ctx.parse_or(allow_as~)
+            let right = ctx.parse_update(allow_as~)
             left = Filter::fallback(left, right)
           }
           _ => {
@@ -2021,13 +2022,13 @@ fn FilterCursor::parse_comma(
   ctx : FilterCursor,
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
-  let mut left = ctx.parse_update(allow_as~)
+  let mut left = ctx.parse_pipe(allow_as~)
   for {
     ctx.skip_ws()
     match ctx.peek_char() {
       Some(',') => {
         ctx.read_char() |> ignore
-        let right = ctx.parse_update(allow_as~)
+        let right = ctx.parse_pipe(allow_as~)
         left = Filter::comma(left, right)
       }
       _ => break

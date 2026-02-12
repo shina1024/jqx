@@ -379,6 +379,26 @@ test "parse update assignment dynamic lhs" {
 }
 
 ///|
+test "parse update assignment precedence" {
+  inspect(
+    parse_filter("1 < 2 | . + 1"),
+    content="Pipe(Lt(Literal(Number(1)), Literal(Number(2))), Add(Identity, Literal(Number(1))))",
+  )
+  guard (try? parse_filter(".a = .b | .a")) is Ok(_) else {
+    fail("expected parse success for pipe after update assignment")
+  }
+  guard (try? parse_filter(".a = .b // 1 | .a")) is Ok(_) else {
+    fail("expected parse success for fallback after update assignment")
+  }
+  guard (try? parse_filter(
+      "reduce .[] as {$x,$y} (null; .x += $x | .y += [$y])",
+    ))
+    is Ok(_) else {
+    fail("expected parse success for reduce update pipeline")
+  }
+}
+
+///|
 test "parse array and object literals" {
   inspect(
     parse_filter("[.a, .b]"),

@@ -124,6 +124,35 @@ test "eval pipe and comma" {
 }
 
 ///|
+test "eval update assignment precedence" {
+  let j1 = must_parse("{\"a\":0}")
+  assert_eq(must_eval(parse_filter(".a = 1 | .a"), j1), [Json::number(1.0)])
+
+  let j2 = must_parse("{\"a\":0}")
+  assert_eq(must_eval(parse_filter(".a = 1 // 2 | .a"), j2), [Json::number(1.0)])
+
+  let j3 = must_parse(
+    "[{\"x\":\"a\",\"y\":1},{\"x\":\"b\",\"y\":2},{\"x\":\"c\",\"y\":3}]",
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("reduce .[] as {$x,$y} (null; .x += $x | .y += [$y])"),
+      j3,
+    ),
+    [
+      Json::object({
+        "x": Json::string("abc"),
+        "y": Json::array([
+          Json::number(1.0),
+          Json::number(2.0),
+          Json::number(3.0),
+        ]),
+      }),
+    ],
+  )
+}
+
+///|
 test "eval literal" {
   let j = must_parse("null")
   let f = parse_filter("\"hi\"")
