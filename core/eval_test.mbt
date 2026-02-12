@@ -2459,6 +2459,22 @@ test "eval update assignment compatibility" {
     must_eval(parse_filter(".foo += .foo"), must_parse("{\"foo\":2}")),
     [Json::object({ "foo": Json::number(4.0) })],
   )
+  assert_eq(must_eval(parse_filter("(.a,.b) = range(3)"), must_parse("null")), [
+    Json::object({ "a": Json::number(0.0), "b": Json::number(0.0) }),
+    Json::object({ "a": Json::number(1.0), "b": Json::number(1.0) }),
+    Json::object({ "a": Json::number(2.0), "b": Json::number(2.0) }),
+  ])
+  assert_eq(
+    must_eval(parse_filter("(.a,.b) |= range(3)"), must_parse("null")),
+    [Json::object({ "a": Json::number(0.0), "b": Json::number(0.0) })],
+  )
+  assert_eq(must_eval(parse_filter("(.a,.b) += (1,2)"), must_parse("null")), [
+    Json::object({ "a": Json::number(1.0), "b": Json::number(1.0) }),
+    Json::object({ "a": Json::number(2.0), "b": Json::number(2.0) }),
+  ])
+  assert_eq(must_eval(parse_filter(".[] += .[0]"), must_parse("[1,2]")), [
+    Json::array([Json::number(2.0), Json::number(3.0)]),
+  ])
   assert_eq(must_eval(parse_filter(".a %= 4"), must_parse("{\"a\":9}")), [
     Json::object({ "a": Json::number(1.0) }),
   ])

@@ -1664,7 +1664,7 @@ fn lower_update_assign_op(
 ) -> Filter {
   match op {
     Set => right
-    Update => Filter::pipe(current, right)
+    Update => Filter::call("first", [Filter::pipe(current, right)])
     Add => Filter::add(current, right)
     Sub => Filter::sub(current, right)
     Mul => Filter::mul(current, right)
@@ -1697,14 +1697,37 @@ fn FilterCursor::lower_update_assignment(
       let path_var = Filter::var_(path_tmp)
       let source = Filter::pipe(input_var, Filter::call("path", [left]))
       let init = input_var
-      let current_value = Filter::call("getpath", [path_var])
-      let updated_value = lower_update_assign_op(op, current_value, right)
-      let update = Filter::call("setpath", [path_var, updated_value])
-      Filter::as_(
-        Filter::identity(),
-        input_tmp,
-        Filter::reduce(source, path_tmp, init, update),
-      )
+      match op {
+        Update => {
+          let current_value = Filter::call("getpath", [path_var])
+          let updated_value = lower_update_assign_op(op, current_value, right)
+          let update = Filter::call("setpath", [path_var, updated_value])
+          Filter::as_(
+            Filter::identity(),
+            input_tmp,
+            Filter::reduce(source, path_tmp, init, update),
+          )
+        }
+        _ => {
+          let value_tmp = ctx.fresh_as_tmp()
+          let value_var = Filter::var_(value_tmp)
+          let current_value = Filter::call("getpath", [path_var])
+          let right_values = Filter::pipe(input_var, right)
+          let updated_value = lower_update_assign_op(
+            op, current_value, value_var,
+          )
+          let update = Filter::call("setpath", [path_var, updated_value])
+          Filter::as_(
+            Filter::identity(),
+            input_tmp,
+            Filter::as_(
+              right_values,
+              value_tmp,
+              Filter::reduce(source, path_tmp, init, update),
+            ),
+          )
+        }
+      }
     }
   }
 }
