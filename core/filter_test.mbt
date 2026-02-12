@@ -347,9 +347,12 @@ test "parse update assignment operators" {
 }
 
 ///|
-test "parse update assignment invalid lhs" {
-  guard (try? parse_filter(".[] |= . + 1")) is Err(_) else {
-    fail("expected parse error for invalid update assignment lhs")
+test "parse update assignment dynamic lhs" {
+  guard (try? parse_filter(".[] |= . + 1")) is Ok(_) else {
+    fail("expected parse success for dynamic update assignment lhs")
+  }
+  guard (try? parse_filter("(.a, .b) = range(3)")) is Ok(_) else {
+    fail("expected parse success for grouped update assignment lhs")
   }
 }
 
@@ -393,6 +396,12 @@ test "parse array and object literals" {
   }
   guard (try? parse_filter("{\"a\",b,\"a$\\(1+1)\"}")) is Ok(_) else {
     fail("expected interpolated object key parse")
+  }
+  guard (try? parse_filter(
+      "{x: try 1, y: try error catch 2, z: if true then 3 end}",
+    ))
+    is Ok(_) else {
+    fail("expected object literal parse with try/catch values")
   }
   guard (try? parse_filter("{a,$__loc__,c}")) is Ok(_) else {
     fail("expected variable shorthand object key parse")

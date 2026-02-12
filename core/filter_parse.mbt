@@ -964,10 +964,10 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
       if ctx.try_keyword("true") {
         Filter::literal(Json::boolean(true))
       } else if ctx.try_keyword("try") {
-        let inner = ctx.parse_comma()
+        let inner = ctx.parse_update()
         ctx.skip_ws()
         if ctx.try_keyword("catch") {
-          let handler = ctx.parse_comma()
+          let handler = ctx.parse_update()
           Filter::try_catch(inner, handler)
         } else {
           Filter::try_catch(inner, Filter::empty())
@@ -1604,11 +1604,12 @@ fn apply_update_assign_op(op : UpdateAssignOp, right : Filter) -> Filter {
 }
 
 ///|
-fn lower_update_assignment(
+fn FilterCursor::lower_update_assignment(
+  ctx : FilterCursor,
   left : Filter,
   op : UpdateAssignOp,
   right : Filter,
-) -> Filter? {
+) -> Filter {
   match update_path_from_filter(left) {
     Some(path) => {
       let getpath_arg = Filter::literal(Json::array(path.copy()))
@@ -1617,9 +1618,27 @@ fn lower_update_assignment(
         Filter::call("getpath", [getpath_arg]),
         apply_update_assign_op(op, right),
       )
-      Some(Filter::call("setpath", [setpath_arg, updated_value]))
+      Filter::call("setpath", [setpath_arg, updated_value])
     }
-    None => None
+    None => {
+      // Lower dynamic/complex update lhs via reduce(path(lhs)).
+      let input_tmp = ctx.fresh_as_tmp()
+      let path_tmp = ctx.fresh_as_tmp()
+      let input_var = Filter::var_(input_tmp)
+      let path_var = Filter::var_(path_tmp)
+      let source = Filter::pipe(input_var, Filter::call("path", [left]))
+      let init = input_var
+      let updated_value = Filter::pipe(
+        Filter::call("getpath", [path_var]),
+        apply_update_assign_op(op, right),
+      )
+      let update = Filter::call("setpath", [path_var, updated_value])
+      Filter::as_(
+        Filter::identity(),
+        input_tmp,
+        Filter::reduce(source, path_tmp, init, update),
+      )
+    }
   }
 }
 
@@ -1766,10 +1785,7 @@ fn FilterCursor::parse_update(
   match ctx.try_parse_update_assign_op() {
     Some(op) => {
       let right = ctx.parse_fallback(allow_as~)
-      match lower_update_assignment(left, op, right) {
-        Some(lowered) => lowered
-        None => ctx.invalid_char()
-      }
+      ctx.lower_update_assignment(left, op, right)
     }
     None => left
   }
