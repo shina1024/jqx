@@ -383,6 +383,22 @@ test "parse array and object literals" {
     parse_filter("[1,2][]"),
     content="Pipe(Array([Literal(Number(1)), Literal(Number(2))]), Iter)",
   )
+  guard (try? parse_filter("{a,b,(.d):.a,e:.b}")) is Ok(_) else {
+    fail("expected dynamic object key parse")
+  }
+  guard (try? parse_filter("{\"a\",b,\"a$\\(1+1)\"}")) is Ok(_) else {
+    fail("expected interpolated object key parse")
+  }
+}
+
+///|
+test "parse interpolated string literal" {
+  guard (try? parse_filter("\"invalid value: \\(.)\"")) is Ok(_) else {
+    fail("expected string interpolation parse")
+  }
+  guard (try? parse_filter("try error(\"\\($__loc__)\") catch .")) is Ok(_) else {
+    fail("expected __loc__ interpolation parse")
+  }
 }
 
 ///|

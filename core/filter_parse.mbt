@@ -321,6 +321,92 @@ fn FilterCursor::parse_string_literal(
 }
 
 ///|
+/// Parse jq string expression.
+/// Supports interpolation `\(... )` by lowering to string concatenation.
+fn FilterCursor::parse_string_expr(
+  ctx : FilterCursor,
+) -> Filter raise FilterError {
+  ctx.skip_ws()
+  match ctx.read_char() {
+    Some('\"') => ()
+    Some(_) => ctx.invalid_char(shift=-1)
+    None => raise InvalidEof
+  }
+
+  let mut text = StringBuilder::new()
+  let parts = []
+  fn flush_text() {
+    let s = text.to_string()
+    if s.length() > 0 {
+      parts.push(Filter::literal(Json::string(s)))
+      text = StringBuilder::new()
+    }
+  }
+
+  for {
+    match ctx.read_char() {
+      Some('\"') => {
+        flush_text()
+        break
+      }
+      Some('\n' | '\r') => ctx.invalid_char(shift=-1)
+      Some('\\') =>
+        match ctx.read_char() {
+          Some('(') => {
+            flush_text()
+            let inner = ctx.parse_comma()
+            ctx.skip_ws()
+            match ctx.read_char() {
+              Some(')') => ()
+              Some(_) => ctx.invalid_char(shift=-1)
+              None => raise InvalidEof
+            }
+            parts.push(Filter::pipe(inner, Filter::builtin("tostring")))
+          }
+          Some('b') => text.write_char('\b')
+          Some('f') => text.write_char('\u{0C}')
+          Some('n') => text.write_char('\n')
+          Some('r') => text.write_char('\r')
+          Some('t') => text.write_char('\t')
+          Some('\"') => text.write_char('\"')
+          Some('\\') => text.write_char('\\')
+          Some('/') => text.write_char('/')
+          Some('u') => {
+            let c = ctx.parse_hex_digits(4)
+            text.write_char(c.unsafe_to_char())
+          }
+          Some(_) => ctx.invalid_char(shift=-1)
+          None => raise InvalidEof
+        }
+      Some(ch) =>
+        if ch.to_int() < 32 {
+          ctx.invalid_char(shift=-1)
+        } else {
+          text.write_char(ch)
+        }
+      None => raise InvalidEof
+    }
+  }
+
+  if parts.length() == 0 {
+    return Filter::literal(Json::string(""))
+  }
+  let mut out = parts[0]
+  for i in 1..<parts.length() {
+    out = Filter::add(out, parts[i])
+  }
+  out
+}
+
+///|
+fn filter_string_literal_value(filter : Filter) -> String? {
+  match filter {
+    Literal(String(s)) => Some(s)
+    _ => None
+  }
+}
+
+///|
 fn FilterCursor::parse_hex_digits(
   ctx : FilterCursor,
   n : Int,
@@ -868,7 +954,7 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
       ctx.read_char() |> ignore
       Filter::var_(ctx.parse_identifier())
     }
-    Some('\"') => Filter::literal(Json::string(ctx.parse_string_literal()))
+    Some('\"') => ctx.parse_string_expr()
     Some('t') =>
       if ctx.try_keyword("true") {
         Filter::literal(Json::boolean(true))
@@ -1048,6 +1134,35 @@ fn FilterCursor::parse_array_literal(
 }
 
 ///|
+fn FilterCursor::lower_object_item_filter(
+  ctx : FilterCursor,
+  key_filter : Filter,
+  value_filter : Filter,
+  shorthand_dynamic : Bool,
+) -> Filter {
+  let input_tmp = ctx.fresh_as_tmp()
+  let input_var = Filter::var_(input_tmp)
+  let key_tmp = ctx.fresh_as_tmp()
+  let key_var = Filter::var_(key_tmp)
+  let key_on_input = Filter::pipe(input_var, key_filter)
+  let value_on_input = if shorthand_dynamic {
+    Filter::pipe(input_var, Filter::call("getpath", [Filter::Array([key_var])]))
+  } else {
+    Filter::pipe(input_var, value_filter)
+  }
+  let path = Filter::Array([key_var])
+  let set_expr = Filter::pipe(
+    Filter::literal(Json::object(Map::new())),
+    Filter::call("setpath", [path, value_on_input]),
+  )
+  Filter::as_(
+    Filter::identity(),
+    input_tmp,
+    Filter::as_(key_on_input, key_tmp, set_expr),
+  )
+}
+
+///|
 fn FilterCursor::parse_object_literal(
   ctx : FilterCursor,
 ) -> Filter raise FilterError {
@@ -1057,23 +1172,60 @@ fn FilterCursor::parse_object_literal(
     ctx.read_char() |> ignore
     return Filter::Object([])
   }
-  let items = []
+  let static_items = []
+  let dynamic_items = []
+  let mut use_dynamic_lowering = false
   for {
     ctx.skip_ws()
-    let key = match ctx.peek_char() {
-      Some('\"') => ctx.parse_string_literal()
-      Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') => ctx.parse_identifier()
+    let key_filter = match ctx.peek_char() {
+      Some('\"') => ctx.parse_string_expr()
+      Some('(') => ctx.parse_paren_expr()
+      Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') =>
+        Filter::literal(Json::string(ctx.parse_identifier()))
       Some(_) => ctx.invalid_char()
       None => raise InvalidEof
     }
+    let static_key = filter_string_literal_value(key_filter)
     ctx.skip_ws()
+    let mut shorthand_dynamic = false
     let value = if ctx.peek_char() is Some(':') {
       ctx.read_char() |> ignore
       ctx.parse_update()
     } else {
-      Filter::pipe(Filter::identity(), Filter::field(key))
+      match static_key {
+        Some(name) => Filter::pipe(Filter::identity(), Filter::field(name))
+        None => {
+          shorthand_dynamic = true
+          Filter::identity()
+        }
+      }
     }
-    items.push((key, value))
+
+    if use_dynamic_lowering {
+      dynamic_items.push(
+        ctx.lower_object_item_filter(key_filter, value, shorthand_dynamic),
+      )
+    } else {
+      match static_key {
+        Some(name) if !shorthand_dynamic => static_items.push((name, value))
+        _ => {
+          use_dynamic_lowering = true
+          for kv in static_items {
+            dynamic_items.push(
+              ctx.lower_object_item_filter(
+                Filter::literal(Json::string(kv.0)),
+                kv.1,
+                false,
+              ),
+            )
+          }
+          dynamic_items.push(
+            ctx.lower_object_item_filter(key_filter, value, shorthand_dynamic),
+          )
+        }
+      }
+    }
+
     ctx.skip_ws()
     match ctx.peek_char() {
       Some(',') => {
@@ -1088,7 +1240,17 @@ fn FilterCursor::parse_object_literal(
       None => raise InvalidEof
     }
   }
-  Filter::Object(items)
+  if !use_dynamic_lowering {
+    return Filter::Object(static_items)
+  }
+  if dynamic_items.length() == 0 {
+    return Filter::Object([])
+  }
+  let mut out = dynamic_items[0]
+  for i in 1..<dynamic_items.length() {
+    out = Filter::add(out, dynamic_items[i])
+  }
+  out
 }
 
 ///|
