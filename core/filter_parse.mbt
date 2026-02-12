@@ -45,7 +45,8 @@ priv struct FilterCursor {
 
 ///|
 priv enum UpdateAssignOp {
-  Assign
+  Set
+  Update
   Add
   Sub
   Mul
@@ -1656,15 +1657,20 @@ fn update_path_from_filter(filter : Filter) -> Array[Json]? {
 }
 
 ///|
-fn apply_update_assign_op(op : UpdateAssignOp, right : Filter) -> Filter {
+fn lower_update_assign_op(
+  op : UpdateAssignOp,
+  current : Filter,
+  right : Filter,
+) -> Filter {
   match op {
-    Assign => right
-    Add => Filter::add(Filter::identity(), right)
-    Sub => Filter::sub(Filter::identity(), right)
-    Mul => Filter::mul(Filter::identity(), right)
-    Div => Filter::div(Filter::identity(), right)
-    Mod => Filter::mod_(Filter::identity(), right)
-    Fallback => Filter::fallback(Filter::identity(), right)
+    Set => right
+    Update => Filter::pipe(current, right)
+    Add => Filter::add(current, right)
+    Sub => Filter::sub(current, right)
+    Mul => Filter::mul(current, right)
+    Div => Filter::div(current, right)
+    Mod => Filter::mod_(current, right)
+    Fallback => Filter::fallback(current, right)
   }
 }
 
@@ -1679,10 +1685,8 @@ fn FilterCursor::lower_update_assignment(
     Some(path) => {
       let getpath_arg = Filter::literal(Json::array(path.copy()))
       let setpath_arg = Filter::literal(Json::array(path))
-      let updated_value = Filter::pipe(
-        Filter::call("getpath", [getpath_arg]),
-        apply_update_assign_op(op, right),
-      )
+      let current_value = Filter::call("getpath", [getpath_arg])
+      let updated_value = lower_update_assign_op(op, current_value, right)
       Filter::call("setpath", [setpath_arg, updated_value])
     }
     None => {
@@ -1693,10 +1697,8 @@ fn FilterCursor::lower_update_assignment(
       let path_var = Filter::var_(path_tmp)
       let source = Filter::pipe(input_var, Filter::call("path", [left]))
       let init = input_var
-      let updated_value = Filter::pipe(
-        Filter::call("getpath", [path_var]),
-        apply_update_assign_op(op, right),
-      )
+      let current_value = Filter::call("getpath", [path_var])
+      let updated_value = lower_update_assign_op(op, current_value, right)
       let update = Filter::call("setpath", [path_var, updated_value])
       Filter::as_(
         Filter::identity(),
@@ -1777,10 +1779,10 @@ fn FilterCursor::try_parse_update_assign_op(
   ctx.skip_ws()
   let saved = ctx.offset
   match ctx.read_char() {
-    Some('=') => Some(Assign)
+    Some('=') => Some(Set)
     Some('|') =>
       match ctx.read_char() {
-        Some('=') => Some(Assign)
+        Some('=') => Some(Update)
         _ => {
           ctx.offset = saved
           None

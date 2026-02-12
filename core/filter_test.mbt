@@ -348,23 +348,23 @@ test "parse update assignment operators" {
   )
   inspect(
     parse_filter(".a += 2"),
-    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Pipe(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Add(Identity, Literal(Number(2))))])",
+    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Add(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Literal(Number(2)))])",
   )
   inspect(
     parse_filter(".a //= 0"),
-    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Pipe(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Fallback(Identity, Literal(Number(0))))])",
+    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Fallback(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Literal(Number(0)))])",
   )
   inspect(
     parse_filter(".[0] *= 3"),
-    content="Call(\"setpath\", [Literal(Array([Number(0)])), Pipe(Call(\"getpath\", [Literal(Array([Number(0)]))]), Mul(Identity, Literal(Number(3))))])",
+    content="Call(\"setpath\", [Literal(Array([Number(0)])), Mul(Call(\"getpath\", [Literal(Array([Number(0)]))]), Literal(Number(3)))])",
   )
   inspect(
     parse_filter(".a = 1"),
-    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Pipe(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Literal(Number(1)))])",
+    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Literal(Number(1))])",
   )
   inspect(
     parse_filter(".a %= 2"),
-    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Pipe(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Mod(Identity, Literal(Number(2))))])",
+    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Mod(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Literal(Number(2)))])",
   )
 }
 

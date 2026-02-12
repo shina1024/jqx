@@ -2444,6 +2444,21 @@ test "eval update assignment compatibility" {
   assert_eq(must_eval(parse_filter(".a = 9"), must_parse("{\"a\":1}")), [
     Json::object({ "a": Json::number(9.0) }),
   ])
+  assert_eq(
+    must_eval(parse_filter(".foo = .bar"), must_parse("{\"bar\":42}")),
+    [Json::object({ "bar": Json::number(42.0), "foo": Json::number(42.0) })],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter(".a = .b"),
+      must_parse("{\"a\":{\"b\":10},\"b\":20}"),
+    ),
+    [Json::object({ "a": Json::number(20.0), "b": Json::number(20.0) })],
+  )
+  assert_eq(
+    must_eval(parse_filter(".foo += .foo"), must_parse("{\"foo\":2}")),
+    [Json::object({ "foo": Json::number(4.0) })],
+  )
   assert_eq(must_eval(parse_filter(".a %= 4"), must_parse("{\"a\":9}")), [
     Json::object({ "a": Json::number(1.0) }),
   ])
