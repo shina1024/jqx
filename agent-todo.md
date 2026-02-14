@@ -58,7 +58,7 @@ Updated: 2026-02-14
 - [x] `core/eval_test.mbt` を機能別に分割する（`eval_test_support` 導入 + 挙動不変）
 - [x] `core/filter_parse.mbt` を `cursor/atom/expr/lowering` に段階分割する（挙動不変、`cursor` / `atom` / `expr` / `lowering` の分割完了）
 - [x] `core/eval.mbt` を `core/json_ops/path_ops/collection_ops` に段階分割する（挙動不変）
-- [ ] `core/eval_call.mbt` を責務別（numeric/string/path/stream）に段階分割する（挙動不変）
+- [ ] `core/eval_call.mbt` を責務別（numeric/string/path/stream）に段階分割する（挙動不変、path 系は `core/eval_call_path.mbt` へ分割済み）
 - [ ] 段階分割ガイドを維持する（`docs/refactor-roadmap.md`）
 
 ## P2: CI/運用の底上げ
