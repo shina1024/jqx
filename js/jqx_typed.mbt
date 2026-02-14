@@ -127,7 +127,7 @@ pub fn evalQuery(
   query : Query[@core.Json, @core.Json],
   input : @core.Json,
 ) -> Result[Array[@core.Json], String] {
-  Ok(@core.eval(query.filter, input)) catch {
+  Ok(@core.execute(query.filter, input)) catch {
     err => Err(err.to_string())
   }
 }
@@ -139,7 +139,7 @@ pub fn runQuery(
 ) -> Result[Array[String], String] {
   try {
     let json = @core.parse(input)
-    let values = @core.eval(query.filter, json)
+    let values = @core.execute(query.filter, json)
     let out = []
     for v in values {
       out.push(v.to_json_string())

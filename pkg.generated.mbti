@@ -6,7 +6,11 @@ import {
 }
 
 // Values
+pub fn compile(StringView) -> @core.Filter raise @core.FilterError
+
 pub fn eval(@core.Filter, @core.Json) -> Array[@core.Json] raise @core.EvalError
+
+pub fn execute(@core.Filter, @core.Json) -> Array[@core.Json] raise @core.EvalError
 
 pub fn parse(StringView, max_nesting_depth? : Int) -> @core.Json raise @core.ParseError
 

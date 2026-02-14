@@ -11,8 +11,21 @@ pub fn parse(
 }
 
 ///|
+pub fn compile(input : StringView) -> @core.Filter raise @core.FilterError {
+  @core.compile(input)
+}
+
+///|
 pub fn parse_filter(input : StringView) -> @core.Filter raise @core.FilterError {
-  @core.parse_filter(input)
+  compile(input)
+}
+
+///|
+pub fn execute(
+  filter : @core.Filter,
+  input : @core.Json,
+) -> Array[@core.Json] raise @core.EvalError {
+  @core.execute(filter, input)
 }
 
 ///|
@@ -20,7 +33,7 @@ pub fn eval(
   filter : @core.Filter,
   input : @core.Json,
 ) -> Array[@core.Json] raise @core.EvalError {
-  @core.eval(filter, input)
+  execute(filter, input)
 }
 
 ///|

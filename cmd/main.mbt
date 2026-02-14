@@ -33,11 +33,11 @@ fn main {
     read_stdin_all()
   }
   try {
-    let f = @lib.parse_filter(filter)
+    let f = @lib.compile(filter)
     let inputs = parse_cli_inputs(cfg, stdin_text)
     let outputs = []
     for j in inputs {
-      for v in @lib.eval(f, j) {
+      for v in @lib.execute(f, j) {
         outputs.push(v)
       }
     }

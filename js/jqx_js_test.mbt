@@ -12,10 +12,10 @@ test "js evalToJsonStrings parse error" {
 }
 
 ///|
-test "js parseJson + parseFilter + eval" {
+test "js parseJson + compile + execute" {
   let json = parseJson("{\"a\": 2}")
-  let filter = parseFilter(".a")
-  let out = eval(filter, json)
+  let filter = compile(".a")
+  let out = execute(filter, json)
   assert_eq(out.length(), 1)
   assert_eq(out[0].to_json_string(), "2")
 }
@@ -40,12 +40,12 @@ test "js safeParseJson alias" {
 }
 
 ///|
-test "js tryParseFilter and tryEval" {
-  let parsed_filter = tryParseFilter(".x")
+test "js tryCompile and tryExecute" {
+  let parsed_filter = tryCompile(".x")
   guard parsed_filter is Ok(filter) else { fail("expected Ok filter") }
   let parsed_json = tryParseJson("{\"x\": 7}")
   guard parsed_json is Ok(input) else { fail("expected Ok json") }
-  let out = tryEval(filter, input)
+  let out = tryExecute(filter, input)
   guard out is Ok(values) else { fail("expected Ok eval") }
   assert_eq(values.length(), 1)
   assert_eq(values[0].to_json_string(), "7")
@@ -59,16 +59,23 @@ test "js run aliases evalToJsonStrings" {
 }
 
 ///|
-test "js execute and safeExecute aliases" {
-  let filter = parseFilter(".foo")
+test "js execute/eval aliases and parseFilter alias" {
+  let filter = compile(".foo")
   let input = parseJson("{\"foo\": 5}")
   let out = execute(filter, input)
   assert_eq(out.length(), 1)
   assert_eq(out[0].to_json_string(), "5")
+  let out_eval_alias = eval(filter, input)
+  assert_eq(out_eval_alias.length(), 1)
+  assert_eq(out_eval_alias[0].to_json_string(), "5")
   let safe_out = safeExecute(filter, input)
   guard safe_out is Ok(values) else { fail("expected Ok") }
   assert_eq(values.length(), 1)
   assert_eq(values[0].to_json_string(), "5")
+  let filter_alias = parseFilter(".foo")
+  let alias_out = execute(filter_alias, input)
+  assert_eq(alias_out.length(), 1)
+  assert_eq(alias_out[0].to_json_string(), "5")
 }
 
 ///|

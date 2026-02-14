@@ -2726,7 +2726,7 @@ fn FilterCursor::parse_definition_prefix(
     let params = parse_params()
     ctx.expect_char(':')
     let body_source = ctx.read_until_top_level_semicolon()
-    defs.push((name, params, parse_filter(body_source)))
+    defs.push((name, params, compile(body_source)))
   }
   defs
 }
@@ -2747,7 +2747,7 @@ fn FilterCursor::parse_scoped(
 }
 
 ///|
-pub fn parse_filter(input : StringView) -> Filter raise FilterError {
+pub fn compile(input : StringView) -> Filter raise FilterError {
   let ctx = FilterCursor::make(input)
   let filter = ctx.parse_scoped()
   ctx.skip_ws()
@@ -2756,4 +2756,10 @@ pub fn parse_filter(input : StringView) -> Filter raise FilterError {
   } else {
     ctx.invalid_char()
   }
+}
+
+///|
+/// Legacy alias. Prefer `compile` for jq-aligned naming.
+pub fn parse_filter(input : StringView) -> Filter raise FilterError {
+  compile(input)
 }

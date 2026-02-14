@@ -20,28 +20,35 @@ pub fn safeParseJson(input : String) -> Result[@core.Json, String] {
 }
 
 ///|
-pub fn parseFilter(input : String) -> @core.Filter raise @core.FilterError {
-  @core.parse_filter(input)
+pub fn compile(input : String) -> @core.Filter raise @core.FilterError {
+  @core.compile(input)
 }
 
 ///|
-pub fn tryParseFilter(input : String) -> Result[@core.Filter, String] {
-  Ok(@core.parse_filter(input)) catch {
+pub fn parseFilter(input : String) -> @core.Filter raise @core.FilterError {
+  compile(input)
+}
+
+///|
+pub fn tryCompile(input : String) -> Result[@core.Filter, String] {
+  Ok(@core.compile(input)) catch {
     err => Err(err.to_string())
   }
 }
 
 ///|
-pub fn safeParseFilter(input : String) -> Result[@core.Filter, String] {
-  tryParseFilter(input)
+pub fn tryParseFilter(input : String) -> Result[@core.Filter, String] {
+  tryCompile(input)
 }
 
 ///|
-pub fn eval(
-  filter : @core.Filter,
-  input : @core.Json,
-) -> Array[@core.Json] raise @core.EvalError {
-  @core.eval(filter, input)
+pub fn safeCompile(input : String) -> Result[@core.Filter, String] {
+  tryCompile(input)
+}
+
+///|
+pub fn safeParseFilter(input : String) -> Result[@core.Filter, String] {
+  safeCompile(input)
 }
 
 ///|
@@ -49,7 +56,25 @@ pub fn execute(
   filter : @core.Filter,
   input : @core.Json,
 ) -> Array[@core.Json] raise @core.EvalError {
-  eval(filter, input)
+  @core.execute(filter, input)
+}
+
+///|
+pub fn eval(
+  filter : @core.Filter,
+  input : @core.Json,
+) -> Array[@core.Json] raise @core.EvalError {
+  execute(filter, input)
+}
+
+///|
+pub fn tryExecute(
+  filter : @core.Filter,
+  input : @core.Json,
+) -> Result[Array[@core.Json], String] {
+  Ok(@core.execute(filter, input)) catch {
+    err => Err(err.to_string())
+  }
 }
 
 ///|
@@ -57,9 +82,7 @@ pub fn tryEval(
   filter : @core.Filter,
   input : @core.Json,
 ) -> Result[Array[@core.Json], String] {
-  Ok(@core.eval(filter, input)) catch {
-    err => Err(err.to_string())
-  }
+  tryExecute(filter, input)
 }
 
 ///|
@@ -67,7 +90,7 @@ pub fn safeExecute(
   filter : @core.Filter,
   input : @core.Json,
 ) -> Result[Array[@core.Json], String] {
-  tryEval(filter, input)
+  tryExecute(filter, input)
 }
 
 ///|
@@ -78,9 +101,9 @@ pub fn evalToJsonStrings(
   input : String,
 ) -> Result[Array[String], String] {
   try {
-    let f = @core.parse_filter(filter)
+    let f = @core.compile(filter)
     let j = @core.parse(input)
-    let out = @core.eval(f, j)
+    let out = @core.execute(f, j)
     let strings = []
     for v in out {
       strings.push(v.to_json_string())
@@ -114,9 +137,9 @@ pub fn runValues(
   input : String,
 ) -> Result[Array[@core.Json], String] {
   try {
-    let f = @core.parse_filter(filter)
+    let f = @core.compile(filter)
     let j = @core.parse(input)
-    Ok(@core.eval(f, j))
+    Ok(@core.execute(f, j))
   } catch {
     err => Err(err.to_string())
   }

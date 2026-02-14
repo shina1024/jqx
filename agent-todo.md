@@ -53,6 +53,7 @@ Updated: 2026-02-14
 
 ## P1: コードベース保守性（リファクタリング）
 
+- [x] 公開API命名をjq寄せに揃える（`compile`/`execute` を主、旧名は互換alias）
 - [ ] `core/eval_test.mbt` を機能別に分割する（`eval_test_support` 導入 + 挙動不変）
 - [ ] `core/filter_parse.mbt` を `cursor/atom/expr/lowering` に段階分割する（挙動不変）
 - [ ] `core/eval.mbt` を `core/json_ops/path_ops/collection_ops` に段階分割する（挙動不変）

@@ -25,6 +25,14 @@ jqx でも同じ思想を取り、言語仕様の差を保ったまま次の対�
 - CLI 相当: `cmd/main*`
 - tests 相当: `core/*_test.mbt` の機能別分割
 
+## Naming policy
+
+未採番期間のため、公開API名も jq 寄せで進める。
+
+- parser API: `compile` を正とし、`parse_filter` は互換alias扱い
+- evaluator API: `execute` を正とし、`eval` は互換alias扱い
+- JS公開APIも同方針（`compile`/`execute` を主、旧名は alias）
+
 ## Target file layout (core)
 
 段階的に次の構成へ寄せる。
@@ -100,4 +108,3 @@ Done criteria:
 - 1 PR/commit あたり 1 phase の一部までに制限する
 - 互換性タスクと混ぜない（実装追加と構造変更を同一コミットにしない）
 - 毎段階で `moon info && moon fmt && moon test` を必須化する
-

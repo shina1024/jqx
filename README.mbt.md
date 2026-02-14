@@ -84,15 +84,19 @@ target and import the generated bundle.
 Functions:
 - `parseJson(text)` -> Json
 - `safeParseJson(text)` -> `Result<Json, string>` (JS-friendly)
-- `parseFilter(text)` -> Filter
-- `safeParseFilter(text)` -> `Result<Filter, string>` (JS-friendly)
+- `compile(text)` -> Filter
+- `safeCompile(text)` -> `Result<Filter, string>` (JS-friendly)
+- `parseFilter(text)` -> Filter (compat alias)
+- `safeParseFilter(text)` -> `Result<Filter, string>` (compat alias)
 - `execute(filter, json)` -> Json[] (JS-friendly)
+- `tryExecute(filter, json)` -> `Result<Json[], string>`
 - `safeExecute(filter, json)` -> `Result<Json[], string>` (JS-friendly)
 - `eval(filter, json)` -> Json[] (compat alias)
 - `evalToJsonStrings(filter, jsonText)` -> `Result<string[], string>`
   (JSON strings / error message)
 - `tryParseJson(text)` -> `Result<Json, string>`
-- `tryParseFilter(text)` -> `Result<Filter, string>`
+- `tryCompile(text)` -> `Result<Filter, string>`
+- `tryParseFilter(text)` -> `Result<Filter, string>` (compat alias)
 - `tryEval(filter, json)` -> `Result<Json[], string>`
 - `run(filter, jsonText)` -> `Result<string[], string>` (compatibility lane alias)
 - `runCompat(filter, jsonText)` -> `Result<string[], string>` (compatibility lane)
