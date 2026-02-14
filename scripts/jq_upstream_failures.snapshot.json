@@ -1,27 +1,11 @@
 [
   {
-    "name": "upstream-jq-test-l118",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":1,\"b\":2,\"c\":1,\"e\":2}",
-    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character '('"
-  },
-  {
-    "name": "upstream-jq-test-l122",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":1,\"b\":2,\"a$2\":4}",
-    "jqx_out": "jqx: error (at <stdin>:1:12): Invalid character '('"
-  },
-  {
     "name": "upstream-jq-test-l200",
     "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[1,2,1,2,1,2,1,2,\"Cannot iterate over number (123)\",\"Cannot iterate over number (123)\"]",
-    "jqx_out": "[1,2,{\"a\":123},{\"a\":123}]"
+    "jqx_out": "[1,2,1,2,1,2,1,2,{\"a\":123},{\"a\":123}]"
   },
   {
     "name": "upstream-jq-test-l205",
@@ -88,20 +72,12 @@
     "jqx_out": "[0,5,9,10]"
   },
   {
-    "name": "upstream-jq-test-l478",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,1,4,5,6,7]\n[0,1,\"a\",\"b\",4,5,6,7]\n[0,1,\"a\",\"b\",\"c\",4,5,6,7]",
-    "jqx_out": "jqx: error (at <stdin>:1:40): Invalid character '�'"
-  },
-  {
     "name": "upstream-jq-test-l490",
-    "category": "parser-invalid-character",
+    "category": "runtime-error-vs-jq-success",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[null,65537,65538,65539,65540]",
-    "jqx_out": "jqx: error (at <stdin>:1:51): Invalid character ')'"
+    "jqx_out": "jqx: error: Invalid path expression with result null"
   },
   {
     "name": "upstream-jq-test-l524",
@@ -137,27 +113,19 @@
   },
   {
     "name": "upstream-jq-test-l689",
-    "category": "unknown-function",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[0,0,0,0,0,-1]",
-    "jqx_out": "jqx: error: Unknown function: infinite"
+    "jqx_out": "[null,null,null,null,null,null]"
   },
   {
     "name": "upstream-jq-test-l693",
-    "category": "unknown-function",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[true,true]",
-    "jqx_out": "jqx: error: Unknown function: nan"
-  },
-  {
-    "name": "upstream-jq-test-l701",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[false,true,false,true]",
-    "jqx_out": "jqx: error: Unknown function: toboolean"
+    "jqx_out": "[null,true]"
   },
   {
     "name": "upstream-jq-test-l705",
@@ -176,92 +144,12 @@
     "jqx_out": "[false,true]\n[false,true]\n[true,false]\n[true,false]\n[false,false]\n[false,false]\n[false,false]\n[false,false]\n[false,false]"
   },
   {
-    "name": "upstream-jq-test-l732",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "6",
-    "jqx_out": "jqx: error: Unknown function: utf8bytelength"
-  },
-  {
     "name": "upstream-jq-test-l736",
     "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[\"array ([]) only strings have UTF-8 byte length\",\"object ({}) only strings have UTF-8 byte length\",\"array ([1,2]) only strings have UTF-8 byte length\",\"number (55) only strings have UTF-8 byte length\",\"boolean (true) only strings have UTF-8 byte length\",\"boolean (false) only strings have UTF-8 byte length\"]",
     "jqx_out": "[[],{},[1,2],55,true,false]"
-  },
-  {
-    "name": "upstream-jq-test-l757",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[null,120,null,55]",
-    "jqx_out": "jqx: error: Unknown function: add"
-  },
-  {
-    "name": "upstream-jq-test-l762",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"arr\":[],\"sum\":null}",
-    "jqx_out": "jqx: error: Unknown function: add"
-  },
-  {
-    "name": "upstream-jq-test-l766",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[\"a\",\"b\",\"d\"]",
-    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character '('"
-  },
-  {
-    "name": "upstream-jq-test-l821",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[-2,1,1]",
-    "jqx_out": "jqx: error: Unknown function: floor"
-  },
-  {
-    "name": "upstream-jq-test-l825",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[2,3]",
-    "jqx_out": "jqx: error: Unknown function: sqrt"
-  },
-  {
-    "name": "upstream-jq-test-l829",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "2",
-    "jqx_out": "jqx: error: Unknown function: sqrt"
-  },
-  {
-    "name": "upstream-jq-test-l838",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "3.141592",
-    "jqx_out": "jqx: error: Unknown function: atan"
-  },
-  {
-    "name": "upstream-jq-test-l842",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,0.996917,0.987688,0.972369,0.951056,0.923879,0.891006,0.85264,0.809017,0.760406,0.707106,0.649448,0.587785,0.522498,0.45399,0.382683,0.309017,0.233445,0.156434,0.078459]",
-    "jqx_out": "jqx: error: Unknown function: cos"
-  },
-  {
-    "name": "upstream-jq-test-l846",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,0.078459,0.156434,0.233445,0.309016,0.382683,0.45399,0.522498,0.587785,0.649447,0.707106,0.760405,0.809016,0.85264,0.891006,0.923879,0.951056,0.972369,0.987688,0.996917]",
-    "jqx_out": "jqx: error: Unknown function: sin"
   },
   {
     "name": "upstream-jq-test-l929",
@@ -302,22 +190,6 @@
     "jqx_status": "0",
     "jq_out": "jq: error (at <stdin>:1): Cannot index array with string \"a\"",
     "jqx_out": "jqx: error: Cannot index array with string \"a\""
-  },
-  {
-    "name": "upstream-jq-test-l1053",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true",
-    "jqx_out": "jqx: error: Unknown function: error"
-  },
-  {
-    "name": "upstream-jq-test-l1057",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "false",
-    "jqx_out": "jqx: error: Unknown function: error"
   },
   {
     "name": "upstream-jq-test-l1114",
@@ -392,60 +264,12 @@
     "jqx_out": "null\n{\"bar\":[0,1],\"foo\":[0,1,2,3,4]}\n{\"bar\":[1],\"foo\":[1,4]}\n{\"bar\":[1]}"
   },
   {
-    "name": "upstream-jq-test-l1184",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":{\"b\":{\"c\":null}}}",
-    "jqx_out": "jqx: error: Unknown function: pick"
-  },
-  {
-    "name": "upstream-jq-test-l1188",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1]",
-    "jqx_out": "jqx: error: Unknown function: pick"
-  },
-  {
-    "name": "upstream-jq-test-l1192",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[[10]]",
-    "jqx_out": "jqx: error: Unknown function: pick"
-  },
-  {
     "name": "upstream-jq-test-l1197",
     "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"Out of bounds negative array index\"",
     "jqx_out": "[1,2]"
-  },
-  {
-    "name": "upstream-jq-test-l1208",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"bar\":42,\"foo\":42}",
-    "jqx_out": "{\"bar\":42,\"foo\":null}"
-  },
-  {
-    "name": "upstream-jq-test-l1216",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[3,5,7]\n[2,6,10]\n[-1,1,3]\n[0.5,1.5,2.5]\n[1,1,1]",
-    "jqx_out": "jqx: error (at <stdin>:1:9): Invalid character ','"
-  },
-  {
-    "name": "upstream-jq-test-l1228",
-    "category": "runtime-error-vs-jq-success",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"foo\":4}",
-    "jqx_out": "jqx: error: Cannot index number with string \"foo\""
   },
   {
     "name": "upstream-jq-test-l1232",
@@ -457,35 +281,35 @@
   },
   {
     "name": "upstream-jq-test-l1241",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"a\":[{\"b\":5}]}\n{\"b\":0,\"a\":[{\"b\":5}]}\n\"Cannot index number with number\"\n{\"a\":[{\"b\":5}]}\n\"Cannot index number with string \\\"b\\\"\"\n\"Cannot index object with number\"\n{\"a\":[{\"b\":5}]}\n{\"a\":[{\"c\":3,\"b\":5}]}",
-    "jqx_out": "jqx: error (at <stdin>:1:37): Invalid character ')'"
+    "jqx_out": "null\n{\"b\":0}\n{\"a\":0}\n{\"a\":null}\n{\"a\":[0,1]}\n{\"a\":{\"b\":1}}\n{\"a\":[{}]}\n{\"a\":[{\"c\":3}]}"
   },
   {
     "name": "upstream-jq-test-l1253",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[1,0]",
-    "jqx_out": "jqx: error (at <stdin>:1:32): Invalid character '�'"
+    "jqx_out": ""
   },
   {
     "name": "upstream-jq-test-l1257",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[0,2,4]",
-    "jqx_out": "jqx: error (at <stdin>:1:26): Invalid character '�'"
+    "jqx_out": ""
   },
   {
     "name": "upstream-jq-test-l1261",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"foo\":[0,5]}",
-    "jqx_out": "jqx: error (at <stdin>:1:23): Invalid character '�'"
+    "jqx_out": ""
   },
   {
     "name": "upstream-jq-test-l1269",
@@ -497,27 +321,19 @@
   },
   {
     "name": "upstream-jq-test-l1273",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"Invalid path expression near attempt to iterate through [{\\\"a\\\":1}]\"",
-    "jqx_out": "jqx: error (at <stdin>:1:37): Invalid character ')'"
+    "jqx_out": "[{\"a\":0},{\"a\":1}]"
   },
   {
     "name": "upstream-jq-test-l1277",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"Invalid path expression near attempt to iterate through [{\\\"a\\\":1}]\"",
-    "jqx_out": "jqx: error (at <stdin>:1:39): Invalid character ')'"
-  },
-  {
-    "name": "upstream-jq-test-l1289",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,1,1,1,1,1]",
-    "jqx_out": "jqx: error (at <stdin>:1:8): Invalid character '�'"
+    "jqx_out": "[{\"a\":0},{\"a\":1}]"
   },
   {
     "name": "upstream-jq-test-l1305",
@@ -552,36 +368,12 @@
     "jqx_out": "[]"
   },
   {
-    "name": "upstream-jq-test-l1357",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[\"hello\",true,\"hello\",[false],\"hello\"]",
-    "jqx_out": "jqx: error (at <stdin>:1:13): Invalid character '�'"
-  },
-  {
     "name": "upstream-jq-test-l1431",
     "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[\"foo\",\"Cannot index number with string \\\"a\\\"\",3]",
     "jqx_out": "[0,1,3]"
-  },
-  {
-    "name": "upstream-jq-test-l1447",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "1",
-    "jqx_out": ""
-  },
-  {
-    "name": "upstream-jq-test-l1451",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "1\n3",
-    "jqx_out": "1"
   },
   {
     "name": "upstream-jq-test-l1456",
@@ -600,20 +392,12 @@
     "jqx_out": "\"foo\""
   },
   {
-    "name": "upstream-jq-test-l1468",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"x\":1,\"y\":2,\"z\":3}",
-    "jqx_out": "jqx: error (at <stdin>:1:13): Invalid character ':'"
-  },
-  {
     "name": "upstream-jq-test-l1482",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"{\\\"file\\\":\\\"<top-level>\\\",\\\"line\\\":1}\"",
-    "jqx_out": "jqx: error (at <stdin>:1:13): Invalid character '('"
+    "jqx_out": "null"
   },
   {
     "name": "upstream-jq-test-l1519",
@@ -657,11 +441,11 @@
   },
   {
     "name": "upstream-jq-test-l1575",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"正\"",
-    "jqx_out": "jqx: error (at <stdin>:1:16): Invalid character '�'"
+    "jqx_out": "\"г\""
   },
   {
     "name": "upstream-jq-test-l1579",
@@ -670,14 +454,6 @@
     "jqx_status": "0",
     "jq_out": "[2,3]",
     "jqx_out": "[4,5]"
-  },
-  {
-    "name": "upstream-jq-test-l1603",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[null,null]",
-    "jqx_out": "jqx: error: Unknown function: nan"
   },
   {
     "name": "upstream-jq-test-l1615",
@@ -712,38 +488,6 @@
     "jqx_out": "[{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3},{\"a\":4,\"b\":1,\"c\":3}]\n[{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3},{\"a\":4,\"b\":1,\"c\":3}]\n[{\"a\":4,\"b\":1,\"c\":3},{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3}]\n[[{\"a\":4,\"b\":1,\"c\":3}],[{\"a\":0,\"b\":2,\"c\":43}],[{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3}]]\n[[{\"a\":1,\"b\":4,\"c\":14},{\"a\":0,\"b\":2,\"c\":43}],[{\"a\":4,\"b\":1,\"c\":3},{\"a\":1,\"b\":4,\"c\":3}]]"
   },
   {
-    "name": "upstream-jq-test-l1679",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"error\":\"no, it's OK\"}",
-    "jqx_out": "jqx: error (at <stdin>:1:29): Invalid character '�'"
-  },
-  {
-    "name": "upstream-jq-test-l1683",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":999}",
-    "jqx_out": "jqx: error (at <stdin>:1:23): Invalid character '�'"
-  },
-  {
-    "name": "upstream-jq-test-l1707",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "false",
-    "jqx_out": "jqx: error: Unknown function: nan"
-  },
-  {
-    "name": "upstream-jq-test-l1719",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[[1],[1],[1,2],[1,2],[1,2]]",
-    "jqx_out": "jqx: error (at <stdin>:1:15): Invalid character ')'"
-  },
-  {
     "name": "upstream-jq-test-l1785",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -769,27 +513,27 @@
   },
   {
     "name": "upstream-jq-test-l1939",
-    "category": "unknown-function",
+    "category": "output-mismatch",
     "jq_status": "5",
     "jqx_status": "0",
     "jq_out": "jq: error (at <stdin>:1): module not found: c",
-    "jqx_out": "jqx: error: Unknown function: modulemeta"
+    "jqx_out": "{\"defs\":{},\"deps\":[]}"
   },
   {
     "name": "upstream-jq-test-l1943",
-    "category": "unknown-function",
+    "category": "output-mismatch",
     "jq_status": "5",
     "jqx_status": "0",
     "jq_out": "jq: error (at <stdin>:1): module not found: c",
-    "jqx_out": "jqx: error: Unknown function: modulemeta"
+    "jqx_out": "0"
   },
   {
     "name": "upstream-jq-test-l1947",
-    "category": "unknown-function",
+    "category": "output-mismatch",
     "jq_status": "5",
     "jqx_status": "0",
     "jq_out": "jq: error (at <stdin>:1): module not found: c",
-    "jqx_out": "jqx: error: Unknown function: modulemeta"
+    "jqx_out": "0"
   },
   {
     "name": "upstream-jq-test-l1967",
@@ -881,27 +625,19 @@
   },
   {
     "name": "upstream-jq-test-l2037",
-    "category": "parser-invalid-character",
+    "category": "unknown-function",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:166): Invalid character '0'"
-  },
-  {
-    "name": "upstream-jq-test-l2052",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error (at <stdin>:1:11): Invalid character ')'"
+    "jqx_out": "jqx: error: Unknown function: pow"
   },
   {
     "name": "upstream-jq-test-l2055",
-    "category": "parser-invalid-character",
+    "category": "unknown-function",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"0\":[0,\"foo0\"],\"1\":[1,\"foo1\"],\"2\":[2,\"foo2\"],\"3\":[3,\"foo3\"],\"4\":[4,\"foo4\"]}",
-    "jqx_out": "jqx: error (at <stdin>:1:25): Invalid character '('"
+    "jqx_out": "jqx: error: Unknown function: INDEX"
   },
   {
     "name": "upstream-jq-test-l2087",
@@ -921,51 +657,27 @@
   },
   {
     "name": "upstream-jq-test-l2096",
-    "category": "parser-invalid-character",
+    "category": "runtime-error-vs-jq-success",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"a\":null,\"b\":\"b\"}",
-    "jqx_out": "jqx: error (at <stdin>:1:22): Invalid character '�'"
-  },
-  {
-    "name": "upstream-jq-test-l2101",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":{\"b\":1}}",
-    "jqx_out": "jqx: error (at <stdin>:1:83): Invalid character '�'"
-  },
-  {
-    "name": "upstream-jq-test-l2123",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true",
-    "jqx_out": "jqx: error: Unknown function: builtins"
+    "jqx_out": "jqx: error: Invalid path expression with result null"
   },
   {
     "name": "upstream-jq-test-l2127",
-    "category": "unknown-function",
+    "category": "runtime-error-vs-jq-success",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "false",
-    "jqx_out": "jqx: error: Unknown function: builtins"
+    "jqx_out": "jqx: error: Cannot apply / to string (\"abs/0\") and string (\"/\")"
   },
   {
     "name": "upstream-jq-test-l2131",
-    "category": "unknown-function",
+    "category": "runtime-error-vs-jq-success",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "true",
-    "jqx_out": "jqx: error: Unknown function: builtins"
-  },
-  {
-    "name": "upstream-jq-test-l2135",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "false",
-    "jqx_out": "jqx: error: Unknown function: builtins"
+    "jqx_out": "jqx: error: Cannot apply / to string (\"abs/0\") and string (\"/\")"
   },
   {
     "name": "upstream-jq-test-l2190",
@@ -1049,43 +761,35 @@
   },
   {
     "name": "upstream-jq-test-l2259",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"foreach\":1,\"and\":2,\"or\":3,\"a\":4}",
-    "jqx_out": "jqx: error (at <stdin>:1:42): Invalid character '$'"
+    "jqx_out": "{\"a\":4,\"or\":3,\"and\":2,\"foreach\":1}"
   },
   {
     "name": "upstream-jq-test-l2270",
-    "category": "parser-invalid-character",
+    "category": "unknown-variable",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"a\":[1,2,3],\"__loc__\":{\"file\":\"<top-level>\",\"line\":1},\"c\":{\"hi\":\"hey\"}}",
-    "jqx_out": "jqx: error (at <stdin>:1:6): Invalid character '$'"
+    "jqx_out": "jqx: error: Unknown variable: $__loc__"
   },
   {
     "name": "upstream-jq-test-l2274",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"x\":1,\"as\":8,\"2\":4,\"3\":5,\"if\":6,\"foo\":7}",
-    "jqx_out": "jqx: error (at <stdin>:1:37): Invalid character '$'"
+    "jqx_out": "{\"2\":4,\"3\":5,\"x\":1,\"as\":8,\"if\":6,\"foo\":7}"
   },
   {
     "name": "upstream-jq-test-l2281",
-    "category": "unknown-function",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "true",
-    "jqx_out": "jqx: error: Unknown function: isnan"
-  },
-  {
-    "name": "upstream-jq-test-l2285",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":null}",
-    "jqx_out": "jqx: error (at <stdin>:1:7): Invalid character 'a'"
+    "jqx_out": "false"
   },
   {
     "name": "upstream-jq-test-l2290",
@@ -1093,71 +797,47 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "true\ntrue\n\"Invalid numeric literal at EOF at line 1, column 4 (while parsing 'NaN1')\"\n\"Invalid numeric literal at EOF at line 1, column 5 (while parsing 'NaN10')\"\n\"Invalid numeric literal at EOF at line 1, column 6 (while parsing 'NaN100')\"\n\"Invalid numeric literal at EOF at line 1, column 7 (while parsing 'NaN1000')\"\n\"Invalid numeric literal at EOF at line 1, column 8 (while parsing 'NaN10000')\"\n\"Invalid numeric literal at EOF at line 1, column 9 (while parsing 'NaN100000')\"",
-    "jqx_out": "\"NaN\"\n\"-NaN\"\n\"NaN1\"\n\"NaN10\"\n\"NaN100\"\n\"NaN1000\"\n\"NaN10000\"\n\"NaN100000\""
-  },
-  {
-    "name": "upstream-jq-test-l2316",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"hi there!\"",
-    "jqx_out": "jqx: error (at <stdin>:1:62): Invalid character '('"
+    "jqx_out": "false\nfalse\n\"NaN1\"\n\"NaN10\"\n\"NaN100\"\n\"NaN1000\"\n\"NaN10000\"\n\"NaN100000\""
   },
   {
     "name": "upstream-jq-test-l2320",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"hi there!\"\n\"caught outside ho\"",
-    "jqx_out": "jqx: error (at <stdin>:1:115): Invalid character '('"
+    "jqx_out": "\"caught outside null\""
   },
   {
     "name": "upstream-jq-test-l2325",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "5",
     "jqx_status": "0",
     "jq_out": "jq: error (at <stdin>:1): ho\n\"hi there!\"",
-    "jqx_out": "jqx: error (at <stdin>:1:98): Invalid character '('"
-  },
-  {
-    "name": "upstream-jq-test-l2329",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"inner catch foo\"",
-    "jqx_out": "jqx: error (at <stdin>:1:36): Invalid character '('"
+    "jqx_out": "jqx: error: \"ho\""
   },
   {
     "name": "upstream-jq-test-l2333",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"outer catch inner catch foo\"",
-    "jqx_out": "jqx: error (at <stdin>:1:37): Invalid character '('"
-  },
-  {
-    "name": "upstream-jq-test-l2343",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"foo\":\"bar\"}",
-    "jqx_out": "jqx: error (at <stdin>:1:26): Invalid character '�'"
+    "jqx_out": "\"outer catch foo\""
   },
   {
     "name": "upstream-jq-test-l2356",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[1,3,6.7,0.89,-876,5.43,21]",
-    "jqx_out": "jqx: error (at <stdin>:1:20): Invalid character '�'"
+    "jqx_out": ""
   },
   {
     "name": "upstream-jq-test-l2373",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[\"implode input must be an array\",\"string (\\\"a\\\") can't be imploded, unicode codepoint needs to be numeric\",\"number (null) can't be imploded, unicode codepoint needs to be numeric\"]",
-    "jqx_out": "jqx: error (at <stdin>:1:14): Invalid character 'a'"
+    "jqx_out": "[123,[\"a\"],\"\\u0000\"]"
   },
   {
     "name": "upstream-jq-test-l2377",
@@ -1192,60 +872,36 @@
     "jqx_out": "[1,2]"
   },
   {
-    "name": "upstream-jq-test-l2425",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,5,2,3,4]",
-    "jqx_out": "jqx: error (at <stdin>:1:24): Invalid character '�'"
-  },
-  {
-    "name": "upstream-jq-test-l2429",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0]",
-    "jqx_out": "jqx: error (at <stdin>:1:22): Invalid character '�'"
-  },
-  {
-    "name": "upstream-jq-test-l2433",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,2]",
-    "jqx_out": "jqx: error (at <stdin>:1:22): Invalid character '�'"
-  },
-  {
     "name": "upstream-jq-test-l2437",
-    "category": "unknown-function",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "null",
-    "jqx_out": "jqx: error: Unknown function: nan"
+    "jqx_out": "0"
   },
   {
     "name": "upstream-jq-test-l2441",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"Cannot set array element at NaN index\"",
-    "jqx_out": "jqx: error (at <stdin>:1:29): Invalid character ')'"
+    "jqx_out": "null"
   },
   {
     "name": "upstream-jq-test-l2445",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"Cannot update string slices\"",
-    "jqx_out": "jqx: error (at <stdin>:1:35): Invalid character ')'"
+    "jqx_out": "null"
   },
   {
     "name": "upstream-jq-test-l2449",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[0,\"xyz\",4,5,6,7,8,9]",
-    "jqx_out": "jqx: error (at <stdin>:1:40): Invalid character ')'"
+    "jqx_out": "[0,\"xyz\",3,4,5,6,7,8,9]"
   },
   {
     "name": "upstream-jq-test-l2453",
@@ -1344,60 +1000,44 @@
     "jqx_out": ""
   },
   {
-    "name": "upstream-base64-test-l13",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"<>&'\\\"\\t\"",
-    "jqx_out": "jqx: error (at <stdin>:1:2): Invalid character '@'"
-  },
-  {
     "name": "upstream-base64-test-l40",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"string (\\\"Not base64...) is not valid base64 data\"",
-    "jqx_out": "jqx: error (at <stdin>:1:9): Invalid character '@'"
+    "jqx_out": "\"Not base64 data\""
   },
   {
     "name": "upstream-base64-test-l45",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"string (\\\"QUJDa\\\") trailing base64 byte found\"",
-    "jqx_out": "jqx: error (at <stdin>:1:9): Invalid character '@'"
-  },
-  {
-    "name": "upstream-uri-test-l9",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"<>&'\\\"\\t\"",
-    "jqx_out": "jqx: error (at <stdin>:1:2): Invalid character '@'"
+    "jqx_out": "\"QUJDa\""
   },
   {
     "name": "upstream-uri-test-l25",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"string (\\\"%F0%93%81\\\") is not a valid uri encoding\"",
-    "jqx_out": "jqx: error (at <stdin>:1:9): Invalid character '@'"
+    "jqx_out": "\"%F0%93%81\""
   },
   {
     "name": "upstream-uri-test-l30",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"string (\\\"%FX%9F%98%8E\\\") is not a valid uri encoding\"",
-    "jqx_out": "jqx: error (at <stdin>:1:9): Invalid character '@'"
+    "jqx_out": "\"%FX%9F%98%8E\""
   },
   {
     "name": "upstream-uri-test-l36",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"string (\\\"%F0%C0%81%8E\\\") is not a valid uri encoding\"",
-    "jqx_out": "jqx: error (at <stdin>:1:9): Invalid character '@'"
+    "jqx_out": "\"%F0%C0%81%8E\""
   },
   {
     "name": "upstream-optional-test-l4",
@@ -1512,14 +1152,6 @@
     "jqx_out": "{\"good\":true,\"name\":\"JSON\"}\n{\"good\":false,\"name\":\"XML\"}"
   },
   {
-    "name": "upstream-man-test-l142",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"stedolan\":[\"JQ Primer\",\"More JQ\"]}",
-    "jqx_out": "jqx: error (at <stdin>:1:2): Invalid character '('"
-  },
-  {
     "name": "upstream-man-test-l182",
     "category": "runtime-error-vs-jq-success",
     "jq_status": "0",
@@ -1528,92 +1160,28 @@
     "jqx_out": "jqx: error: Cannot apply / to string (\"a, b,c,d, e\") and string (\", \")"
   },
   {
-    "name": "upstream-man-test-l207",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "2",
-    "jqx_out": "jqx: error: Unknown function: utf8bytelength"
-  },
-  {
-    "name": "upstream-man-test-l252",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":1,\"b\":{\"c\":2},\"x\":null}",
-    "jqx_out": "jqx: error: Unknown function: pick"
-  },
-  {
-    "name": "upstream-man-test-l256",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,null,3]",
-    "jqx_out": "jqx: error: Unknown function: pick"
-  },
-  {
     "name": "upstream-man-test-l337",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"invalid value: 42\"",
-    "jqx_out": "jqx: error (at <stdin>:1:28): Invalid character '('"
+    "jqx_out": "42"
   },
   {
     "name": "upstream-man-test-l341",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"{\\\"file\\\":\\\"<top-level>\\\",\\\"line\\\":1}\"",
-    "jqx_out": "jqx: error (at <stdin>:1:13): Invalid character '('"
-  },
-  {
-    "name": "upstream-man-test-l365",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "8",
-    "jqx_out": "jqx: error: Unknown function: add"
-  },
-  {
-    "name": "upstream-man-test-l434",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "3",
-    "jqx_out": "jqx: error: Unknown function: floor"
-  },
-  {
-    "name": "upstream-man-test-l438",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "3",
-    "jqx_out": "jqx: error: Unknown function: sqrt"
-  },
-  {
-    "name": "upstream-man-test-l447",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true\nfalse\ntrue\nfalse",
-    "jqx_out": "jqx: error: Unknown function: toboolean"
-  },
-  {
-    "name": "upstream-man-test-l464",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true\nfalse",
-    "jqx_out": "jqx: error: Unknown function: infinite"
+    "jqx_out": "null"
   },
   {
     "name": "upstream-man-test-l469",
-    "category": "unknown-function",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"number\"\n\"number\"",
-    "jqx_out": "jqx: error: Unknown function: infinite"
+    "jqx_out": "1.7976931348623157e+308\n\"number\""
   },
   {
     "name": "upstream-man-test-l478",
@@ -1705,11 +1273,11 @@
   },
   {
     "name": "upstream-man-test-l706",
-    "category": "parser-invalid-character",
+    "category": "runtime-error-vs-jq-success",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[1,2,3,4]",
-    "jqx_out": "jqx: error (at <stdin>:1:53): Invalid character 'e'"
+    "jqx_out": "jqx: error: Invalid path expression with result null"
   },
   {
     "name": "upstream-man-test-l742",
@@ -1744,14 +1312,6 @@
     "jqx_out": "[true,true]"
   },
   {
-    "name": "upstream-man-test-l813",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "42\n42\n1",
-    "jqx_out": "1"
-  },
-  {
     "name": "upstream-man-test-l827",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -1760,44 +1320,28 @@
     "jqx_out": "true"
   },
   {
-    "name": "upstream-man-test-l857",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":1,\"b\":2,\"d\":3,\"e\":4}\n{\"a\":1,\"b\":2,\"d\":3,\"e\":4}",
-    "jqx_out": "jqx: error (at <stdin>:1:61): Invalid character '$'"
-  },
-  {
     "name": "upstream-man-test-l862",
-    "category": "parser-invalid-character",
+    "category": "runtime-error-vs-jq-success",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"a\":1,\"b\":2,\"d\":3,\"e\":null}\n{\"a\":1,\"b\":2,\"d\":null,\"e\":4}",
-    "jqx_out": "jqx: error (at <stdin>:1:53): Invalid character '$'"
+    "jqx_out": "jqx: error: Cannot index object with number"
   },
   {
     "name": "upstream-man-test-l867",
-    "category": "parser-invalid-character",
+    "category": "unknown-variable",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"a\":null,\"b\":3}",
-    "jqx_out": "jqx: error (at <stdin>:1:56): Invalid character '('"
-  },
-  {
-    "name": "upstream-man-test-l919",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"x\":\"abc\",\"y\":[1,2,3]}",
-    "jqx_out": "jqx: error (at <stdin>:1:44): Invalid character '+'"
+    "jqx_out": "jqx: error: Unknown variable: $a"
   },
   {
     "name": "upstream-man-test-l939",
-    "category": "parser-invalid-character",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"index\":1,\"item\":\"foo\"}\n{\"index\":2,\"item\":\"bar\"}\n{\"index\":3,\"item\":\"baz\"}",
-    "jqx_out": "jqx: error (at <stdin>:1:44): Invalid character '$'"
+    "jqx_out": "{\"item\":\"foo\",\"index\":1}\n{\"item\":\"bar\",\"index\":2}\n{\"item\":\"baz\",\"index\":3}"
   },
   {
     "name": "upstream-man-test-l956",
@@ -1822,37 +1366,5 @@
     "jqx_status": "0",
     "jq_out": "true",
     "jqx_out": "jqx: error: Unknown function: fromstream"
-  },
-  {
-    "name": "upstream-man-test-l969",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,0,[5,1,[1,[0]],0]]",
-    "jqx_out": "jqx: error (at <stdin>:1:55): Invalid character '�'"
-  },
-  {
-    "name": "upstream-man-test-l977",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":20,\"b\":20}",
-    "jqx_out": "{\"a\":10,\"b\":20}"
-  },
-  {
-    "name": "upstream-man-test-l985",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":0,\"b\":0}\n{\"a\":1,\"b\":1}\n{\"a\":2,\"b\":2}",
-    "jqx_out": "jqx: error (at <stdin>:1:20): Invalid character '�'"
-  },
-  {
-    "name": "upstream-man-test-l991",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":0,\"b\":0}",
-    "jqx_out": "jqx: error (at <stdin>:1:21): Invalid character '�'"
   }
 ]

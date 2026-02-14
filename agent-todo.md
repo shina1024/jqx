@@ -5,7 +5,8 @@ Updated: 2026-02-14
 ## P0: jq互換の未実装/部分実装を埋める
 
 - [x] `def`（ユーザー定義関数）の最小実装を追加する（top-level の parser lowering + 引数付き `def f(a;b)` + differential case）
-- [ ] `def` の対応範囲を拡張する（再帰、ネスト定義の完全互換、import連携）
+- [x] `def` の対応範囲を拡張する（ネスト定義の配置対応・arity解決改善）
+- [ ] `def` の対応範囲をさらに拡張する（再帰、filter引数セマンティクス、import連携）
 - [ ] update assignment（`|=`, `+=` など）の対応範囲を拡張する（静的パス以外の実用ケース）
 - [ ] 正規表現ファミリ（`test`/`match`/`capture`/`scan`/`sub`/`gsub`）を最小互換で実装する
 - [ ] CLI `-R`/`-s` の入力セマンティクス差分を縮小する（line/slurp境界のjq互換）
@@ -18,20 +19,21 @@ Updated: 2026-02-14
 - [x] upstream stage1 subsetをallowlistベースで自動生成し、CIで生成物ドリフトを検知する
 - [x] upstream stage1 subsetを拡張する（安定性を維持しつつ59→76件に増やす）
 - [x] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ76→84件へ段階追加）
+- [x] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ84→92件へ段階追加）
 - [x] upstream失敗ケースをカテゴリ集計して台帳化する（`docs/upstream-failure-backlog.md` + snapshot）
 - [x] upstream parser失敗クラスタの第1段を実施する（188→147、`=`/`%`/単項`-`/`."..."`/`foreach`2句/object shorthand/`.[1,2]`）
 - [x] upstream parser失敗クラスタの第2段を実施する（145→108、`if/elif/else/end`拡張・`else`省略・任意式`[]`後置・配列/オブジェクト値で比較式）
 - [x] upstream parser失敗クラスタの第3段を実施する（108→80、`as`配列/オブジェクトパターン束縛と`?//` destructuring fallback）
 - [x] upstream parser失敗クラスタの第4段を実施する（80→75、`reduce/foreach` の `as` パターン束縛対応）
 - [x] upstream parser失敗クラスタの第5段を実施する（75→60、動的ブラケット添字/数値添字拡張/一般式の`.field`後置）
-- [ ] upstream parser失敗クラスタを段階的に潰す（残り `Invalid character` 62件）
+- [x] upstream parser失敗クラスタを段階的に潰す（`parser-invalid-character` 62→0）
 - [x] upstream unknown-functionクラスタの第1段を実施する（127→87、`range`/`limit`/`skip`/`IN`/`nth(i; expr)`）
 - [x] upstream unknown-functionクラスタの第2段を実施する（87→77、`path`/`del`/再帰下降 `..`）
 - [x] upstream unknown-function上位クラスタを潰す（77→0、`have_decnum`/`abs`/`isempty`/`trimstr`/`trim`系を実装）
 - [x] Objectキー順の扱いを安定化する方針を決めて実装する（辞書順正規化で安定化）
 - [ ] エラーメッセージ差分を縮小する（`expect_error` ケース追加は進捗あり、正規化改善を継続）
 - [x] differentialケースを拡張する（`reduce`/`foreach`/`try-catch`/演算の境界系を11件追加、smoke 169→180）
-- [ ] differentialケースをさらに拡張する（upstream pass群からの段階取り込み）
+- [x] differentialケースをさらに拡張する（upstream pass群から `def` 系3件を取り込み、smoke 180→185）
 
 ## P1: JS/TS公開に向けた仕上げ
 

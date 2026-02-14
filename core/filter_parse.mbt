@@ -147,6 +147,15 @@ fn FilterCursor::try_keyword(ctx : FilterCursor, kw : String) -> Bool {
 }
 
 ///|
+fn FilterCursor::peek_keyword(ctx : FilterCursor, kw : String) -> Bool {
+  ctx.skip_ws()
+  let saved = ctx.offset
+  let ok = ctx.try_keyword(kw)
+  ctx.offset = saved
+  ok
+}
+
+///|
 fn FilterCursor::try_qslash_fallback_sep(ctx : FilterCursor) -> Bool {
   ctx.skip_ws()
   let saved = ctx.offset
@@ -1168,7 +1177,7 @@ fn FilterCursor::parse_paren_expr(
   ctx : FilterCursor,
 ) -> Filter raise FilterError {
   ctx.expect_char('(')
-  let inner = ctx.parse_comma()
+  let inner = ctx.parse_scoped()
   ctx.expect_char(')')
   inner
 }
@@ -1185,7 +1194,7 @@ fn FilterCursor::parse_array_literal(
   }
   let items = []
   for {
-    let elem = ctx.parse_pipe()
+    let elem = ctx.parse_pipe_scoped()
     items.push(elem)
     ctx.skip_ws()
     match ctx.peek_char() {
@@ -1274,7 +1283,7 @@ fn FilterCursor::parse_object_literal(
         }
         None => ()
       }
-      ctx.parse_pipe()
+      ctx.parse_pipe_scoped()
     } else {
       match var_key_name {
         Some(name) => Filter::var_(name)
@@ -1815,7 +1824,11 @@ fn FilterCursor::parse_pipe(
         }
         ctx.skip_ws()
         ctx.expect_char('|')
-        let body = ctx.parse_pipe()
+        let body = if ctx.peek_keyword("def") {
+          ctx.parse_scoped(allow_as~)
+        } else {
+          ctx.parse_pipe()
+        }
         let source_tmp = ctx.fresh_as_tmp()
         let source_var = Filter::var_(source_tmp)
         let mut branch = ctx.lower_as_pattern_with_source(
@@ -1835,7 +1848,11 @@ fn FilterCursor::parse_pipe(
         return Filter::as_(left, source_tmp, branch)
       } else {
         ctx.expect_char('|')
-        let right = ctx.parse_pipe()
+        let right = if ctx.peek_keyword("def") {
+          ctx.parse_scoped(allow_as~)
+        } else {
+          ctx.parse_pipe()
+        }
         return ctx.lower_as_pattern_with_source(left, pattern, right)
       }
     }
@@ -1847,13 +1864,32 @@ fn FilterCursor::parse_pipe(
           ctx.offset = saved
           break
         }
-        let right = ctx.parse_fallback(allow_as~)
+        let right = if ctx.peek_keyword("def") {
+          ctx.parse_scoped(allow_as~)
+        } else {
+          ctx.parse_fallback(allow_as~)
+        }
         left = Filter::pipe(left, right)
       }
       _ => break
     }
   }
   left
+}
+
+///|
+fn FilterCursor::parse_pipe_scoped(
+  ctx : FilterCursor,
+  allow_as? : Bool = true,
+) -> Filter raise FilterError {
+  let defs = ctx.parse_definition_prefix()
+  let raw_filter = ctx.parse_pipe(allow_as~)
+  if defs.length() == 0 {
+    raw_filter
+  } else {
+    let lowered_defs = lower_definition_sequence(defs)
+    lower_filter_with_defs(raw_filter, lowered_defs)
+  }
 }
 
 ///|
@@ -2114,7 +2150,11 @@ fn FilterCursor::parse_comma(
     match ctx.peek_char() {
       Some(',') => {
         ctx.read_char() |> ignore
-        let right = ctx.parse_pipe(allow_as~)
+        let right = if ctx.peek_keyword("def") {
+          ctx.parse_scoped(allow_as~)
+        } else {
+          ctx.parse_pipe(allow_as~)
+        }
         left = Filter::comma(left, right)
       }
       _ => break
@@ -2124,14 +2164,15 @@ fn FilterCursor::parse_comma(
 }
 
 ///|
-fn find_filter_definition(
+fn find_filter_definition_arity(
   defs : Array[(String, Array[String], Filter)],
   name : String,
+  arity : Int,
 ) -> (Array[String], Filter)? {
   for i in 0..<defs.length() {
     let idx = defs.length() - 1 - i
     let kv = defs[idx]
-    if kv.0 == name {
+    if kv.0 == name && kv.1.length() == arity {
       return Some((kv.1, kv.2))
     }
   }
@@ -2156,10 +2197,10 @@ fn lower_filter_with_defs(
     | Builtin("@base64d") =>
       match filter {
         Builtin(name) =>
-          match find_filter_definition(defs, name) {
+          match find_filter_definition_arity(defs, name, 0) {
             Some((params, replaced)) =>
               if params.length() == 0 {
-                replaced
+                lower_filter_with_defs(replaced, defs)
               } else {
                 filter
               }
@@ -2191,10 +2232,10 @@ fn lower_filter_with_defs(
         items.map(kv => (kv.0, lower_filter_with_defs(kv.1, defs))),
       )
     Builtin(name) =>
-      match find_filter_definition(defs, name) {
+      match find_filter_definition_arity(defs, name, 0) {
         Some((params, replaced)) =>
           if params.length() == 0 {
-            replaced
+            lower_filter_with_defs(replaced, defs)
           } else {
             filter
           }
@@ -2202,12 +2243,13 @@ fn lower_filter_with_defs(
       }
     Call(name, args) => {
       let lowered_args = args.map(f => lower_filter_with_defs(f, defs))
-      match find_filter_definition(defs, name) {
+      match find_filter_definition_arity(defs, name, lowered_args.length()) {
         Some((params, replaced)) =>
           if params.length() == lowered_args.length() {
-            lower_filter_def_call(replaced, params, lowered_args)
-          } else if params.length() == 0 && lowered_args.length() == 0 {
-            replaced
+            lower_filter_with_defs(
+              lower_filter_def_call(replaced, params, lowered_args),
+              defs,
+            )
           } else {
             Filter::call(name, lowered_args)
           }
@@ -2498,8 +2540,49 @@ fn FilterCursor::read_until_top_level_semicolon(
   let mut paren_depth = 0
   let mut bracket_depth = 0
   let mut brace_depth = 0
+  let mut nested_def_depth = 0
   let mut in_string = false
   let mut escaped = false
+
+  fn char_at_offset(offset : Int) -> Char? {
+    if offset < ctx.end_offset {
+      Some(ctx.input.unsafe_get(offset).to_int().unsafe_to_char())
+    } else {
+      None
+    }
+  }
+
+  fn is_def_keyword_start(offset : Int) -> Bool {
+    if offset + 2 >= ctx.end_offset {
+      return false
+    }
+    match
+      (
+        char_at_offset(offset),
+        char_at_offset(offset + 1),
+        char_at_offset(offset + 2),
+      ) {
+      (Some('d'), Some('e'), Some('f')) => ()
+      _ => return false
+    }
+    let prev_is_ident = if offset > start {
+      match char_at_offset(offset - 1) {
+        Some(prev) => is_ident_continue(prev)
+        None => false
+      }
+    } else {
+      false
+    }
+    if prev_is_ident {
+      return false
+    }
+    let next_is_ident = match char_at_offset(offset + 3) {
+      Some(next) => is_ident_continue(next)
+      None => false
+    }
+    !next_is_ident
+  }
+
   for {
     match ctx.read_char() {
       Some(c) =>
@@ -2521,10 +2604,23 @@ fn FilterCursor::read_until_top_level_semicolon(
             ']' => if bracket_depth > 0 { bracket_depth -= 1 }
             '{' => brace_depth += 1
             '}' => if brace_depth > 0 { brace_depth -= 1 }
+            'd' =>
+              if paren_depth == 0 && bracket_depth == 0 && brace_depth == 0 {
+                let keyword_start = ctx.offset - 1
+                if is_def_keyword_start(keyword_start) {
+                  ctx.read_char() |> ignore
+                  ctx.read_char() |> ignore
+                  nested_def_depth += 1
+                }
+              }
             ';' =>
               if paren_depth == 0 && bracket_depth == 0 && brace_depth == 0 {
-                let end = ctx.offset - 1
-                return ctx.input.view(start_offset=start, end_offset=end)
+                if nested_def_depth > 0 {
+                  nested_def_depth -= 1
+                } else {
+                  let end = ctx.offset - 1
+                  return ctx.input.view(start_offset=start, end_offset=end)
+                }
               }
             _ => ()
           }
@@ -2594,16 +2690,24 @@ fn FilterCursor::parse_definition_prefix(
 }
 
 ///|
-pub fn parse_filter(input : StringView) -> Filter raise FilterError {
-  let ctx = FilterCursor::make(input)
+fn FilterCursor::parse_scoped(
+  ctx : FilterCursor,
+  allow_as? : Bool = true,
+) -> Filter raise FilterError {
   let defs = ctx.parse_definition_prefix()
-  let raw_filter = ctx.parse_comma()
-  let filter = if defs.length() == 0 {
+  let raw_filter = ctx.parse_comma(allow_as~)
+  if defs.length() == 0 {
     raw_filter
   } else {
     let lowered_defs = lower_definition_sequence(defs)
     lower_filter_with_defs(raw_filter, lowered_defs)
   }
+}
+
+///|
+pub fn parse_filter(input : StringView) -> Filter raise FilterError {
+  let ctx = FilterCursor::make(input)
+  let filter = ctx.parse_scoped()
   ctx.skip_ws()
   if ctx.offset >= ctx.end_offset {
     filter

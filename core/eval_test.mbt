@@ -226,6 +226,42 @@ test "eval def no-arg minimal" {
   assert_eq(must_eval(parse_filter("def plus($x): . + $x; plus(2)"), j), [
     Json::number(3.0),
   ])
+  assert_eq(
+    must_eval(
+      parse_filter("def f: . + 1; def g: def g: . + 100; f | g | f; (f | g), g"),
+      must_parse("3"),
+    ),
+    [Json::number(106.0), Json::number(105.0)],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter(
+        "def f: .+1; def g: f; def f: .+100; def f(a):a+.+11; [(g|f(20)), f]",
+      ),
+      must_parse("1"),
+    ),
+    [Json::array([Json::number(33.0), Json::number(101.0)])],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter(
+        "[[20,10][1,0] as $x | def f: (100,200) as $y | def g: [$x + $y, .]; . + $x | g; f[0] | [f][0][1] | f]",
+      ),
+      must_parse("999999999"),
+    ),
+    [
+      Json::array([
+        Json::array([Json::number(110.0), Json::number(130.0)]),
+        Json::array([Json::number(210.0), Json::number(130.0)]),
+        Json::array([Json::number(110.0), Json::number(230.0)]),
+        Json::array([Json::number(210.0), Json::number(230.0)]),
+        Json::array([Json::number(120.0), Json::number(160.0)]),
+        Json::array([Json::number(220.0), Json::number(160.0)]),
+        Json::array([Json::number(120.0), Json::number(260.0)]),
+        Json::array([Json::number(220.0), Json::number(260.0)]),
+      ]),
+    ],
+  )
 }
 
 ///|

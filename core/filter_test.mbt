@@ -211,6 +211,18 @@ test "parse def no-arg minimal" {
   guard (try? parse_filter("def f(x): x; [f(1), f(2)]")) is Ok(_) else {
     fail("expected parse success for def parameters")
   }
+  guard (try? parse_filter(
+      "def f: . + 1; def g: def g: . + 100; f | g | f; (f | g), g",
+    ))
+    is Ok(_) else {
+    fail("expected parse success for nested local defs in def body")
+  }
+  guard (try? parse_filter(
+      "[[20,10][1,0] as $x | def f: (100,200) as $y | def g: [$x + $y, .]; . + $x | g; f[0] | [f][0][1] | f]",
+    ))
+    is Ok(_) else {
+    fail("expected parse success for local defs in array element")
+  }
 }
 
 ///|

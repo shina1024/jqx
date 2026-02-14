@@ -336,6 +336,78 @@
     "source_expected_count": 1
   },
   {
+    "name": "upstream-jq-test-l287",
+    "filter": "[range(0;10)]",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 287,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l291",
+    "filter": "[range(0,1;3,4)]",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 291,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l295",
+    "filter": "[range(0;10;3)]",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 295,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l299",
+    "filter": "[range(0;10;-1)]",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 299,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l303",
+    "filter": "[range(0;-5;-1)]",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 303,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l307",
+    "filter": "[range(0,1;4,5;1,2)]",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 307,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l337",
+    "filter": "[foreach range(5) as $item (0; $item)]",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 337,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l341",
+    "filter": "[foreach .[] as [$i, $j] (0; . + $i - $j)]",
+    "input": "[[2,1], [5,3], [6,4]]",
+    "source_file": "jq.test",
+    "source_line": 341,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
     "name": "upstream-jq-test-l440",
     "filter": "[(index(\",\",\"|\"), rindex(\",\",\"|\")), indices(\",\",\"|\")]",
     "input": "\"a,b|c,d,e||f,g,h,|,|,i,j\"",

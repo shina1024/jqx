@@ -38,6 +38,14 @@ upstream-jq-test-l265
 upstream-jq-test-l269
 upstream-jq-test-l273
 upstream-jq-test-l283
+upstream-jq-test-l287
+upstream-jq-test-l291
+upstream-jq-test-l295
+upstream-jq-test-l299
+upstream-jq-test-l303
+upstream-jq-test-l307
+upstream-jq-test-l337
+upstream-jq-test-l341
 upstream-jq-test-l440
 upstream-jq-test-l445
 upstream-jq-test-l450
