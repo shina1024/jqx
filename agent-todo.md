@@ -51,6 +51,13 @@ Updated: 2026-02-14
 - [ ] Zod/Yup/Valibotの実ランタイム接続例をdocsに追加する（mockではない配線例）
 - [ ] Typed DSLコンビネータを拡張し、compile-time推論テストを追加する
 
+## P1: コードベース保守性（リファクタリング）
+
+- [ ] `core/eval_test.mbt` を機能別に分割する（`eval_test_support` 導入 + 挙動不変）
+- [ ] `core/filter_parse.mbt` を `cursor/atom/expr/lowering` に段階分割する（挙動不変）
+- [ ] `core/eval.mbt` を `core/json_ops/path_ops/collection_ops` に段階分割する（挙動不変）
+- [ ] 段階分割ガイドを維持する（`docs/refactor-roadmap.md`）
+
 ## P2: CI/運用の底上げ
 
 - [ ] differentialテストの実行対象OSを拡張する（Linux専用からの段階的拡張）
