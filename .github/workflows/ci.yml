@@ -56,6 +56,19 @@ jobs:
             ts/yup-adapter/pnpm-lock.yaml
             ts/valibot-adapter/pnpm-lock.yaml
 
+      - name: Install jq (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          JQ_VERSION="1.8.1"
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL "https://github.com/jqlang/jq/releases/download/jq-${JQ_VERSION}/jq-linux-amd64" -o "$HOME/.local/bin/jq"
+          chmod +x "$HOME/.local/bin/jq"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: jq Version (Linux)
+        if: runner.os == 'Linux'
+        run: jq --version
+
       - name: pnpm Version (Linux)
         if: runner.os == 'Linux'
         run: pnpm --version
