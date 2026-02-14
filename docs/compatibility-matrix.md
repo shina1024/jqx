@@ -102,7 +102,7 @@ Notes:
   `scripts/jq_upstream_import.json` (skip patterns + per-case overrides).
 - `scripts/jq_compat_cases.upstream.stage1.json` is auto-generated from
   `scripts/jq_upstream_stage1_allowlist.txt` and is the current CI-safe subset
-  (76 passing cases as of 2026-02-10).
+  (84 passing cases as of 2026-02-14).
 - Full upstream failure backlog and prioritization:
   `docs/upstream-failure-backlog.md`.
 - CLI compatibility cases can specify `jq_args` / `jqx_args` and

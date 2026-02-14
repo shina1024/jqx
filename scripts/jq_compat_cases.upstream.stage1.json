@@ -102,6 +102,24 @@
     "source_expected_count": 1
   },
   {
+    "name": "upstream-jq-test-l118",
+    "filter": "{a,b,(.d):.a,e:.b}",
+    "input": "{\"a\":1, \"b\":2, \"c\":3, \"d\":\"c\"}",
+    "source_file": "jq.test",
+    "source_line": 118,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l122",
+    "filter": "{\"a\",b,\"a$\\(1+1)\"}",
+    "input": "{\"a\":1, \"b\":2, \"c\":3, \"a$2\":4}",
+    "source_file": "jq.test",
+    "source_line": 122,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
     "name": "upstream-jq-test-l148",
     "filter": ".foo",
     "input": "{\"foo\": 42, \"bar\": 43}",
@@ -147,6 +165,15 @@
     "source_expected_count": 1
   },
   {
+    "name": "upstream-jq-test-l168",
+    "filter": ".\"foo\".\"bar\"",
+    "input": "{\"foo\": {\"bar\": 20}}",
+    "source_file": "jq.test",
+    "source_line": 168,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
     "name": "upstream-jq-test-l172",
     "filter": ".e0, .E1, .E-1, .E+1",
     "input": "{\"e0\": 1, \"E1\": 2, \"E\": 3}",
@@ -174,6 +201,15 @@
     "source_expected_count": 1
   },
   {
+    "name": "upstream-jq-test-l187",
+    "filter": "[..]",
+    "input": "[1,[[2]],{ \"a\":[1]}]",
+    "source_file": "jq.test",
+    "source_line": 187,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
     "name": "upstream-jq-test-l191",
     "filter": "[.[]|.[]?]",
     "input": "[1,null,[],[1,[2,[[3]]]],[{}],[{\"a\":[1,[2]]}]]",
@@ -188,6 +224,24 @@
     "input": "[1,null,true,false,\"abcdef\",{},{\"a\":1,\"b\":2},[],[1,2,3,4,5],[1,2]]",
     "source_file": "jq.test",
     "source_line": 195,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l221",
+    "filter": ".[-1] = 5",
+    "input": "[0,1,2]",
+    "source_file": "jq.test",
+    "source_line": 221,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l225",
+    "filter": ".[-2] = 5",
+    "input": "[0,1,2]",
+    "source_file": "jq.test",
+    "source_line": 225,
     "source_kind": "runtime",
     "source_expected_count": 1
   },
@@ -260,6 +314,24 @@
     "input": "[\"a\",\"b\"]",
     "source_file": "jq.test",
     "source_line": 269,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l273",
+    "filter": "[([5,5][]),.,.[]]",
+    "input": "[1,2,3]",
+    "source_file": "jq.test",
+    "source_line": 273,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l283",
+    "filter": "[.[-4,-3,-2,-1,0,1,2,3]]",
+    "input": "[1,2,3]",
+    "source_file": "jq.test",
+    "source_line": 283,
     "source_kind": "runtime",
     "source_expected_count": 1
   },

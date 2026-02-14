@@ -17,7 +17,7 @@ Updated: 2026-02-14
 - [x] upstream importerで生成したケース群のうち、安定パス集合（stage1）を選定してCIに段階導入する
 - [x] upstream stage1 subsetをallowlistベースで自動生成し、CIで生成物ドリフトを検知する
 - [x] upstream stage1 subsetを拡張する（安定性を維持しつつ59→76件に増やす）
-- [ ] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ79件超へ段階追加）
+- [x] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ76→84件へ段階追加）
 - [x] upstream失敗ケースをカテゴリ集計して台帳化する（`docs/upstream-failure-backlog.md` + snapshot）
 - [x] upstream parser失敗クラスタの第1段を実施する（188→147、`=`/`%`/単項`-`/`."..."`/`foreach`2句/object shorthand/`.[1,2]`）
 - [x] upstream parser失敗クラスタの第2段を実施する（145→108、`if/elif/else/end`拡張・`else`省略・任意式`[]`後置・配列/オブジェクト値で比較式）
