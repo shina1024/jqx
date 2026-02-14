@@ -1416,6 +1416,12 @@ test "execute arithmetic" {
   assert_eq(must_execute(parse_filter(".c - .a"), j), [Json::number(2.0)])
   assert_eq(must_execute(parse_filter(".a * .b"), j), [Json::number(2.0)])
   assert_eq(must_execute(parse_filter(".c / .a"), j), [Json::number(3.0)])
+  assert_eq(must_execute(parse_filter("\"a,b,c\" / \",\""), j), [
+    Json::array([Json::string("a"), Json::string("b"), Json::string("c")]),
+  ])
+  assert_eq(must_execute(parse_filter("\"a, b,c,d, e\" / \", \""), j), [
+    Json::array([Json::string("a"), Json::string("b,c,d"), Json::string("e")]),
+  ])
   assert_eq(must_execute(parse_filter("10 % 3"), j), [Json::number(1.0)])
   assert_eq(must_execute(parse_filter("-."), must_parse("3")), [
     Json::number(-3.0),
@@ -1604,6 +1610,46 @@ test "execute update assignment compatibility" {
   assert_eq(must_execute(parse_filter(".[] += .[0]"), must_parse("[1,2]")), [
     Json::array([Json::number(2.0), Json::number(3.0)]),
   ])
+  assert_eq(
+    must_execute(
+      parse_filter(
+        "reduce range(65540;65536;-1) as $i ([]; .[$i] = $i)|.[65536:]",
+      ),
+      must_parse("null"),
+    ),
+    [
+      Json::array([
+        Json::null(),
+        Json::number(65537.0),
+        Json::number(65538.0),
+        Json::number(65539.0),
+        Json::number(65540.0),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("(.a as $x | .b) = \"b\""),
+      must_parse("{\"a\":null,\"b\":null}"),
+    ),
+    [Json::object({ "a": Json::null(), "b": Json::string("b") })],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter(
+        "bsearch(4) as $ix | if $ix < 0 then .[-(1+$ix)] = 4 else . end",
+      ),
+      must_parse("[1,2,3]"),
+    ),
+    [
+      Json::array([
+        Json::number(1.0),
+        Json::number(2.0),
+        Json::number(3.0),
+        Json::number(4.0),
+      ]),
+    ],
+  )
   assert_eq(
     must_execute(
       parse_filter(".[2:4] = ([], [\"a\",\"b\"], [\"a\",\"b\",\"c\"])"),
@@ -2093,9 +2139,32 @@ test "execute abs/have_decnum/isempty compatibility" {
     must_execute(parse_filter("map(abs)"), must_parse("[-10,-1.1,-1e-1]")),
     [Json::array([Json::number(10.0), Json::number(1.1), Json::number(0.1)])],
   )
+  assert_eq(must_execute(parse_filter("abs"), must_parse("\"abc\"")), [
+    Json::string("abc"),
+  ])
+  assert_eq(must_execute(parse_filter("abs"), must_parse("[1,-2]")), [
+    Json::array([Json::number(1.0), Json::number(-2.0)]),
+  ])
+  assert_eq(must_execute(parse_filter("abs"), must_parse("{\"a\":-1}")), [
+    Json::object({ "a": Json::number(-1.0) }),
+  ])
   assert_eq(must_execute(parse_filter("have_decnum"), must_parse("null")), [
     Json::boolean(true),
   ])
+  assert_eq(
+    must_execute(
+      parse_filter("\"-1\"|IN(builtins[] / \"/\"|.[1])"),
+      must_parse("null"),
+    ),
+    [Json::boolean(false)],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("all(builtins[] / \"/\"; .[1]|tonumber >= 0)"),
+      must_parse("null"),
+    ),
+    [Json::boolean(true)],
+  )
   assert_eq(must_execute(parse_filter("isempty(empty)"), must_parse("null")), [
     Json::boolean(true),
   ])

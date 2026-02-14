@@ -72,14 +72,6 @@
     "jqx_out": "[0,5,9,10]"
   },
   {
-    "name": "upstream-jq-test-l490",
-    "category": "runtime-error-vs-jq-success",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[null,65537,65538,65539,65540]",
-    "jqx_out": "jqx: error: Invalid path expression with result null"
-  },
-  {
     "name": "upstream-jq-test-l657",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -200,14 +192,6 @@
     "jqx_out": "{\"a\":[{\"b\":0}]}"
   },
   {
-    "name": "upstream-jq-test-l1130",
-    "category": "runtime-error-vs-jq-success",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[\"a\",\"b\"]",
-    "jqx_out": "jqx: error: Invalid path expression with result 0"
-  },
-  {
     "name": "upstream-jq-test-l1164",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -245,7 +229,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"a\":[{\"b\":5}]}\n{\"b\":0,\"a\":[{\"b\":5}]}\n\"Cannot index number with number\"\n{\"a\":[{\"b\":5}]}\n\"Cannot index number with string \\\"b\\\"\"\n\"Cannot index object with number\"\n{\"a\":[{\"b\":5}]}\n{\"a\":[{\"c\":3,\"b\":5}]}",
-    "jqx_out": "null\n{\"b\":0}\n{\"a\":0}\n{\"a\":null}\n{\"a\":[0,1]}\n{\"a\":{\"b\":1}}\n{\"a\":[{}]}\n{\"a\":[{\"c\":3}]}"
+    "jqx_out": "{\"a\":[{\"b\":5}]}\n{\"a\":[{\"b\":5}],\"b\":0}\n{\"a\":0}\n{\"a\":[{\"b\":5}]}\n{\"a\":[0,1]}\n{\"a\":{\"b\":1}}\n{\"a\":[{\"b\":5}]}\n{\"a\":[{\"b\":5,\"c\":3}]}"
   },
   {
     "name": "upstream-jq-test-l1253",
@@ -424,22 +408,6 @@
     "jqx_out": "\"abc\""
   },
   {
-    "name": "upstream-jq-test-l1619",
-    "category": "runtime-error-vs-jq-success",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[[\"a\",\" bc\",\" def\",\" ghij\",\" jklmn\",\" a\",\"b\",\" c\",\"d\",\" e\",\"f\"],[\"a\",\"b\",\"c\",\"d\",\" e\",\"f\",\"g\",\"h\"]]",
-    "jqx_out": "jqx: error: Cannot apply / to string (\"a, bc, def, ghij, jklmn, a,b, c,d, e,f\") and string (\",\")"
-  },
-  {
-    "name": "upstream-jq-test-l1623",
-    "category": "runtime-error-vs-jq-success",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[[\"a\",\"bc\",\"def\",\"ghij\",\"jklmn\",\"a,b\",\"c,d\",\"e,f\"],[\"a,b,c,d\",\"e,f,g,h\"]]",
-    "jqx_out": "jqx: error: Cannot apply / to string (\"a, bc, def, ghij, jklmn, a,b, c,d, e,f\") and string (\", \")"
-  },
-  {
     "name": "upstream-jq-test-l1651",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -576,30 +544,6 @@
     "jqx_out": "0"
   },
   {
-    "name": "upstream-jq-test-l2096",
-    "category": "runtime-error-vs-jq-success",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":null,\"b\":\"b\"}",
-    "jqx_out": "jqx: error: Invalid path expression with result null"
-  },
-  {
-    "name": "upstream-jq-test-l2127",
-    "category": "runtime-error-vs-jq-success",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "false",
-    "jqx_out": "jqx: error: Cannot apply / to string (\"abs/0\") and string (\"/\")"
-  },
-  {
-    "name": "upstream-jq-test-l2131",
-    "category": "runtime-error-vs-jq-success",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true",
-    "jqx_out": "jqx: error: Cannot apply / to string (\"abs/0\") and string (\"/\")"
-  },
-  {
     "name": "upstream-jq-test-l2190",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -630,14 +574,6 @@
     "jqx_status": "0",
     "jq_out": "[-9007199254740992,\"-9007199254740992\",true]\n[-9007199254740992,\"-9007199254740992\",true]\n[9007199254740992,\"9007199254740992\",true]\n[9007199254740992,\"9007199254740992\",true]\n[13911860366432392,\"13911860366432392\",true]",
     "jqx_out": "[-9007199254740992,\"-9007199254740992\",false]\n[-9007199254740992,\"-9007199254740992\",false]\n[9007199254740992,\"9007199254740992\",false]\n[9007199254740992,\"9007199254740992\",false]\n[13911860366432392,\"13911860366432392\",false]"
-  },
-  {
-    "name": "upstream-jq-test-l2216",
-    "category": "runtime-error-vs-jq-success",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"abc\"",
-    "jqx_out": "jqx: error: string (\"abc\") cannot be negated"
   },
   {
     "name": "upstream-jq-test-l2220",
@@ -797,7 +733,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"Cannot set array element at NaN index\"",
-    "jqx_out": "null"
+    "jqx_out": "[9,1,2]"
   },
   {
     "name": "upstream-jq-test-l2445",
@@ -1000,14 +936,6 @@
     "jqx_out": "{\"good\":true,\"name\":\"JSON\"}\n{\"good\":false,\"name\":\"XML\"}"
   },
   {
-    "name": "upstream-man-test-l182",
-    "category": "runtime-error-vs-jq-success",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[\"a\",\"b,c,d\",\"e\"]",
-    "jqx_out": "jqx: error: Cannot apply / to string (\"a, b,c,d, e\") and string (\", \")"
-  },
-  {
     "name": "upstream-man-test-l337",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -1086,14 +1014,6 @@
     "jqx_status": "0",
     "jq_out": "[2]",
     "jqx_out": "[]"
-  },
-  {
-    "name": "upstream-man-test-l706",
-    "category": "runtime-error-vs-jq-success",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,2,3,4]",
-    "jqx_out": "jqx: error: Invalid path expression with result null"
   },
   {
     "name": "upstream-man-test-l781",

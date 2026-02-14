@@ -282,6 +282,19 @@ fn execute_arith(
           }
           out.push(json_number_value(v))
         }
+        (String(s), String(sep)) =>
+          if op == "/" {
+            out.push(Json::array(split_string(s, sep)))
+          } else {
+            raise TypeError(
+              "Cannot apply " +
+              op +
+              " to " +
+              json_type_with_value(a) +
+              " and " +
+              json_type_with_value(b),
+            )
+          }
         (String(s), Number(n, _)) =>
           if op == "*" {
             out.push(multiply_string_number(s, n))

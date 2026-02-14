@@ -140,6 +140,41 @@
     "input": "{\"a\":1,\"b\":2}"
   },
   {
+    "name": "path-dynamic-key",
+    "filter": "path(.a[path(.b)[0]])",
+    "input": "{\"a\":{\"b\":0}}"
+  },
+  {
+    "name": "assign-dynamic-index-large",
+    "filter": "reduce range(65540;65536;-1) as $i ([]; .[$i] = $i)|.[65536:]",
+    "input": "null"
+  },
+  {
+    "name": "assign-lhs-as",
+    "filter": "(.a as $x | .b) = \"b\"",
+    "input": "{\"a\":null,\"b\":null}"
+  },
+  {
+    "name": "assign-bsearch-index",
+    "filter": "bsearch(4) as $ix | if $ix < 0 then .[-(1+$ix)] = 4 else . end",
+    "input": "[1,2,3]"
+  },
+  {
+    "name": "string-divide-split",
+    "filter": "\"a, b,c,d, e\" / \", \"",
+    "input": "null"
+  },
+  {
+    "name": "builtins-slash-in",
+    "filter": "\"-1\"|IN(builtins[] / \"/\"|.[1])",
+    "input": "null"
+  },
+  {
+    "name": "builtins-slash-all",
+    "filter": "all(builtins[] / \"/\"; .[1]|tonumber >= 0)",
+    "input": "null"
+  },
+  {
     "name": "tojson-fromjson",
     "filter": "tojson | fromjson | .x | .[1]",
     "input": "{\"x\":[1,2]}"

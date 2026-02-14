@@ -11,8 +11,8 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 535
-- failed: 142
+- passed: 545
+- failed: 132
 - skipped: 147
 
 ## Failure Categories (Current)
@@ -20,7 +20,7 @@ This document tracks failing upstream differential cases so they do not stay
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
 | `output-mismatch` | 132 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
-| `runtime-error-vs-jq-success` | 10 | jqx runtime errors where jq succeeds |
+| `runtime-error-vs-jq-success` | 0 | resolved in current baseline |
 | `unknown-variable` | 0 | resolved in current baseline |
 | `parser-invalid-character` | 0 | resolved in current baseline |
 | `unknown-function` | 0 | resolved in current baseline |
@@ -53,7 +53,12 @@ From current snapshot (`unknown-function` subset):
   - fixed `?//` pattern fallback variable defaults (`null` initialization).
   - added special variables `$ENV` (minimal empty object) and `$__loc__` (minimal location object).
   - full upstream unknown-variable cluster reduced from `8` to `0`.
-- Differential smoke cases were expanded from 190 to 203.
+- Runtime error parity expanded:
+  - implemented string-division compatibility (`string / string` as split behavior).
+  - `abs` now matches jq for non-numeric scalar/container inputs (null/bool are still type errors).
+  - `path()` evaluation now keeps variable-bound path state through `as` and dynamic `getpath`.
+  - full upstream runtime-error-vs-jq-success cluster reduced from `10` to `0`.
+- Differential smoke cases were expanded from 203 to 210.
 - Upstream stage1 subset was expanded from 95 to 110 passing cases.
 
 ## Priority Plan
@@ -61,6 +66,5 @@ From current snapshot (`unknown-function` subset):
 1. Triage `output-mismatch` (`132`) by subcategory:
    - intentional policy differences (e.g. object key order)
    - real behavioral regressions (streaming/error semantics).
-2. Reduce `runtime-error-vs-jq-success` (`10`).
-3. Continue `def` compatibility improvements (recursion and filter-argument semantics).
-4. Keep expanding stage1 allowlist incrementally with newly stable cases.
+2. Continue `def` compatibility improvements (recursion and filter-argument semantics).
+3. Keep expanding stage1 allowlist incrementally with newly stable cases.

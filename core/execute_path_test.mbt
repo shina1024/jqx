@@ -423,6 +423,13 @@ test "execute path compatibility" {
     Json::array([Json::string("a"), Json::number(0.0), Json::string("b")]),
   ])
   assert_eq(
+    must_execute(
+      parse_filter("path(.a[path(.b)[0]])"),
+      must_parse("{\"a\":{\"b\":0}}"),
+    ),
+    [Json::array([Json::string("a"), Json::string("b")])],
+  )
+  assert_eq(
     must_execute(parse_filter("[path(..)]"), must_parse("{\"a\":[{\"b\":1}]}")),
     [
       Json::array([

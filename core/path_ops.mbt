@@ -579,26 +579,114 @@ fn append_recurse_path_states(
 }
 
 ///|
-fn path_filter_state(
+fn path_getpath_step(
+  state : PathEvalState,
+  segment : Json,
+) -> Array[PathEvalState] raise EvalError {
+  match segment {
+    String(name) => path_field_state(state, name, false)
+    Number(n, _) => path_index_state(state, n.to_int(), false)
+    _ => raise TypeError("Path must be specified as an array")
+  }
+}
+
+///|
+fn path_getpath_states(
+  state : PathEvalState,
+  path : Json,
+) -> Array[PathEvalState] raise EvalError {
+  match path {
+    Array(parts) => {
+      let mut states = [state]
+      for segment in parts {
+        let next = []
+        for current in states {
+          for stepped in path_getpath_step(current, segment) {
+            next.push(stepped)
+          }
+        }
+        states = next
+      }
+      states
+    }
+    _ => raise TypeError("Path must be specified as an array")
+  }
+}
+
+///|
+fn path_as_value_states(
+  value : Filter,
+  state : PathEvalState,
+  env : Map[String, Json],
+  bindings : Map[String, PathEvalState],
+) -> Array[PathEvalState] raise EvalError {
+  try path_filter_state_with_bindings(value, state, env, bindings) catch {
+    _ => {
+      let out = []
+      let values = execute_with_env(value, state.value, env)
+      for v in values {
+        out.push(path_eval_state(v, state.path.copy(), false))
+      }
+      out
+    }
+  } noraise {
+    states => states
+  }
+}
+
+///|
+fn path_filter_state_with_bindings(
   filter : Filter,
   state : PathEvalState,
   env : Map[String, Json],
+  bindings : Map[String, PathEvalState],
 ) -> Array[PathEvalState] raise EvalError {
   match filter {
     Identity => [state]
     Pipe(left, right) => {
       let out = []
-      for left_state in path_filter_state(left, state, env) {
-        for right_state in path_filter_state(right, left_state, env) {
+      for
+        left_state in path_filter_state_with_bindings(
+          left, state, env, bindings,
+        ) {
+        for
+          right_state in path_filter_state_with_bindings(
+            right, left_state, env, bindings,
+          ) {
           out.push(right_state)
         }
       }
       out
     }
     Comma(left, right) => {
-      let out = path_filter_state(left, state, env)
-      for right_state in path_filter_state(right, state, env) {
+      let out = path_filter_state_with_bindings(left, state, env, bindings)
+      for
+        right_state in path_filter_state_with_bindings(
+          right, state, env, bindings,
+        ) {
         out.push(right_state)
+      }
+      out
+    }
+    Var(name) =>
+      match bindings.get(name) {
+        Some(bound_state) => [bound_state]
+        None => path_fallback_states(filter, state, env)
+      }
+    As(value, name, body) => {
+      let out = []
+      let values = path_as_value_states(value, state, env, bindings)
+      for v in values {
+        let next_env = env.copy()
+        next_env[name] = v.value
+        let next_bindings = bindings.copy()
+        next_bindings[name] = v
+        for
+          body_state in path_filter_state_with_bindings(
+            body, state, next_env, next_bindings,
+          ) {
+          out.push(body_state)
+        }
       }
       out
     }
@@ -618,6 +706,19 @@ fn path_filter_state(
       append_recurse_path_states(state.value, state.path, out)
       out
     }
+    Call("getpath", args) =>
+      if args.length() != 1 {
+        raise UnknownFunction("getpath")
+      } else {
+        let out = []
+        let path_values = execute_with_env(args[0], state.value, env)
+        for path in path_values {
+          for next_state in path_getpath_states(state, path) {
+            out.push(next_state)
+          }
+        }
+        out
+      }
     Call("select", args) =>
       if args.length() != 1 {
         raise UnknownFunction("select")
@@ -629,6 +730,15 @@ fn path_filter_state(
     Empty => []
     _ => path_fallback_states(filter, state, env)
   }
+}
+
+///|
+fn path_filter_state(
+  filter : Filter,
+  state : PathEvalState,
+  env : Map[String, Json],
+) -> Array[PathEvalState] raise EvalError {
+  path_filter_state_with_bindings(filter, state, env, Map::new())
 }
 
 ///|

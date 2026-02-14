@@ -590,7 +590,9 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
           } else {
             [Json::number(n)]
           }
-        _ => raise TypeError(json_type_with_value(input) + " cannot be negated")
+        JNull | JTrue | JFalse =>
+          raise TypeError(json_type_with_value(input) + " cannot be negated")
+        _ => [input]
       }
     "fabs" =>
       match input {
