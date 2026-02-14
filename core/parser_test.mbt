@@ -1,4 +1,7 @@
 ///|
+// Source under test: core/parser.mbt, core/parser_cursor.mbt, core/parser_atom.mbt, core/parser_expr.mbt, core/parser_lowering.mbt
+
+///|
 test "parse identity" {
   inspect(parse_filter("."), content="Identity")
 }

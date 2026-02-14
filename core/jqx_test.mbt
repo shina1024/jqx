@@ -1,4 +1,7 @@
 ///|
+// Source under test: core/jqx.mbt
+
+///|
 test "parse primitives" {
   assert_eq(try? parse("null"), Ok(Json::null()))
   assert_eq(try? parse("true"), Ok(Json::boolean(true)))

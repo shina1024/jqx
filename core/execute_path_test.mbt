@@ -1,4 +1,7 @@
 ///|
+// Source under test: core/path_ops.mbt, core/builtin_path.mbt
+
+///|
 test "execute getpath compatibility" {
   let j = must_parse("{\"a\":[1,2],\"b\":{\"c\":3}}")
   assert_eq(must_execute(parse_filter("getpath([\"a\",1])"), j), [

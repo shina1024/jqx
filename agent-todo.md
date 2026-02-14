@@ -61,6 +61,9 @@ Updated: 2026-02-14
 - [x] `core/execute.mbt` を `core/json_ops/path_ops/collection_ops` に段階分割する（挙動不変）
 - [x] `core/builtin_dispatch.mbt` を責務別（numeric/string/path/stream）に段階分割する（挙動不変、path/string/collection/numeric/stream 分割完了）
 - [x] 段階分割ガイドを維持する（`docs/refactor-roadmap.md` を分割進捗と命名方針に追従更新）
+- [x] テスト命名方針を明文化する（`source_stem_test` と `execute_topic_test` の使い分けを `docs/refactor-roadmap.md` に追記）
+- [x] parser テストを source 対応へ揃える（`core/filter_test.mbt` → `core/parser_test.mbt`）
+- [x] テストファイル先頭に source 対応コメントを追加する（`Source under test` ヘッダ）
 
 ## P2: CI/運用の底上げ
 

@@ -1,4 +1,7 @@
 ///|
+// Source under test: core/execute.mbt, core/json_ops.mbt, core/builtin_dispatch.mbt
+
+///|
 test "execute identity" {
   let j = must_parse("{\"a\":1}")
   let f = parse_filter(".")

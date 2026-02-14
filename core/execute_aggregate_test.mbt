@@ -1,4 +1,7 @@
 ///|
+// Source under test: core/builtin_numeric.mbt, core/builtin_stream.mbt
+
+///|
 test "execute any/all compatibility" {
   assert_eq(must_execute(parse_filter("any"), must_parse("[true,false]")), [
     Json::boolean(true),

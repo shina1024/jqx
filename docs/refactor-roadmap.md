@@ -86,7 +86,7 @@ jqx でも同じ思想を取り、言語仕様の差を保ったまま次の対�
   - map/select/sort/group/unique/contains など collection/string 系
 - `core/execute_aggregate_test.mbt`
   - reduce/foreach/add/min/max/stream 系
-- `core/filter_test.mbt`
+- `core/parser_test.mbt`
   - parser (`compile`/`parse_filter`) の構文エラー・構文木期待値
 - `core/jqx_test.mbt`
   - JSON parser (`parse_json`) の入力/エラーケース
@@ -97,13 +97,35 @@ jqx でも同じ思想を取り、言語仕様の差を保ったまま次の対�
 
 | Source (core) | Primary tests (core) | Scope |
 |---|---|---|
-| `parser.mbt`, `parser_cursor.mbt`, `parser_atom.mbt`, `parser_expr.mbt`, `parser_lowering.mbt` | `filter_test.mbt` | フィルタ文字列の構文解析と lowering |
+| `parser.mbt`, `parser_cursor.mbt`, `parser_atom.mbt`, `parser_expr.mbt`, `parser_lowering.mbt` | `parser_test.mbt` | フィルタ文字列の構文解析と lowering |
 | `execute.mbt`, `json_ops.mbt`, `builtin_dispatch.mbt` | `execute_test.mbt` | execute の中核挙動と主要回帰 |
 | `path_ops.mbt`, `builtin_path.mbt` | `execute_path_test.mbt` | path 操作と関連 builtin |
 | `collection_ops.mbt`, `builtin_collection.mbt`, `builtin_string.mbt` | `execute_collections_test.mbt` | collection/string 操作 builtin |
 | `builtin_numeric.mbt`, `builtin_stream.mbt` | `execute_aggregate_test.mbt` | numeric/aggregate/stream builtin |
 | `jqx.mbt` | `jqx_test.mbt` | JSON parser の単体 |
 | (test helper) | `execute_test_support_test.mbt` | テスト共通補助の健全性 |
+
+## Test naming policy (MoonBit + this repo)
+
+MoonBit では `*_test.mbt` / `*_wbtest.mbt` が規約であり、`source名_test` は必須ではない。
+この repo では、対応関係を明確にするため次を採用する。
+
+- 1ソースが主担当のテスト: `<source_stem>_test.mbt`（例: `parser_test.mbt`, `jqx_test.mbt`）
+- 複数ソースをまたぐ execute 系: `execute_<topic>_test.mbt`（例: `execute_path_test.mbt`）
+- 共通補助: `<domain>_test_support_test.mbt`（例: `execute_test_support_test.mbt`）
+- 各テストファイル先頭に `Source under test` コメントを置き、一次対応を即参照できるようにする
+
+## Test naming migration steps
+
+### Step 1 (completed 2026-02-14)
+
+- `core/filter_test.mbt` を `core/parser_test.mbt` へ改名
+- execute 系テスト先頭に `Source under test` コメントを追加
+
+### Step 2 (optional)
+
+- `execute_*_test.mbt` を source 対応へさらに細分するかは、重複と可読性を比較して判断
+- 判断基準は「1ソースに閉じるか」「jq差分回帰の追跡が速くなるか」を優先
 
 ## Execution plan
 

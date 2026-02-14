@@ -1,4 +1,7 @@
 ///|
+// Source under test: core/collection_ops.mbt, core/builtin_collection.mbt, core/builtin_string.mbt
+
+///|
 test "execute contains jq semantics" {
   let array_input = must_parse("[1,{\"x\":2},3]")
   assert_eq(must_execute(parse_filter("contains([1,3])"), array_input), [

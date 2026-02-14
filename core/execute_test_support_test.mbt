@@ -1,4 +1,7 @@
 ///|
+// Shared test helper for execute-related test files.
+
+///|
 pub fn must_parse(input : String) -> Json raise Failure {
   parse(input) catch {
     err => fail("parse failed: " + err.to_string())
