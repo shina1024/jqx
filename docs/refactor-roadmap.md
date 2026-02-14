@@ -9,7 +9,7 @@ Updated: 2026-02-14
 - `core/filter_parse_lowering.mbt`: 933 lines
 - `core/filter_parse_atom.mbt`: 849 lines
 - `core/eval_test.mbt`: 2176 lines
-- `core/eval_call.mbt`: 819 lines
+- `core/eval_call_stream.mbt`: 575 lines
 
 結論として、互換性実装を継続するためにリファクタリングは **必要**。
 ただし挙動変更を伴う大改修は避け、まず「責務分割のみ」を行う。
@@ -28,7 +28,10 @@ Updated: 2026-02-14
 - `core/eval_call.mbt` から path 系 call を `core/eval_call_path.mbt` へ分離済み（挙動不変）
 - `core/eval_call.mbt` から string/index 系 call を `core/eval_call_string.mbt` へ分離済み（挙動不変）
 - `core/eval_call.mbt` から collection 系 call を `core/eval_call_collection.mbt` へ分離済み（挙動不変）
-- 次の主対象は `core/eval_call.mbt` の責務分割（挙動不変）
+- `core/eval_call.mbt` から numeric 系 call を `core/eval_call_numeric.mbt` へ分離済み（挙動不変）
+- `core/eval_call.mbt` から stream 系 call を `core/eval_call_stream.mbt` へ分離済み（挙動不変）
+- `core/eval_call.mbt` は call dispatcher の薄い入口へ整理済み
+- 次の主対象は内部API命名の jq 寄せ整理（挙動不変）
 
 ## Upstream jq からの参照方針
 
