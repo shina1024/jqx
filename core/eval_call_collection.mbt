@@ -1,0 +1,265 @@
+///|
+fn index_object_key(value : Json) -> String {
+  match value {
+    String(s) => s
+    _ => value.to_json_string()
+  }
+}
+
+///|
+fn eval_call_collection_builtin(
+  name : String,
+  args : Array[Filter],
+  input : Json,
+  env : Map[String, Json],
+) -> Array[Json]? raise EvalError {
+  match name {
+    "contains" =>
+      if args.length() != 1 {
+        raise UnknownFunction("contains")
+      } else {
+        let target = args[0]
+        let needles = eval_with_env(target, input, env)
+        let out = []
+        for needle in needles {
+          out.push(Json::boolean(contains_checked(input, needle)))
+        }
+        Some(out)
+      }
+    "inside" =>
+      if args.length() != 1 {
+        raise UnknownFunction("inside")
+      } else {
+        let target = args[0]
+        let haystacks = eval_with_env(target, input, env)
+        let out = []
+        for haystack in haystacks {
+          out.push(Json::boolean(contains_checked(haystack, input)))
+        }
+        Some(out)
+      }
+    "has" =>
+      if args.length() != 1 {
+        raise UnknownFunction("has")
+      } else {
+        let key_filter = args[0]
+        let keys = eval_with_env(key_filter, input, env)
+        let out = []
+        for key in keys {
+          out.push(Json::boolean(has_key(input, key)))
+        }
+        Some(out)
+      }
+    "in" =>
+      if args.length() != 1 {
+        raise UnknownFunction("in")
+      } else {
+        let collection_filter = args[0]
+        let collections = eval_with_env(collection_filter, input, env)
+        let out = []
+        for collection in collections {
+          out.push(Json::boolean(has_key(collection, input)))
+        }
+        Some(out)
+      }
+    "IN" =>
+      if args.length() == 1 {
+        let candidates = eval_with_env(args[0], input, env)
+        let mut found = false
+        for candidate in candidates {
+          if candidate == input {
+            found = true
+            break
+          }
+        }
+        Some([Json::boolean(found)])
+      } else if args.length() == 2 {
+        let haystack = eval_with_env(args[0], input, env)
+        let needles = eval_with_env(args[1], input, env)
+        let mut found = false
+        for needle in needles {
+          for candidate in haystack {
+            if candidate == needle {
+              found = true
+              break
+            }
+          }
+          if found {
+            break
+          }
+        }
+        Some([Json::boolean(found)])
+      } else {
+        raise UnknownFunction("IN")
+      }
+    "INDEX" =>
+      if args.length() != 2 {
+        raise UnknownFunction("INDEX")
+      } else {
+        let values = eval_with_env(args[0], input, env)
+        let out = Map::new()
+        for value in values {
+          let keys = eval_with_env(args[1], value, env)
+          for key in keys {
+            out[index_object_key(key)] = value
+          }
+        }
+        Some([Json::object(out)])
+      }
+    "sort_by" =>
+      if args.length() != 1 {
+        raise UnknownFunction("sort_by")
+      } else {
+        match input {
+          Array(a) => {
+            let keyed = []
+            let key_filter = args[0]
+            for v in a {
+              let key_values = eval_with_env(key_filter, v, env)
+              let key = if key_values.length() == 0 {
+                Json::null()
+              } else {
+                key_values[0]
+              }
+              keyed.push((key, v))
+            }
+            let sorted = sort_keyed_pairs(keyed)
+            let out = []
+            for kv in sorted {
+              out.push(kv.1)
+            }
+            Some([Json::array(out)])
+          }
+          _ =>
+            raise TypeError(
+              "Cannot iterate over " + json_type_with_value(input),
+            )
+        }
+      }
+    "group_by" =>
+      if args.length() != 1 {
+        raise UnknownFunction("group_by")
+      } else {
+        match input {
+          Array(a) => {
+            let keyed = []
+            let key_filter = args[0]
+            for v in a {
+              let key_values = eval_with_env(key_filter, v, env)
+              let key = if key_values.length() == 0 {
+                Json::null()
+              } else {
+                key_values[0]
+              }
+              keyed.push((key, v))
+            }
+            let sorted = sort_keyed_pairs(keyed)
+            let groups = []
+            let mut current : Array[Json] = []
+            let mut current_key = Json::null()
+            let mut has_current = false
+            for kv in sorted {
+              if !has_current || compare_json(current_key, kv.0) != 0 {
+                if has_current {
+                  groups.push(Json::array(current))
+                }
+                current = []
+                current_key = kv.0
+                has_current = true
+              }
+              current.push(kv.1)
+            }
+            if has_current {
+              groups.push(Json::array(current))
+            }
+            Some([Json::array(groups)])
+          }
+          _ =>
+            raise TypeError(
+              "Cannot iterate over " + json_type_with_value(input),
+            )
+        }
+      }
+    "min_by" =>
+      if args.length() != 1 {
+        raise UnknownFunction("min_by")
+      } else {
+        match input {
+          Array(a) =>
+            Some([minmax_by_json_array(a, args[0], env, choose_max=false)])
+          _ =>
+            raise TypeError(
+              "Cannot iterate over " + json_type_with_value(input),
+            )
+        }
+      }
+    "max_by" =>
+      if args.length() != 1 {
+        raise UnknownFunction("max_by")
+      } else {
+        match input {
+          Array(a) =>
+            Some([minmax_by_json_array(a, args[0], env, choose_max=true)])
+          _ =>
+            raise TypeError(
+              "Cannot iterate over " + json_type_with_value(input),
+            )
+        }
+      }
+    "unique_by" =>
+      if args.length() != 1 {
+        raise UnknownFunction("unique_by")
+      } else {
+        match input {
+          Array(a) => {
+            let keyed = []
+            let key_filter = args[0]
+            for v in a {
+              let key_values = eval_with_env(key_filter, v, env)
+              let key = if key_values.length() == 0 {
+                Json::null()
+              } else {
+                key_values[0]
+              }
+              keyed.push((key, v))
+            }
+            let sorted = sort_keyed_pairs(keyed)
+            let out = []
+            let mut prev_key = Json::null()
+            let mut has_prev = false
+            for kv in sorted {
+              if !has_prev || compare_json(prev_key, kv.0) != 0 {
+                out.push(kv.1)
+                prev_key = kv.0
+                has_prev = true
+              }
+            }
+            Some([Json::array(out)])
+          }
+          _ =>
+            raise TypeError(
+              "Cannot iterate over " + json_type_with_value(input),
+            )
+        }
+      }
+    "bsearch" =>
+      if args.length() != 1 {
+        raise UnknownFunction("bsearch")
+      } else {
+        let needles = eval_with_env(args[0], input, env)
+        let out = []
+        for needle in needles {
+          match input {
+            Array(a) =>
+              out.push(Json::number(bsearch_json_array(a, needle).to_double()))
+            _ =>
+              raise TypeError(
+                json_type_with_value(input) + " cannot be searched from",
+              )
+          }
+        }
+        Some(out)
+      }
+    _ => None
+  }
+}
