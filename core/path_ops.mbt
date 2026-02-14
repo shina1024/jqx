@@ -321,7 +321,7 @@ fn collect_paths(
   let out = []
   fn include_node(v : Json) -> Bool raise EvalError {
     match predicate {
-      Some(pred) => eval_to_bool(pred, v, env)
+      Some(pred) => execute_to_bool(pred, v, env)
       None => true
     }
   }
@@ -395,12 +395,12 @@ fn path_invalid_iter_message(value : Json) -> String {
 }
 
 ///|
-fn eval_path_fallback_states(
+fn path_fallback_states(
   filter : Filter,
   state : PathEvalState,
   env : Map[String, Json],
 ) -> Array[PathEvalState] raise EvalError {
-  let values = eval_with_env(filter, state.value, env)
+  let values = execute_with_env(filter, state.value, env)
   let out = []
   for value in values {
     out.push(path_eval_state(value, state.path.copy(), false))
@@ -409,7 +409,7 @@ fn eval_path_fallback_states(
 }
 
 ///|
-fn eval_path_field_state(
+fn path_field_state(
   state : PathEvalState,
   name : String,
   optional : Bool,
@@ -440,7 +440,7 @@ fn eval_path_field_state(
 }
 
 ///|
-fn eval_path_index_state(
+fn path_index_state(
   state : PathEvalState,
   index : Int,
   optional : Bool,
@@ -469,7 +469,7 @@ fn eval_path_index_state(
 }
 
 ///|
-fn eval_path_slice_state(
+fn path_slice_state(
   state : PathEvalState,
   start : Int?,
   end : Int?,
@@ -512,7 +512,7 @@ fn eval_path_slice_state(
 }
 
 ///|
-fn eval_path_iter_state(
+fn path_iter_state(
   state : PathEvalState,
   optional : Bool,
 ) -> Array[PathEvalState] raise EvalError {
@@ -579,7 +579,7 @@ fn append_recurse_path_states(
 }
 
 ///|
-fn eval_path_filter_state(
+fn path_filter_state(
   filter : Filter,
   state : PathEvalState,
   env : Map[String, Json],
@@ -588,28 +588,28 @@ fn eval_path_filter_state(
     Identity => [state]
     Pipe(left, right) => {
       let out = []
-      for left_state in eval_path_filter_state(left, state, env) {
-        for right_state in eval_path_filter_state(right, left_state, env) {
+      for left_state in path_filter_state(left, state, env) {
+        for right_state in path_filter_state(right, left_state, env) {
           out.push(right_state)
         }
       }
       out
     }
     Comma(left, right) => {
-      let out = eval_path_filter_state(left, state, env)
-      for right_state in eval_path_filter_state(right, state, env) {
+      let out = path_filter_state(left, state, env)
+      for right_state in path_filter_state(right, state, env) {
         out.push(right_state)
       }
       out
     }
-    Field(name) => eval_path_field_state(state, name, false)
-    FieldOpt(name) => eval_path_field_state(state, name, true)
-    Index(index) => eval_path_index_state(state, index, false)
-    IndexOpt(index) => eval_path_index_state(state, index, true)
-    Slice(start, end) => eval_path_slice_state(state, start, end, false)
-    SliceOpt(start, end) => eval_path_slice_state(state, start, end, true)
-    Iter => eval_path_iter_state(state, false)
-    IterOpt => eval_path_iter_state(state, true)
+    Field(name) => path_field_state(state, name, false)
+    FieldOpt(name) => path_field_state(state, name, true)
+    Index(index) => path_index_state(state, index, false)
+    IndexOpt(index) => path_index_state(state, index, true)
+    Slice(start, end) => path_slice_state(state, start, end, false)
+    SliceOpt(start, end) => path_slice_state(state, start, end, true)
+    Iter => path_iter_state(state, false)
+    IterOpt => path_iter_state(state, true)
     Recurse => {
       if !state.valid {
         raise TypeError(path_invalid_iter_message(state.value))
@@ -621,27 +621,23 @@ fn eval_path_filter_state(
     Call("select", args) =>
       if args.length() != 1 {
         raise UnknownFunction("select")
-      } else if eval_to_bool(args[0], state.value, env) {
+      } else if execute_to_bool(args[0], state.value, env) {
         [state]
       } else {
         []
       }
     Empty => []
-    _ => eval_path_fallback_states(filter, state, env)
+    _ => path_fallback_states(filter, state, env)
   }
 }
 
 ///|
-fn eval_path_expression(
+fn path_expression(
   filter : Filter,
   input : Json,
   env : Map[String, Json],
 ) -> Array[Json] raise EvalError {
-  let states = eval_path_filter_state(
-    filter,
-    path_eval_state(input, [], true),
-    env,
-  )
+  let states = path_filter_state(filter, path_eval_state(input, [], true), env)
   let out = []
   for state in states {
     if !state.valid {

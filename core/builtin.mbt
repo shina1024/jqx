@@ -486,7 +486,7 @@ fn builtin_list() -> Array[Json] {
 }
 
 ///|
-fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
+fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
   match name {
     "have_decnum" => [Json::boolean(true)]
     "modulemeta" =>
@@ -843,7 +843,7 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
                 raise TypeError("combinations input must be an array of arrays")
             }
           }
-          eval_combinations_from_groups(groups)
+          combinations_from_groups(groups)
         }
         _ => raise TypeError("combinations input must be an array")
       }

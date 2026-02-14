@@ -5,7 +5,7 @@ Updated: 2026-02-14
 Scope:
 - Target compatibility: jq 1.7 behavior
 - Differential baseline used in this repo: jq 1.8.1 (local)
-- Source of truth for behavior: `core/filter_parse.mbt`, `core/eval.mbt`
+- Source of truth for behavior: `core/parser.mbt`, `core/execute.mbt`, `core/builtin*.mbt`
 
 Legend:
 - `supported`: implemented and covered by tests
@@ -32,7 +32,7 @@ Legend:
 
 ## Builtins and Functions (Implemented)
 
-Implemented builtins/functions in `core/eval.mbt` include:
+Implemented builtins/functions in `core/execute.mbt` + `core/builtin*.mbt` include:
 
 - `length`, `type`, `keys`, `keys_unsorted`
 - `values`, `nulls`, `booleans`, `numbers`, `strings`, `arrays`, `objects`, `iterables`, `scalars`

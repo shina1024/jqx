@@ -111,7 +111,7 @@ fn parse_fromjson_string(s : String) -> Json raise EvalError {
 ///|
 pub fn execute(filter : Filter, input : Json) -> Array[Json] raise EvalError {
   let env = Map::new()
-  eval_with_env(filter, input, env)
+  execute_with_env(filter, input, env)
 }
 
 ///|
@@ -121,7 +121,7 @@ pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
 }
 
 ///|
-fn eval_with_env(
+fn execute_with_env(
   filter : Filter,
   input : Json,
   env : Map[String, Json],
@@ -185,8 +185,8 @@ fn eval_with_env(
         JNull => [Json::null()]
         _ => []
       }
-    Slice(start, end) => eval_slice(start, end, input, optional=false)
-    SliceOpt(start, end) => eval_slice(start, end, input, optional=true)
+    Slice(start, end) => execute_slice(start, end, input, optional=false)
+    SliceOpt(start, end) => execute_slice(start, end, input, optional=true)
     Iter =>
       match input {
         Array(a) => a
@@ -236,37 +236,37 @@ fn eval_with_env(
       }
     As(value, name, body) => {
       let out = []
-      let values = eval_with_env(value, input, env)
+      let values = execute_with_env(value, input, env)
       for v in values {
         let next_env = env.copy()
         next_env[name] = v
-        for v2 in eval_with_env(body, input, next_env) {
+        for v2 in execute_with_env(body, input, next_env) {
           out.push(v2)
         }
       }
       out
     }
     Try(inner) =>
-      try eval_with_env(inner, input, env) catch {
+      try execute_with_env(inner, input, env) catch {
         _ => []
       } noraise {
         values => values
       }
     TryCatch(inner, handler) =>
-      try eval_with_env(inner, input, env) catch {
-        _ => eval_with_env(handler, input, env)
+      try execute_with_env(inner, input, env) catch {
+        _ => execute_with_env(handler, input, env)
       } noraise {
         values => values
       }
     Reduce(source, name, init, update) => {
-      let mut accs = eval_with_env(init, input, env)
-      let items = eval_with_env(source, input, env)
+      let mut accs = execute_with_env(init, input, env)
+      let items = execute_with_env(source, input, env)
       for item in items {
         let next_env = env.copy()
         next_env[name] = item
         let next_accs = []
         for acc in accs {
-          for v in eval_with_env(update, acc, next_env) {
+          for v in execute_with_env(update, acc, next_env) {
             next_accs.push(v)
           }
         }
@@ -275,20 +275,20 @@ fn eval_with_env(
       accs
     }
     Foreach(source, name, init, update, extract) => {
-      let mut accs = eval_with_env(init, input, env)
-      let items = eval_with_env(source, input, env)
+      let mut accs = execute_with_env(init, input, env)
+      let items = execute_with_env(source, input, env)
       let out = []
       for item in items {
         let next_env = env.copy()
         next_env[name] = item
         let next_accs = []
         for acc in accs {
-          for v in eval_with_env(update, acc, next_env) {
+          for v in execute_with_env(update, acc, next_env) {
             next_accs.push(v)
           }
         }
         for acc in next_accs {
-          for v in eval_with_env(extract, acc, next_env) {
+          for v in execute_with_env(extract, acc, next_env) {
             out.push(v)
           }
         }
@@ -298,8 +298,8 @@ fn eval_with_env(
     }
     Pipe(left, right) => {
       let out = []
-      for v in eval_with_env(left, input, env) {
-        for v2 in eval_with_env(right, v, env) {
+      for v in execute_with_env(left, input, env) {
+        for v2 in execute_with_env(right, v, env) {
           out.push(v2)
         }
       }
@@ -307,10 +307,10 @@ fn eval_with_env(
     }
     Comma(left, right) => {
       let out = []
-      for v in eval_with_env(left, input, env) {
+      for v in execute_with_env(left, input, env) {
         out.push(v)
       }
-      for v in eval_with_env(right, input, env) {
+      for v in execute_with_env(right, input, env) {
         out.push(v)
       }
       out
@@ -318,7 +318,7 @@ fn eval_with_env(
     Array(items) => {
       let out = []
       for f in items {
-        for v in eval_with_env(f, input, env) {
+        for v in execute_with_env(f, input, env) {
           out.push(v)
         }
       }
@@ -329,7 +329,7 @@ fn eval_with_env(
       for kv in items {
         let key = kv.0
         let f = kv.1
-        let vals = eval_with_env(f, input, env)
+        let vals = execute_with_env(f, input, env)
         if vals.length() == 0 {
           return []
         }
@@ -350,11 +350,11 @@ fn eval_with_env(
       }
       out
     }
-    Builtin(name) => eval_builtin(name, input)
+    Builtin(name) => builtin_call0(name, input)
     Call(name, args) => builtin_call(name, args, input, env)
     Eq(left, right) => {
-      let l = eval_with_env(left, input, env)
-      let r = eval_with_env(right, input, env)
+      let l = execute_with_env(left, input, env)
+      let r = execute_with_env(right, input, env)
       let out = []
       for j in 0..<r.length() {
         let b = r[j]
@@ -366,8 +366,8 @@ fn eval_with_env(
       out
     }
     Neq(left, right) => {
-      let l = eval_with_env(left, input, env)
-      let r = eval_with_env(right, input, env)
+      let l = execute_with_env(left, input, env)
+      let r = execute_with_env(right, input, env)
       let out = []
       for j in 0..<r.length() {
         let b = r[j]
@@ -378,40 +378,40 @@ fn eval_with_env(
       }
       out
     }
-    Lt(left, right) => eval_compare("<", left, right, input, env)
-    Lte(left, right) => eval_compare("<=", left, right, input, env)
-    Gt(left, right) => eval_compare(">", left, right, input, env)
-    Gte(left, right) => eval_compare(">=", left, right, input, env)
+    Lt(left, right) => execute_compare("<", left, right, input, env)
+    Lte(left, right) => execute_compare("<=", left, right, input, env)
+    Gt(left, right) => execute_compare(">", left, right, input, env)
+    Gte(left, right) => execute_compare(">=", left, right, input, env)
     And(left, right) => {
-      let l = eval_to_bool(left, input, env)
+      let l = execute_to_bool(left, input, env)
       if l {
-        [Json::boolean(eval_to_bool(right, input, env))]
+        [Json::boolean(execute_to_bool(right, input, env))]
       } else {
         [Json::boolean(false)]
       }
     }
     Or(left, right) => {
-      let l = eval_to_bool(left, input, env)
+      let l = execute_to_bool(left, input, env)
       if l {
         [Json::boolean(true)]
       } else {
-        [Json::boolean(eval_to_bool(right, input, env))]
+        [Json::boolean(execute_to_bool(right, input, env))]
       }
     }
-    Not(inner) => [Json::boolean(!eval_to_bool(inner, input, env))]
-    Add(left, right) => eval_add(left, right, input, env)
-    Sub(left, right) => eval_arith("-", left, right, input, env)
-    Mul(left, right) => eval_arith("*", left, right, input, env)
-    Div(left, right) => eval_arith("/", left, right, input, env)
-    Mod(left, right) => eval_arith("%", left, right, input, env)
+    Not(inner) => [Json::boolean(!execute_to_bool(inner, input, env))]
+    Add(left, right) => execute_add(left, right, input, env)
+    Sub(left, right) => execute_arith("-", left, right, input, env)
+    Mul(left, right) => execute_arith("*", left, right, input, env)
+    Div(left, right) => execute_arith("/", left, right, input, env)
+    Mod(left, right) => execute_arith("%", left, right, input, env)
     IfElse(cond, then_branch, else_branch) =>
-      if eval_to_bool(cond, input, env) {
-        eval_with_env(then_branch, input, env)
+      if execute_to_bool(cond, input, env) {
+        execute_with_env(then_branch, input, env)
       } else {
-        eval_with_env(else_branch, input, env)
+        execute_with_env(else_branch, input, env)
       }
     Fallback(left, right) => {
-      let l = eval_with_env(left, input, env)
+      let l = execute_with_env(left, input, env)
       let truthy_values = []
       for v in l {
         if is_truthy(v) {
@@ -421,7 +421,7 @@ fn eval_with_env(
       if truthy_values.length() > 0 {
         truthy_values
       } else {
-        eval_with_env(right, input, env)
+        execute_with_env(right, input, env)
       }
     }
     Empty => []
@@ -429,7 +429,7 @@ fn eval_with_env(
 }
 
 ///|
-fn eval_with_env_prefix(
+fn execute_with_env_prefix(
   filter : Filter,
   input : Json,
   env : Map[String, Json],
@@ -452,7 +452,7 @@ fn eval_with_env_prefix(
         }
       }
       Pipe(left, right) => {
-        let left_values = eval_with_env(left, value, env)
+        let left_values = execute_with_env(left, value, env)
         for next in left_values {
           if out.length() >= max_count {
             break
@@ -461,7 +461,7 @@ fn eval_with_env_prefix(
         }
       }
       _ => {
-        let values = eval_with_env(current, value, env)
+        let values = execute_with_env(current, value, env)
         for v in values {
           if out.length() >= max_count {
             break
@@ -477,7 +477,7 @@ fn eval_with_env_prefix(
 }
 
 ///|
-fn eval_join(a : Array[Json], sep : Json) -> Json raise EvalError {
+fn join_values(a : Array[Json], sep : Json) -> Json raise EvalError {
   let mut acc = Json::string("")
   for i in 0..<a.length() {
     if i > 0 {
@@ -864,7 +864,11 @@ fn normalize_slice_index(i : Int?, len : Int, default : Int) -> Int {
 }
 
 ///|
-fn eval_slice_array(a : Array[Json], start : Int?, end : Int?) -> Array[Json] {
+fn execute_slice_array(
+  a : Array[Json],
+  start : Int?,
+  end : Int?,
+) -> Array[Json] {
   let len = a.length()
   let lo = normalize_slice_index(start, len, 0)
   let hi = normalize_slice_index(end, len, len)
@@ -924,7 +928,7 @@ fn set_slice_on_input(
 }
 
 ///|
-fn eval_slice_string(s : String, start : Int?, end : Int?) -> String {
+fn execute_slice_string(s : String, start : Int?, end : Int?) -> String {
   let len = s.length()
   let lo = normalize_slice_index(start, len, 0)
   let hi = normalize_slice_index(end, len, len)
@@ -936,15 +940,15 @@ fn eval_slice_string(s : String, start : Int?, end : Int?) -> String {
 }
 
 ///|
-fn eval_slice(
+fn execute_slice(
   start : Int?,
   end : Int?,
   input : Json,
   optional~ : Bool,
 ) -> Array[Json] raise EvalError {
   match input {
-    Array(a) => [Json::array(eval_slice_array(a, start, end))]
-    String(s) => [Json::string(eval_slice_string(s, start, end))]
+    Array(a) => [Json::array(execute_slice_array(a, start, end))]
+    String(s) => [Json::string(execute_slice_string(s, start, end))]
     JNull => [Json::null()]
     _ =>
       if optional {

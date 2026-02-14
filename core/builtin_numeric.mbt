@@ -170,8 +170,8 @@ fn builtin_call_numeric(
       if args.length() != 2 {
         raise UnknownFunction("pow")
       } else {
-        let bases = eval_with_env(args[0], input, env)
-        let exponents = eval_with_env(args[1], input, env)
+        let bases = execute_with_env(args[0], input, env)
+        let exponents = execute_with_env(args[1], input, env)
         let out = []
         for base_value in bases {
           let base = call_require_number("pow", base_value)
@@ -211,15 +211,15 @@ fn builtin_call_numeric(
         let starts = if args.length() == 1 {
           [Json::number(0.0)]
         } else {
-          eval_with_env(args[0], input, env)
+          execute_with_env(args[0], input, env)
         }
         let ends = if args.length() == 1 {
-          eval_with_env(args[0], input, env)
+          execute_with_env(args[0], input, env)
         } else {
-          eval_with_env(args[1], input, env)
+          execute_with_env(args[1], input, env)
         }
         let steps = if args.length() >= 3 {
-          eval_with_env(args[2], input, env)
+          execute_with_env(args[2], input, env)
         } else {
           [Json::number(1.0)]
         }

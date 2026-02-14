@@ -175,12 +175,12 @@ fn is_truthy(j : Json) -> Bool {
 }
 
 ///|
-fn eval_to_bool(
+fn execute_to_bool(
   filter : Filter,
   input : Json,
   env : Map[String, Json],
 ) -> Bool raise EvalError {
-  let results = eval_with_env(filter, input, env)
+  let results = execute_with_env(filter, input, env)
   for v in results {
     if is_truthy(v) {
       return true
@@ -190,15 +190,15 @@ fn eval_to_bool(
 }
 
 ///|
-fn eval_compare(
+fn execute_compare(
   op : String,
   left : Filter,
   right : Filter,
   input : Json,
   env : Map[String, Json],
 ) -> Array[Json] raise EvalError {
-  let l = eval_with_env(left, input, env)
-  let r = eval_with_env(right, input, env)
+  let l = execute_with_env(left, input, env)
+  let r = execute_with_env(right, input, env)
   let out = []
   for j in 0..<r.length() {
     let b = r[j]
@@ -238,15 +238,15 @@ fn eval_compare(
 }
 
 ///|
-fn eval_arith(
+fn execute_arith(
   op : String,
   left : Filter,
   right : Filter,
   input : Json,
   env : Map[String, Json],
 ) -> Array[Json] raise EvalError {
-  let l = eval_with_env(left, input, env)
-  let r = eval_with_env(right, input, env)
+  let l = execute_with_env(left, input, env)
+  let r = execute_with_env(right, input, env)
   let out = []
   for j in 0..<r.length() {
     let b = r[j]
@@ -284,7 +284,7 @@ fn eval_arith(
         }
         (String(s), Number(n, _)) =>
           if op == "*" {
-            out.push(eval_mul_string_number(s, n))
+            out.push(multiply_string_number(s, n))
           } else {
             raise TypeError(
               "Cannot apply " +
@@ -297,7 +297,7 @@ fn eval_arith(
           }
         (Number(n, _), String(s)) =>
           if op == "*" {
-            out.push(eval_mul_string_number(s, n))
+            out.push(multiply_string_number(s, n))
           } else {
             raise TypeError(
               "Cannot apply " +
@@ -363,7 +363,7 @@ fn eval_arith(
 }
 
 ///|
-fn eval_mul_string_number(s : String, n : Double) -> Json raise EvalError {
+fn multiply_string_number(s : String, n : Double) -> Json raise EvalError {
   if n != n || n < 0.0 || n == @double.neg_infinity {
     return Json::null()
   }
@@ -413,14 +413,14 @@ fn merge_objects_recursive(
 }
 
 ///|
-fn eval_add(
+fn execute_add(
   left : Filter,
   right : Filter,
   input : Json,
   env : Map[String, Json],
 ) -> Array[Json] raise EvalError {
-  let l = eval_with_env(left, input, env)
-  let r = eval_with_env(right, input, env)
+  let l = execute_with_env(left, input, env)
+  let r = execute_with_env(right, input, env)
   let out = []
   for j in 0..<r.length() {
     let b = r[j]

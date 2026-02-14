@@ -23,7 +23,7 @@ fn builtin_call_string(
         raise UnknownFunction("startswith")
       } else {
         let target = args[0]
-        let needles = eval_with_env(target, input, env)
+        let needles = execute_with_env(target, input, env)
         let out = []
         for needle in needles {
           match (input, needle) {
@@ -38,7 +38,7 @@ fn builtin_call_string(
         raise UnknownFunction("endswith")
       } else {
         let target = args[0]
-        let needles = eval_with_env(target, input, env)
+        let needles = execute_with_env(target, input, env)
         let out = []
         for needle in needles {
           match (input, needle) {
@@ -52,7 +52,7 @@ fn builtin_call_string(
       if args.length() != 1 {
         raise UnknownFunction("ltrimstr")
       } else {
-        let needles = eval_with_env(args[0], input, env)
+        let needles = execute_with_env(args[0], input, env)
         let out = []
         for needle in needles {
           match (input, needle) {
@@ -73,7 +73,7 @@ fn builtin_call_string(
       if args.length() != 1 {
         raise UnknownFunction("trimstr")
       } else {
-        let needles = eval_with_env(args[0], input, env)
+        let needles = execute_with_env(args[0], input, env)
         let out = []
         for needle in needles {
           match (input, needle) {
@@ -101,7 +101,7 @@ fn builtin_call_string(
       if args.length() != 1 {
         raise UnknownFunction("rtrimstr")
       } else {
-        let needles = eval_with_env(args[0], input, env)
+        let needles = execute_with_env(args[0], input, env)
         let out = []
         for needle in needles {
           match (input, needle) {
@@ -128,10 +128,10 @@ fn builtin_call_string(
       } else {
         match input {
           Array(a) => {
-            let seps = eval_with_env(args[0], input, env)
+            let seps = execute_with_env(args[0], input, env)
             let out = []
             for sep in seps {
-              out.push(eval_join(a, sep))
+              out.push(join_values(a, sep))
             }
             Some(out)
           }
@@ -143,7 +143,7 @@ fn builtin_call_string(
       }
     "split" =>
       if args.length() == 1 {
-        let seps = eval_with_env(args[0], input, env)
+        let seps = execute_with_env(args[0], input, env)
         let out = []
         for sep in seps {
           match (input, sep) {
@@ -153,8 +153,8 @@ fn builtin_call_string(
         }
         Some(out)
       } else if args.length() == 2 {
-        let patterns = eval_with_env(args[0], input, env)
-        let flag_values = eval_with_env(args[1], input, env)
+        let patterns = execute_with_env(args[0], input, env)
+        let flag_values = execute_with_env(args[1], input, env)
         let out = []
         for pattern_value in patterns {
           match pattern_value {
@@ -179,9 +179,9 @@ fn builtin_call_string(
       }
     "splits" =>
       if args.length() == 1 || args.length() == 2 {
-        let patterns = eval_with_env(args[0], input, env)
+        let patterns = execute_with_env(args[0], input, env)
         let flag_values = if args.length() == 2 {
-          eval_with_env(args[1], input, env)
+          execute_with_env(args[1], input, env)
         } else {
           [Json::null()]
         }
@@ -213,7 +213,7 @@ fn builtin_call_string(
       if args.length() != 1 {
         raise UnknownFunction("index")
       } else {
-        let needles = eval_with_env(args[0], input, env)
+        let needles = execute_with_env(args[0], input, env)
         let out = []
         for needle in needles {
           let indices = match input {
@@ -237,7 +237,7 @@ fn builtin_call_string(
       if args.length() != 1 {
         raise UnknownFunction("rindex")
       } else {
-        let needles = eval_with_env(args[0], input, env)
+        let needles = execute_with_env(args[0], input, env)
         let out = []
         for needle in needles {
           let indices = match input {
@@ -261,7 +261,7 @@ fn builtin_call_string(
       if args.length() != 1 {
         raise UnknownFunction("indices")
       } else {
-        let needles = eval_with_env(args[0], input, env)
+        let needles = execute_with_env(args[0], input, env)
         let out = []
         for needle in needles {
           let indices = match input {

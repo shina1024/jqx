@@ -9,7 +9,7 @@ Updated: 2026-02-14
 - `core/parser_lowering.mbt`: 933 lines
 - `core/parser_atom.mbt`: 849 lines
 - `core/eval_test.mbt`: 2176 lines
-- `core/eval_builtin_stream.mbt`: 575 lines
+- `core/builtin_stream.mbt`: 575 lines
 
 結論として、互換性実装を継続するためにリファクタリングは **必要**。
 ただし挙動変更を伴う大改修は避け、まず「責務分割のみ」を行う。
@@ -17,20 +17,20 @@ Updated: 2026-02-14
 ## Current progress
 
 - `core/eval_test.mbt` の分割を開始済み（`core/eval_collections_test.mbt`, `core/eval_path_test.mbt`, `core/eval_aggregate_test.mbt`, `core/eval_test_support_test.mbt`）
-- `core/eval.mbt` から path 系を `core/eval_path_ops.mbt` へ分離済み（挙動不変）
-- `core/eval.mbt` から collection 系を `core/eval_collection_ops.mbt` へ分離済み（挙動不変）
-- `core/eval.mbt` から json 系を `core/eval_json_ops.mbt` へ分離済み（挙動不変）
+- `core/execute.mbt` から path 系を `core/path_ops.mbt` へ分離済み（挙動不変）
+- `core/execute.mbt` から collection 系を `core/collection_ops.mbt` へ分離済み（挙動不変）
+- `core/execute.mbt` から json 系を `core/json_ops.mbt` へ分離済み（挙動不変）
 - `core/parser.mbt` から cursor 系を `core/parser_cursor.mbt` へ分離済み（挙動不変）
 - `core/parser.mbt` から atom 系を `core/parser_atom.mbt` へ分離済み（挙動不変）
 - `core/parser.mbt` から expr 系を `core/parser_expr.mbt` へ分離済み（挙動不変）
 - `core/parser.mbt` から lowering 系を `core/parser_lowering.mbt` へ分離済み（挙動不変）
 - `core/parser.mbt` は public API（`compile`/`parse_filter`）とエラー定義のみを保持する薄い入口へ整理済み
-- `core/eval_builtin_dispatch.mbt` から path 系 call を `core/eval_builtin_path.mbt` へ分離済み（挙動不変）
-- `core/eval_builtin_dispatch.mbt` から string/index 系 call を `core/eval_builtin_string.mbt` へ分離済み（挙動不変）
-- `core/eval_builtin_dispatch.mbt` から collection 系 call を `core/eval_builtin_collection.mbt` へ分離済み（挙動不変）
-- `core/eval_builtin_dispatch.mbt` から numeric 系 call を `core/eval_builtin_numeric.mbt` へ分離済み（挙動不変）
-- `core/eval_builtin_dispatch.mbt` から stream 系 call を `core/eval_builtin_stream.mbt` へ分離済み（挙動不変）
-- `core/eval_builtin_dispatch.mbt` は call dispatcher の薄い入口へ整理済み
+- `core/builtin_dispatch.mbt` から path 系 call を `core/builtin_path.mbt` へ分離済み（挙動不変）
+- `core/builtin_dispatch.mbt` から string/index 系 call を `core/builtin_string.mbt` へ分離済み（挙動不変）
+- `core/builtin_dispatch.mbt` から collection 系 call を `core/builtin_collection.mbt` へ分離済み（挙動不変）
+- `core/builtin_dispatch.mbt` から numeric 系 call を `core/builtin_numeric.mbt` へ分離済み（挙動不変）
+- `core/builtin_dispatch.mbt` から stream 系 call を `core/builtin_stream.mbt` へ分離済み（挙動不変）
+- `core/builtin_dispatch.mbt` は call dispatcher の薄い入口へ整理済み
 - internal dispatch 命名を `eval_call_*` から `builtin_call_*` へ統一済み
 - 次の主対象は大きいテスト/補助モジュールの追加分割（挙動不変）
 
@@ -40,8 +40,8 @@ Updated: 2026-02-14
 jqx でも同じ思想を取り、言語仕様の差を保ったまま次の対応関係を目標にする。
 
 - parser/lexer 相当: `parser*`
-- execute 相当: `eval*`
-- builtin 相当: `eval_builtin*`
+- execute 相当: `execute*`
+- builtin 相当: `builtin*`
 - CLI 相当: `cmd/main*`
 - tests 相当: `core/*_test.mbt` の機能別分割
 
@@ -67,13 +67,13 @@ jqx でも同じ思想を取り、言語仕様の差を保ったまま次の対�
 - `core/parser_lowering.mbt`
   - `as` / `?//` / update assignment / `def` lowering
 
-- `core/eval_core.mbt`
-  - `eval`, `eval_with_env`, dispatch 本体
-- `core/eval_json_ops.mbt`
+- `core/execute.mbt`
+  - `execute`, `execute_with_env`, dispatch 本体
+- `core/json_ops.mbt`
   - 型判定、比較、算術、truthy判定などの共通演算
-- `core/eval_path_ops.mbt`
+- `core/path_ops.mbt`
   - `path` / `getpath` / `setpath` / `delpaths` 系
-- `core/eval_collection_ops.mbt`
+- `core/collection_ops.mbt`
   - sort/group/unique/min/max/flatten/transpose など
 
 - `core/eval_test_support_test.mbt`
@@ -110,8 +110,8 @@ Done criteria:
 
 ### Phase 3 (evaluator split, no behavior change)
 
-- `eval.mbt` の path/collection/helper を分離
-- `eval_with_env` の match dispatch のみを `eval_core.mbt` に残す
+- `execute.mbt` の path/collection/helper を分離
+- `execute_with_env` の match dispatch のみを `execute.mbt` に残す
 
 Done criteria:
 
@@ -121,7 +121,7 @@ Done criteria:
 
 ### Phase 4 (optional, after stabilization)
 
-- `eval_builtin_dispatch.mbt` / `eval_builtin.mbt` の命名統一と重複削減
+- `builtin_dispatch.mbt` / `builtin.mbt` の命名統一と重複削減
 - エラーメッセージ整備タスクと接続
 
 ## Guardrails

@@ -58,7 +58,7 @@ fn builtin_call_path(
       if args.length() != 1 {
         raise UnknownFunction("getpath")
       } else {
-        let paths = eval_with_env(args[0], input, env)
+        let paths = execute_with_env(args[0], input, env)
         let out = []
         for path in paths {
           out.push(getpath_on_input(input, path))
@@ -69,11 +69,11 @@ fn builtin_call_path(
       if args.length() != 2 {
         raise UnknownFunction("setpath")
       } else {
-        let values = eval_with_env(args[1], input, env)
+        let values = execute_with_env(args[1], input, env)
         if values.length() == 0 {
           Some([])
         } else {
-          let paths = eval_with_env(args[0], input, env)
+          let paths = execute_with_env(args[0], input, env)
           let out = []
           for value in values {
             for path in paths {
@@ -88,7 +88,7 @@ fn builtin_call_path(
       if args.length() != 1 {
         raise UnknownFunction("delpaths")
       } else {
-        let pathsets = eval_with_env(args[0], input, env)
+        let pathsets = execute_with_env(args[0], input, env)
         let out = []
         for pathset in pathsets {
           let normalized = normalize_delpaths_arg(pathset)
@@ -100,20 +100,20 @@ fn builtin_call_path(
       if args.length() != 1 {
         raise UnknownFunction("path")
       } else {
-        Some(eval_path_expression(args[0], input, env))
+        Some(path_expression(args[0], input, env))
       }
     "_slice" =>
       if args.length() != 2 {
         raise UnknownFunction("_slice")
       } else {
-        let starts = eval_with_env(args[0], input, env)
-        let ends = eval_with_env(args[1], input, env)
+        let starts = execute_with_env(args[0], input, env)
+        let ends = execute_with_env(args[1], input, env)
         let out = []
         for start_value in starts {
           let start = call_parse_slice_index(start_value)
           for end_value in ends {
             let end = call_parse_slice_index(end_value)
-            for v in eval_slice(start, end, input, optional=false) {
+            for v in execute_slice(start, end, input, optional=false) {
               out.push(v)
             }
           }
@@ -124,9 +124,9 @@ fn builtin_call_path(
       if args.length() != 3 {
         raise UnknownFunction("_set_slice")
       } else {
-        let starts = eval_with_env(args[0], input, env)
-        let ends = eval_with_env(args[1], input, env)
-        let values = eval_with_env(args[2], input, env)
+        let starts = execute_with_env(args[0], input, env)
+        let ends = execute_with_env(args[1], input, env)
+        let values = execute_with_env(args[2], input, env)
         let out = []
         for start_value in starts {
           let start = call_parse_slice_index(start_value)
@@ -145,7 +145,7 @@ fn builtin_call_path(
       } else {
         let normalized_paths = []
         for arg in args {
-          for path_json in eval_path_expression(arg, input, env) {
+          for path_json in path_expression(arg, input, env) {
             match path_json {
               Array(parts) => normalized_paths.push(parts)
               _ => raise TypeError("Path must be specified as an array")
@@ -164,7 +164,7 @@ fn builtin_call_path(
       } else {
         let normalized_paths = []
         for arg in args {
-          let path_values = try eval_path_expression(arg, input, env) catch {
+          let path_values = try path_expression(arg, input, env) catch {
             err =>
               match pick_static_path_segments(arg) {
                 Some(parts) => [Json::array(parts)]

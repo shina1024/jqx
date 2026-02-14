@@ -56,7 +56,7 @@ fn append_combinations_recursive(
 }
 
 ///|
-fn eval_combinations_from_groups(groups : Array[Array[Json]]) -> Array[Json] {
+fn combinations_from_groups(groups : Array[Array[Json]]) -> Array[Json] {
   let out = []
   append_combinations_recursive(groups, 0, [], out)
   out
@@ -136,7 +136,7 @@ fn[T] raise_error_value(value : Json) -> T raise EvalError {
 }
 
 ///|
-fn eval_any_with_short_circuit(
+fn any_with_short_circuit(
   source : Filter,
   cond : Filter,
   input : Json,
@@ -144,15 +144,15 @@ fn eval_any_with_short_circuit(
 ) -> Bool raise EvalError {
   match source {
     Comma(left, right) =>
-      if eval_any_with_short_circuit(left, cond, input, env) {
+      if any_with_short_circuit(left, cond, input, env) {
         true
       } else {
-        eval_any_with_short_circuit(right, cond, input, env)
+        any_with_short_circuit(right, cond, input, env)
       }
     _ => {
-      let values = eval_with_env(source, input, env)
+      let values = execute_with_env(source, input, env)
       for v in values {
-        for cond_out in eval_with_env(cond, v, env) {
+        for cond_out in execute_with_env(cond, v, env) {
           if is_truthy(cond_out) {
             return true
           }
@@ -164,7 +164,7 @@ fn eval_any_with_short_circuit(
 }
 
 ///|
-fn eval_all_with_short_circuit(
+fn all_with_short_circuit(
   source : Filter,
   cond : Filter,
   input : Json,
@@ -172,15 +172,15 @@ fn eval_all_with_short_circuit(
 ) -> Bool raise EvalError {
   match source {
     Comma(left, right) =>
-      if !eval_all_with_short_circuit(left, cond, input, env) {
+      if !all_with_short_circuit(left, cond, input, env) {
         false
       } else {
-        eval_all_with_short_circuit(right, cond, input, env)
+        all_with_short_circuit(right, cond, input, env)
       }
     _ => {
-      let values = eval_with_env(source, input, env)
+      let values = execute_with_env(source, input, env)
       for v in values {
-        for cond_out in eval_with_env(cond, v, env) {
+        for cond_out in execute_with_env(cond, v, env) {
           if !is_truthy(cond_out) {
             return false
           }
@@ -203,7 +203,7 @@ fn builtin_call_stream(
       if args.length() == 0 {
         Some([raise_error_value(input)])
       } else if args.length() == 1 {
-        let values = eval_with_env(args[0], input, env)
+        let values = execute_with_env(args[0], input, env)
         if values.length() == 0 {
           Some([raise_error_value(input)])
         } else {
@@ -217,7 +217,7 @@ fn builtin_call_stream(
         raise UnknownFunction("select")
       } else {
         let cond = args[0]
-        let results = eval_with_env(cond, input, env)
+        let results = execute_with_env(cond, input, env)
         let out = []
         for v in results {
           if is_truthy(v) {
@@ -235,7 +235,7 @@ fn builtin_call_stream(
             let out = []
             let f = args[0]
             for v in a {
-              for v2 in eval_with_env(f, v, env) {
+              for v2 in execute_with_env(f, v, env) {
                 out.push(v2)
               }
             }
@@ -245,7 +245,7 @@ fn builtin_call_stream(
             let out = []
             let f = args[0]
             for kv in object_entries_sorted(o) {
-              for v2 in eval_with_env(f, kv.1, env) {
+              for v2 in execute_with_env(f, kv.1, env) {
                 out.push(v2)
               }
             }
@@ -266,7 +266,7 @@ fn builtin_call_stream(
             let out = Map::new()
             let f = args[0]
             for kv in object_entries_sorted(o) {
-              let vals = eval_with_env(f, kv.1, env)
+              let vals = execute_with_env(f, kv.1, env)
               if vals.length() > 0 {
                 out[kv.0] = vals[0]
               }
@@ -277,7 +277,7 @@ fn builtin_call_stream(
             let out = []
             let f = args[0]
             for v in a {
-              let vals = eval_with_env(f, v, env)
+              let vals = execute_with_env(f, v, env)
               if vals.length() > 0 {
                 out.push(vals[0])
               }
@@ -294,7 +294,7 @@ fn builtin_call_stream(
       if args.length() != 1 {
         raise UnknownFunction("first")
       } else {
-        let values = eval_with_env_prefix(args[0], input, env, 1)
+        let values = execute_with_env_prefix(args[0], input, env, 1)
         if values.length() == 0 {
           Some([])
         } else {
@@ -305,7 +305,7 @@ fn builtin_call_stream(
       if args.length() != 1 {
         raise UnknownFunction("last")
       } else {
-        let values = eval_with_env(args[0], input, env)
+        let values = execute_with_env(args[0], input, env)
         if values.length() == 0 {
           Some([])
         } else {
@@ -314,20 +314,20 @@ fn builtin_call_stream(
       }
     "nth" =>
       if args.length() == 1 {
-        let keys = eval_with_env(args[0], input, env)
+        let keys = execute_with_env(args[0], input, env)
         let out = []
         for key in keys {
           out.push(nth_on_input(input, key))
         }
         Some(out)
       } else if args.length() == 2 {
-        let indexes = eval_with_env(args[0], input, env)
+        let indexes = execute_with_env(args[0], input, env)
         let stream = args[1]
         let out = []
         for index in indexes {
           match call_parse_nth_index(index) {
             Some(i) => {
-              let values = eval_with_env_prefix(stream, input, env, i + 1)
+              let values = execute_with_env_prefix(stream, input, env, i + 1)
               if i < values.length() {
                 out.push(values[i])
               }
@@ -343,7 +343,7 @@ fn builtin_call_stream(
       if args.length() != 2 {
         raise UnknownFunction("limit")
       } else {
-        let counts = eval_with_env(args[0], input, env)
+        let counts = execute_with_env(args[0], input, env)
         let stream = args[1]
         let out = []
         for count_value in counts {
@@ -353,11 +353,11 @@ fn builtin_call_stream(
             ) {
             Some(0) => ()
             Some(count) =>
-              for v in eval_with_env_prefix(stream, input, env, count) {
+              for v in execute_with_env_prefix(stream, input, env, count) {
                 out.push(v)
               }
             None =>
-              for v in eval_with_env(stream, input, env) {
+              for v in execute_with_env(stream, input, env) {
                 out.push(v)
               }
           }
@@ -368,11 +368,11 @@ fn builtin_call_stream(
       if args.length() != 2 {
         raise UnknownFunction("skip")
       } else {
-        let counts = eval_with_env(args[0], input, env)
+        let counts = execute_with_env(args[0], input, env)
         let stream = args[1]
         let out = []
         for count_value in counts {
-          let values = eval_with_env(stream, input, env)
+          let values = execute_with_env(stream, input, env)
           match
             call_parse_non_negative_count(
               count_value, "skip doesn't support negative count",
@@ -398,7 +398,7 @@ fn builtin_call_stream(
         let cond = args[0]
         let mut ok = false
         for v in values {
-          for cond_out in eval_with_env(cond, v, env) {
+          for cond_out in execute_with_env(cond, v, env) {
             if is_truthy(cond_out) {
               ok = true
               break
@@ -411,9 +411,7 @@ fn builtin_call_stream(
         Some([Json::boolean(ok)])
       } else if args.length() == 2 {
         Some([
-          Json::boolean(
-            eval_any_with_short_circuit(args[0], args[1], input, env),
-          ),
+          Json::boolean(any_with_short_circuit(args[0], args[1], input, env)),
         ])
       } else {
         raise UnknownFunction("any")
@@ -424,7 +422,7 @@ fn builtin_call_stream(
         let cond = args[0]
         let mut ok = true
         for v in values {
-          for cond_out in eval_with_env(cond, v, env) {
+          for cond_out in execute_with_env(cond, v, env) {
             if !is_truthy(cond_out) {
               ok = false
               break
@@ -437,9 +435,7 @@ fn builtin_call_stream(
         Some([Json::boolean(ok)])
       } else if args.length() == 2 {
         Some([
-          Json::boolean(
-            eval_all_with_short_circuit(args[0], args[1], input, env),
-          ),
+          Json::boolean(all_with_short_circuit(args[0], args[1], input, env)),
         ])
       } else {
         raise UnknownFunction("all")
@@ -451,7 +447,7 @@ fn builtin_call_stream(
         let mut acc = Json::null()
         let mut seen = false
         for arg in args {
-          for value in eval_with_env(arg, input, env) {
+          for value in execute_with_env(arg, input, env) {
             if !seen {
               acc = value
               seen = true
@@ -466,14 +462,14 @@ fn builtin_call_stream(
       if args.length() != 1 {
         raise UnknownFunction("isempty")
       } else {
-        let values = eval_with_env_prefix(args[0], input, env, 1)
+        let values = execute_with_env_prefix(args[0], input, env, 1)
         Some([Json::boolean(values.length() == 0)])
       }
     "flatten" =>
       if args.length() != 1 {
         raise UnknownFunction("flatten")
       } else {
-        let depths = eval_with_env(args[0], input, env)
+        let depths = execute_with_env(args[0], input, env)
         let out = []
         for depth in depths {
           out.push(flatten_with_depth(input, depth))
@@ -488,7 +484,7 @@ fn builtin_call_stream(
           Array(entries) => {
             let mapped = []
             for entry in entries {
-              for mapped_entry in eval_with_env(args[0], entry, env) {
+              for mapped_entry in execute_with_env(args[0], entry, env) {
                 mapped.push(mapped_entry)
               }
             }
@@ -511,14 +507,14 @@ fn builtin_call_stream(
                   )
               }
             }
-            Some(eval_combinations_from_groups(groups))
+            Some(combinations_from_groups(groups))
           }
           _ => raise TypeError("combinations input must be an array")
         }
       } else if args.length() == 1 {
         match input {
           Array(pool) => {
-            let counts = eval_with_env(args[0], input, env)
+            let counts = execute_with_env(args[0], input, env)
             let out = []
             for count_value in counts {
               match
@@ -530,7 +526,7 @@ fn builtin_call_stream(
                   for _ in 0..<count {
                     groups.push(pool)
                   }
-                  for combo in eval_combinations_from_groups(groups) {
+                  for combo in combinations_from_groups(groups) {
                     out.push(combo)
                   }
                 }
@@ -550,7 +546,7 @@ fn builtin_call_stream(
       } else {
         let out = []
         for arg in args {
-          for token in eval_with_env(arg, input, env) {
+          for token in execute_with_env(arg, input, env) {
             match truncate_stream_token(token, input) {
               Some(next) => out.push(next)
               None => ()
@@ -563,7 +559,7 @@ fn builtin_call_stream(
       if args.length() != 1 {
         raise UnknownFunction("fromstream")
       } else {
-        let tokens = eval_with_env(args[0], input, env)
+        let tokens = execute_with_env(args[0], input, env)
         let mut root = Json::null()
         for token in tokens {
           root = apply_fromstream_token(root, token)

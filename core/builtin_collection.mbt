@@ -19,7 +19,7 @@ fn builtin_call_collection(
         raise UnknownFunction("contains")
       } else {
         let target = args[0]
-        let needles = eval_with_env(target, input, env)
+        let needles = execute_with_env(target, input, env)
         let out = []
         for needle in needles {
           out.push(Json::boolean(contains_checked(input, needle)))
@@ -31,7 +31,7 @@ fn builtin_call_collection(
         raise UnknownFunction("inside")
       } else {
         let target = args[0]
-        let haystacks = eval_with_env(target, input, env)
+        let haystacks = execute_with_env(target, input, env)
         let out = []
         for haystack in haystacks {
           out.push(Json::boolean(contains_checked(haystack, input)))
@@ -43,7 +43,7 @@ fn builtin_call_collection(
         raise UnknownFunction("has")
       } else {
         let key_filter = args[0]
-        let keys = eval_with_env(key_filter, input, env)
+        let keys = execute_with_env(key_filter, input, env)
         let out = []
         for key in keys {
           out.push(Json::boolean(has_key(input, key)))
@@ -55,7 +55,7 @@ fn builtin_call_collection(
         raise UnknownFunction("in")
       } else {
         let collection_filter = args[0]
-        let collections = eval_with_env(collection_filter, input, env)
+        let collections = execute_with_env(collection_filter, input, env)
         let out = []
         for collection in collections {
           out.push(Json::boolean(has_key(collection, input)))
@@ -64,7 +64,7 @@ fn builtin_call_collection(
       }
     "IN" =>
       if args.length() == 1 {
-        let candidates = eval_with_env(args[0], input, env)
+        let candidates = execute_with_env(args[0], input, env)
         let mut found = false
         for candidate in candidates {
           if candidate == input {
@@ -74,8 +74,8 @@ fn builtin_call_collection(
         }
         Some([Json::boolean(found)])
       } else if args.length() == 2 {
-        let haystack = eval_with_env(args[0], input, env)
-        let needles = eval_with_env(args[1], input, env)
+        let haystack = execute_with_env(args[0], input, env)
+        let needles = execute_with_env(args[1], input, env)
         let mut found = false
         for needle in needles {
           for candidate in haystack {
@@ -96,10 +96,10 @@ fn builtin_call_collection(
       if args.length() != 2 {
         raise UnknownFunction("INDEX")
       } else {
-        let values = eval_with_env(args[0], input, env)
+        let values = execute_with_env(args[0], input, env)
         let out = Map::new()
         for value in values {
-          let keys = eval_with_env(args[1], value, env)
+          let keys = execute_with_env(args[1], value, env)
           for key in keys {
             out[index_object_key(key)] = value
           }
@@ -115,7 +115,7 @@ fn builtin_call_collection(
             let keyed = []
             let key_filter = args[0]
             for v in a {
-              let key_values = eval_with_env(key_filter, v, env)
+              let key_values = execute_with_env(key_filter, v, env)
               let key = if key_values.length() == 0 {
                 Json::null()
               } else {
@@ -145,7 +145,7 @@ fn builtin_call_collection(
             let keyed = []
             let key_filter = args[0]
             for v in a {
-              let key_values = eval_with_env(key_filter, v, env)
+              let key_values = execute_with_env(key_filter, v, env)
               let key = if key_values.length() == 0 {
                 Json::null()
               } else {
@@ -215,7 +215,7 @@ fn builtin_call_collection(
             let keyed = []
             let key_filter = args[0]
             for v in a {
-              let key_values = eval_with_env(key_filter, v, env)
+              let key_values = execute_with_env(key_filter, v, env)
               let key = if key_values.length() == 0 {
                 Json::null()
               } else {
@@ -246,7 +246,7 @@ fn builtin_call_collection(
       if args.length() != 1 {
         raise UnknownFunction("bsearch")
       } else {
-        let needles = eval_with_env(args[0], input, env)
+        let needles = execute_with_env(args[0], input, env)
         let out = []
         for needle in needles {
           match input {
