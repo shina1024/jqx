@@ -8,7 +8,7 @@ Updated: 2026-02-14
 
 - `core/parser_lowering.mbt`: 933 lines
 - `core/parser_atom.mbt`: 849 lines
-- `core/eval_test.mbt`: 2176 lines
+- `core/execute_test.mbt`: 2176 lines
 - `core/builtin_stream.mbt`: 575 lines
 
 結論として、互換性実装を継続するためにリファクタリングは **必要**。
@@ -16,7 +16,7 @@ Updated: 2026-02-14
 
 ## Current progress
 
-- `core/eval_test.mbt` の分割を開始済み（`core/eval_collections_test.mbt`, `core/eval_path_test.mbt`, `core/eval_aggregate_test.mbt`, `core/eval_test_support_test.mbt`）
+- `core/execute_test.mbt` の分割を開始済み（`core/execute_collections_test.mbt`, `core/execute_path_test.mbt`, `core/execute_aggregate_test.mbt`, `core/execute_test_support_test.mbt`）
 - `core/execute.mbt` から path 系を `core/path_ops.mbt` へ分離済み（挙動不変）
 - `core/execute.mbt` から collection 系を `core/collection_ops.mbt` へ分離済み（挙動不変）
 - `core/execute.mbt` から json 系を `core/json_ops.mbt` へ分離済み（挙動不変）
@@ -31,7 +31,7 @@ Updated: 2026-02-14
 - `core/builtin_dispatch.mbt` から numeric 系 call を `core/builtin_numeric.mbt` へ分離済み（挙動不変）
 - `core/builtin_dispatch.mbt` から stream 系 call を `core/builtin_stream.mbt` へ分離済み（挙動不変）
 - `core/builtin_dispatch.mbt` は call dispatcher の薄い入口へ整理済み
-- internal dispatch 命名を `eval_call_*` から `builtin_call_*` へ統一済み
+- internal dispatch 命名を `builtin_call_*` へ統一済み
 - 次の主対象は大きいテスト/補助モジュールの追加分割（挙動不変）
 
 ## Upstream jq からの参照方針
@@ -76,20 +76,20 @@ jqx でも同じ思想を取り、言語仕様の差を保ったまま次の対�
 - `core/collection_ops.mbt`
   - sort/group/unique/min/max/flatten/transpose など
 
-- `core/eval_test_support_test.mbt`
+- `core/execute_test_support_test.mbt`
   - `must_parse`, `must_eval` などテスト共通ヘルパ
-- `core/eval_basic_test.mbt`
-- `core/eval_path_test.mbt`
-- `core/eval_builtin_test.mbt`
-- `core/eval_control_test.mbt`
-- `core/eval_compat_test.mbt`
-  - `eval_test.mbt` を無理なく分割
+- `core/execute_basic_test.mbt`
+- `core/execute_path_test.mbt`
+- `core/execute_builtin_test.mbt`
+- `core/execute_control_test.mbt`
+- `core/execute_compat_test.mbt`
+  - `execute_test.mbt` を無理なく分割
 
 ## Execution plan
 
 ### Phase 1 (low risk, first)
 
-- `eval_test.mbt` を機能別に分割し、`eval_test_support_test.mbt` を導入
+- `execute_test.mbt` を機能別に分割し、`execute_test_support_test.mbt` を導入
 - 挙動変更禁止（テスト名と期待値を維持）
 
 Done criteria:
@@ -129,3 +129,4 @@ Done criteria:
 - 1 PR/commit あたり 1 phase の一部までに制限する
 - 互換性タスクと混ぜない（実装追加と構造変更を同一コミットにしない）
 - 毎段階で `moon info && moon fmt && moon test` を必須化する
+

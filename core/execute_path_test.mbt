@@ -1,5 +1,5 @@
 ///|
-test "eval getpath compatibility" {
+test "execute getpath compatibility" {
   let j = must_parse("{\"a\":[1,2],\"b\":{\"c\":3}}")
   assert_eq(must_eval(parse_filter("getpath([\"a\",1])"), j), [
     Json::number(2.0),
@@ -31,7 +31,7 @@ test "eval getpath compatibility" {
 }
 
 ///|
-test "eval getpath errors" {
+test "execute getpath errors" {
   guard (try? execute(parse_filter("getpath(\"a\")"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Path must be specified as an array" else {
@@ -65,7 +65,7 @@ test "eval getpath errors" {
 }
 
 ///|
-test "eval setpath compatibility" {
+test "execute setpath compatibility" {
   assert_eq(
     must_eval(parse_filter("setpath([\"a\"];2)"), must_parse("{\"a\":1}")),
     [Json::object({ "a": Json::number(2.0) })],
@@ -130,7 +130,7 @@ test "eval setpath compatibility" {
 }
 
 ///|
-test "eval setpath errors" {
+test "execute setpath errors" {
   guard (try? execute(parse_filter("setpath(\"a\";2)"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Path must be specified as an array" else {
@@ -220,7 +220,7 @@ test "eval setpath errors" {
 }
 
 ///|
-test "eval delpaths compatibility" {
+test "execute delpaths compatibility" {
   assert_eq(
     must_eval(
       parse_filter("delpaths([[\"a\"]])"),
@@ -290,7 +290,7 @@ test "eval delpaths compatibility" {
 }
 
 ///|
-test "eval delpaths errors" {
+test "execute delpaths errors" {
   guard (try? execute(parse_filter("delpaths(\"a\")"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Paths must be specified as an array" else {
@@ -383,7 +383,7 @@ test "eval delpaths errors" {
 }
 
 ///|
-test "eval path compatibility" {
+test "execute path compatibility" {
   assert_eq(must_eval(parse_filter("path(.foo[0,1])"), must_parse("null")), [
     Json::array([Json::string("foo"), Json::number(0.0)]),
     Json::array([Json::string("foo"), Json::number(1.0)]),
@@ -412,7 +412,7 @@ test "eval path compatibility" {
 }
 
 ///|
-test "eval path invalid expression errors" {
+test "execute path invalid expression errors" {
   guard (try? execute(
       parse_filter("path(.a | map(select(.b == 0)))"),
       must_parse("{\"a\":[{\"b\":0}]}"),
@@ -451,7 +451,7 @@ test "eval path invalid expression errors" {
 }
 
 ///|
-test "eval del compatibility" {
+test "execute del compatibility" {
   assert_eq(
     must_eval(
       parse_filter("del(.[2:4],.[0],.[-2:])"),
@@ -520,7 +520,7 @@ test "eval del compatibility" {
 }
 
 ///|
-test "eval paths compatibility" {
+test "execute paths compatibility" {
   let obj = must_parse("{\"a\":1,\"b\":[2,3]}")
   assert_eq(must_eval(parse_filter("paths"), obj), [
     Json::array([Json::string("a")]),
@@ -561,7 +561,7 @@ test "eval paths compatibility" {
 }
 
 ///|
-test "eval paths errors" {
+test "execute paths errors" {
   guard (try? execute(parse_filter("paths(.foo)"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Cannot index number with string \"foo\"" else {

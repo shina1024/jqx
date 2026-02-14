@@ -1,5 +1,5 @@
 ///|
-test "eval any/all compatibility" {
+test "execute any/all compatibility" {
   assert_eq(must_eval(parse_filter("any"), must_parse("[true,false]")), [
     Json::boolean(true),
   ])
@@ -80,7 +80,7 @@ test "eval any/all compatibility" {
 }
 
 ///|
-test "eval any/all errors" {
+test "execute any/all errors" {
   guard (try? execute(parse_filter("any"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected any number iterate error")
@@ -113,7 +113,7 @@ test "eval any/all errors" {
 }
 
 ///|
-test "eval pick compatibility" {
+test "execute pick compatibility" {
   assert_eq(must_eval(parse_filter("pick(.a.b.c)"), must_parse("null")), [
     Json::object({
       "a": Json::object({ "b": Json::object({ "c": Json::null() }) }),
@@ -146,7 +146,7 @@ test "eval pick compatibility" {
 }
 
 ///|
-test "eval pick errors" {
+test "execute pick errors" {
   guard (try? execute(parse_filter("pick(last)"), must_parse("[1,2]")))
     is Err(err) &&
     err.to_string() == "Out of bounds negative array index" else {
@@ -155,7 +155,7 @@ test "eval pick errors" {
 }
 
 ///|
-test "eval jq type-filter builtins" {
+test "execute jq type-filter builtins" {
   assert_eq(must_eval(parse_filter("values"), must_parse("null")), [])
   assert_eq(must_eval(parse_filter("values"), must_parse("1")), [
     Json::number(1.0),
@@ -190,7 +190,7 @@ test "eval jq type-filter builtins" {
 }
 
 ///|
-test "eval add builtin compatibility" {
+test "execute add builtin compatibility" {
   assert_eq(must_eval(parse_filter("add"), must_parse("[1,2,3]")), [
     Json::number(6.0),
   ])
@@ -221,7 +221,7 @@ test "eval add builtin compatibility" {
 }
 
 ///|
-test "eval add builtin errors" {
+test "execute add builtin errors" {
   guard (try? execute(parse_filter("add"), must_parse("null"))) is Err(err) &&
     err.to_string() == "Cannot iterate over null (null)" else {
     fail("expected add null iterate error")
@@ -238,7 +238,7 @@ test "eval add builtin errors" {
 }
 
 ///|
-test "eval add call compatibility" {
+test "execute add call compatibility" {
   assert_eq(
     must_eval(
       parse_filter(
@@ -265,7 +265,7 @@ test "eval add call compatibility" {
 }
 
 ///|
-test "eval sort compatibility" {
+test "execute sort compatibility" {
   assert_eq(must_eval(parse_filter("sort"), must_parse("[3,1,2]")), [
     Json::array([Json::number(1.0), Json::number(2.0), Json::number(3.0)]),
   ])
@@ -309,7 +309,7 @@ test "eval sort compatibility" {
 }
 
 ///|
-test "eval sort errors" {
+test "execute sort errors" {
   guard (try? execute(parse_filter("sort"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) cannot be sorted, as it is not an array" else {
     fail("expected sort non-array type error")
@@ -321,7 +321,7 @@ test "eval sort errors" {
 }
 
 ///|
-test "eval sort_by compatibility" {
+test "execute sort_by compatibility" {
   assert_eq(
     must_eval(parse_filter("sort_by(.a)"), must_parse("[{\"a\":2},{\"a\":1}]")),
     [
@@ -349,7 +349,7 @@ test "eval sort_by compatibility" {
 }
 
 ///|
-test "eval sort_by errors" {
+test "execute sort_by errors" {
   guard (try? execute(parse_filter("sort_by(.)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected sort_by non-array error")
@@ -357,7 +357,7 @@ test "eval sort_by errors" {
 }
 
 ///|
-test "eval group_by compatibility" {
+test "execute group_by compatibility" {
   assert_eq(
     must_eval(
       parse_filter("group_by(.a)"),
@@ -400,7 +400,7 @@ test "eval group_by compatibility" {
 }
 
 ///|
-test "eval group_by errors" {
+test "execute group_by errors" {
   guard (try? execute(parse_filter("group_by(.)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected group_by non-array error")
@@ -408,7 +408,7 @@ test "eval group_by errors" {
 }
 
 ///|
-test "eval min/max compatibility" {
+test "execute min/max compatibility" {
   assert_eq(must_eval(parse_filter("min"), must_parse("[3,1,2]")), [
     Json::number(1.0),
   ])
@@ -428,7 +428,7 @@ test "eval min/max compatibility" {
 }
 
 ///|
-test "eval min/max errors" {
+test "execute min/max errors" {
   guard (try? execute(parse_filter("min"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) and number (1) cannot be iterated over" else {
     fail("expected min non-array iterate error")
@@ -440,7 +440,7 @@ test "eval min/max errors" {
 }
 
 ///|
-test "eval min_by/max_by compatibility" {
+test "execute min_by/max_by compatibility" {
   assert_eq(
     must_eval(parse_filter("min_by(.a)"), must_parse("[{\"a\":2},{\"a\":1}]")),
     [Json::object({ "a": Json::number(1.0) })],
@@ -485,7 +485,7 @@ test "eval min_by/max_by compatibility" {
 }
 
 ///|
-test "eval min_by/max_by errors" {
+test "execute min_by/max_by errors" {
   guard (try? execute(parse_filter("min_by(.)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected min_by non-array error")
@@ -497,7 +497,7 @@ test "eval min_by/max_by errors" {
 }
 
 ///|
-test "eval unique compatibility" {
+test "execute unique compatibility" {
   assert_eq(must_eval(parse_filter("unique"), must_parse("[1,2,1,3]")), [
     Json::array([Json::number(1.0), Json::number(2.0), Json::number(3.0)]),
   ])
@@ -519,7 +519,7 @@ test "eval unique compatibility" {
 }
 
 ///|
-test "eval unique errors" {
+test "execute unique errors" {
   guard (try? execute(parse_filter("unique"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) cannot be sorted, as it is not an array" else {
     fail("expected unique non-array type error")
@@ -531,7 +531,7 @@ test "eval unique errors" {
 }
 
 ///|
-test "eval unique_by compatibility" {
+test "execute unique_by compatibility" {
   assert_eq(
     must_eval(
       parse_filter("unique_by(.a)"),
@@ -571,7 +571,7 @@ test "eval unique_by compatibility" {
 }
 
 ///|
-test "eval unique_by errors" {
+test "execute unique_by errors" {
   guard (try? execute(parse_filter("unique_by(.)"), must_parse("1")))
     is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {

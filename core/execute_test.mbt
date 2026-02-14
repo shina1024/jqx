@@ -1,5 +1,5 @@
 ///|
-test "eval identity" {
+test "execute identity" {
   let j = must_parse("{\"a\":1}")
   let f = parse_filter(".")
   let out = must_eval(f, j)
@@ -7,7 +7,7 @@ test "eval identity" {
 }
 
 ///|
-test "eval field and missing field" {
+test "execute field and missing field" {
   let j = must_parse("{\"a\":1}")
   let f1 = parse_filter(".a")
   let f2 = parse_filter(".b")
@@ -18,7 +18,7 @@ test "eval field and missing field" {
 }
 
 ///|
-test "eval field/index type errors and optional suppression" {
+test "execute field/index type errors and optional suppression" {
   let number_json = must_parse("1")
   let array_json = must_parse("[1,2]")
   let object_json = must_parse("{\"a\":1}")
@@ -50,7 +50,7 @@ test "eval field/index type errors and optional suppression" {
 }
 
 ///|
-test "eval index and iter" {
+test "execute index and iter" {
   let j = must_parse("[1,2,3]")
   let f1 = parse_filter(".[1]")
   let f2 = parse_filter(".[]")
@@ -65,7 +65,7 @@ test "eval index and iter" {
 }
 
 ///|
-test "eval chained index without extra dot" {
+test "execute chained index without extra dot" {
   let j = must_parse("{\"a\":[10,20,30]}")
   assert_eq(must_eval(parse_filter(".a[1]"), j), [Json::number(20.0)])
   assert_eq(must_eval(parse_filter(".a[1:3]"), j), [
@@ -74,7 +74,7 @@ test "eval chained index without extra dot" {
 }
 
 ///|
-test "eval string index jq compatibility" {
+test "execute string index jq compatibility" {
   let s = must_parse("\"abc\"")
   guard (try? execute(parse_filter(".[0]"), s)) is Err(err) &&
     err.to_string() == "Cannot index string with number" else {
@@ -89,7 +89,7 @@ test "eval string index jq compatibility" {
 }
 
 ///|
-test "eval optional access" {
+test "execute optional access" {
   let j = must_parse("[1,2,3]")
   assert_eq(must_eval(parse_filter(".[]?"), j), [
     Json::number(1.0),
@@ -103,14 +103,14 @@ test "eval optional access" {
 }
 
 ///|
-test "eval pipe and comma" {
+test "execute pipe and comma" {
   let j = must_parse("{\"a\":{\"b\":2},\"c\":3}")
   let f = parse_filter(".a | .b, .c")
   assert_eq(must_eval(f, j), [Json::number(2.0), Json::number(3.0)])
 }
 
 ///|
-test "eval update assignment precedence" {
+test "execute update assignment precedence" {
   let j1 = must_parse("{\"a\":0}")
   assert_eq(must_eval(parse_filter(".a = 1 | .a"), j1), [Json::number(1.0)])
 
@@ -139,14 +139,14 @@ test "eval update assignment precedence" {
 }
 
 ///|
-test "eval literal" {
+test "execute literal" {
   let j = must_parse("null")
   let f = parse_filter("\"hi\"")
   assert_eq(must_eval(f, j), [Json::string("hi")])
 }
 
 ///|
-test "eval array and object literals" {
+test "execute array and object literals" {
   let j = must_parse("{\"a\":1,\"b\":2}")
   let f1 = parse_filter("[.a, .b]")
   let f2 = parse_filter("{\"x\": .a, y: .b}")
@@ -171,7 +171,7 @@ test "eval array and object literals" {
 }
 
 ///|
-test "eval builtins" {
+test "execute builtins" {
   let j1 = must_parse("[1,2,3]")
   let j2 = must_parse("{\"a\":1,\"b\":2}")
   let j3 = must_parse("\"hi\"")
@@ -185,7 +185,7 @@ test "eval builtins" {
 }
 
 ///|
-test "eval def no-arg minimal" {
+test "execute def no-arg minimal" {
   let j = must_parse("1")
   assert_eq(must_eval(parse_filter("def inc: . + 1; . | inc"), j), [
     Json::number(2.0),
@@ -251,7 +251,7 @@ test "eval def no-arg minimal" {
 }
 
 ///|
-test "eval first/last/nth compatibility" {
+test "execute first/last/nth compatibility" {
   let arr = must_parse("[1,2,3]")
   assert_eq(must_eval(parse_filter("first"), arr), [Json::number(1.0)])
   assert_eq(must_eval(parse_filter("last"), arr), [Json::number(3.0)])
@@ -291,7 +291,7 @@ test "eval first/last/nth compatibility" {
 }
 
 ///|
-test "eval first/last/nth errors" {
+test "execute first/last/nth errors" {
   guard (try? execute(parse_filter("first"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot index number with number" else {
     fail("expected first number index error")
@@ -313,7 +313,7 @@ test "eval first/last/nth errors" {
 }
 
 ///|
-test "eval flatten compatibility" {
+test "execute flatten compatibility" {
   let nested = must_parse("[1,[2],[[3,[4]]],5]")
   assert_eq(must_eval(parse_filter("flatten"), nested), [
     Json::array([
@@ -359,7 +359,7 @@ test "eval flatten compatibility" {
 }
 
 ///|
-test "eval flatten errors" {
+test "execute flatten errors" {
   guard (try? execute(parse_filter("flatten"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected flatten non-array iterate error")
@@ -391,7 +391,7 @@ test "eval flatten errors" {
 }
 
 ///|
-test "eval transpose compatibility" {
+test "execute transpose compatibility" {
   assert_eq(must_eval(parse_filter("transpose"), must_parse("[[1,2],[3,4]]")), [
     Json::array([
       Json::array([Json::number(1.0), Json::number(3.0)]),
@@ -431,7 +431,7 @@ test "eval transpose compatibility" {
 }
 
 ///|
-test "eval transpose errors" {
+test "execute transpose errors" {
   guard (try? execute(parse_filter("transpose"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected transpose non-array iterate error")
@@ -463,7 +463,7 @@ test "eval transpose errors" {
 }
 
 ///|
-test "eval to_entries/from_entries/with_entries compatibility" {
+test "execute to_entries/from_entries/with_entries compatibility" {
   assert_eq(must_eval(parse_filter("to_entries"), must_parse("[10,20]")), [
     Json::array([
       Json::object({ "key": Json::number(0.0), "value": Json::number(10.0) }),
@@ -504,7 +504,7 @@ test "eval to_entries/from_entries/with_entries compatibility" {
 }
 
 ///|
-test "eval to_entries/from_entries/with_entries errors" {
+test "execute to_entries/from_entries/with_entries errors" {
   guard (try? execute(parse_filter("to_entries"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) has no keys" else {
     fail("expected to_entries no-keys error")
@@ -548,7 +548,7 @@ test "eval to_entries/from_entries/with_entries errors" {
 }
 
 ///|
-test "eval keys compatibility errors and keys_unsorted" {
+test "execute keys compatibility errors and keys_unsorted" {
   let arr = must_parse("[10,20]")
   assert_eq(must_eval(parse_filter("keys_unsorted"), arr), [
     Json::array([Json::number(0.0), Json::number(1.0)]),
@@ -576,7 +576,7 @@ test "eval keys compatibility errors and keys_unsorted" {
 }
 
 ///|
-test "eval tostring/tonumber compatibility" {
+test "execute tostring/tonumber compatibility" {
   assert_eq(must_eval(parse_filter("tostring"), must_parse("1")), [
     Json::string("1"),
   ])
@@ -616,7 +616,7 @@ test "eval tostring/tonumber compatibility" {
 }
 
 ///|
-test "eval tojson/fromjson compatibility" {
+test "execute tojson/fromjson compatibility" {
   assert_eq(must_eval(parse_filter("tojson"), must_parse("1")), [
     Json::string("1"),
   ])
@@ -663,7 +663,7 @@ test "eval tojson/fromjson compatibility" {
 }
 
 ///|
-test "eval format filter compatibility" {
+test "execute format filter compatibility" {
   assert_eq(
     must_eval(parse_filter("(@uri|@urid)"), must_parse("\"<>&'\\\"\\t\"")),
     [Json::string("<>&'\"\t")],
@@ -693,7 +693,7 @@ test "eval format filter compatibility" {
 }
 
 ///|
-test "eval fromjson errors" {
+test "execute fromjson errors" {
   guard (try? execute(parse_filter("fromjson"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) only strings can be parsed" else {
     fail("expected fromjson number type error")
@@ -723,7 +723,7 @@ test "eval fromjson errors" {
 }
 
 ///|
-test "eval tonumber errors" {
+test "execute tonumber errors" {
   guard (try? execute(parse_filter("tonumber"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "string (\"abc\") cannot be parsed as a number" else {
@@ -740,7 +740,7 @@ test "eval tonumber errors" {
 }
 
 ///|
-test "eval reverse compatibility" {
+test "execute reverse compatibility" {
   assert_eq(must_eval(parse_filter("reverse"), must_parse("[1,2,3]")), [
     Json::array([Json::number(3.0), Json::number(2.0), Json::number(1.0)]),
   ])
@@ -762,7 +762,7 @@ test "eval reverse compatibility" {
 }
 
 ///|
-test "eval reverse errors" {
+test "execute reverse errors" {
   guard (try? execute(parse_filter("reverse"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot index number with number" else {
     fail("expected reverse number index error")
@@ -784,7 +784,7 @@ test "eval reverse errors" {
 }
 
 ///|
-test "eval join compatibility" {
+test "execute join compatibility" {
   assert_eq(
     must_eval(parse_filter("join(\",\")"), must_parse("[\"a\",1,true,null]")),
     [Json::string("a,1,true,")],
@@ -806,7 +806,7 @@ test "eval join compatibility" {
 }
 
 ///|
-test "eval join errors" {
+test "execute join errors" {
   guard (try? execute(parse_filter("join(\",\")"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected join iterate error")
@@ -824,7 +824,7 @@ test "eval join errors" {
 }
 
 ///|
-test "eval split compatibility" {
+test "execute split compatibility" {
   assert_eq(must_eval(parse_filter("split(\",\")"), must_parse("\"a,b,c\"")), [
     Json::array([Json::string("a"), Json::string("b"), Json::string("c")]),
   ])
@@ -892,7 +892,7 @@ test "eval split compatibility" {
 }
 
 ///|
-test "eval split errors" {
+test "execute split errors" {
   guard (try? execute(parse_filter("split(\",\")"), must_parse("1")))
     is Err(err) &&
     err.to_string() == "split input and separator must be strings" else {
@@ -916,7 +916,7 @@ test "eval split errors" {
 }
 
 ///|
-test "eval combinations/date/env/stream compatibility" {
+test "execute combinations/date/env/stream compatibility" {
   assert_eq(
     must_eval(parse_filter("combinations"), must_parse("[[1,2], [3,4]]")),
     [
@@ -968,7 +968,7 @@ test "eval combinations/date/env/stream compatibility" {
 }
 
 ///|
-test "eval explode/implode compatibility" {
+test "execute explode/implode compatibility" {
   assert_eq(must_eval(parse_filter("explode"), must_parse("\"abc\"")), [
     Json::array([Json::number(97.0), Json::number(98.0), Json::number(99.0)]),
   ])
@@ -993,7 +993,7 @@ test "eval explode/implode compatibility" {
 }
 
 ///|
-test "eval explode/implode errors" {
+test "execute explode/implode errors" {
   guard (try? execute(parse_filter("explode"), must_parse("1"))) is Err(err) &&
     err.to_string() == "explode input must be a string" else {
     fail("expected explode input type error")
@@ -1011,7 +1011,7 @@ test "eval explode/implode errors" {
 }
 
 ///|
-test "eval index/rindex/indices compatibility" {
+test "execute index/rindex/indices compatibility" {
   assert_eq(must_eval(parse_filter("index(\"l\")"), must_parse("\"hello\"")), [
     Json::number(2.0),
   ])
@@ -1056,7 +1056,7 @@ test "eval index/rindex/indices compatibility" {
 }
 
 ///|
-test "eval index/rindex/indices errors" {
+test "execute index/rindex/indices errors" {
   guard (try? execute(parse_filter("index(1)"), must_parse("\"hello\"")))
     is Err(err) &&
     err.to_string() == "Cannot index string with number" else {
@@ -1075,7 +1075,7 @@ test "eval index/rindex/indices errors" {
 }
 
 ///|
-test "eval bsearch compatibility" {
+test "execute bsearch compatibility" {
   assert_eq(must_eval(parse_filter("bsearch(1)"), must_parse("[1,3,5]")), [
     Json::number(0.0),
   ])
@@ -1115,7 +1115,7 @@ test "eval bsearch compatibility" {
 }
 
 ///|
-test "eval range/limit/skip/IN compatibility" {
+test "execute range/limit/skip/IN compatibility" {
   let null_json = must_parse("null")
   assert_eq(must_eval(parse_filter("[range(0;10)]"), null_json), [
     Json::array([
@@ -1249,7 +1249,7 @@ test "eval range/limit/skip/IN compatibility" {
 }
 
 ///|
-test "eval range/limit/skip/nth stream errors" {
+test "execute range/limit/skip/nth stream errors" {
   let null_json = must_parse("null")
   guard (try? execute(parse_filter("limit(-1; .[])"), must_parse("[1,2,3]")))
     is Err(err) &&
@@ -1269,7 +1269,7 @@ test "eval range/limit/skip/nth stream errors" {
 }
 
 ///|
-test "eval bsearch errors" {
+test "execute bsearch errors" {
   guard (try? execute(parse_filter("bsearch(1)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) cannot be searched from" else {
     fail("expected bsearch number input error")
@@ -1297,7 +1297,7 @@ test "eval bsearch errors" {
 }
 
 ///|
-test "eval select" {
+test "execute select" {
   let j = must_parse("{\"a\":1,\"b\":null}")
   let f1 = parse_filter("select(.a)")
   let f2 = parse_filter("select(.b)")
@@ -1306,7 +1306,7 @@ test "eval select" {
 }
 
 ///|
-test "eval select stream compatibility" {
+test "execute select stream compatibility" {
   let j = must_parse("1")
   assert_eq(must_eval(parse_filter("select((false,true,true))"), j), [j, j])
   assert_eq(must_eval(parse_filter("select((false,false))"), j), [])
@@ -1314,7 +1314,7 @@ test "eval select stream compatibility" {
 }
 
 ///|
-test "eval compare" {
+test "execute compare" {
   let j = must_parse("{\"a\":1,\"b\":2}")
   let f1 = parse_filter(".a == 1")
   let f2 = parse_filter(".a != .b")
@@ -1323,7 +1323,7 @@ test "eval compare" {
 }
 
 ///|
-test "eval compare stream cross product" {
+test "execute compare stream cross product" {
   let j = must_parse("null")
   assert_eq(must_eval(parse_filter("(1,2) == (1,2)"), j), [
     Json::boolean(true),
@@ -1335,7 +1335,7 @@ test "eval compare stream cross product" {
 }
 
 ///|
-test "eval compare order and logical" {
+test "execute compare order and logical" {
   let j = must_parse("{\"a\":1,\"b\":2}")
   assert_eq(must_eval(parse_filter(".a < .b"), j), [Json::boolean(true)])
   assert_eq(must_eval(parse_filter(".a >= .b"), j), [Json::boolean(false)])
@@ -1351,7 +1351,7 @@ test "eval compare order and logical" {
 }
 
 ///|
-test "eval arithmetic" {
+test "execute arithmetic" {
   let j = must_parse("{\"a\":1,\"b\":2,\"c\":3}")
   assert_eq(must_eval(parse_filter(".a + .b"), j), [Json::number(3.0)])
   assert_eq(must_eval(parse_filter(".c - .a"), j), [Json::number(2.0)])
@@ -1375,7 +1375,7 @@ test "eval arithmetic" {
 }
 
 ///|
-test "eval multiply compatibility" {
+test "execute multiply compatibility" {
   let j = must_parse("null")
   assert_eq(must_eval(parse_filter("\"ab\" * 2"), j), [Json::string("abab")])
   assert_eq(must_eval(parse_filter("2 * \"ab\""), j), [Json::string("abab")])
@@ -1399,7 +1399,7 @@ test "eval multiply compatibility" {
 }
 
 ///|
-test "eval multiply repeat too long error" {
+test "execute multiply repeat too long error" {
   let j = must_parse("null")
   guard (try? execute(parse_filter("\"x\" * 1000000000000"), j)) is Err(err) &&
     err.to_string() == "Repeat string result too long" else {
@@ -1408,7 +1408,7 @@ test "eval multiply repeat too long error" {
 }
 
 ///|
-test "eval array subtraction compatibility" {
+test "execute array subtraction compatibility" {
   let j = must_parse("null")
   assert_eq(must_eval(parse_filter("[1,2,2,3] - [2]"), j), [
     Json::array([Json::number(1.0), Json::number(3.0)]),
@@ -1419,7 +1419,7 @@ test "eval array subtraction compatibility" {
 }
 
 ///|
-test "eval division by zero compatibility" {
+test "execute division by zero compatibility" {
   let j = must_parse("null")
   guard (try? execute(parse_filter("1 / 0"), j)) is Err(err) &&
     err.to_string() ==
@@ -1434,7 +1434,7 @@ test "eval division by zero compatibility" {
 }
 
 ///|
-test "eval arithmetic stream cross product" {
+test "execute arithmetic stream cross product" {
   let j = must_parse("null")
   assert_eq(must_eval(parse_filter("(1,2) + (10,20)"), j), [
     Json::number(11.0),
@@ -1446,7 +1446,7 @@ test "eval arithmetic stream cross product" {
 }
 
 ///|
-test "eval add arrays and objects" {
+test "execute add arrays and objects" {
   let j = must_parse("{\"a\":[1],\"b\":[2],\"x\":{\"k\":1},\"y\":{\"k\":2}}")
   assert_eq(must_eval(parse_filter(".a + .b"), j), [
     Json::array([Json::number(1.0), Json::number(2.0)]),
@@ -1457,7 +1457,7 @@ test "eval add arrays and objects" {
 }
 
 ///|
-test "eval add null identity compatibility" {
+test "execute add null identity compatibility" {
   let j = must_parse("null")
   assert_eq(must_eval(parse_filter("null + 1"), j), [Json::number(1.0)])
   assert_eq(must_eval(parse_filter("1 + null"), j), [Json::number(1.0)])
@@ -1472,7 +1472,7 @@ test "eval add null identity compatibility" {
 }
 
 ///|
-test "eval update assignment compatibility" {
+test "execute update assignment compatibility" {
   let obj = must_parse("{\"a\":1,\"b\":2}")
   assert_eq(must_eval(parse_filter(".a |= . + 1"), obj), [
     Json::object({ "a": Json::number(2.0), "b": Json::number(2.0) }),
@@ -1581,7 +1581,7 @@ test "eval update assignment compatibility" {
 }
 
 ///|
-test "eval object literal stream product" {
+test "execute object literal stream product" {
   let j = must_parse("null")
   assert_eq(must_eval(parse_filter("{a:(1,2)}"), j), [
     Json::object({ "a": Json::number(1.0) }),
@@ -1597,7 +1597,7 @@ test "eval object literal stream product" {
 }
 
 ///|
-test "eval map" {
+test "execute map" {
   let j = must_parse("[1,2,3]")
   assert_eq(must_eval(parse_filter("map(. + 1)"), j), [
     Json::array([Json::number(2.0), Json::number(3.0), Json::number(4.0)]),
@@ -1605,7 +1605,7 @@ test "eval map" {
 }
 
 ///|
-test "eval map object compatibility" {
+test "execute map object compatibility" {
   let j = must_parse("{\"a\":1}")
   assert_eq(must_eval(parse_filter("map(. + 1)"), j), [
     Json::array([Json::number(2.0)]),
@@ -1617,7 +1617,7 @@ test "eval map object compatibility" {
 }
 
 ///|
-test "eval map iter errors" {
+test "execute map iter errors" {
   guard (try? execute(parse_filter("map(. + 1)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected map number error")
@@ -1630,7 +1630,7 @@ test "eval map iter errors" {
 }
 
 ///|
-test "eval map_values jq semantics" {
+test "execute map_values jq semantics" {
   let obj = must_parse("{\"a\":1,\"b\":2}")
   assert_eq(must_eval(parse_filter("map_values(select(. > 1))"), obj), [
     Json::object({ "b": Json::number(2.0) }),
@@ -1651,7 +1651,7 @@ test "eval map_values jq semantics" {
 }
 
 ///|
-test "eval map_values iter errors" {
+test "execute map_values iter errors" {
   guard (try? execute(parse_filter("map_values(. + 1)"), must_parse("1")))
     is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
@@ -1665,7 +1665,7 @@ test "eval map_values iter errors" {
 }
 
 ///|
-test "eval as and variable" {
+test "execute as and variable" {
   let j = must_parse("{\"a\":1,\"b\":2}")
   assert_eq(must_eval(parse_filter(".a as $x | $x"), j), [Json::number(1.0)])
   assert_eq(must_eval(parse_filter(".a as $x | .b"), j), [Json::number(2.0)])
@@ -1694,7 +1694,7 @@ test "eval as and variable" {
 }
 
 ///|
-test "eval as pattern bindings" {
+test "execute as pattern bindings" {
   assert_eq(
     must_eval(
       parse_filter(".[] as [$a,$b] | [$b,$a]"),
@@ -1760,7 +1760,7 @@ test "eval as pattern bindings" {
 }
 
 ///|
-test "eval special variables compatibility" {
+test "execute special variables compatibility" {
   assert_eq(must_eval(parse_filter("$ENV.PAGER"), must_parse("null")), [
     Json::null(),
   ])
@@ -1778,7 +1778,7 @@ test "eval special variables compatibility" {
 }
 
 ///|
-test "eval dynamic bracket index" {
+test "execute dynamic bracket index" {
   assert_eq(
     must_eval(
       parse_filter(".foo[.baz]"),
@@ -1804,14 +1804,14 @@ test "eval dynamic bracket index" {
 }
 
 ///|
-test "eval try" {
+test "execute try" {
   let j = must_parse("{\"a\":\"hi\"}")
   assert_eq(must_eval(parse_filter("(.a + 1)?"), j), [])
   assert_eq(must_eval(parse_filter("(.a | .b)?"), j), [])
 }
 
 ///|
-test "eval try/catch" {
+test "execute try/catch" {
   let j = must_parse("{\"a\":\"hi\",\"b\":1}")
   assert_eq(must_eval(parse_filter("try .a catch .b"), j), [Json::string("hi")])
   assert_eq(must_eval(parse_filter("try (.a + 1) catch .b"), j), [
@@ -1820,7 +1820,7 @@ test "eval try/catch" {
 }
 
 ///|
-test "eval reduce/foreach" {
+test "execute reduce/foreach" {
   let j = must_parse("[1,2,3]")
   assert_eq(must_eval(parse_filter("reduce .[] as $x (0; . + $x)"), j), [
     Json::number(6.0),
@@ -1852,7 +1852,7 @@ test "eval reduce/foreach" {
 }
 
 ///|
-test "eval if-then-else" {
+test "execute if-then-else" {
   let j = must_parse("{\"a\":true,\"b\":1,\"c\":2}")
   assert_eq(must_eval(parse_filter("if .a then .b else .c end"), j), [
     Json::number(1.0),
@@ -1870,7 +1870,7 @@ test "eval if-then-else" {
 }
 
 ///|
-test "eval fallback and empty" {
+test "execute fallback and empty" {
   let j = must_parse("{\"a\":1,\"b\":2}")
   assert_eq(must_eval(parse_filter(".a // .b"), j), [Json::number(1.0)])
   assert_eq(must_eval(parse_filter("empty // .b"), j), [Json::number(2.0)])
@@ -1878,7 +1878,7 @@ test "eval fallback and empty" {
 }
 
 ///|
-test "eval fallback jq semantics with null/false and streams" {
+test "execute fallback jq semantics with null/false and streams" {
   let j = must_parse("null")
   assert_eq(must_eval(parse_filter("null // 1"), j), [Json::number(1.0)])
   assert_eq(must_eval(parse_filter("false // 1"), j), [Json::number(1.0)])
@@ -1896,7 +1896,7 @@ test "eval fallback jq semantics with null/false and streams" {
 }
 
 ///|
-test "eval string contains/starts/ends" {
+test "execute string contains/starts/ends" {
   let j = must_parse("\"hello\"")
   assert_eq(must_eval(parse_filter("contains(\"ell\")"), j), [
     Json::boolean(true),
@@ -1925,7 +1925,7 @@ test "eval string contains/starts/ends" {
 }
 
 ///|
-test "eval trimstr compatibility" {
+test "execute trimstr compatibility" {
   let j = must_parse("\"foobar\"")
   assert_eq(must_eval(parse_filter("ltrimstr(\"foo\")"), j), [
     Json::string("bar"),
@@ -1947,7 +1947,7 @@ test "eval trimstr compatibility" {
 }
 
 ///|
-test "eval trim/ltrim/rtrim compatibility" {
+test "execute trim/ltrim/rtrim compatibility" {
   assert_eq(
     must_eval(parse_filter("trim, ltrim, rtrim"), must_parse("\" abc \"")),
     [Json::string("abc"), Json::string("abc "), Json::string(" abc")],
@@ -1970,7 +1970,7 @@ test "eval trim/ltrim/rtrim compatibility" {
 }
 
 ///|
-test "eval trimstr errors" {
+test "execute trimstr errors" {
   guard (try? execute(parse_filter("ltrimstr(\"1\")"), must_parse("1")))
     is Err(err) &&
     err.to_string() == "ltrimstr() requires string inputs" else {
@@ -2011,7 +2011,7 @@ test "eval trimstr errors" {
 }
 
 ///|
-test "eval abs/have_decnum/isempty compatibility" {
+test "execute abs/have_decnum/isempty compatibility" {
   assert_eq(
     must_eval(parse_filter("map(abs)"), must_parse("[-10,-1.1,-1e-1]")),
     [Json::array([Json::number(10.0), Json::number(1.1), Json::number(0.1)])],
@@ -2035,7 +2035,7 @@ test "eval abs/have_decnum/isempty compatibility" {
 }
 
 ///|
-test "eval numeric/meta builtins compatibility" {
+test "execute numeric/meta builtins compatibility" {
   assert_eq(
     must_eval(
       parse_filter("map(toboolean)"),
@@ -2101,7 +2101,7 @@ test "eval numeric/meta builtins compatibility" {
 }
 
 ///|
-test "eval numeric/meta builtins errors" {
+test "execute numeric/meta builtins errors" {
   guard (try? execute(parse_filter("toboolean"), must_parse("\"tru\"")))
     is Err(err) &&
     err.to_string() == "string (\"tru\") cannot be parsed as a boolean" else {
@@ -2127,7 +2127,7 @@ test "eval numeric/meta builtins errors" {
 }
 
 ///|
-test "eval abs/fabs/isempty errors" {
+test "execute abs/fabs/isempty errors" {
   guard (try? execute(parse_filter("abs"), must_parse("null"))) is Err(err) &&
     err.to_string() == "null (null) cannot be negated" else {
     fail("expected abs null type error")
@@ -2148,7 +2148,7 @@ test "eval abs/fabs/isempty errors" {
 }
 
 ///|
-test "eval ascii case compatibility" {
+test "execute ascii case compatibility" {
   assert_eq(
     must_eval(parse_filter("ascii_downcase"), must_parse("\"AbC_é\"")),
     [Json::string("abc_é")],
@@ -2159,7 +2159,7 @@ test "eval ascii case compatibility" {
 }
 
 ///|
-test "eval ascii case errors" {
+test "execute ascii case errors" {
   guard (try? execute(parse_filter("ascii_upcase"), must_parse("1")))
     is Err(err) &&
     err.to_string() == "ascii_upcase input must be a string" else {
@@ -2173,7 +2173,7 @@ test "eval ascii case errors" {
 }
 
 ///|
-test "eval utf8bytelength compatibility" {
+test "execute utf8bytelength compatibility" {
   assert_eq(
     must_eval(parse_filter("utf8bytelength"), must_parse("\"asdf\\u03bc\"")),
     [Json::number(6.0)],
@@ -2185,7 +2185,7 @@ test "eval utf8bytelength compatibility" {
 }
 
 ///|
-test "eval utf8bytelength errors" {
+test "execute utf8bytelength errors" {
   guard (try? execute(parse_filter("utf8bytelength"), must_parse("[]")))
     is Err(err) &&
     err.to_string() == "array ([]) only strings have UTF-8 byte length" else {

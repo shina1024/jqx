@@ -54,9 +54,9 @@ Updated: 2026-02-14
 ## P1: コードベース保守性（リファクタリング）
 
 - [x] 公開API命名をjq寄せに揃える（`compile`/`execute` を主、旧名は互換alias）
-- [x] 内部API命名をjq寄せに揃える（`eval_call_*` から `builtin_call_*` への置換と `parser*` / `builtin*` 命名への統一を反映）
-- [x] `core/eval_test.mbt` の第1分割を実施する（collections系を `core/eval_collections_test.mbt` へ切り出し）
-- [x] `core/eval_test.mbt` を機能別に分割する（`eval_test_support` 導入 + 挙動不変）
+- [x] 内部API命名をjq寄せに揃える（`builtin_call_*` への統一と `parser*` / `builtin*` 命名への統一を反映）
+- [x] `core/execute_test.mbt` の第1分割を実施する（collections系を `core/execute_collections_test.mbt` へ切り出し）
+- [x] `core/execute_test.mbt` を機能別に分割する（`execute_test_support` 導入 + 挙動不変）
 - [x] `core/parser.mbt` を `cursor/atom/expr/lowering` に段階分割する（挙動不変、`cursor` / `atom` / `expr` / `lowering` の分割完了）
 - [x] `core/execute.mbt` を `core/json_ops/path_ops/collection_ops` に段階分割する（挙動不変）
 - [x] `core/builtin_dispatch.mbt` を責務別（numeric/string/path/stream）に段階分割する（挙動不変、path/string/collection/numeric/stream 分割完了）
@@ -66,3 +66,4 @@ Updated: 2026-02-14
 
 - [ ] differentialテストの実行対象OSを拡張する（Linux専用からの段階的拡張）
 - [ ] カバレッジ可視化（`moon coverage analyze`）をCIに組み込む
+

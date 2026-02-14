@@ -1,5 +1,5 @@
 ///|
-test "eval contains jq semantics" {
+test "execute contains jq semantics" {
   let array_input = must_parse("[1,{\"x\":2},3]")
   assert_eq(must_eval(parse_filter("contains([1,3])"), array_input), [
     Json::boolean(true),
@@ -45,7 +45,7 @@ test "eval contains jq semantics" {
 }
 
 ///|
-test "eval contains/startswith/endswith type errors" {
+test "execute contains/startswith/endswith type errors" {
   let array_input = must_parse("[1,2,3]")
   guard (try? execute(parse_filter("contains(2)"), array_input)) is Err(err) &&
     err.to_string() ==
@@ -75,7 +75,7 @@ test "eval contains/startswith/endswith type errors" {
 }
 
 ///|
-test "eval inside jq semantics" {
+test "execute inside jq semantics" {
   assert_eq(must_eval(parse_filter("inside(1)"), must_parse("1")), [
     Json::boolean(true),
   ])
@@ -114,7 +114,7 @@ test "eval inside jq semantics" {
 }
 
 ///|
-test "eval inside type errors" {
+test "execute inside type errors" {
   guard (try? execute(parse_filter("inside(false)"), must_parse("true")))
     is Err(err) &&
     err.to_string() ==
@@ -134,7 +134,7 @@ test "eval inside type errors" {
 }
 
 ///|
-test "eval has jq semantics" {
+test "execute has jq semantics" {
   let obj = must_parse("{\"a\":1}")
   assert_eq(must_eval(parse_filter("has(\"a\")"), obj), [Json::boolean(true)])
   assert_eq(must_eval(parse_filter("has(\"z\")"), obj), [Json::boolean(false)])
@@ -161,7 +161,7 @@ test "eval has jq semantics" {
 }
 
 ///|
-test "eval has type errors" {
+test "execute has type errors" {
   let obj = must_parse("{\"a\":1}")
   guard (try? execute(parse_filter("has(0)"), obj)) is Err(err) &&
     err.to_string() == "Cannot check whether object has a number key" else {
@@ -180,7 +180,7 @@ test "eval has type errors" {
 }
 
 ///|
-test "eval in jq semantics" {
+test "execute in jq semantics" {
   assert_eq(
     must_eval(parse_filter("\"a\" | in({\"a\":1})"), must_parse("null")),
     [Json::boolean(true)],
@@ -202,7 +202,7 @@ test "eval in jq semantics" {
 }
 
 ///|
-test "eval in type errors" {
+test "execute in type errors" {
   guard (try? execute(parse_filter("\"a\" | in(1)"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "Cannot check whether number has a string key" else {
@@ -221,7 +221,7 @@ test "eval in type errors" {
 }
 
 ///|
-test "eval iter non-array errors" {
+test "execute iter non-array errors" {
   let j = must_parse("1")
   let f = parse_filter(".[]")
   guard (try? execute(f, j)) is Err(_) else {
@@ -230,7 +230,7 @@ test "eval iter non-array errors" {
 }
 
 ///|
-test "eval index negative" {
+test "execute index negative" {
   let j = must_parse("[1,2]")
   assert_eq(must_eval(parse_filter(".[-1]"), j), [Json::number(2.0)])
   assert_eq(must_eval(parse_filter(".[-1]?"), j), [Json::number(2.0)])
@@ -238,7 +238,7 @@ test "eval index negative" {
 }
 
 ///|
-test "eval slice compatibility" {
+test "execute slice compatibility" {
   let arr = must_parse("[1,2,3]")
   assert_eq(must_eval(parse_filter(".[1:2]"), arr), [
     Json::array([Json::number(2.0)]),
@@ -269,7 +269,7 @@ test "eval slice compatibility" {
 }
 
 ///|
-test "eval dynamic slice compatibility" {
+test "execute dynamic slice compatibility" {
   assert_eq(
     must_eval(parse_filter(".[:rindex(\"x\")]"), must_parse("\"正xyz\"")),
     [Json::string("正")],
@@ -308,7 +308,7 @@ test "eval dynamic slice compatibility" {
 }
 
 ///|
-test "eval length compatibility" {
+test "execute length compatibility" {
   assert_eq(must_eval(parse_filter("length"), must_parse("null")), [
     Json::number(0.0),
   ])
@@ -321,7 +321,7 @@ test "eval length compatibility" {
 }
 
 ///|
-test "eval keys array compatibility" {
+test "execute keys array compatibility" {
   let j = must_parse("[10,20]")
   assert_eq(must_eval(parse_filter("keys"), j), [
     Json::array([Json::number(0.0), Json::number(1.0)]),
