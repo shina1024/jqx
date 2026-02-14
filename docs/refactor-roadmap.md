@@ -8,7 +8,6 @@ Updated: 2026-02-14
 
 - `core/filter_parse.mbt`: 2765 lines
 - `core/eval_test.mbt`: 2176 lines
-- `core/eval.mbt`: 1426 lines
 - `core/eval_call.mbt`: 1521 lines
 
 結論として、互換性実装を継続するためにリファクタリングは **必要**。
@@ -19,7 +18,8 @@ Updated: 2026-02-14
 - `core/eval_test.mbt` の分割を開始済み（`core/eval_collections_test.mbt`, `core/eval_path_test.mbt`, `core/eval_aggregate_test.mbt`, `core/eval_test_support_test.mbt`）
 - `core/eval.mbt` から path 系を `core/eval_path_ops.mbt` へ分離済み（挙動不変）
 - `core/eval.mbt` から collection 系を `core/eval_collection_ops.mbt` へ分離済み（挙動不変）
-- 次段は `eval_json_ops` と `filter_parse` 分割
+- `core/eval.mbt` から json 系を `core/eval_json_ops.mbt` へ分離済み（挙動不変）
+- 現在の主対象は `filter_parse.mbt` 分割
 
 ## Upstream jq からの参照方針
 
