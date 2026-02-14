@@ -78,12 +78,32 @@ jqx でも同じ思想を取り、言語仕様の差を保ったまま次の対�
 
 - `core/execute_test_support_test.mbt`
   - `must_parse`, `must_execute` などテスト共通ヘルパ
-- `core/execute_basic_test.mbt`
+- `core/execute_test.mbt`
+  - execute 本体の基本挙動、複合ケース、回帰ケース
 - `core/execute_path_test.mbt`
-- `core/execute_builtin_test.mbt`
-- `core/execute_control_test.mbt`
-- `core/execute_compat_test.mbt`
-  - `execute_test.mbt` を無理なく分割
+  - path/getpath/setpath/delpaths と path builtin
+- `core/execute_collections_test.mbt`
+  - map/select/sort/group/unique/contains など collection/string 系
+- `core/execute_aggregate_test.mbt`
+  - reduce/foreach/add/min/max/stream 系
+- `core/filter_test.mbt`
+  - parser (`compile`/`parse_filter`) の構文エラー・構文木期待値
+- `core/jqx_test.mbt`
+  - JSON parser (`parse_json`) の入力/エラーケース
+
+## Source/Test mapping (current)
+
+現状の `core` は、次の対応でソースとテストを追える状態にしている。
+
+| Source (core) | Primary tests (core) | Scope |
+|---|---|---|
+| `parser.mbt`, `parser_cursor.mbt`, `parser_atom.mbt`, `parser_expr.mbt`, `parser_lowering.mbt` | `filter_test.mbt` | フィルタ文字列の構文解析と lowering |
+| `execute.mbt`, `json_ops.mbt`, `builtin_dispatch.mbt` | `execute_test.mbt` | execute の中核挙動と主要回帰 |
+| `path_ops.mbt`, `builtin_path.mbt` | `execute_path_test.mbt` | path 操作と関連 builtin |
+| `collection_ops.mbt`, `builtin_collection.mbt`, `builtin_string.mbt` | `execute_collections_test.mbt` | collection/string 操作 builtin |
+| `builtin_numeric.mbt`, `builtin_stream.mbt` | `execute_aggregate_test.mbt` | numeric/aggregate/stream builtin |
+| `jqx.mbt` | `jqx_test.mbt` | JSON parser の単体 |
+| (test helper) | `execute_test_support_test.mbt` | テスト共通補助の健全性 |
 
 ## Execution plan
 
