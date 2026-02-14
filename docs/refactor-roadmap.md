@@ -6,7 +6,8 @@ Updated: 2026-02-14
 
 現状、`core` には以下の巨大ファイルがあり、仕様追加と回帰修正の速度を落とし始めている。
 
-- `core/filter_parse.mbt`: 990 lines
+- `core/filter_parse_lowering.mbt`: 933 lines
+- `core/filter_parse_atom.mbt`: 849 lines
 - `core/eval_test.mbt`: 2176 lines
 - `core/eval_call.mbt`: 1521 lines
 
@@ -22,7 +23,9 @@ Updated: 2026-02-14
 - `core/filter_parse.mbt` から cursor 系を `core/filter_parse_cursor.mbt` へ分離済み（挙動不変）
 - `core/filter_parse.mbt` から atom 系を `core/filter_parse_atom.mbt` へ分離済み（挙動不変）
 - `core/filter_parse.mbt` から expr 系を `core/filter_parse_expr.mbt` へ分離済み（挙動不変）
-- 現在の主対象は `filter_parse.mbt` の lowering 分割
+- `core/filter_parse.mbt` から lowering 系を `core/filter_parse_lowering.mbt` へ分離済み（挙動不変）
+- `core/filter_parse.mbt` は public API（`compile`/`parse_filter`）とエラー定義のみを保持する薄い入口へ整理済み
+- 次の主対象は `core/eval_call.mbt` の責務分割（挙動不変）
 
 ## Upstream jq からの参照方針
 
@@ -86,7 +89,7 @@ Done criteria:
 - `moon test` が現状同等で通る
 - 差分はファイル移動・関数移設のみ
 
-### Phase 2 (parser split, no behavior change)
+### Phase 2 (parser split, no behavior change, completed 2026-02-14)
 
 - `filter_parse.mbt` を cursor/atom/expr/lowering に分割
 - parser の public API とエラーメッセージは維持
