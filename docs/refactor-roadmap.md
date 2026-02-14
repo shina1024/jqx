@@ -6,7 +6,7 @@ Updated: 2026-02-14
 
 現状、`core` には以下の巨大ファイルがあり、仕様追加と回帰修正の速度を落とし始めている。
 
-- `core/filter_parse.mbt`: 2765 lines
+- `core/filter_parse.mbt`: 1452 lines
 - `core/eval_test.mbt`: 2176 lines
 - `core/eval_call.mbt`: 1521 lines
 
@@ -20,7 +20,8 @@ Updated: 2026-02-14
 - `core/eval.mbt` から collection 系を `core/eval_collection_ops.mbt` へ分離済み（挙動不変）
 - `core/eval.mbt` から json 系を `core/eval_json_ops.mbt` へ分離済み（挙動不変）
 - `core/filter_parse.mbt` から cursor 系を `core/filter_parse_cursor.mbt` へ分離済み（挙動不変）
-- 現在の主対象は `filter_parse.mbt` の atom/expr/lowering 分割
+- `core/filter_parse.mbt` から atom 系を `core/filter_parse_atom.mbt` へ分離済み（挙動不変）
+- 現在の主対象は `filter_parse.mbt` の expr/lowering 分割
 
 ## Upstream jq からの参照方針
 
