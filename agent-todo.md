@@ -60,7 +60,7 @@ Updated: 2026-02-14
 - [x] `core/parser.mbt` を `cursor/atom/expr/lowering` に段階分割する（挙動不変、`cursor` / `atom` / `expr` / `lowering` の分割完了）
 - [x] `core/eval.mbt` を `core/json_ops/path_ops/collection_ops` に段階分割する（挙動不変）
 - [x] `core/eval_builtin_dispatch.mbt` を責務別（numeric/string/path/stream）に段階分割する（挙動不変、path/string/collection/numeric/stream 分割完了）
-- [ ] 段階分割ガイドを維持する（`docs/refactor-roadmap.md`）
+- [x] 段階分割ガイドを維持する（`docs/refactor-roadmap.md` を分割進捗と命名方針に追従更新）
 
 ## P2: CI/運用の底上げ
 
