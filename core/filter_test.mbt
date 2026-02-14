@@ -199,6 +199,21 @@ test "parse builtin" {
 }
 
 ///|
+test "parse def no-arg minimal" {
+  inspect(
+    parse_filter("def inc: . + 1; . | inc"),
+    content="Pipe(Identity, Add(Identity, Literal(Number(1))))",
+  )
+  guard (try? parse_filter("def inc: . + 1; def twice: inc | inc; . | twice"))
+    is Ok(_) else {
+    fail("expected chained no-arg def parse")
+  }
+  guard (try? parse_filter("def f(x): x; .")) is Err(_) else {
+    fail("expected parse error for def parameters in minimal mode")
+  }
+}
+
+///|
 test "parse call" {
   inspect(
     parse_filter("select(.a)"),

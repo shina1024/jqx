@@ -1,10 +1,11 @@
 # Agent TODO
 
-Updated: 2026-02-10
+Updated: 2026-02-14
 
 ## P0: jq互換の未実装/部分実装を埋める
 
-- [ ] `def`（ユーザー定義関数）の最小実装を追加する（parser + eval + differential case）
+- [x] `def`（ユーザー定義関数）の最小実装を追加する（no-arg top-level の parser lowering + differential case）
+- [ ] `def` の対応範囲を拡張する（引数付き定義、再帰、ネスト定義、import連携）
 - [ ] update assignment（`|=`, `+=` など）の対応範囲を拡張する（静的パス以外の実用ケース）
 - [ ] 正規表現ファミリ（`test`/`match`/`capture`/`scan`/`sub`/`gsub`）を最小互換で実装する
 - [ ] CLI `-R`/`-s` の入力セマンティクス差分を縮小する（line/slurp境界のjq互換）

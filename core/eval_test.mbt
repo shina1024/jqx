@@ -199,6 +199,24 @@ test "eval builtins" {
 }
 
 ///|
+test "eval def no-arg minimal" {
+  let j = must_parse("1")
+  assert_eq(must_eval(parse_filter("def inc: . + 1; . | inc"), j), [
+    Json::number(2.0),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("def inc: . + 1; def twice: inc | inc; . | twice"),
+      j,
+    ),
+    [Json::number(3.0)],
+  )
+  assert_eq(must_eval(parse_filter("def length: 42; . | length"), j), [
+    Json::number(42.0),
+  ])
+}
+
+///|
 test "eval first/last/nth compatibility" {
   let arr = must_parse("[1,2,3]")
   assert_eq(must_eval(parse_filter("first"), arr), [Json::number(1.0)])

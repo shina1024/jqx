@@ -1,6 +1,6 @@
 # jqx Compatibility Matrix (Baseline)
 
-Updated: 2026-02-10
+Updated: 2026-02-14
 
 Scope:
 - Target compatibility: jq 1.7 behavior
@@ -25,7 +25,7 @@ Legend:
 | Control flow | supported | `if ... then ... else ... end`, `empty`, `//` |
 | Reduce / foreach | supported | minimal stream semantics |
 | Arithmetic / compare / logic | supported | `+ - * / %`, `== != < <= > >=`, `and or not` |
-| User-defined functions (`def`) | planned | parser/evaluator not implemented |
+| User-defined functions (`def`) | partial | minimal no-arg top-level definitions are supported via parser lowering; parameterized defs/recursive semantics remain pending |
 | Labels / break | planned | parser/evaluator not implemented |
 | Module system (`import`/`include`) | planned | parser/evaluator not implemented |
 | Update assignment (`=`, `|=`, `+=`, `-=`, `*=`, `/=`, `%=`, `//=`) | partial | minimal lowering via `setpath(getpath(...))` for static path LHS (`.foo`, `.[n]`, `.a.b`, `.a.[1]`) |
