@@ -21,6 +21,7 @@ Updated: 2026-02-14
 - [x] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ76→84件へ段階追加）
 - [x] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ84→92件へ段階追加）
 - [x] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ92→95件へ段階追加）
+- [x] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ95→110件へ段階追加）
 - [x] upstream失敗ケースをカテゴリ集計して台帳化する（`docs/upstream-failure-backlog.md` + snapshot）
 - [x] upstream parser失敗クラスタの第1段を実施する（188→147、`=`/`%`/単項`-`/`."..."`/`foreach`2句/object shorthand/`.[1,2]`）
 - [x] upstream parser失敗クラスタの第2段を実施する（145→108、`if/elif/else/end`拡張・`else`省略・任意式`[]`後置・配列/オブジェクト値で比較式）
@@ -33,12 +34,14 @@ Updated: 2026-02-14
 - [x] upstream unknown-function上位クラスタを潰す（77→0、`have_decnum`/`abs`/`isempty`/`trimstr`/`trim`系を実装）
 - [x] upstream unknown-functionホットスポットを追加で縮小する（21→18、`pow`/`fabs`/`log2`/`round`）
 - [x] upstream unknown-functionホットスポットを追加で縮小する（18→15、`IN`/`INDEX`）
+- [x] upstream unknown-functionクラスタを実質解消する（15→0、`split/splits`+`combinations`+`fromdate`+`env`+`tostream/fromstream/truncate_stream`）
 - [x] Objectキー順の扱いを安定化する方針を決めて実装する（辞書順正規化で安定化）
 - [ ] エラーメッセージ差分を縮小する（`expect_error` ケース追加は進捗あり、正規化改善を継続）
 - [x] differentialケースを拡張する（`reduce`/`foreach`/`try-catch`/演算の境界系を11件追加、smoke 169→180）
 - [x] differentialケースをさらに拡張する（upstream pass群から `def` 系3件を取り込み、smoke 180→185）
 - [x] differentialケースをさらに拡張する（`pow`/`fabs`/`log2` 3件を追加、smoke 185→188）
 - [x] differentialケースをさらに拡張する（`IN`/`INDEX` 2件を追加、smoke 188→190）
+- [x] differentialケースをさらに拡張する（`split/splits`+`combinations`+`fromdate`+`env`+stream系を9件追加、smoke 190→199）
 
 ## P1: JS/TS公開に向けた仕上げ
 

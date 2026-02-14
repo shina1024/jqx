@@ -11,8 +11,8 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 512
-- failed: 165
+- passed: 527
+- failed: 150
 - skipped: 147
 
 ## Failure Categories (Current)
@@ -20,24 +20,16 @@ This document tracks failing upstream differential cases so they do not stay
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
 | `output-mismatch` | 131 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
-| `unknown-function` | 15 | builtin/function coverage gaps |
 | `runtime-error-vs-jq-success` | 11 | jqx runtime errors where jq succeeds |
 | `unknown-variable` | 8 | variable binding/scoping coverage gaps |
 | `parser-invalid-character` | 0 | resolved in current baseline |
+| `unknown-function` | 0 | resolved in current baseline |
 
 ## Top Unknown Functions
 
 From current snapshot (`unknown-function` subset):
 
-| Function | Count |
-| --- | ---: |
-| `splits` | 6 |
-| `combinations` | 2 |
-| `fromdate` | 2 |
-| `fromstream` | 2 |
-| `env` | 1 |
-| `split` | 1 |
-| `truncate_stream` | 1 |
+- none (cluster is `0`)
 
 ## Latest Progress
 
@@ -52,15 +44,18 @@ From current snapshot (`unknown-function` subset):
 - `IN`/`INDEX` call coverage expanded:
   - implemented `IN(stream; stream)` and `INDEX(stream; index_expr)`.
   - full upstream unknown-function cluster reduced from `18` to `15`.
-- Differential smoke cases were expanded from 180 to 190
-  (`def` 3 + numeric 3 + `IN/INDEX` 2).
-- Upstream stage1 subset was expanded from 84 to 95 passing cases.
+- Split/stream/date/environment/function coverage expanded:
+  - implemented regex-aware `split(...; flags)` / `splits(...; flags)` (minimal `?/*/+`, `i`, `n`).
+  - implemented `combinations`, `fromdate`, `env`, `tostream`, `fromstream`, `truncate_stream`.
+  - full upstream unknown-function cluster reduced from `15` to `0`.
+- Differential smoke cases were expanded from 190 to 199.
+- Upstream stage1 subset was expanded from 95 to 110 passing cases.
 
 ## Priority Plan
 
 1. Triage `output-mismatch` (`131`) by subcategory:
    - intentional policy differences (e.g. object key order)
    - real behavioral regressions (streaming/error semantics).
-2. Reduce `unknown-function` (`15`) with focus on `splits`, `fromdate`, `fromstream`, `combinations`.
+2. Reduce `runtime-error-vs-jq-success` (`11`) and `unknown-variable` (`8`).
 3. Continue `def` compatibility improvements (recursion and filter-argument semantics).
 4. Keep expanding stage1 allowlist incrementally with newly stable cases.

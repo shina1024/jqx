@@ -468,14 +468,15 @@ fn format_base64_decode(
 fn builtin_list() -> Array[Json] {
   let names = [
     "abs/0", "add/0", "all/0", "any/0", "ascii_downcase/0", "ascii_upcase/0", "atan/0",
-    "builtins/0", "cos/0", "endswith/1", "error/0", "error/1", "explode/0", "fabs/0",
-    "first/0", "flatten/0", "floor/0", "from_entries/0", "fromjson/0", "group_by/1",
-    "implode/0", "infinite/0", "inside/1", "isfinite/0", "isinfinite/0", "isempty/0",
-    "isnan/0", "join/1", "keys/0", "last/0", "length/0", "log2/0", "ltrim/0", "map/1",
-    "map_values/1", "max/0", "min/0", "modulemeta/0", "nan/0", "paths/0", "pow/2",
-    "reverse/0", "round/0", "rtrim/0", "sin/0", "sort/0", "split/1", "sqrt/0", "startswith/1",
-    "to_entries/0", "toboolean/0", "tojson/0", "tonumber/0", "tostring/0", "utf8bytelength/0",
-    "transpose/0", "trim/0", "type/0", "unique/0", "values/0",
+    "builtins/0", "combinations/0", "cos/0", "endswith/1", "env/0", "error/0", "error/1",
+    "explode/0", "fabs/0", "first/0", "flatten/0", "floor/0", "from_entries/0", "fromdate/0",
+    "fromjson/0", "group_by/1", "implode/0", "infinite/0", "inside/1", "isfinite/0",
+    "isinfinite/0", "isempty/0", "isnan/0", "join/1", "keys/0", "last/0", "length/0",
+    "log2/0", "ltrim/0", "map/1", "map_values/1", "max/0", "min/0", "modulemeta/0",
+    "nan/0", "paths/0", "pow/2", "reverse/0", "round/0", "rtrim/0", "sin/0", "sort/0",
+    "split/1", "sqrt/0", "startswith/1", "to_entries/0", "toboolean/0", "tojson/0",
+    "tonumber/0", "tostream/0", "tostring/0", "utf8bytelength/0", "transpose/0",
+    "trim/0", "type/0", "unique/0", "values/0",
   ]
   let out = []
   for name in names {
@@ -490,6 +491,7 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
     "have_decnum" => [Json::boolean(true)]
     "modulemeta" =>
       [Json::object({ "deps": Json::array([]), "defs": Json::object({}) })]
+    "env" => [Json::object(Map::new())]
     "builtins" => [Json::array(builtin_list())]
     "nan" => [Json::number(@double.infinity - @double.infinity)]
     "infinite" => [Json::number(@double.infinity)]
@@ -764,6 +766,7 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
       }
     }
     "tojson" => [Json::string(input.to_json_string())]
+    "tostream" => [Json::array([Json::array([]), input])]
     "tonumber" =>
       match input {
         Number(_, _) => [input]
@@ -829,6 +832,21 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
       [Json::boolean(ok)]
     }
     "flatten" => [flatten_default(input)]
+    "combinations" =>
+      match input {
+        Array(groups_raw) => {
+          let groups = []
+          for entry in groups_raw {
+            match entry {
+              Array(group) => groups.push(group)
+              _ =>
+                raise TypeError("combinations input must be an array of arrays")
+            }
+          }
+          eval_combinations_from_groups(groups)
+        }
+        _ => raise TypeError("combinations input must be an array")
+      }
     "transpose" => [transpose_json(input)]
     "to_entries" => [to_entries_json(input)]
     "from_entries" => [from_entries_json(input)]
@@ -891,6 +909,18 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
       match input {
         Array(a) => [Json::string(implode_array(a))]
         _ => raise TypeError("implode input must be an array")
+      }
+    "fromdate" =>
+      match input {
+        String(s) =>
+          match parse_rfc3339_utc_seconds(s) {
+            Some(seconds) => [json_number_value(seconds)]
+            None =>
+              raise TypeError(
+                "fromdate input must be RFC3339 UTC (YYYY-MM-DDTHH:MM:SSZ)",
+              )
+          }
+        _ => raise TypeError("fromdate input must be a string")
       }
     "reverse" =>
       match input {

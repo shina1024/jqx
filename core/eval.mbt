@@ -1812,6 +1812,239 @@ fn split_string(s : String, sep : String) -> Array[Json] {
 }
 
 ///|
+priv struct SplitRegexAtom {
+  ch : Char
+  min_repeat : Int
+  max_repeat : Int
+}
+
+///|
+fn string_to_chars(s : String) -> Array[Char] {
+  let out = []
+  for ch in s {
+    out.push(ch)
+  }
+  out
+}
+
+///|
+fn chars_slice_to_string(
+  chars : Array[Char],
+  start : Int,
+  end_ : Int,
+) -> String {
+  let buf = StringBuilder::new()
+  for i in start..<end_ {
+    buf.write_char(chars[i])
+  }
+  buf.to_string()
+}
+
+///|
+fn ascii_fold_char(ch : Char) -> Char {
+  let code = ch.to_int()
+  if code >= 'A'.to_int() && code <= 'Z'.to_int() {
+    (code + 32).unsafe_to_char()
+  } else {
+    ch
+  }
+}
+
+///|
+fn split_regex_char_matches(
+  input_char : Char,
+  pattern_char : Char,
+  ignore_case : Bool,
+) -> Bool {
+  if ignore_case {
+    ascii_fold_char(input_char) == ascii_fold_char(pattern_char)
+  } else {
+    input_char == pattern_char
+  }
+}
+
+///|
+fn split_regex_flag_enabled(flags : String, flag : Char) -> Bool {
+  for ch in flags {
+    if ch == flag {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn parse_split_regex_atoms(pattern : String) -> Array[SplitRegexAtom] {
+  let chars = string_to_chars(pattern)
+  let out = []
+  let mut i = 0
+  let n = chars.length()
+  for {
+    if i >= n {
+      return out
+    }
+    let mut ch = chars[i]
+    if ch == '\\' && i + 1 < n {
+      i = i + 1
+      ch = chars[i]
+    }
+
+    let mut min_repeat = 1
+    let mut max_repeat = 1
+    if i + 1 < n {
+      match chars[i + 1] {
+        '?' => {
+          min_repeat = 0
+          max_repeat = 1
+          i = i + 1
+        }
+        '*' => {
+          min_repeat = 0
+          max_repeat = -1
+          i = i + 1
+        }
+        '+' => {
+          min_repeat = 1
+          max_repeat = -1
+          i = i + 1
+        }
+        _ => ()
+      }
+    }
+    out.push(SplitRegexAtom::{ ch, min_repeat, max_repeat })
+    i = i + 1
+    continue
+  }
+}
+
+///|
+fn split_regex_match_end(
+  chars : Array[Char],
+  pos : Int,
+  atoms : Array[SplitRegexAtom],
+  atom_index : Int,
+  ignore_case : Bool,
+) -> Int? {
+  if atom_index >= atoms.length() {
+    return Some(pos)
+  }
+
+  let atom = atoms[atom_index]
+  let len = chars.length()
+  let mut max_repeat = 0
+  let mut cursor = pos
+  for {
+    if cursor < len &&
+      (atom.max_repeat < 0 || max_repeat < atom.max_repeat) &&
+      split_regex_char_matches(chars[cursor], atom.ch, ignore_case) {
+      max_repeat = max_repeat + 1
+      cursor = cursor + 1
+      continue
+    }
+    break
+  }
+
+  if max_repeat < atom.min_repeat {
+    return None
+  }
+
+  let mut repeat = max_repeat
+  for {
+    if repeat >= atom.min_repeat {
+      let next_pos = pos + repeat
+      match
+        split_regex_match_end(
+          chars,
+          next_pos,
+          atoms,
+          atom_index + 1,
+          ignore_case,
+        ) {
+        Some(end_pos) => return Some(end_pos)
+        None => ()
+      }
+      repeat = repeat - 1
+      continue
+    }
+    break
+  }
+  None
+}
+
+///|
+fn split_regex_find_next(
+  chars : Array[Char],
+  start : Int,
+  atoms : Array[SplitRegexAtom],
+  ignore_case : Bool,
+  skip_empty_match : Bool,
+) -> (Int, Int)? {
+  let len = chars.length()
+  let mut pos = start
+  for {
+    if pos > len {
+      return None
+    }
+    match split_regex_match_end(chars, pos, atoms, 0, ignore_case) {
+      Some(end_pos) =>
+        if skip_empty_match && end_pos == pos {
+          pos = pos + 1
+          continue
+        } else {
+          return Some((pos, end_pos))
+        }
+      None => {
+        pos = pos + 1
+        continue
+      }
+    }
+  }
+}
+
+///|
+fn split_string_regex_tokens(
+  s : String,
+  pattern : String,
+  flags : String,
+) -> Array[Json] {
+  let chars = string_to_chars(s)
+  let atoms = parse_split_regex_atoms(pattern)
+  let ignore_case = split_regex_flag_enabled(flags, 'i')
+  let skip_empty_match = split_regex_flag_enabled(flags, 'n')
+  let len = chars.length()
+  let out = []
+  let mut token_start = 0
+  let mut search_start = 0
+
+  for {
+    match
+      split_regex_find_next(
+        chars, search_start, atoms, ignore_case, skip_empty_match,
+      ) {
+      Some((match_start, match_end)) => {
+        out.push(
+          Json::string(chars_slice_to_string(chars, token_start, match_start)),
+        )
+        token_start = match_end
+        if match_end > search_start {
+          search_start = match_end
+        } else if match_start < len {
+          search_start = match_start + 1
+        } else {
+          out.push(Json::string(chars_slice_to_string(chars, token_start, len)))
+          return out
+        }
+        continue
+      }
+      None => {
+        out.push(Json::string(chars_slice_to_string(chars, token_start, len)))
+        return out
+      }
+    }
+  }
+}
+
+///|
 fn json_sort_rank(j : Json) -> Int {
   match j {
     JNull => 0

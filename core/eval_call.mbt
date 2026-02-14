@@ -74,6 +74,18 @@ fn call_parse_slice_index(value : Json) -> Int? raise EvalError {
 }
 
 ///|
+fn call_parse_regex_flags(
+  name : String,
+  value : Json,
+) -> String raise EvalError {
+  match value {
+    JNull => ""
+    String(flags) => flags
+    _ => raise TypeError(name + " flags must be a string or null")
+  }
+}
+
+///|
 fn append_range_outputs(
   out : Array[Json],
   start : Double,
@@ -102,6 +114,217 @@ fn append_range_outputs(
       }
       break
     }
+  }
+}
+
+///|
+fn parse_decimal_digits(s : String, start : Int, count : Int) -> Int? {
+  if start < 0 || count < 0 || start + count > s.length() {
+    return None
+  }
+  let mut value = 0
+  for i in 0..<count {
+    let code = s.unsafe_get(start + i).to_int()
+    if code < '0'.to_int() || code > '9'.to_int() {
+      return None
+    }
+    value = value * 10 + (code - '0'.to_int())
+  }
+  Some(value)
+}
+
+///|
+fn is_leap_year(year : Int) -> Bool {
+  (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
+}
+
+///|
+fn days_in_month(year : Int, month : Int) -> Int {
+  match month {
+    1 => 31
+    2 => if is_leap_year(year) { 29 } else { 28 }
+    3 => 31
+    4 => 30
+    5 => 31
+    6 => 30
+    7 => 31
+    8 => 31
+    9 => 30
+    10 => 31
+    11 => 30
+    12 => 31
+    _ => 0
+  }
+}
+
+///|
+fn days_from_civil(year : Int, month : Int, day : Int) -> Int {
+  let adjusted_year = if month <= 2 { year - 1 } else { year }
+  let era = if adjusted_year >= 0 {
+    adjusted_year / 400
+  } else {
+    (adjusted_year - 399) / 400
+  }
+  let year_of_era = adjusted_year - era * 400
+  let shifted_month = if month > 2 { month - 3 } else { month + 9 }
+  let day_of_year = (153 * shifted_month + 2) / 5 + day - 1
+  let day_of_era = year_of_era * 365 +
+    year_of_era / 4 -
+    year_of_era / 100 +
+    day_of_year
+  era * 146097 + day_of_era - 719468
+}
+
+///|
+fn parse_rfc3339_utc_seconds(s : String) -> Double? {
+  if s.length() != 20 {
+    return None
+  }
+  guard s.unsafe_get(4).to_int().unsafe_to_char() == '-' else { return None }
+  guard s.unsafe_get(7).to_int().unsafe_to_char() == '-' else { return None }
+  guard s.unsafe_get(10).to_int().unsafe_to_char() == 'T' else { return None }
+  guard s.unsafe_get(13).to_int().unsafe_to_char() == ':' else { return None }
+  guard s.unsafe_get(16).to_int().unsafe_to_char() == ':' else { return None }
+  guard s.unsafe_get(19).to_int().unsafe_to_char() == 'Z' else { return None }
+
+  let year = match parse_decimal_digits(s, 0, 4) {
+    Some(v) => v
+    None => return None
+  }
+  let month = match parse_decimal_digits(s, 5, 2) {
+    Some(v) => v
+    None => return None
+  }
+  let day = match parse_decimal_digits(s, 8, 2) {
+    Some(v) => v
+    None => return None
+  }
+  let hour = match parse_decimal_digits(s, 11, 2) {
+    Some(v) => v
+    None => return None
+  }
+  let minute = match parse_decimal_digits(s, 14, 2) {
+    Some(v) => v
+    None => return None
+  }
+  let second = match parse_decimal_digits(s, 17, 2) {
+    Some(v) => v
+    None => return None
+  }
+
+  if month < 1 || month > 12 {
+    return None
+  }
+  let max_day = days_in_month(year, month)
+  if day < 1 || day > max_day {
+    return None
+  }
+  if hour < 0 || hour > 23 {
+    return None
+  }
+  if minute < 0 || minute > 59 {
+    return None
+  }
+  if second < 0 || second > 59 {
+    return None
+  }
+
+  let days = days_from_civil(year, month, day).to_double()
+  let total = days * 86400.0 +
+    hour.to_double() * 3600.0 +
+    minute.to_double() * 60.0 +
+    second.to_double()
+  Some(total)
+}
+
+///|
+fn append_combinations_recursive(
+  groups : Array[Array[Json]],
+  depth : Int,
+  current : Array[Json],
+  out : Array[Json],
+) -> Unit {
+  if depth >= groups.length() {
+    out.push(Json::array(current.copy()))
+    return
+  }
+  let group = groups[depth]
+  for value in group {
+    current.push(value)
+    append_combinations_recursive(groups, depth + 1, current, out)
+    ignore(current.pop())
+  }
+}
+
+///|
+fn eval_combinations_from_groups(groups : Array[Array[Json]]) -> Array[Json] {
+  let out = []
+  append_combinations_recursive(groups, 0, [], out)
+  out
+}
+
+///|
+fn truncate_stream_token(
+  token : Json,
+  selector : Json,
+) -> Json? raise EvalError {
+  match token {
+    Array(entries) =>
+      if entries.length() == 2 {
+        match entries[0] {
+          Array(path) =>
+            if path.length() == 0 || path[0] != selector {
+              None
+            } else {
+              let trimmed = []
+              for i in 1..<path.length() {
+                trimmed.push(path[i])
+              }
+              Some(Json::array([Json::array(trimmed), entries[1]]))
+            }
+          _ => raise TypeError("truncate_stream token path must be an array")
+        }
+      } else if entries.length() == 1 {
+        match entries[0] {
+          Array(path) =>
+            if path.length() == 0 || path[0] != selector {
+              None
+            } else if path.length() == 1 {
+              None
+            } else {
+              let trimmed = []
+              for i in 1..<path.length() {
+                trimmed.push(path[i])
+              }
+              Some(Json::array([Json::array(trimmed)]))
+            }
+          _ => raise TypeError("truncate_stream token path must be an array")
+        }
+      } else {
+        raise TypeError("truncate_stream token must be [path] or [path, value]")
+      }
+    _ => raise TypeError("truncate_stream token must be an array")
+  }
+}
+
+///|
+fn apply_fromstream_token(root : Json, token : Json) -> Json raise EvalError {
+  match token {
+    Array(entries) =>
+      if entries.length() == 2 {
+        match entries[0] {
+          Array(path) => setpath_on_input(root, path, entries[1])
+          _ => raise TypeError("fromstream token path must be an array")
+        }
+      } else if entries.length() == 1 {
+        match entries[0] {
+          Array(_) => root
+          _ => raise TypeError("fromstream token path must be an array")
+        }
+      } else {
+        raise TypeError("fromstream token must be [path] or [path, value]")
+      }
+    _ => raise TypeError("fromstream token must be an array")
   }
 }
 
@@ -361,6 +584,28 @@ fn eval_call(
           }
         }
         out
+      }
+    "fromdate" =>
+      if args.length() != 0 {
+        raise UnknownFunction("fromdate")
+      } else {
+        match input {
+          String(s) =>
+            match parse_rfc3339_utc_seconds(s) {
+              Some(seconds) => [json_number_value(seconds)]
+              None =>
+                raise TypeError(
+                  "fromdate input must be RFC3339 UTC (YYYY-MM-DDTHH:MM:SSZ)",
+                )
+            }
+          _ => raise TypeError("fromdate input must be a string")
+        }
+      }
+    "env" =>
+      if args.length() != 0 {
+        raise UnknownFunction("env")
+      } else {
+        [Json::object(Map::new())]
       }
     "range" =>
       if args.length() == 0 || args.length() > 3 {
@@ -768,9 +1013,7 @@ fn eval_call(
         }
       }
     "split" =>
-      if args.length() != 1 {
-        raise UnknownFunction("split")
-      } else {
+      if args.length() == 1 {
         let seps = eval_with_env(args[0], input, env)
         let out = []
         for sep in seps {
@@ -780,6 +1023,135 @@ fn eval_call(
           }
         }
         out
+      } else if args.length() == 2 {
+        let patterns = eval_with_env(args[0], input, env)
+        let flag_values = eval_with_env(args[1], input, env)
+        let out = []
+        for pattern_value in patterns {
+          match pattern_value {
+            String(pattern) =>
+              for flag_value in flag_values {
+                let flags = call_parse_regex_flags("split", flag_value)
+                match input {
+                  String(s) =>
+                    out.push(
+                      Json::array(split_string_regex_tokens(s, pattern, flags)),
+                    )
+                  _ =>
+                    raise TypeError("split input and separator must be strings")
+                }
+              }
+            _ => raise TypeError("split input and separator must be strings")
+          }
+        }
+        out
+      } else {
+        raise UnknownFunction("split")
+      }
+    "splits" =>
+      if args.length() == 1 || args.length() == 2 {
+        let patterns = eval_with_env(args[0], input, env)
+        let flag_values = if args.length() == 2 {
+          eval_with_env(args[1], input, env)
+        } else {
+          [Json::null()]
+        }
+        let out = []
+        for pattern_value in patterns {
+          match pattern_value {
+            String(pattern) =>
+              for flag_value in flag_values {
+                let flags = call_parse_regex_flags("splits", flag_value)
+                match input {
+                  String(s) =>
+                    for part in split_string_regex_tokens(s, pattern, flags) {
+                      out.push(part)
+                    }
+                  _ =>
+                    raise TypeError(
+                      "splits input and separator must be strings",
+                    )
+                }
+              }
+            _ => raise TypeError("splits input and separator must be strings")
+          }
+        }
+        out
+      } else {
+        raise UnknownFunction("splits")
+      }
+    "combinations" =>
+      if args.length() == 0 {
+        match input {
+          Array(groups_raw) => {
+            let groups = []
+            for entry in groups_raw {
+              match entry {
+                Array(group) => groups.push(group)
+                _ =>
+                  raise TypeError(
+                    "combinations input must be an array of arrays",
+                  )
+              }
+            }
+            eval_combinations_from_groups(groups)
+          }
+          _ => raise TypeError("combinations input must be an array")
+        }
+      } else if args.length() == 1 {
+        match input {
+          Array(pool) => {
+            let counts = eval_with_env(args[0], input, env)
+            let out = []
+            for count_value in counts {
+              match
+                call_parse_non_negative_count(
+                  count_value, "combinations doesn't support negative count",
+                ) {
+                Some(count) => {
+                  let groups = []
+                  for _ in 0..<count {
+                    groups.push(pool)
+                  }
+                  for combo in eval_combinations_from_groups(groups) {
+                    out.push(combo)
+                  }
+                }
+                None => ()
+              }
+            }
+            out
+          }
+          _ => raise TypeError("combinations input must be an array")
+        }
+      } else {
+        raise UnknownFunction("combinations")
+      }
+    "truncate_stream" =>
+      if args.length() == 0 {
+        raise UnknownFunction("truncate_stream")
+      } else {
+        let out = []
+        for arg in args {
+          for token in eval_with_env(arg, input, env) {
+            match truncate_stream_token(token, input) {
+              Some(next) => out.push(next)
+              None => ()
+            }
+          }
+        }
+        out
+      }
+    "fromstream" =>
+      if args.length() != 1 {
+        raise UnknownFunction("fromstream")
+      } else {
+        let tokens = eval_with_env(args[0], input, env)
+        let mut root = Json::null()
+        for token in tokens {
+          root = apply_fromstream_token(root, token)
+        }
+        [root]
       }
     "sort_by" =>
       if args.length() != 1 {

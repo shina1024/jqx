@@ -847,6 +847,47 @@ test "eval split compatibility" {
     Json::array([Json::string(""), Json::string(""), Json::string("")]),
   ])
   assert_eq(must_eval(parse_filter("split(empty)"), must_parse("\"a\"")), [])
+  assert_eq(
+    must_eval(parse_filter("split(\", *\"; null)"), must_parse("\"ab,cd, ef\"")),
+    [Json::array([Json::string("ab"), Json::string("cd"), Json::string("ef")])],
+  )
+  assert_eq(must_eval(parse_filter("[splits(\"\")]"), must_parse("\"ab\"")), [
+    Json::array([
+      Json::string(""),
+      Json::string("a"),
+      Json::string("b"),
+      Json::string(""),
+    ]),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("[splits(\"a+\"; \"i\")]"),
+      must_parse("\"abAABBabA\""),
+    ),
+    [
+      Json::array([
+        Json::string(""),
+        Json::string("b"),
+        Json::string("BB"),
+        Json::string("b"),
+        Json::string(""),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter("[splits(\",? *\"; \"n\")]"),
+      must_parse("\"ab,cd ef,  gh\""),
+    ),
+    [
+      Json::array([
+        Json::string("ab"),
+        Json::string("cd"),
+        Json::string("ef"),
+        Json::string("gh"),
+      ]),
+    ],
+  )
 }
 
 ///|
@@ -859,6 +900,67 @@ test "eval split errors" {
     err.to_string() == "split input and separator must be strings" else {
     fail("expected split separator type error")
   }
+  guard (try? eval(parse_filter("split(\",\"; 1)"), must_parse("\"a\"")))
+    is Err(err) &&
+    err.to_string() == "split flags must be a string or null" else {
+    fail("expected split flags type error")
+  }
+  guard (try? eval(parse_filter("splits(1)"), must_parse("\"a\""))) is Err(err) &&
+    err.to_string() == "splits input and separator must be strings" else {
+    fail("expected splits separator type error")
+  }
+}
+
+///|
+test "eval combinations/date/env/stream compatibility" {
+  assert_eq(
+    must_eval(parse_filter("combinations"), must_parse("[[1,2], [3,4]]")),
+    [
+      Json::array([Json::number(1.0), Json::number(3.0)]),
+      Json::array([Json::number(1.0), Json::number(4.0)]),
+      Json::array([Json::number(2.0), Json::number(3.0)]),
+      Json::array([Json::number(2.0), Json::number(4.0)]),
+    ],
+  )
+  assert_eq(must_eval(parse_filter("combinations(2)"), must_parse("[0,1]")), [
+    Json::array([Json::number(0.0), Json::number(0.0)]),
+    Json::array([Json::number(0.0), Json::number(1.0)]),
+    Json::array([Json::number(1.0), Json::number(0.0)]),
+    Json::array([Json::number(1.0), Json::number(1.0)]),
+  ])
+  assert_eq(
+    must_eval(parse_filter("fromdate"), must_parse("\"2015-03-05T23:51:47Z\"")),
+    [Json::number(1425599507.0)],
+  )
+  assert_eq(must_eval(parse_filter("env.PAGER"), must_parse("null")), [
+    Json::null(),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("truncate_stream([[0],\"a\"],[[1,0],\"b\"],[[1,0]],[[1]])"),
+      must_parse("1"),
+    ),
+    [
+      Json::array([Json::array([Json::number(0.0)]), Json::string("b")]),
+      Json::array([Json::array([Json::number(0.0)])]),
+    ],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter(
+        "fromstream(1|truncate_stream([[0],\"a\"],[[1,0],\"b\"],[[1,0]],[[1]]))",
+      ),
+      must_parse("null"),
+    ),
+    [Json::array([Json::string("b")])],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter(". as $dot|fromstream($dot|tostream)|.==$dot"),
+      must_parse("[0,[1,{\"a\":1},{\"b\":2}]]"),
+    ),
+    [Json::boolean(true)],
+  )
 }
 
 ///|

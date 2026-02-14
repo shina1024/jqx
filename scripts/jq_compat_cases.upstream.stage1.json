@@ -856,5 +856,140 @@
     "source_line": 2091,
     "source_kind": "runtime",
     "source_expected_count": 1
+  },
+  {
+    "name": "upstream-optional-test-l4",
+    "filter": "fromdate",
+    "input": "\"2038-01-19T03:14:08Z\"",
+    "source_file": "optional.test",
+    "source_line": 4,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-onig-test-l196",
+    "filter": "[splits(\"\")]",
+    "input": "\"ab\"",
+    "source_file": "onig.test",
+    "source_line": 196,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-onig-test-l200",
+    "filter": "[splits(\"c\")]",
+    "input": "\"ab\"",
+    "source_file": "onig.test",
+    "source_line": 200,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-onig-test-l204",
+    "filter": "[splits(\"a+\"; \"i\")]",
+    "input": "\"abAABBabA\"",
+    "source_file": "onig.test",
+    "source_line": 204,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-onig-test-l208",
+    "filter": "[splits(\"b+\"; \"i\")]",
+    "input": "\"abAABBabA\"",
+    "source_file": "onig.test",
+    "source_line": 208,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-manonig-test-l56",
+    "filter": "split(\", *\"; null)",
+    "input": "\"ab,cd, ef\"",
+    "source_file": "manonig.test",
+    "source_line": 56,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-manonig-test-l60",
+    "filter": "splits(\", *\")",
+    "input": "\"ab,cd,   ef, gh\"",
+    "source_file": "manonig.test",
+    "source_line": 60,
+    "source_kind": "runtime",
+    "source_expected_count": 4
+  },
+  {
+    "name": "upstream-manonig-test-l67",
+    "filter": "splits(\",? *\"; \"n\")",
+    "input": "\"ab,cd ef,  gh\"",
+    "source_file": "manonig.test",
+    "source_line": 67,
+    "source_kind": "runtime",
+    "source_expected_count": 4
+  },
+  {
+    "name": "upstream-man-test-l598",
+    "filter": "combinations",
+    "input": "[[1,2], [3, 4]]",
+    "source_file": "man.test",
+    "source_line": 598,
+    "source_kind": "runtime",
+    "source_expected_count": 4
+  },
+  {
+    "name": "upstream-man-test-l605",
+    "filter": "combinations(2)",
+    "input": "[0, 1]",
+    "source_file": "man.test",
+    "source_line": 605,
+    "source_kind": "runtime",
+    "source_expected_count": 4
+  },
+  {
+    "name": "upstream-man-test-l690",
+    "filter": "env.PAGER",
+    "input": "null",
+    "source_file": "man.test",
+    "source_line": 690,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-man-test-l742",
+    "filter": "fromdate",
+    "input": "\"2015-03-05T23:51:47Z\"",
+    "source_file": "man.test",
+    "source_line": 742,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-man-test-l956",
+    "filter": "truncate_stream([[0],\"a\"],[[1,0],\"b\"],[[1,0]],[[1]])",
+    "input": "1",
+    "source_file": "man.test",
+    "source_line": 956,
+    "source_kind": "runtime",
+    "source_expected_count": 2
+  },
+  {
+    "name": "upstream-man-test-l961",
+    "filter": "fromstream(1|truncate_stream([[0],\"a\"],[[1,0],\"b\"],[[1,0]],[[1]]))",
+    "input": "null",
+    "source_file": "man.test",
+    "source_line": 961,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-man-test-l965",
+    "filter": ". as $dot|fromstream($dot|tostream)|.==$dot",
+    "input": "[0,[1,{\"a\":1},{\"b\":2}]]",
+    "source_file": "man.test",
+    "source_line": 965,
+    "source_kind": "runtime",
+    "source_expected_count": 1
   }
 ]

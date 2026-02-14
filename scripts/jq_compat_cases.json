@@ -932,6 +932,51 @@
     "expect_error_mode": "any"
   },
   {
+    "name": "split-regex-null-flags",
+    "filter": "split(\", *\"; null)",
+    "input": "\"ab,cd, ef\""
+  },
+  {
+    "name": "splits-empty",
+    "filter": "[splits(\"\")]",
+    "input": "\"ab\""
+  },
+  {
+    "name": "splits-regex-ignore-empty",
+    "filter": "[splits(\",? *\"; \"n\")]",
+    "input": "\"ab,cd ef,  gh\""
+  },
+  {
+    "name": "combinations-basic",
+    "filter": "combinations",
+    "input": "[[1,2],[3,4]]"
+  },
+  {
+    "name": "fromdate-basic",
+    "filter": "fromdate",
+    "input": "\"2015-03-05T23:51:47Z\""
+  },
+  {
+    "name": "env-pager-null",
+    "filter": "env.PAGER",
+    "input": "null"
+  },
+  {
+    "name": "truncate-stream-basic",
+    "filter": "truncate_stream([[0],\"a\"],[[1,0],\"b\"],[[1,0]],[[1]])",
+    "input": "1"
+  },
+  {
+    "name": "fromstream-truncate",
+    "filter": "fromstream(1|truncate_stream([[0],\"a\"],[[1,0],\"b\"],[[1,0]],[[1]]))",
+    "input": "null"
+  },
+  {
+    "name": "fromstream-tostream-roundtrip",
+    "filter": ". as $dot|fromstream($dot|tostream)|.==$dot",
+    "input": "[0,[1,{\"a\":1},{\"b\":2}]]"
+  },
+  {
     "name": "cli-compact-explicit",
     "filter": ".",
     "input": "{\"a\":1}",
