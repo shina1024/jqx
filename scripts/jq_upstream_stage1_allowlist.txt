@@ -93,3 +93,6 @@ upstream-jq-test-l1069
 upstream-jq-test-l1073
 upstream-jq-test-l1077
 upstream-jq-test-l1081
+upstream-jq-test-l2055
+upstream-jq-test-l2087
+upstream-jq-test-l2091

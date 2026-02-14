@@ -616,30 +616,6 @@
     "jqx_out": "0"
   },
   {
-    "name": "upstream-jq-test-l2055",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"0\":[0,\"foo0\"],\"1\":[1,\"foo1\"],\"2\":[2,\"foo2\"],\"3\":[3,\"foo3\"],\"4\":[4,\"foo4\"]}",
-    "jqx_out": "jqx: error: Unknown function: INDEX"
-  },
-  {
-    "name": "upstream-jq-test-l2087",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "false",
-    "jqx_out": "jqx: error: Unknown function: IN"
-  },
-  {
-    "name": "upstream-jq-test-l2091",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true",
-    "jqx_out": "jqx: error: Unknown function: IN"
-  },
-  {
     "name": "upstream-jq-test-l2096",
     "category": "runtime-error-vs-jq-success",
     "jq_status": "0",

@@ -11,8 +11,8 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 509
-- failed: 168
+- passed: 512
+- failed: 165
 - skipped: 147
 
 ## Failure Categories (Current)
@@ -20,7 +20,7 @@ This document tracks failing upstream differential cases so they do not stay
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
 | `output-mismatch` | 131 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
-| `unknown-function` | 18 | builtin/function coverage gaps |
+| `unknown-function` | 15 | builtin/function coverage gaps |
 | `runtime-error-vs-jq-success` | 11 | jqx runtime errors where jq succeeds |
 | `unknown-variable` | 8 | variable binding/scoping coverage gaps |
 | `parser-invalid-character` | 0 | resolved in current baseline |
@@ -35,9 +35,7 @@ From current snapshot (`unknown-function` subset):
 | `combinations` | 2 |
 | `fromdate` | 2 |
 | `fromstream` | 2 |
-| `IN` | 2 |
 | `env` | 1 |
-| `INDEX` | 1 |
 | `split` | 1 |
 | `truncate_stream` | 1 |
 
@@ -51,15 +49,18 @@ From current snapshot (`unknown-function` subset):
 - Numeric builtin/call coverage expanded:
   - implemented `pow(2-arg)`, `fabs`, `log2`, and `round`.
   - full upstream unknown-function cluster reduced from `21` to `18`.
-- Differential smoke cases were expanded from 180 to 188
-  (`def`-focused 3 + numeric pow/fabs/log2 3).
-- Upstream stage1 subset was expanded from 84 to 92 passing cases.
+- `IN`/`INDEX` call coverage expanded:
+  - implemented `IN(stream; stream)` and `INDEX(stream; index_expr)`.
+  - full upstream unknown-function cluster reduced from `18` to `15`.
+- Differential smoke cases were expanded from 180 to 190
+  (`def` 3 + numeric 3 + `IN/INDEX` 2).
+- Upstream stage1 subset was expanded from 84 to 95 passing cases.
 
 ## Priority Plan
 
 1. Triage `output-mismatch` (`131`) by subcategory:
    - intentional policy differences (e.g. object key order)
    - real behavioral regressions (streaming/error semantics).
-2. Reduce `unknown-function` (`18`) with focus on `splits`, `fromdate`, `fromstream`, `combinations`.
+2. Reduce `unknown-function` (`15`) with focus on `splits`, `fromdate`, `fromstream`, `combinations`.
 3. Continue `def` compatibility improvements (recursion and filter-argument semantics).
 4. Keep expanding stage1 allowlist incrementally with newly stable cases.

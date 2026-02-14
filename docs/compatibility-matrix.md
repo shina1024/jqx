@@ -102,15 +102,15 @@ Notes:
   `scripts/jq_upstream_import.json` (skip patterns + per-case overrides).
 - `scripts/jq_compat_cases.upstream.stage1.json` is auto-generated from
   `scripts/jq_upstream_stage1_allowlist.txt` and is the current CI-safe subset
-  (92 passing cases as of 2026-02-14).
+  (95 passing cases as of 2026-02-14).
 - Full upstream failure backlog and prioritization:
   `docs/upstream-failure-backlog.md`.
 - CLI compatibility cases can specify `jq_args` / `jqx_args` and
   `jqx_use_stdin` for option-aware differential runs.
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.
-- Smoke differential currently covers 188 cases (as of 2026-02-14).
+- Smoke differential currently covers 190 cases (as of 2026-02-14).
 - Full upstream differential baseline is currently:
-  total 824 / passed 509 / failed 168 / skipped 147
+  total 824 / passed 512 / failed 165 / skipped 147
   (see `scripts/jq_upstream_failures.snapshot.json` and `docs/upstream-failure-backlog.md`).
 - `expect_error: true` in smoke differential cases compares normalized jq/jqx
   error messages and accepts jqx `moon run` wrapper status behavior.

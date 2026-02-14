@@ -829,5 +829,32 @@
     "source_line": 1081,
     "source_kind": "runtime",
     "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l2055",
+    "filter": "INDEX(range(5)|[., \"foo\\(.)\"]; .[0])",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 2055,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l2087",
+    "filter": "IN(range(10;20); range(10))",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 2087,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l2091",
+    "filter": "IN(range(5;20); range(10))",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 2091,
+    "source_kind": "runtime",
+    "source_expected_count": 1
   }
 ]

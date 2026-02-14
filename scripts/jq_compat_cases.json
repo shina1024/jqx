@@ -230,6 +230,16 @@
     "input": "null"
   },
   {
+    "name": "IN-two-args",
+    "filter": "IN(range(5;20); range(10))",
+    "input": "null"
+  },
+  {
+    "name": "INDEX-call",
+    "filter": "INDEX(range(5)|[., \"foo\\(.)\"]; .[0])",
+    "input": "null"
+  },
+  {
     "name": "type",
     "filter": "type",
     "input": "{\"a\":1}"

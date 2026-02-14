@@ -114,6 +114,14 @@ fn[T] raise_error_value(value : Json) -> T raise EvalError {
 }
 
 ///|
+fn index_object_key(value : Json) -> String {
+  match value {
+    String(s) => s
+    _ => value.to_json_string()
+  }
+}
+
+///|
 fn eval_any_with_short_circuit(
   source : Filter,
   cond : Filter,
@@ -593,9 +601,7 @@ fn eval_call(
         out
       }
     "IN" =>
-      if args.length() != 1 {
-        raise UnknownFunction("IN")
-      } else {
+      if args.length() == 1 {
         let candidates = eval_with_env(args[0], input, env)
         let mut found = false
         for candidate in candidates {
@@ -605,6 +611,38 @@ fn eval_call(
           }
         }
         [Json::boolean(found)]
+      } else if args.length() == 2 {
+        let haystack = eval_with_env(args[0], input, env)
+        let needles = eval_with_env(args[1], input, env)
+        let mut found = false
+        for needle in needles {
+          for candidate in haystack {
+            if candidate == needle {
+              found = true
+              break
+            }
+          }
+          if found {
+            break
+          }
+        }
+        [Json::boolean(found)]
+      } else {
+        raise UnknownFunction("IN")
+      }
+    "INDEX" =>
+      if args.length() != 2 {
+        raise UnknownFunction("INDEX")
+      } else {
+        let values = eval_with_env(args[0], input, env)
+        let out = Map::new()
+        for value in values {
+          let keys = eval_with_env(args[1], value, env)
+          for key in keys {
+            out[index_object_key(key)] = value
+          }
+        }
+        [Json::object(out)]
       }
     "startswith" =>
       if args.length() != 1 {

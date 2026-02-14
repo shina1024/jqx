@@ -1117,6 +1117,27 @@ test "eval range/limit/skip/IN compatibility" {
     Json::boolean(true),
     Json::boolean(true),
   ])
+  assert_eq(must_eval(parse_filter("IN(range(10;20); range(10))"), null_json), [
+    Json::boolean(false),
+  ])
+  assert_eq(must_eval(parse_filter("IN(range(5;20); range(10))"), null_json), [
+    Json::boolean(true),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("INDEX(range(5)|[., \"foo\\(.)\"]; .[0])"),
+      null_json,
+    ),
+    [
+      Json::object({
+        "0": Json::array([Json::number(0.0), Json::string("foo0")]),
+        "1": Json::array([Json::number(1.0), Json::string("foo1")]),
+        "2": Json::array([Json::number(2.0), Json::string("foo2")]),
+        "3": Json::array([Json::number(3.0), Json::string("foo3")]),
+        "4": Json::array([Json::number(4.0), Json::string("foo4")]),
+      }),
+    ],
+  )
 }
 
 ///|
