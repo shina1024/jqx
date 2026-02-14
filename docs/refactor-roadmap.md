@@ -6,13 +6,19 @@ Updated: 2026-02-14
 
 現状、`core` には以下の巨大ファイルがあり、仕様追加と回帰修正の速度を落とし始めている。
 
-- `core/eval_test.mbt`: 3521 lines
-- `core/filter_parse.mbt`: 2662 lines
-- `core/eval.mbt`: 2479 lines
-- `core/eval_call.mbt`: 1497 lines
+- `core/filter_parse.mbt`: 2765 lines
+- `core/eval_test.mbt`: 2176 lines
+- `core/eval.mbt`: 1936 lines
+- `core/eval_call.mbt`: 1521 lines
 
 結論として、互換性実装を継続するためにリファクタリングは **必要**。
 ただし挙動変更を伴う大改修は避け、まず「責務分割のみ」を行う。
+
+## Current progress
+
+- `core/eval_test.mbt` の分割を開始済み（`core/eval_collections_test.mbt`, `core/eval_path_test.mbt`, `core/eval_aggregate_test.mbt`, `core/eval_test_support_test.mbt`）
+- `core/eval.mbt` から path 系を `core/eval_path_ops.mbt` へ分離済み（挙動不変）
+- 次段は `eval_collection_ops` と `filter_parse` 分割
 
 ## Upstream jq からの参照方針
 
@@ -55,7 +61,7 @@ jqx でも同じ思想を取り、言語仕様の差を保ったまま次の対�
 - `core/eval_collection_ops.mbt`
   - sort/group/unique/min/max/flatten/transpose など
 
-- `core/eval_test_support.mbt`
+- `core/eval_test_support_test.mbt`
   - `must_parse`, `must_eval` などテスト共通ヘルパ
 - `core/eval_basic_test.mbt`
 - `core/eval_path_test.mbt`

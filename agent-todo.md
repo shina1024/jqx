@@ -55,9 +55,9 @@ Updated: 2026-02-14
 
 - [x] 公開API命名をjq寄せに揃える（`compile`/`execute` を主、旧名は互換alias）
 - [x] `core/eval_test.mbt` の第1分割を実施する（collections系を `core/eval_collections_test.mbt` へ切り出し）
-- [ ] `core/eval_test.mbt` を機能別に分割する（`eval_test_support` 導入 + 挙動不変）
+- [x] `core/eval_test.mbt` を機能別に分割する（`eval_test_support` 導入 + 挙動不変）
 - [ ] `core/filter_parse.mbt` を `cursor/atom/expr/lowering` に段階分割する（挙動不変）
-- [ ] `core/eval.mbt` を `core/json_ops/path_ops/collection_ops` に段階分割する（挙動不変）
+- [ ] `core/eval.mbt` を `core/json_ops/path_ops/collection_ops` に段階分割する（挙動不変、`path_ops` は分割済み）
 - [ ] 段階分割ガイドを維持する（`docs/refactor-roadmap.md`）
 
 ## P2: CI/運用の底上げ
