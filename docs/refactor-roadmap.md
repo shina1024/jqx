@@ -25,14 +25,14 @@ Updated: 2026-02-14
 - `core/parser.mbt` から expr 系を `core/parser_expr.mbt` へ分離済み（挙動不変）
 - `core/parser.mbt` から lowering 系を `core/parser_lowering.mbt` へ分離済み（挙動不変）
 - `core/parser.mbt` は public API（`compile`/`parse_filter`）とエラー定義のみを保持する薄い入口へ整理済み
-- `core/eval_call.mbt` から path 系 call を `core/eval_builtin_path.mbt` へ分離済み（挙動不変）
-- `core/eval_call.mbt` から string/index 系 call を `core/eval_builtin_string.mbt` へ分離済み（挙動不変）
-- `core/eval_call.mbt` から collection 系 call を `core/eval_builtin_collection.mbt` へ分離済み（挙動不変）
-- `core/eval_call.mbt` から numeric 系 call を `core/eval_builtin_numeric.mbt` へ分離済み（挙動不変）
-- `core/eval_call.mbt` から stream 系 call を `core/eval_builtin_stream.mbt` へ分離済み（挙動不変）
-- `core/eval_call.mbt` は call dispatcher の薄い入口へ整理済み
-- internal dispatch 命名を `eval_call_*` から `builtin_call_*` へ寄せ始めた（継続中）
-- 次の主対象は内部API命名の jq 寄せ整理（挙動不変）
+- `core/eval_builtin_dispatch.mbt` から path 系 call を `core/eval_builtin_path.mbt` へ分離済み（挙動不変）
+- `core/eval_builtin_dispatch.mbt` から string/index 系 call を `core/eval_builtin_string.mbt` へ分離済み（挙動不変）
+- `core/eval_builtin_dispatch.mbt` から collection 系 call を `core/eval_builtin_collection.mbt` へ分離済み（挙動不変）
+- `core/eval_builtin_dispatch.mbt` から numeric 系 call を `core/eval_builtin_numeric.mbt` へ分離済み（挙動不変）
+- `core/eval_builtin_dispatch.mbt` から stream 系 call を `core/eval_builtin_stream.mbt` へ分離済み（挙動不変）
+- `core/eval_builtin_dispatch.mbt` は call dispatcher の薄い入口へ整理済み
+- internal dispatch 命名を `eval_call_*` から `builtin_call_*` へ統一済み
+- 次の主対象は大きいテスト/補助モジュールの追加分割（挙動不変）
 
 ## Upstream jq からの参照方針
 
@@ -41,7 +41,7 @@ jqx でも同じ思想を取り、言語仕様の差を保ったまま次の対�
 
 - parser/lexer 相当: `parser*`
 - execute 相当: `eval*`
-- builtin 相当: `eval_builtin*`, `eval_call*`
+- builtin 相当: `eval_builtin*`
 - CLI 相当: `cmd/main*`
 - tests 相当: `core/*_test.mbt` の機能別分割
 
@@ -121,7 +121,7 @@ Done criteria:
 
 ### Phase 4 (optional, after stabilization)
 
-- `eval_call.mbt` / `eval_builtin.mbt` の命名統一と重複削減
+- `eval_builtin_dispatch.mbt` / `eval_builtin.mbt` の命名統一と重複削減
 - エラーメッセージ整備タスクと接続
 
 ## Guardrails

@@ -351,7 +351,7 @@ fn eval_with_env(
       out
     }
     Builtin(name) => eval_builtin(name, input)
-    Call(name, args) => eval_call(name, args, input, env)
+    Call(name, args) => builtin_call(name, args, input, env)
     Eq(left, right) => {
       let l = eval_with_env(left, input, env)
       let r = eval_with_env(right, input, env)
