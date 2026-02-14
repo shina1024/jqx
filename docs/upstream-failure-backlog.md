@@ -11,17 +11,17 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 527
-- failed: 150
+- passed: 535
+- failed: 142
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `output-mismatch` | 131 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
-| `runtime-error-vs-jq-success` | 11 | jqx runtime errors where jq succeeds |
-| `unknown-variable` | 8 | variable binding/scoping coverage gaps |
+| `output-mismatch` | 132 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
+| `runtime-error-vs-jq-success` | 10 | jqx runtime errors where jq succeeds |
+| `unknown-variable` | 0 | resolved in current baseline |
 | `parser-invalid-character` | 0 | resolved in current baseline |
 | `unknown-function` | 0 | resolved in current baseline |
 
@@ -48,14 +48,19 @@ From current snapshot (`unknown-function` subset):
   - implemented regex-aware `split(...; flags)` / `splits(...; flags)` (minimal `?/*/+`, `i`, `n`).
   - implemented `combinations`, `fromdate`, `env`, `tostream`, `fromstream`, `truncate_stream`.
   - full upstream unknown-function cluster reduced from `15` to `0`.
-- Differential smoke cases were expanded from 190 to 199.
+- Variable/scoping compatibility expanded:
+  - fixed `as ... |` scope for comma-separated RHS.
+  - fixed `?//` pattern fallback variable defaults (`null` initialization).
+  - added special variables `$ENV` (minimal empty object) and `$__loc__` (minimal location object).
+  - full upstream unknown-variable cluster reduced from `8` to `0`.
+- Differential smoke cases were expanded from 190 to 203.
 - Upstream stage1 subset was expanded from 95 to 110 passing cases.
 
 ## Priority Plan
 
-1. Triage `output-mismatch` (`131`) by subcategory:
+1. Triage `output-mismatch` (`132`) by subcategory:
    - intentional policy differences (e.g. object key order)
    - real behavioral regressions (streaming/error semantics).
-2. Reduce `runtime-error-vs-jq-success` (`11`) and `unknown-variable` (`8`).
+2. Reduce `runtime-error-vs-jq-success` (`10`).
 3. Continue `def` compatibility improvements (recursion and filter-argument semantics).
 4. Keep expanding stage1 allowlist incrementally with newly stable cases.

@@ -1358,6 +1358,47 @@ fn FilterCursor::fresh_as_tmp(ctx : FilterCursor) -> String {
 }
 
 ///|
+fn append_as_pattern_var_once(vars : Array[String], name : String) -> Unit {
+  if !vars.contains(name) {
+    vars.push(name)
+  }
+}
+
+///|
+fn collect_as_pattern_vars(pattern : AsPattern, vars : Array[String]) -> Unit {
+  match pattern {
+    Var(name) => append_as_pattern_var_once(vars, name)
+    Array(items) =>
+      for item in items {
+        collect_as_pattern_vars(item, vars)
+      }
+    Object(entries) =>
+      for entry in entries {
+        for binding in entry.bindings {
+          collect_as_pattern_vars(binding, vars)
+        }
+      }
+  }
+}
+
+///|
+fn lower_with_null_defaults_for_patterns(
+  body : Filter,
+  patterns : Array[AsPattern],
+) -> Filter {
+  let vars = []
+  for pattern in patterns {
+    collect_as_pattern_vars(pattern, vars)
+  }
+  let mut out = body
+  for i in 0..<vars.length() {
+    let idx = vars.length() - 1 - i
+    out = Filter::as_(Filter::literal(Json::null()), vars[idx], out)
+  }
+  out
+}
+
+///|
 fn as_pattern_key_access(base : Filter, key : Filter) -> Filter {
   Filter::pipe(base, Filter::call("getpath", [Filter::Array([key])]))
 }
@@ -1827,7 +1868,7 @@ fn FilterCursor::parse_pipe(
         let body = if ctx.peek_keyword("def") {
           ctx.parse_scoped(allow_as~)
         } else {
-          ctx.parse_pipe()
+          ctx.parse_comma(allow_as~)
         }
         let source_tmp = ctx.fresh_as_tmp()
         let source_var = Filter::var_(source_tmp)
@@ -1845,13 +1886,14 @@ fn FilterCursor::parse_pipe(
           )
           branch = Filter::try_catch(candidate, branch)
         }
+        branch = lower_with_null_defaults_for_patterns(branch, patterns)
         return Filter::as_(left, source_tmp, branch)
       } else {
         ctx.expect_char('|')
         let right = if ctx.peek_keyword("def") {
           ctx.parse_scoped(allow_as~)
         } else {
-          ctx.parse_pipe()
+          ctx.parse_comma(allow_as~)
         }
         return ctx.lower_as_pattern_with_source(left, pattern, right)
       }

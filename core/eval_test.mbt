@@ -2805,6 +2805,22 @@ test "eval as and variable" {
     Json::number(2.0),
     Json::number(3.0),
   ])
+  assert_eq(must_eval(parse_filter("[-1 as $x | 1,$x]"), must_parse("null")), [
+    Json::array([Json::number(1.0), Json::number(-1.0)]),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter(
+        "[\"foo\",1] as $p | getpath($p), setpath($p; 20), delpaths([$p])",
+      ),
+      must_parse("{\"bar\":42, \"foo\":[\"a\", \"b\", \"c\", \"d\"]}"),
+    ),
+    [
+      Json::string("b"),
+      must_parse("{\"bar\":42,\"foo\":[\"a\",20,\"c\",\"d\"]}"),
+      must_parse("{\"bar\":42,\"foo\":[\"a\",\"c\",\"d\"]}"),
+    ],
+  )
 }
 
 ///|
@@ -2835,10 +2851,59 @@ test "eval as pattern bindings" {
   )
   assert_eq(
     must_eval(
+      parse_filter("[1, {c:3, d:4}] as [$a, {c:$b, b:$c}] | $a, $b, $c"),
+      must_parse("null"),
+    ),
+    [Json::number(1.0), Json::number(3.0), Json::null()],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter(
+        ".[] as [$a] ?// [$b] | if $a != null then error(\"err: \\($a)\") else {$a,$b} end",
+      ),
+      must_parse("[[3]]"),
+    ),
+    [must_parse("{\"a\":null,\"b\":3}")],
+  )
+  assert_eq(
+    must_eval(
+      parse_filter(
+        ".[] | . as {$a, b: [$c, {$d}]} ?// [$a, {$b}, $e] ?// $f | [$a, $b, $c, $d, $e, $f]",
+      ),
+      must_parse(
+        "[{\"a\":1, \"b\":[2,{\"d\":3}]}, [4, {\"b\":5, \"c\":6}, 7, 8, 9], \"foo\"]",
+      ),
+    ),
+    [
+      must_parse("[1,null,2,3,null,null]"),
+      must_parse("[4,5,null,null,7,null]"),
+      must_parse("[null,null,null,null,null,\"foo\"]"),
+    ],
+  )
+  assert_eq(
+    must_eval(
       parse_filter(". as {(\"e\"+\"x\"+\"p\"):$exp} | $exp"),
       must_parse("{\"exp\":3}"),
     ),
     [Json::number(3.0)],
+  )
+}
+
+///|
+test "eval special variables compatibility" {
+  assert_eq(must_eval(parse_filter("$ENV.PAGER"), must_parse("null")), [
+    Json::null(),
+  ])
+  assert_eq(
+    must_eval(
+      parse_filter("{ a, $__loc__, c }"),
+      must_parse("{\"a\":[1,2,3],\"b\":\"foo\",\"c\":{\"hi\":\"hey\"}}"),
+    ),
+    [
+      must_parse(
+        "{\"a\":[1,2,3],\"__loc__\":{\"file\":\"<top-level>\",\"line\":1},\"c\":{\"hi\":\"hey\"}}",
+      ),
+    ],
   )
 }
 

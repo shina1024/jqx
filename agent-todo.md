@@ -35,6 +35,7 @@ Updated: 2026-02-14
 - [x] upstream unknown-functionホットスポットを追加で縮小する（21→18、`pow`/`fabs`/`log2`/`round`）
 - [x] upstream unknown-functionホットスポットを追加で縮小する（18→15、`IN`/`INDEX`）
 - [x] upstream unknown-functionクラスタを実質解消する（15→0、`split/splits`+`combinations`+`fromdate`+`env`+`tostream/fromstream/truncate_stream`）
+- [x] upstream unknown-variableクラスタを解消する（8→0、`as`スコープ修正+`?//`変数初期化+`$ENV`/`$__loc__`最小互換）
 - [x] Objectキー順の扱いを安定化する方針を決めて実装する（辞書順正規化で安定化）
 - [ ] エラーメッセージ差分を縮小する（`expect_error` ケース追加は進捗あり、正規化改善を継続）
 - [x] differentialケースを拡張する（`reduce`/`foreach`/`try-catch`/演算の境界系を11件追加、smoke 169→180）
@@ -42,6 +43,7 @@ Updated: 2026-02-14
 - [x] differentialケースをさらに拡張する（`pow`/`fabs`/`log2` 3件を追加、smoke 185→188）
 - [x] differentialケースをさらに拡張する（`IN`/`INDEX` 2件を追加、smoke 188→190）
 - [x] differentialケースをさらに拡張する（`split/splits`+`combinations`+`fromdate`+`env`+stream系を9件追加、smoke 190→199）
+- [x] differentialケースをさらに拡張する（`as`束縛/スコープ回帰の4件を追加、smoke 199→203）
 
 ## P1: JS/TS公開に向けた仕上げ
 

@@ -1253,7 +1253,19 @@ fn eval_with_env(
     Var(name) =>
       match env.get(name) {
         Some(v) => [v]
-        None => raise UnknownVariable(name)
+        None =>
+          if name == "ENV" {
+            [Json::object(Map::new())]
+          } else if name == "__loc__" {
+            [
+              Json::object({
+                "file": Json::string("<top-level>"),
+                "line": Json::number(1.0),
+              }),
+            ]
+          } else {
+            raise UnknownVariable(name)
+          }
       }
     As(value, name, body) => {
       let out = []

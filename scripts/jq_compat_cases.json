@@ -977,6 +977,26 @@
     "input": "[0,[1,{\"a\":1},{\"b\":2}]]"
   },
   {
+    "name": "as-comma-scope",
+    "filter": "[-1 as $x | 1,$x]",
+    "input": "null"
+  },
+  {
+    "name": "as-pattern-missing-field-null",
+    "filter": "[1, {c:3, d:4}] as [$a, {c:$b, b:$c}] | $a, $b, $c",
+    "input": "null"
+  },
+  {
+    "name": "as-pattern-fallback-var-defaults",
+    "filter": ".[] as [$a] ?// [$b] | if $a != null then error(\"err: \\($a)\") else {$a,$b} end",
+    "input": "[[3]]"
+  },
+  {
+    "name": "as-binding-across-comma-calls",
+    "filter": "[\"foo\",1] as $p | getpath($p), setpath($p; 20), delpaths([$p])",
+    "input": "{\"bar\":42, \"foo\":[\"a\", \"b\", \"c\", \"d\"]}"
+  },
+  {
     "name": "cli-compact-explicit",
     "filter": ".",
     "input": "{\"a\":1}",

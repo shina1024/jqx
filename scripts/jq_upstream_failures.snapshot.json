@@ -80,22 +80,6 @@
     "jqx_out": "jqx: error: Invalid path expression with result null"
   },
   {
-    "name": "upstream-jq-test-l524",
-    "category": "unknown-variable",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "1\n3\nnull",
-    "jqx_out": "jqx: error: Unknown variable: $b"
-  },
-  {
-    "name": "upstream-jq-test-l637",
-    "category": "unknown-variable",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,-1]",
-    "jqx_out": "jqx: error: Unknown variable: $x"
-  },
-  {
     "name": "upstream-jq-test-l657",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -150,14 +134,6 @@
     "jqx_status": "0",
     "jq_out": "[\"array ([]) only strings have UTF-8 byte length\",\"object ({}) only strings have UTF-8 byte length\",\"array ([1,2]) only strings have UTF-8 byte length\",\"number (55) only strings have UTF-8 byte length\",\"boolean (true) only strings have UTF-8 byte length\",\"boolean (false) only strings have UTF-8 byte length\"]",
     "jqx_out": "[[],{},[1,2],55,true,false]"
-  },
-  {
-    "name": "upstream-jq-test-l929",
-    "category": "unknown-variable",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,null,2,3,null,null]\n[4,5,null,null,7,null]\n[null,null,null,null,null,\"foo\"]",
-    "jqx_out": "jqx: error: Unknown variable: $a"
   },
   {
     "name": "upstream-jq-test-l936",
@@ -230,22 +206,6 @@
     "jqx_status": "0",
     "jq_out": "[\"a\",\"b\"]",
     "jqx_out": "jqx: error: Invalid path expression with result 0"
-  },
-  {
-    "name": "upstream-jq-test-l1138",
-    "category": "unknown-variable",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"b\"\n{\"bar\":42,\"foo\":[\"a\",20,\"c\",\"d\"]}\n{\"bar\":42,\"foo\":[\"a\",\"c\",\"d\"]}",
-    "jqx_out": "jqx: error: Unknown variable: $p"
-  },
-  {
-    "name": "upstream-jq-test-l1154",
-    "category": "unknown-variable",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "null\n{\"bar\":false,\"foo\":[null,20]}\n{\"bar\":false}",
-    "jqx_out": "jqx: error: Unknown variable: $p"
   },
   {
     "name": "upstream-jq-test-l1164",
@@ -721,11 +681,11 @@
   },
   {
     "name": "upstream-jq-test-l2270",
-    "category": "unknown-variable",
+    "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "{\"a\":[1,2,3],\"__loc__\":{\"file\":\"<top-level>\",\"line\":1},\"c\":{\"hi\":\"hey\"}}",
-    "jqx_out": "jqx: error: Unknown variable: $__loc__"
+    "jqx_out": "{\"a\":[1,2,3],\"c\":{\"hi\":\"hey\"},\"__loc__\":{\"file\":\"<top-level>\",\"line\":1}}"
   },
   {
     "name": "upstream-jq-test-l2274",
@@ -1128,14 +1088,6 @@
     "jqx_out": "[]"
   },
   {
-    "name": "upstream-man-test-l686",
-    "category": "unknown-variable",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "null",
-    "jqx_out": "jqx: error: Unknown variable: $ENV"
-  },
-  {
     "name": "upstream-man-test-l706",
     "category": "runtime-error-vs-jq-success",
     "jq_status": "0",
@@ -1174,22 +1126,6 @@
     "jqx_status": "0",
     "jq_out": "\"some exception\"",
     "jqx_out": "true"
-  },
-  {
-    "name": "upstream-man-test-l862",
-    "category": "runtime-error-vs-jq-success",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":1,\"b\":2,\"d\":3,\"e\":null}\n{\"a\":1,\"b\":2,\"d\":null,\"e\":4}",
-    "jqx_out": "jqx: error: Cannot index object with number"
-  },
-  {
-    "name": "upstream-man-test-l867",
-    "category": "unknown-variable",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":null,\"b\":3}",
-    "jqx_out": "jqx: error: Unknown variable: $a"
   },
   {
     "name": "upstream-man-test-l939",
