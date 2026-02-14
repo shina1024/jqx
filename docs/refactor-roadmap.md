@@ -77,7 +77,7 @@ jqx でも同じ思想を取り、言語仕様の差を保ったまま次の対�
   - sort/group/unique/min/max/flatten/transpose など
 
 - `core/execute_test_support_test.mbt`
-  - `must_parse`, `must_eval` などテスト共通ヘルパ
+  - `must_parse`, `must_execute` などテスト共通ヘルパ
 - `core/execute_basic_test.mbt`
 - `core/execute_path_test.mbt`
 - `core/execute_builtin_test.mbt`

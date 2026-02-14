@@ -2,7 +2,7 @@
 test "execute identity" {
   let j = must_parse("{\"a\":1}")
   let f = parse_filter(".")
-  let out = must_eval(f, j)
+  let out = must_execute(f, j)
   assert_eq(out, [j])
 }
 
@@ -12,9 +12,9 @@ test "execute field and missing field" {
   let f1 = parse_filter(".a")
   let f2 = parse_filter(".b")
   let f3 = parse_filter(".\"a\"")
-  assert_eq(must_eval(f1, j), [Json::number(1.0)])
-  assert_eq(must_eval(f2, j), [Json::null()])
-  assert_eq(must_eval(f3, j), [Json::number(1.0)])
+  assert_eq(must_execute(f1, j), [Json::number(1.0)])
+  assert_eq(must_execute(f2, j), [Json::null()])
+  assert_eq(must_execute(f3, j), [Json::number(1.0)])
 }
 
 ///|
@@ -39,14 +39,14 @@ test "execute field/index type errors and optional suppression" {
     err.to_string() == "Cannot index object with number" else {
     fail("expected type error for object .[0]")
   }
-  assert_eq(must_eval(parse_filter(".foo?"), number_json), [])
-  assert_eq(must_eval(parse_filter(".foo?"), array_json), [])
-  assert_eq(must_eval(parse_filter(".[0]?"), number_json), [])
-  assert_eq(must_eval(parse_filter(".[0]?"), object_json), [])
-  assert_eq(must_eval(parse_filter(".foo"), null_json), [Json::null()])
-  assert_eq(must_eval(parse_filter(".foo?"), null_json), [Json::null()])
-  assert_eq(must_eval(parse_filter(".[0]"), null_json), [Json::null()])
-  assert_eq(must_eval(parse_filter(".[0]?"), null_json), [Json::null()])
+  assert_eq(must_execute(parse_filter(".foo?"), number_json), [])
+  assert_eq(must_execute(parse_filter(".foo?"), array_json), [])
+  assert_eq(must_execute(parse_filter(".[0]?"), number_json), [])
+  assert_eq(must_execute(parse_filter(".[0]?"), object_json), [])
+  assert_eq(must_execute(parse_filter(".foo"), null_json), [Json::null()])
+  assert_eq(must_execute(parse_filter(".foo?"), null_json), [Json::null()])
+  assert_eq(must_execute(parse_filter(".[0]"), null_json), [Json::null()])
+  assert_eq(must_execute(parse_filter(".[0]?"), null_json), [Json::null()])
 }
 
 ///|
@@ -55,20 +55,20 @@ test "execute index and iter" {
   let f1 = parse_filter(".[1]")
   let f2 = parse_filter(".[]")
   let f3 = parse_filter(".[1,2]")
-  assert_eq(must_eval(f1, j), [Json::number(2.0)])
-  assert_eq(must_eval(f2, j), [
+  assert_eq(must_execute(f1, j), [Json::number(2.0)])
+  assert_eq(must_execute(f2, j), [
     Json::number(1.0),
     Json::number(2.0),
     Json::number(3.0),
   ])
-  assert_eq(must_eval(f3, j), [Json::number(2.0), Json::number(3.0)])
+  assert_eq(must_execute(f3, j), [Json::number(2.0), Json::number(3.0)])
 }
 
 ///|
 test "execute chained index without extra dot" {
   let j = must_parse("{\"a\":[10,20,30]}")
-  assert_eq(must_eval(parse_filter(".a[1]"), j), [Json::number(20.0)])
-  assert_eq(must_eval(parse_filter(".a[1:3]"), j), [
+  assert_eq(must_execute(parse_filter(".a[1]"), j), [Json::number(20.0)])
+  assert_eq(must_execute(parse_filter(".a[1:3]"), j), [
     Json::array([Json::number(20.0), Json::number(30.0)]),
   ])
 }
@@ -84,44 +84,46 @@ test "execute string index jq compatibility" {
     err.to_string() == "Cannot index string with number" else {
     fail("expected string negative index type error")
   }
-  assert_eq(must_eval(parse_filter(".[0]?"), s), [])
-  assert_eq(must_eval(parse_filter(".[-1]?"), s), [])
+  assert_eq(must_execute(parse_filter(".[0]?"), s), [])
+  assert_eq(must_execute(parse_filter(".[-1]?"), s), [])
 }
 
 ///|
 test "execute optional access" {
   let j = must_parse("[1,2,3]")
-  assert_eq(must_eval(parse_filter(".[]?"), j), [
+  assert_eq(must_execute(parse_filter(".[]?"), j), [
     Json::number(1.0),
     Json::number(2.0),
     Json::number(3.0),
   ])
   let j2 = must_parse("1")
-  assert_eq(must_eval(parse_filter(".[]?"), j2), [])
-  assert_eq(must_eval(parse_filter(".foo?"), j2), [])
-  assert_eq(must_eval(parse_filter(".[0]?"), j2), [])
+  assert_eq(must_execute(parse_filter(".[]?"), j2), [])
+  assert_eq(must_execute(parse_filter(".foo?"), j2), [])
+  assert_eq(must_execute(parse_filter(".[0]?"), j2), [])
 }
 
 ///|
 test "execute pipe and comma" {
   let j = must_parse("{\"a\":{\"b\":2},\"c\":3}")
   let f = parse_filter(".a | .b, .c")
-  assert_eq(must_eval(f, j), [Json::number(2.0), Json::number(3.0)])
+  assert_eq(must_execute(f, j), [Json::number(2.0), Json::number(3.0)])
 }
 
 ///|
 test "execute update assignment precedence" {
   let j1 = must_parse("{\"a\":0}")
-  assert_eq(must_eval(parse_filter(".a = 1 | .a"), j1), [Json::number(1.0)])
+  assert_eq(must_execute(parse_filter(".a = 1 | .a"), j1), [Json::number(1.0)])
 
   let j2 = must_parse("{\"a\":0}")
-  assert_eq(must_eval(parse_filter(".a = 1 // 2 | .a"), j2), [Json::number(1.0)])
+  assert_eq(must_execute(parse_filter(".a = 1 // 2 | .a"), j2), [
+    Json::number(1.0),
+  ])
 
   let j3 = must_parse(
     "[{\"x\":\"a\",\"y\":1},{\"x\":\"b\",\"y\":2},{\"x\":\"c\",\"y\":3}]",
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("reduce .[] as {$x,$y} (null; .x += $x | .y += [$y])"),
       j3,
     ),
@@ -142,7 +144,7 @@ test "execute update assignment precedence" {
 test "execute literal" {
   let j = must_parse("null")
   let f = parse_filter("\"hi\"")
-  assert_eq(must_eval(f, j), [Json::string("hi")])
+  assert_eq(must_execute(f, j), [Json::string("hi")])
 }
 
 ///|
@@ -152,16 +154,16 @@ test "execute array and object literals" {
   let f2 = parse_filter("{\"x\": .a, y: .b}")
   let f3 = parse_filter("{a, \"b\"}")
   let f4 = parse_filter("1 as $x | \"dyn\" as $k | { $x, $k: .b, a }")
-  assert_eq(must_eval(f1, j), [
+  assert_eq(must_execute(f1, j), [
     Json::array([Json::number(1.0), Json::number(2.0)]),
   ])
-  assert_eq(must_eval(f2, j), [
+  assert_eq(must_execute(f2, j), [
     Json::object({ "x": Json::number(1.0), "y": Json::number(2.0) }),
   ])
-  assert_eq(must_eval(f3, j), [
+  assert_eq(must_execute(f3, j), [
     Json::object({ "a": Json::number(1.0), "b": Json::number(2.0) }),
   ])
-  assert_eq(must_eval(f4, j), [
+  assert_eq(must_execute(f4, j), [
     Json::object({
       "x": Json::number(1.0),
       "dyn": Json::number(2.0),
@@ -175,11 +177,11 @@ test "execute builtins" {
   let j1 = must_parse("[1,2,3]")
   let j2 = must_parse("{\"a\":1,\"b\":2}")
   let j3 = must_parse("\"hi\"")
-  assert_eq(must_eval(parse_filter("length"), j1), [Json::number(3.0)])
-  assert_eq(must_eval(parse_filter("length"), j2), [Json::number(2.0)])
-  assert_eq(must_eval(parse_filter("length"), j3), [Json::number(2.0)])
-  assert_eq(must_eval(parse_filter("type"), j2), [Json::string("object")])
-  assert_eq(must_eval(parse_filter("keys"), j2), [
+  assert_eq(must_execute(parse_filter("length"), j1), [Json::number(3.0)])
+  assert_eq(must_execute(parse_filter("length"), j2), [Json::number(2.0)])
+  assert_eq(must_execute(parse_filter("length"), j3), [Json::number(2.0)])
+  assert_eq(must_execute(parse_filter("type"), j2), [Json::string("object")])
+  assert_eq(must_execute(parse_filter("keys"), j2), [
     Json::array([Json::string("a"), Json::string("b")]),
   ])
 }
@@ -187,40 +189,41 @@ test "execute builtins" {
 ///|
 test "execute def no-arg minimal" {
   let j = must_parse("1")
-  assert_eq(must_eval(parse_filter("def inc: . + 1; . | inc"), j), [
+  assert_eq(must_execute(parse_filter("def inc: . + 1; . | inc"), j), [
     Json::number(2.0),
   ])
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("def inc: . + 1; def twice: inc | inc; . | twice"),
       j,
     ),
     [Json::number(3.0)],
   )
-  assert_eq(must_eval(parse_filter("def length: 42; . | length"), j), [
+  assert_eq(must_execute(parse_filter("def length: 42; . | length"), j), [
     Json::number(42.0),
   ])
   let obj = must_parse("{\"a\":1,\"b\":2}")
-  assert_eq(must_eval(parse_filter("def add(a;b): a + b; add(.a; .b)"), obj), [
-    Json::number(3.0),
-  ])
+  assert_eq(
+    must_execute(parse_filter("def add(a;b): a + b; add(.a; .b)"), obj),
+    [Json::number(3.0)],
+  )
   let arr = must_parse("[1,2]")
   assert_eq(
-    must_eval(parse_filter("def addvalue(f): . + [f]; addvalue(.[0])"), arr),
+    must_execute(parse_filter("def addvalue(f): . + [f]; addvalue(.[0])"), arr),
     [Json::array([Json::number(1.0), Json::number(2.0), Json::number(1.0)])],
   )
-  assert_eq(must_eval(parse_filter("def plus($x): . + $x; plus(2)"), j), [
+  assert_eq(must_execute(parse_filter("def plus($x): . + $x; plus(2)"), j), [
     Json::number(3.0),
   ])
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("def f: . + 1; def g: def g: . + 100; f | g | f; (f | g), g"),
       must_parse("3"),
     ),
     [Json::number(106.0), Json::number(105.0)],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter(
         "def f: .+1; def g: f; def f: .+100; def f(a):a+.+11; [(g|f(20)), f]",
       ),
@@ -229,7 +232,7 @@ test "execute def no-arg minimal" {
     [Json::array([Json::number(33.0), Json::number(101.0)])],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter(
         "[[20,10][1,0] as $x | def f: (100,200) as $y | def g: [$x + $y, .]; . + $x | g; f[0] | [f][0][1] | f]",
       ),
@@ -253,41 +256,42 @@ test "execute def no-arg minimal" {
 ///|
 test "execute first/last/nth compatibility" {
   let arr = must_parse("[1,2,3]")
-  assert_eq(must_eval(parse_filter("first"), arr), [Json::number(1.0)])
-  assert_eq(must_eval(parse_filter("last"), arr), [Json::number(3.0)])
-  assert_eq(must_eval(parse_filter("nth(0)"), arr), [Json::number(1.0)])
-  assert_eq(must_eval(parse_filter("nth(-1)"), arr), [Json::number(3.0)])
-  assert_eq(must_eval(parse_filter("nth(9)"), arr), [Json::null()])
-  assert_eq(must_eval(parse_filter("nth(1.9)"), arr), [Json::number(2.0)])
-  assert_eq(must_eval(parse_filter("nth((0,-1,9))"), arr), [
+  assert_eq(must_execute(parse_filter("first"), arr), [Json::number(1.0)])
+  assert_eq(must_execute(parse_filter("last"), arr), [Json::number(3.0)])
+  assert_eq(must_execute(parse_filter("nth(0)"), arr), [Json::number(1.0)])
+  assert_eq(must_execute(parse_filter("nth(-1)"), arr), [Json::number(3.0)])
+  assert_eq(must_execute(parse_filter("nth(9)"), arr), [Json::null()])
+  assert_eq(must_execute(parse_filter("nth(1.9)"), arr), [Json::number(2.0)])
+  assert_eq(must_execute(parse_filter("nth((0,-1,9))"), arr), [
     Json::number(1.0),
     Json::number(3.0),
     Json::null(),
   ])
   let empty_arr = must_parse("[]")
-  assert_eq(must_eval(parse_filter("first"), empty_arr), [Json::null()])
-  assert_eq(must_eval(parse_filter("last"), empty_arr), [Json::null()])
-  assert_eq(must_eval(parse_filter("nth(0)"), empty_arr), [Json::null()])
+  assert_eq(must_execute(parse_filter("first"), empty_arr), [Json::null()])
+  assert_eq(must_execute(parse_filter("last"), empty_arr), [Json::null()])
+  assert_eq(must_execute(parse_filter("nth(0)"), empty_arr), [Json::null()])
   let null_json = must_parse("null")
-  assert_eq(must_eval(parse_filter("first"), null_json), [Json::null()])
-  assert_eq(must_eval(parse_filter("last"), null_json), [Json::null()])
-  assert_eq(must_eval(parse_filter("nth(0)"), null_json), [Json::null()])
-  assert_eq(must_eval(parse_filter("nth(\"a\")"), null_json), [Json::null()])
+  assert_eq(must_execute(parse_filter("first"), null_json), [Json::null()])
+  assert_eq(must_execute(parse_filter("last"), null_json), [Json::null()])
+  assert_eq(must_execute(parse_filter("nth(0)"), null_json), [Json::null()])
+  assert_eq(must_execute(parse_filter("nth(\"a\")"), null_json), [Json::null()])
   let scalar = must_parse("1")
-  assert_eq(must_eval(parse_filter("first(empty)"), scalar), [])
-  assert_eq(must_eval(parse_filter("last(empty)"), scalar), [])
-  assert_eq(must_eval(parse_filter("nth(empty)"), scalar), [])
-  assert_eq(must_eval(parse_filter("first((1,2,3))"), scalar), [
+  assert_eq(must_execute(parse_filter("first(empty)"), scalar), [])
+  assert_eq(must_execute(parse_filter("last(empty)"), scalar), [])
+  assert_eq(must_execute(parse_filter("nth(empty)"), scalar), [])
+  assert_eq(must_execute(parse_filter("first((1,2,3))"), scalar), [
     Json::number(1.0),
   ])
-  assert_eq(must_eval(parse_filter("last((1,2,3))"), scalar), [
+  assert_eq(must_execute(parse_filter("last((1,2,3))"), scalar), [
     Json::number(3.0),
   ])
   let null_json2 = must_parse("null")
-  assert_eq(must_eval(parse_filter("nth(1; 0,1,error(\"foo\"))"), null_json2), [
-    Json::number(1.0),
-  ])
-  assert_eq(must_eval(parse_filter("nth(5; empty)"), null_json2), [])
+  assert_eq(
+    must_execute(parse_filter("nth(1; 0,1,error(\"foo\"))"), null_json2),
+    [Json::number(1.0)],
+  )
+  assert_eq(must_execute(parse_filter("nth(5; empty)"), null_json2), [])
 }
 
 ///|
@@ -315,7 +319,7 @@ test "execute first/last/nth errors" {
 ///|
 test "execute flatten compatibility" {
   let nested = must_parse("[1,[2],[[3,[4]]],5]")
-  assert_eq(must_eval(parse_filter("flatten"), nested), [
+  assert_eq(must_execute(parse_filter("flatten"), nested), [
     Json::array([
       Json::number(1.0),
       Json::number(2.0),
@@ -324,7 +328,7 @@ test "execute flatten compatibility" {
       Json::number(5.0),
     ]),
   ])
-  assert_eq(must_eval(parse_filter("flatten(1)"), nested), [
+  assert_eq(must_execute(parse_filter("flatten(1)"), nested), [
     Json::array([
       Json::number(1.0),
       Json::number(2.0),
@@ -332,7 +336,7 @@ test "execute flatten compatibility" {
       Json::number(5.0),
     ]),
   ])
-  assert_eq(must_eval(parse_filter("flatten(2)"), nested), [
+  assert_eq(must_execute(parse_filter("flatten(2)"), nested), [
     Json::array([
       Json::number(1.0),
       Json::number(2.0),
@@ -341,8 +345,8 @@ test "execute flatten compatibility" {
       Json::number(5.0),
     ]),
   ])
-  assert_eq(must_eval(parse_filter("flatten(0)"), nested), [nested])
-  assert_eq(must_eval(parse_filter("flatten(0.1)"), nested), [
+  assert_eq(must_execute(parse_filter("flatten(0)"), nested), [nested])
+  assert_eq(must_execute(parse_filter("flatten(0.1)"), nested), [
     Json::array([
       Json::number(1.0),
       Json::number(2.0),
@@ -351,11 +355,14 @@ test "execute flatten compatibility" {
       Json::number(5.0),
     ]),
   ])
-  assert_eq(must_eval(parse_filter("flatten((0,1))"), must_parse("[1,[2]]")), [
-    Json::array([Json::number(1.0), Json::array([Json::number(2.0)])]),
-    Json::array([Json::number(1.0), Json::number(2.0)]),
-  ])
-  assert_eq(must_eval(parse_filter("flatten(empty)"), nested), [])
+  assert_eq(
+    must_execute(parse_filter("flatten((0,1))"), must_parse("[1,[2]]")),
+    [
+      Json::array([Json::number(1.0), Json::array([Json::number(2.0)])]),
+      Json::array([Json::number(1.0), Json::number(2.0)]),
+    ],
+  )
+  assert_eq(must_execute(parse_filter("flatten(empty)"), nested), [])
 }
 
 ///|
@@ -392,35 +399,41 @@ test "execute flatten errors" {
 
 ///|
 test "execute transpose compatibility" {
-  assert_eq(must_eval(parse_filter("transpose"), must_parse("[[1,2],[3,4]]")), [
-    Json::array([
-      Json::array([Json::number(1.0), Json::number(3.0)]),
-      Json::array([Json::number(2.0), Json::number(4.0)]),
-    ]),
-  ])
-  assert_eq(must_eval(parse_filter("transpose"), must_parse("[[1],[2,3]]")), [
-    Json::array([
-      Json::array([Json::number(1.0), Json::number(2.0)]),
-      Json::array([Json::null(), Json::number(3.0)]),
-    ]),
-  ])
-  assert_eq(must_eval(parse_filter("transpose"), must_parse("[]")), [
+  assert_eq(
+    must_execute(parse_filter("transpose"), must_parse("[[1,2],[3,4]]")),
+    [
+      Json::array([
+        Json::array([Json::number(1.0), Json::number(3.0)]),
+        Json::array([Json::number(2.0), Json::number(4.0)]),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_execute(parse_filter("transpose"), must_parse("[[1],[2,3]]")),
+    [
+      Json::array([
+        Json::array([Json::number(1.0), Json::number(2.0)]),
+        Json::array([Json::null(), Json::number(3.0)]),
+      ]),
+    ],
+  )
+  assert_eq(must_execute(parse_filter("transpose"), must_parse("[]")), [
     Json::array([]),
   ])
-  assert_eq(must_eval(parse_filter("transpose"), must_parse("[[],[]]")), [
+  assert_eq(must_execute(parse_filter("transpose"), must_parse("[[],[]]")), [
     Json::array([]),
   ])
-  assert_eq(must_eval(parse_filter("transpose"), must_parse("[[1],[]]")), [
+  assert_eq(must_execute(parse_filter("transpose"), must_parse("[[1],[]]")), [
     Json::array([Json::array([Json::number(1.0), Json::null()])]),
   ])
-  assert_eq(must_eval(parse_filter("transpose"), must_parse("[{}]")), [
+  assert_eq(must_execute(parse_filter("transpose"), must_parse("[{}]")), [
     Json::array([]),
   ])
-  assert_eq(must_eval(parse_filter("transpose"), must_parse("[[1],null]")), [
+  assert_eq(must_execute(parse_filter("transpose"), must_parse("[[1],null]")), [
     Json::array([Json::array([Json::number(1.0), Json::null()])]),
   ])
   assert_eq(
-    must_eval(parse_filter("transpose"), must_parse("[[1,null],[2]]")),
+    must_execute(parse_filter("transpose"), must_parse("[[1,null],[2]]")),
     [
       Json::array([
         Json::array([Json::number(1.0), Json::number(2.0)]),
@@ -464,14 +477,14 @@ test "execute transpose errors" {
 
 ///|
 test "execute to_entries/from_entries/with_entries compatibility" {
-  assert_eq(must_eval(parse_filter("to_entries"), must_parse("[10,20]")), [
+  assert_eq(must_execute(parse_filter("to_entries"), must_parse("[10,20]")), [
     Json::array([
       Json::object({ "key": Json::number(0.0), "value": Json::number(10.0) }),
       Json::object({ "key": Json::number(1.0), "value": Json::number(20.0) }),
     ]),
   ])
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("from_entries"),
       must_parse(
         "[{\"key\":\"a\",\"value\":1},{\"Key\":\"b\",\"Value\":2},{\"name\":\"c\",\"value\":3},{\"Name\":\"d\",\"Value\":4}]",
@@ -487,18 +500,18 @@ test "execute to_entries/from_entries/with_entries compatibility" {
     ],
   )
   assert_eq(
-    must_eval(parse_filter("from_entries"), must_parse("[{\"key\":\"a\"}]")),
+    must_execute(parse_filter("from_entries"), must_parse("[{\"key\":\"a\"}]")),
     [Json::object({ "a": Json::null() })],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("with_entries({key: (.key + \"_x\"), value: (.value + 10)})"),
       must_parse("{\"a\":1}"),
     ),
     [Json::object({ "a_x": Json::number(11.0) })],
   )
   assert_eq(
-    must_eval(parse_filter("with_entries(empty)"), must_parse("{\"a\":1}")),
+    must_execute(parse_filter("with_entries(empty)"), must_parse("{\"a\":1}")),
     [Json::object(Map::new())],
   )
 }
@@ -550,18 +563,18 @@ test "execute to_entries/from_entries/with_entries errors" {
 ///|
 test "execute keys compatibility errors and keys_unsorted" {
   let arr = must_parse("[10,20]")
-  assert_eq(must_eval(parse_filter("keys_unsorted"), arr), [
+  assert_eq(must_execute(parse_filter("keys_unsorted"), arr), [
     Json::array([Json::number(0.0), Json::number(1.0)]),
   ])
   let obj = must_parse("{\"b\":2,\"a\":1}")
-  assert_eq(must_eval(parse_filter("keys_unsorted"), obj), [
+  assert_eq(must_execute(parse_filter("keys_unsorted"), obj), [
     Json::array([Json::string("a"), Json::string("b")]),
   ])
-  assert_eq(must_eval(parse_filter(".[]"), obj), [
+  assert_eq(must_execute(parse_filter(".[]"), obj), [
     Json::number(1.0),
     Json::number(2.0),
   ])
-  assert_eq(must_eval(parse_filter("tojson"), obj), [
+  assert_eq(must_execute(parse_filter("tojson"), obj), [
     Json::string("{\"a\":1,\"b\":2}"),
   ])
   guard (try? execute(parse_filter("keys"), must_parse("1"))) is Err(err) &&
@@ -577,87 +590,93 @@ test "execute keys compatibility errors and keys_unsorted" {
 
 ///|
 test "execute tostring/tonumber compatibility" {
-  assert_eq(must_eval(parse_filter("tostring"), must_parse("1")), [
+  assert_eq(must_execute(parse_filter("tostring"), must_parse("1")), [
     Json::string("1"),
   ])
-  assert_eq(must_eval(parse_filter("tostring"), must_parse("\"x\"")), [
+  assert_eq(must_execute(parse_filter("tostring"), must_parse("\"x\"")), [
     Json::string("x"),
   ])
-  assert_eq(must_eval(parse_filter("tostring"), must_parse("null")), [
+  assert_eq(must_execute(parse_filter("tostring"), must_parse("null")), [
     Json::string("null"),
   ])
-  assert_eq(must_eval(parse_filter("tostring"), must_parse("[1,2]")), [
+  assert_eq(must_execute(parse_filter("tostring"), must_parse("[1,2]")), [
     Json::string("[1,2]"),
   ])
-  assert_eq(must_eval(parse_filter("tonumber"), must_parse("\"1\"")), [
+  assert_eq(must_execute(parse_filter("tonumber"), must_parse("\"1\"")), [
     Json::number(1.0),
   ])
-  assert_eq(must_eval(parse_filter("tonumber"), must_parse("\"01\"")), [
+  assert_eq(must_execute(parse_filter("tonumber"), must_parse("\"01\"")), [
     Json::number(1.0),
   ])
-  assert_eq(must_eval(parse_filter("tonumber"), must_parse("\"1.25\"")), [
+  assert_eq(must_execute(parse_filter("tonumber"), must_parse("\"1.25\"")), [
     Json::number(1.25),
   ])
-  assert_eq(must_eval(parse_filter("tonumber"), must_parse("1")), [
+  assert_eq(must_execute(parse_filter("tonumber"), must_parse("1")), [
     Json::number(1.0),
   ])
-  let nan_number = must_eval(parse_filter("tonumber"), must_parse("\"nan\""))
+  let nan_number = must_execute(parse_filter("tonumber"), must_parse("\"nan\""))
   assert_eq(nan_number.length(), 1)
   assert_eq(nan_number[0].to_json_string(), "null")
-  let huge = must_eval(parse_filter("tonumber"), must_parse("\"1e309\""))
+  let huge = must_execute(parse_filter("tonumber"), must_parse("\"1e309\""))
   assert_eq(huge.length(), 1)
   assert_eq(huge[0].to_json_string(), "1e309")
-  let pos_inf = must_eval(parse_filter("tonumber"), must_parse("\"Infinity\""))
+  let pos_inf = must_execute(
+    parse_filter("tonumber"),
+    must_parse("\"Infinity\""),
+  )
   assert_eq(pos_inf.length(), 1)
   assert_eq(pos_inf[0].to_json_string(), "1.7976931348623157e+308")
-  let neg_inf = must_eval(parse_filter("tonumber"), must_parse("\"-Infinity\""))
+  let neg_inf = must_execute(
+    parse_filter("tonumber"),
+    must_parse("\"-Infinity\""),
+  )
   assert_eq(neg_inf.length(), 1)
   assert_eq(neg_inf[0].to_json_string(), "-1.7976931348623157e+308")
 }
 
 ///|
 test "execute tojson/fromjson compatibility" {
-  assert_eq(must_eval(parse_filter("tojson"), must_parse("1")), [
+  assert_eq(must_execute(parse_filter("tojson"), must_parse("1")), [
     Json::string("1"),
   ])
-  assert_eq(must_eval(parse_filter("tojson"), must_parse("\"x\"")), [
+  assert_eq(must_execute(parse_filter("tojson"), must_parse("\"x\"")), [
     Json::string("\"x\""),
   ])
-  assert_eq(must_eval(parse_filter("tojson"), must_parse("[1,2]")), [
+  assert_eq(must_execute(parse_filter("tojson"), must_parse("[1,2]")), [
     Json::string("[1,2]"),
   ])
-  assert_eq(must_eval(parse_filter("tojson"), must_parse("{\"a\":1}")), [
+  assert_eq(must_execute(parse_filter("tojson"), must_parse("{\"a\":1}")), [
     Json::string("{\"a\":1}"),
   ])
-  assert_eq(must_eval(parse_filter("tojson"), must_parse("null")), [
+  assert_eq(must_execute(parse_filter("tojson"), must_parse("null")), [
     Json::string("null"),
   ])
-  assert_eq(must_eval(parse_filter("tojson"), must_parse("true")), [
+  assert_eq(must_execute(parse_filter("tojson"), must_parse("true")), [
     Json::string("true"),
   ])
-  assert_eq(must_eval(parse_filter("fromjson"), must_parse("\"1\"")), [
+  assert_eq(must_execute(parse_filter("fromjson"), must_parse("\"1\"")), [
     Json::number(1.0),
   ])
-  assert_eq(must_eval(parse_filter("fromjson"), must_parse("\"[1,2]\"")), [
+  assert_eq(must_execute(parse_filter("fromjson"), must_parse("\"[1,2]\"")), [
     Json::array([Json::number(1.0), Json::number(2.0)]),
   ])
   assert_eq(
-    must_eval(parse_filter("fromjson"), must_parse("\"{\\\"a\\\":1}\"")),
+    must_execute(parse_filter("fromjson"), must_parse("\"{\\\"a\\\":1}\"")),
     [Json::object({ "a": Json::number(1.0) })],
   )
-  assert_eq(must_eval(parse_filter("fromjson"), must_parse("\"null\"")), [
+  assert_eq(must_execute(parse_filter("fromjson"), must_parse("\"null\"")), [
     Json::null(),
   ])
-  assert_eq(must_eval(parse_filter("fromjson"), must_parse("\" true \"")), [
+  assert_eq(must_execute(parse_filter("fromjson"), must_parse("\" true \"")), [
     Json::boolean(true),
   ])
-  assert_eq(must_eval(parse_filter("fromjson"), must_parse("\"nan\"")), [
+  assert_eq(must_execute(parse_filter("fromjson"), must_parse("\"nan\"")), [
     Json::null(),
   ])
-  assert_eq(must_eval(parse_filter("fromjson"), must_parse("\"INF\"")), [
+  assert_eq(must_execute(parse_filter("fromjson"), must_parse("\"INF\"")), [
     Json::number(1.7976931348623157e+308),
   ])
-  assert_eq(must_eval(parse_filter("fromjson"), must_parse("\"-inf\"")), [
+  assert_eq(must_execute(parse_filter("fromjson"), must_parse("\"-inf\"")), [
     Json::number(-1.7976931348623157e+308),
   ])
 }
@@ -665,11 +684,14 @@ test "execute tojson/fromjson compatibility" {
 ///|
 test "execute format filter compatibility" {
   assert_eq(
-    must_eval(parse_filter("(@uri|@urid)"), must_parse("\"<>&'\\\"\\t\"")),
+    must_execute(parse_filter("(@uri|@urid)"), must_parse("\"<>&'\\\"\\t\"")),
     [Json::string("<>&'\"\t")],
   )
   assert_eq(
-    must_eval(parse_filter("(@base64|@base64d)"), must_parse("\"<>&'\\\"\\t\"")),
+    must_execute(
+      parse_filter("(@base64|@base64d)"),
+      must_parse("\"<>&'\\\"\\t\""),
+    ),
     [Json::string("<>&'\"\t")],
   )
   guard (try? execute(
@@ -741,22 +763,22 @@ test "execute tonumber errors" {
 
 ///|
 test "execute reverse compatibility" {
-  assert_eq(must_eval(parse_filter("reverse"), must_parse("[1,2,3]")), [
+  assert_eq(must_execute(parse_filter("reverse"), must_parse("[1,2,3]")), [
     Json::array([Json::number(3.0), Json::number(2.0), Json::number(1.0)]),
   ])
-  assert_eq(must_eval(parse_filter("reverse"), must_parse("[]")), [
+  assert_eq(must_execute(parse_filter("reverse"), must_parse("[]")), [
     Json::array([]),
   ])
-  assert_eq(must_eval(parse_filter("reverse"), must_parse("null")), [
+  assert_eq(must_execute(parse_filter("reverse"), must_parse("null")), [
     Json::array([]),
   ])
-  assert_eq(must_eval(parse_filter("reverse"), must_parse("{}")), [
+  assert_eq(must_execute(parse_filter("reverse"), must_parse("{}")), [
     Json::array([]),
   ])
-  assert_eq(must_eval(parse_filter("reverse"), must_parse("\"\"")), [
+  assert_eq(must_execute(parse_filter("reverse"), must_parse("\"\"")), [
     Json::array([]),
   ])
-  assert_eq(must_eval(parse_filter("reverse"), must_parse("0")), [
+  assert_eq(must_execute(parse_filter("reverse"), must_parse("0")), [
     Json::array([]),
   ])
 }
@@ -786,23 +808,26 @@ test "execute reverse errors" {
 ///|
 test "execute join compatibility" {
   assert_eq(
-    must_eval(parse_filter("join(\",\")"), must_parse("[\"a\",1,true,null]")),
+    must_execute(parse_filter("join(\",\")"), must_parse("[\"a\",1,true,null]")),
     [Json::string("a,1,true,")],
   )
-  assert_eq(must_eval(parse_filter("join(\",\")"), must_parse("[]")), [
+  assert_eq(must_execute(parse_filter("join(\",\")"), must_parse("[]")), [
     Json::string(""),
   ])
-  assert_eq(must_eval(parse_filter("join(\",\")"), must_parse("[1,2]")), [
+  assert_eq(must_execute(parse_filter("join(\",\")"), must_parse("[1,2]")), [
     Json::string("1,2"),
   ])
-  assert_eq(must_eval(parse_filter("join(1)"), must_parse("[\"a\"]")), [
+  assert_eq(must_execute(parse_filter("join(1)"), must_parse("[\"a\"]")), [
     Json::string("a"),
   ])
   assert_eq(
-    must_eval(parse_filter("join((\",\", \":\"))"), must_parse("[\"a\",\"b\"]")),
+    must_execute(
+      parse_filter("join((\",\", \":\"))"),
+      must_parse("[\"a\",\"b\"]"),
+    ),
     [Json::string("a,b"), Json::string("a:b")],
   )
-  assert_eq(must_eval(parse_filter("join(empty)"), must_parse("[\"a\"]")), [])
+  assert_eq(must_execute(parse_filter("join(empty)"), must_parse("[\"a\"]")), [])
 }
 
 ///|
@@ -825,43 +850,50 @@ test "execute join errors" {
 
 ///|
 test "execute split compatibility" {
-  assert_eq(must_eval(parse_filter("split(\",\")"), must_parse("\"a,b,c\"")), [
+  assert_eq(
+    must_execute(parse_filter("split(\",\")"), must_parse("\"a,b,c\"")),
+    [Json::array([Json::string("a"), Json::string("b"), Json::string("c")])],
+  )
+  assert_eq(must_execute(parse_filter("split(\"\")"), must_parse("\"abc\"")), [
     Json::array([Json::string("a"), Json::string("b"), Json::string("c")]),
   ])
-  assert_eq(must_eval(parse_filter("split(\"\")"), must_parse("\"abc\"")), [
-    Json::array([Json::string("a"), Json::string("b"), Json::string("c")]),
-  ])
-  assert_eq(must_eval(parse_filter("split(\"\")"), must_parse("\"\"")), [
+  assert_eq(must_execute(parse_filter("split(\"\")"), must_parse("\"\"")), [
     Json::array([]),
   ])
-  assert_eq(must_eval(parse_filter("split(\",\")"), must_parse("\"\"")), [
+  assert_eq(must_execute(parse_filter("split(\",\")"), must_parse("\"\"")), [
     Json::array([]),
   ])
   assert_eq(
-    must_eval(parse_filter("split((\",\", \"\"))"), must_parse("\"abc\"")),
+    must_execute(parse_filter("split((\",\", \"\"))"), must_parse("\"abc\"")),
     [
       Json::array([Json::string("abc")]),
       Json::array([Json::string("a"), Json::string("b"), Json::string("c")]),
     ],
   )
-  assert_eq(must_eval(parse_filter("split(\"a\")"), must_parse("\"aa\"")), [
+  assert_eq(must_execute(parse_filter("split(\"a\")"), must_parse("\"aa\"")), [
     Json::array([Json::string(""), Json::string(""), Json::string("")]),
   ])
-  assert_eq(must_eval(parse_filter("split(empty)"), must_parse("\"a\"")), [])
+  assert_eq(must_execute(parse_filter("split(empty)"), must_parse("\"a\"")), [])
   assert_eq(
-    must_eval(parse_filter("split(\", *\"; null)"), must_parse("\"ab,cd, ef\"")),
+    must_execute(
+      parse_filter("split(\", *\"; null)"),
+      must_parse("\"ab,cd, ef\""),
+    ),
     [Json::array([Json::string("ab"), Json::string("cd"), Json::string("ef")])],
   )
-  assert_eq(must_eval(parse_filter("[splits(\"\")]"), must_parse("\"ab\"")), [
-    Json::array([
-      Json::string(""),
-      Json::string("a"),
-      Json::string("b"),
-      Json::string(""),
-    ]),
-  ])
   assert_eq(
-    must_eval(
+    must_execute(parse_filter("[splits(\"\")]"), must_parse("\"ab\"")),
+    [
+      Json::array([
+        Json::string(""),
+        Json::string("a"),
+        Json::string("b"),
+        Json::string(""),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_execute(
       parse_filter("[splits(\"a+\"; \"i\")]"),
       must_parse("\"abAABBabA\""),
     ),
@@ -876,7 +908,7 @@ test "execute split compatibility" {
     ],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("[splits(\",? *\"; \"n\")]"),
       must_parse("\"ab,cd ef,  gh\""),
     ),
@@ -918,7 +950,7 @@ test "execute split errors" {
 ///|
 test "execute combinations/date/env/stream compatibility" {
   assert_eq(
-    must_eval(parse_filter("combinations"), must_parse("[[1,2], [3,4]]")),
+    must_execute(parse_filter("combinations"), must_parse("[[1,2], [3,4]]")),
     [
       Json::array([Json::number(1.0), Json::number(3.0)]),
       Json::array([Json::number(1.0), Json::number(4.0)]),
@@ -926,21 +958,27 @@ test "execute combinations/date/env/stream compatibility" {
       Json::array([Json::number(2.0), Json::number(4.0)]),
     ],
   )
-  assert_eq(must_eval(parse_filter("combinations(2)"), must_parse("[0,1]")), [
-    Json::array([Json::number(0.0), Json::number(0.0)]),
-    Json::array([Json::number(0.0), Json::number(1.0)]),
-    Json::array([Json::number(1.0), Json::number(0.0)]),
-    Json::array([Json::number(1.0), Json::number(1.0)]),
-  ])
   assert_eq(
-    must_eval(parse_filter("fromdate"), must_parse("\"2015-03-05T23:51:47Z\"")),
+    must_execute(parse_filter("combinations(2)"), must_parse("[0,1]")),
+    [
+      Json::array([Json::number(0.0), Json::number(0.0)]),
+      Json::array([Json::number(0.0), Json::number(1.0)]),
+      Json::array([Json::number(1.0), Json::number(0.0)]),
+      Json::array([Json::number(1.0), Json::number(1.0)]),
+    ],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("fromdate"),
+      must_parse("\"2015-03-05T23:51:47Z\""),
+    ),
     [Json::number(1425599507.0)],
   )
-  assert_eq(must_eval(parse_filter("env.PAGER"), must_parse("null")), [
+  assert_eq(must_execute(parse_filter("env.PAGER"), must_parse("null")), [
     Json::null(),
   ])
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("truncate_stream([[0],\"a\"],[[1,0],\"b\"],[[1,0]],[[1]])"),
       must_parse("1"),
     ),
@@ -950,7 +988,7 @@ test "execute combinations/date/env/stream compatibility" {
     ],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter(
         "fromstream(1|truncate_stream([[0],\"a\"],[[1,0],\"b\"],[[1,0]],[[1]]))",
       ),
@@ -959,7 +997,7 @@ test "execute combinations/date/env/stream compatibility" {
     [Json::array([Json::string("b")])],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter(". as $dot|fromstream($dot|tostream)|.==$dot"),
       must_parse("[0,[1,{\"a\":1},{\"b\":2}]]"),
     ),
@@ -969,25 +1007,25 @@ test "execute combinations/date/env/stream compatibility" {
 
 ///|
 test "execute explode/implode compatibility" {
-  assert_eq(must_eval(parse_filter("explode"), must_parse("\"abc\"")), [
+  assert_eq(must_execute(parse_filter("explode"), must_parse("\"abc\"")), [
     Json::array([Json::number(97.0), Json::number(98.0), Json::number(99.0)]),
   ])
-  assert_eq(must_eval(parse_filter("explode"), must_parse("\"あ\"")), [
+  assert_eq(must_execute(parse_filter("explode"), must_parse("\"あ\"")), [
     Json::array([Json::number(12354.0)]),
   ])
-  assert_eq(must_eval(parse_filter("implode"), must_parse("[97,98,99]")), [
+  assert_eq(must_execute(parse_filter("implode"), must_parse("[97,98,99]")), [
     Json::string("abc"),
   ])
-  assert_eq(must_eval(parse_filter("implode"), must_parse("[12354]")), [
+  assert_eq(must_execute(parse_filter("implode"), must_parse("[12354]")), [
     Json::string("あ"),
   ])
-  assert_eq(must_eval(parse_filter("implode"), must_parse("[]")), [
+  assert_eq(must_execute(parse_filter("implode"), must_parse("[]")), [
     Json::string(""),
   ])
-  assert_eq(must_eval(parse_filter("implode"), must_parse("[-1]")), [
+  assert_eq(must_execute(parse_filter("implode"), must_parse("[-1]")), [
     Json::string("\u{fffd}"),
   ])
-  assert_eq(must_eval(parse_filter("implode"), must_parse("[97.9]")), [
+  assert_eq(must_execute(parse_filter("implode"), must_parse("[97.9]")), [
     Json::string("a"),
   ])
 }
@@ -1012,45 +1050,52 @@ test "execute explode/implode errors" {
 
 ///|
 test "execute index/rindex/indices compatibility" {
-  assert_eq(must_eval(parse_filter("index(\"l\")"), must_parse("\"hello\"")), [
-    Json::number(2.0),
-  ])
-  assert_eq(must_eval(parse_filter("rindex(\"l\")"), must_parse("\"hello\"")), [
-    Json::number(3.0),
-  ])
   assert_eq(
-    must_eval(parse_filter("indices(\"l\")"), must_parse("\"hello\"")),
+    must_execute(parse_filter("index(\"l\")"), must_parse("\"hello\"")),
+    [Json::number(2.0)],
+  )
+  assert_eq(
+    must_execute(parse_filter("rindex(\"l\")"), must_parse("\"hello\"")),
+    [Json::number(3.0)],
+  )
+  assert_eq(
+    must_execute(parse_filter("indices(\"l\")"), must_parse("\"hello\"")),
     [Json::array([Json::number(2.0), Json::number(3.0)])],
   )
-  assert_eq(must_eval(parse_filter("index(\"z\")"), must_parse("\"hello\"")), [
-    Json::null(),
-  ])
   assert_eq(
-    must_eval(parse_filter("indices(\"z\")"), must_parse("\"hello\"")),
+    must_execute(parse_filter("index(\"z\")"), must_parse("\"hello\"")),
+    [Json::null()],
+  )
+  assert_eq(
+    must_execute(parse_filter("indices(\"z\")"), must_parse("\"hello\"")),
     [Json::array([])],
   )
-  assert_eq(must_eval(parse_filter("indices(\"aa\")"), must_parse("\"aaa\"")), [
-    Json::array([Json::number(0.0), Json::number(1.0)]),
-  ])
   assert_eq(
-    must_eval(parse_filter("index((\"l\",\"e\"))"), must_parse("\"hello\"")),
+    must_execute(parse_filter("indices(\"aa\")"), must_parse("\"aaa\"")),
+    [Json::array([Json::number(0.0), Json::number(1.0)])],
+  )
+  assert_eq(
+    must_execute(parse_filter("index((\"l\",\"e\"))"), must_parse("\"hello\"")),
     [Json::number(2.0), Json::number(1.0)],
   )
-  assert_eq(must_eval(parse_filter("index(empty)"), must_parse("\"hello\"")), [])
+  assert_eq(
+    must_execute(parse_filter("index(empty)"), must_parse("\"hello\"")),
+    [],
+  )
   let arr = must_parse("[1,2,1,3]")
-  assert_eq(must_eval(parse_filter("index(1)"), arr), [Json::number(0.0)])
-  assert_eq(must_eval(parse_filter("rindex(1)"), arr), [Json::number(2.0)])
-  assert_eq(must_eval(parse_filter("indices(1)"), arr), [
+  assert_eq(must_execute(parse_filter("index(1)"), arr), [Json::number(0.0)])
+  assert_eq(must_execute(parse_filter("rindex(1)"), arr), [Json::number(2.0)])
+  assert_eq(must_execute(parse_filter("indices(1)"), arr), [
     Json::array([Json::number(0.0), Json::number(2.0)]),
   ])
-  assert_eq(must_eval(parse_filter("index([1,3])"), arr), [Json::number(2.0)])
-  assert_eq(must_eval(parse_filter("indices([1,3])"), arr), [
+  assert_eq(must_execute(parse_filter("index([1,3])"), arr), [Json::number(2.0)])
+  assert_eq(must_execute(parse_filter("indices([1,3])"), arr), [
     Json::array([Json::number(2.0)]),
   ])
-  assert_eq(must_eval(parse_filter("index(\"1\")"), must_parse("[1,2]")), [
+  assert_eq(must_execute(parse_filter("index(\"1\")"), must_parse("[1,2]")), [
     Json::null(),
   ])
-  assert_eq(must_eval(parse_filter("indices([])"), must_parse("[1,2,3]")), [
+  assert_eq(must_execute(parse_filter("indices([])"), must_parse("[1,2,3]")), [
     Json::array([]),
   ])
 }
@@ -1076,40 +1121,43 @@ test "execute index/rindex/indices errors" {
 
 ///|
 test "execute bsearch compatibility" {
-  assert_eq(must_eval(parse_filter("bsearch(1)"), must_parse("[1,3,5]")), [
+  assert_eq(must_execute(parse_filter("bsearch(1)"), must_parse("[1,3,5]")), [
     Json::number(0.0),
   ])
-  assert_eq(must_eval(parse_filter("bsearch(2)"), must_parse("[1,3,5]")), [
+  assert_eq(must_execute(parse_filter("bsearch(2)"), must_parse("[1,3,5]")), [
     Json::number(-2.0),
   ])
-  assert_eq(must_eval(parse_filter("bsearch(5)"), must_parse("[1,3,5]")), [
+  assert_eq(must_execute(parse_filter("bsearch(5)"), must_parse("[1,3,5]")), [
     Json::number(2.0),
   ])
-  assert_eq(must_eval(parse_filter("bsearch(6)"), must_parse("[1,3,5]")), [
+  assert_eq(must_execute(parse_filter("bsearch(6)"), must_parse("[1,3,5]")), [
     Json::number(-4.0),
   ])
-  assert_eq(must_eval(parse_filter("bsearch(0)"), must_parse("[1,3,5]")), [
+  assert_eq(must_execute(parse_filter("bsearch(0)"), must_parse("[1,3,5]")), [
     Json::number(-1.0),
   ])
-  assert_eq(must_eval(parse_filter("bsearch(1)"), must_parse("[]")), [
+  assert_eq(must_execute(parse_filter("bsearch(1)"), must_parse("[]")), [
     Json::number(-1.0),
   ])
-  assert_eq(must_eval(parse_filter("bsearch(1)"), must_parse("[1,1,1]")), [
+  assert_eq(must_execute(parse_filter("bsearch(1)"), must_parse("[1,1,1]")), [
     Json::number(1.0),
   ])
-  assert_eq(must_eval(parse_filter("bsearch((2,5))"), must_parse("[1,3,5]")), [
-    Json::number(-2.0),
-    Json::number(2.0),
-  ])
-  assert_eq(must_eval(parse_filter("bsearch(empty)"), must_parse("[1,3,5]")), [])
   assert_eq(
-    must_eval(
+    must_execute(parse_filter("bsearch((2,5))"), must_parse("[1,3,5]")),
+    [Json::number(-2.0), Json::number(2.0)],
+  )
+  assert_eq(
+    must_execute(parse_filter("bsearch(empty)"), must_parse("[1,3,5]")),
+    [],
+  )
+  assert_eq(
+    must_execute(
       parse_filter("bsearch(\"a\")"),
       must_parse("[null,false,true,1,\"a\",[],{}]"),
     ),
     [Json::number(4.0)],
   )
-  assert_eq(must_eval(parse_filter("bsearch([2])"), must_parse("[1,3,5]")), [
+  assert_eq(must_execute(parse_filter("bsearch([2])"), must_parse("[1,3,5]")), [
     Json::number(-4.0),
   ])
 }
@@ -1117,7 +1165,7 @@ test "execute bsearch compatibility" {
 ///|
 test "execute range/limit/skip/IN compatibility" {
   let null_json = must_parse("null")
-  assert_eq(must_eval(parse_filter("[range(0;10)]"), null_json), [
+  assert_eq(must_execute(parse_filter("[range(0;10)]"), null_json), [
     Json::array([
       Json::number(0.0),
       Json::number(1.0),
@@ -1131,7 +1179,7 @@ test "execute range/limit/skip/IN compatibility" {
       Json::number(9.0),
     ]),
   ])
-  assert_eq(must_eval(parse_filter("[range(0;10;3)]"), null_json), [
+  assert_eq(must_execute(parse_filter("[range(0;10;3)]"), null_json), [
     Json::array([
       Json::number(0.0),
       Json::number(3.0),
@@ -1139,7 +1187,7 @@ test "execute range/limit/skip/IN compatibility" {
       Json::number(9.0),
     ]),
   ])
-  assert_eq(must_eval(parse_filter("[range(3,5)]"), null_json), [
+  assert_eq(must_execute(parse_filter("[range(3,5)]"), null_json), [
     Json::array([
       Json::number(0.0),
       Json::number(1.0),
@@ -1153,22 +1201,25 @@ test "execute range/limit/skip/IN compatibility" {
   ])
 
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("[limit(3; .[])]"),
       must_parse("[11,22,33,44,55,66,77,88,99]"),
     ),
     [Json::array([Json::number(11.0), Json::number(22.0), Json::number(33.0)])],
   )
-  assert_eq(must_eval(parse_filter("[limit(0; error)]"), null_json), [
+  assert_eq(must_execute(parse_filter("[limit(0; error)]"), null_json), [
     Json::array([]),
   ])
   assert_eq(
-    must_eval(parse_filter("[limit(1; 1,error(\"foo\"))]"), null_json),
+    must_execute(parse_filter("[limit(1; 1,error(\"foo\"))]"), null_json),
     [Json::array([Json::number(1.0)])],
   )
 
   assert_eq(
-    must_eval(parse_filter("[skip(3; .[])]"), must_parse("[1,2,3,4,5,6,7,8,9]")),
+    must_execute(
+      parse_filter("[skip(3; .[])]"),
+      must_parse("[1,2,3,4,5,6,7,8,9]"),
+    ),
     [
       Json::array([
         Json::number(4.0),
@@ -1181,7 +1232,7 @@ test "execute range/limit/skip/IN compatibility" {
     ],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("[skip(0,2,3,4; .[])]"),
       must_parse("[1,2,3,4,5,6,7,8,9]"),
     ),
@@ -1218,21 +1269,26 @@ test "execute range/limit/skip/IN compatibility" {
     ],
   )
 
-  assert_eq(must_eval(parse_filter("range(5;10)|IN(range(10))"), null_json), [
-    Json::boolean(true),
-    Json::boolean(true),
-    Json::boolean(true),
-    Json::boolean(true),
-    Json::boolean(true),
-  ])
-  assert_eq(must_eval(parse_filter("IN(range(10;20); range(10))"), null_json), [
-    Json::boolean(false),
-  ])
-  assert_eq(must_eval(parse_filter("IN(range(5;20); range(10))"), null_json), [
-    Json::boolean(true),
-  ])
   assert_eq(
-    must_eval(
+    must_execute(parse_filter("range(5;10)|IN(range(10))"), null_json),
+    [
+      Json::boolean(true),
+      Json::boolean(true),
+      Json::boolean(true),
+      Json::boolean(true),
+      Json::boolean(true),
+    ],
+  )
+  assert_eq(
+    must_execute(parse_filter("IN(range(10;20); range(10))"), null_json),
+    [Json::boolean(false)],
+  )
+  assert_eq(
+    must_execute(parse_filter("IN(range(5;20); range(10))"), null_json),
+    [Json::boolean(true)],
+  )
+  assert_eq(
+    must_execute(
       parse_filter("INDEX(range(5)|[., \"foo\\(.)\"]; .[0])"),
       null_json,
     ),
@@ -1293,7 +1349,7 @@ test "execute bsearch errors" {
     err.to_string() == "boolean (true) cannot be searched from" else {
     fail("expected bsearch boolean input error")
   }
-  assert_eq(must_eval(parse_filter("bsearch(empty)"), must_parse("1")), [])
+  assert_eq(must_execute(parse_filter("bsearch(empty)"), must_parse("1")), [])
 }
 
 ///|
@@ -1301,16 +1357,16 @@ test "execute select" {
   let j = must_parse("{\"a\":1,\"b\":null}")
   let f1 = parse_filter("select(.a)")
   let f2 = parse_filter("select(.b)")
-  assert_eq(must_eval(f1, j), [j])
-  assert_eq(must_eval(f2, j), [])
+  assert_eq(must_execute(f1, j), [j])
+  assert_eq(must_execute(f2, j), [])
 }
 
 ///|
 test "execute select stream compatibility" {
   let j = must_parse("1")
-  assert_eq(must_eval(parse_filter("select((false,true,true))"), j), [j, j])
-  assert_eq(must_eval(parse_filter("select((false,false))"), j), [])
-  assert_eq(must_eval(parse_filter("select(empty)"), j), [])
+  assert_eq(must_execute(parse_filter("select((false,true,true))"), j), [j, j])
+  assert_eq(must_execute(parse_filter("select((false,false))"), j), [])
+  assert_eq(must_execute(parse_filter("select(empty)"), j), [])
 }
 
 ///|
@@ -1318,58 +1374,60 @@ test "execute compare" {
   let j = must_parse("{\"a\":1,\"b\":2}")
   let f1 = parse_filter(".a == 1")
   let f2 = parse_filter(".a != .b")
-  assert_eq(must_eval(f1, j), [Json::boolean(true)])
-  assert_eq(must_eval(f2, j), [Json::boolean(true)])
+  assert_eq(must_execute(f1, j), [Json::boolean(true)])
+  assert_eq(must_execute(f2, j), [Json::boolean(true)])
 }
 
 ///|
 test "execute compare stream cross product" {
   let j = must_parse("null")
-  assert_eq(must_eval(parse_filter("(1,2) == (1,2)"), j), [
+  assert_eq(must_execute(parse_filter("(1,2) == (1,2)"), j), [
     Json::boolean(true),
     Json::boolean(false),
     Json::boolean(false),
     Json::boolean(true),
   ])
-  assert_eq(must_eval(parse_filter("(empty) == 1"), j), [])
+  assert_eq(must_execute(parse_filter("(empty) == 1"), j), [])
 }
 
 ///|
 test "execute compare order and logical" {
   let j = must_parse("{\"a\":1,\"b\":2}")
-  assert_eq(must_eval(parse_filter(".a < .b"), j), [Json::boolean(true)])
-  assert_eq(must_eval(parse_filter(".a >= .b"), j), [Json::boolean(false)])
-  assert_eq(must_eval(parse_filter(". > .00005"), must_parse("0.0001")), [
+  assert_eq(must_execute(parse_filter(".a < .b"), j), [Json::boolean(true)])
+  assert_eq(must_execute(parse_filter(".a >= .b"), j), [Json::boolean(false)])
+  assert_eq(must_execute(parse_filter(". > .00005"), must_parse("0.0001")), [
     Json::boolean(true),
   ])
-  assert_eq(must_eval(parse_filter(". > .00005"), must_parse("0.0")), [
+  assert_eq(must_execute(parse_filter(". > .00005"), must_parse("0.0")), [
     Json::boolean(false),
   ])
-  assert_eq(must_eval(parse_filter(".a and .b"), j), [Json::boolean(true)])
-  assert_eq(must_eval(parse_filter("not .b"), j), [Json::boolean(false)])
-  assert_eq(must_eval(parse_filter(".a or .b"), j), [Json::boolean(true)])
+  assert_eq(must_execute(parse_filter(".a and .b"), j), [Json::boolean(true)])
+  assert_eq(must_execute(parse_filter("not .b"), j), [Json::boolean(false)])
+  assert_eq(must_execute(parse_filter(".a or .b"), j), [Json::boolean(true)])
 }
 
 ///|
 test "execute arithmetic" {
   let j = must_parse("{\"a\":1,\"b\":2,\"c\":3}")
-  assert_eq(must_eval(parse_filter(".a + .b"), j), [Json::number(3.0)])
-  assert_eq(must_eval(parse_filter(".c - .a"), j), [Json::number(2.0)])
-  assert_eq(must_eval(parse_filter(".a * .b"), j), [Json::number(2.0)])
-  assert_eq(must_eval(parse_filter(".c / .a"), j), [Json::number(3.0)])
-  assert_eq(must_eval(parse_filter("10 % 3"), j), [Json::number(1.0)])
-  assert_eq(must_eval(parse_filter("-."), must_parse("3")), [Json::number(-3.0)])
-  let inf_out = must_eval(parse_filter(". + 1"), must_parse("1e309"))
+  assert_eq(must_execute(parse_filter(".a + .b"), j), [Json::number(3.0)])
+  assert_eq(must_execute(parse_filter(".c - .a"), j), [Json::number(2.0)])
+  assert_eq(must_execute(parse_filter(".a * .b"), j), [Json::number(2.0)])
+  assert_eq(must_execute(parse_filter(".c / .a"), j), [Json::number(3.0)])
+  assert_eq(must_execute(parse_filter("10 % 3"), j), [Json::number(1.0)])
+  assert_eq(must_execute(parse_filter("-."), must_parse("3")), [
+    Json::number(-3.0),
+  ])
+  let inf_out = must_execute(parse_filter(". + 1"), must_parse("1e309"))
   assert_eq(inf_out.length(), 1)
   assert_eq(inf_out[0].to_json_string(), "1.7976931348623157e+308")
-  let nan_out = must_eval(parse_filter(". - ."), must_parse("1e309"))
+  let nan_out = must_execute(parse_filter(". - ."), must_parse("1e309"))
   assert_eq(nan_out.length(), 1)
   assert_eq(nan_out[0].to_json_string(), "null")
   let null_input = must_parse("null")
-  let literal_inf_out = must_eval(parse_filter("1e309 + 1"), null_input)
+  let literal_inf_out = must_execute(parse_filter("1e309 + 1"), null_input)
   assert_eq(literal_inf_out.length(), 1)
   assert_eq(literal_inf_out[0].to_json_string(), "1.7976931348623157e+308")
-  let literal_nan_out = must_eval(parse_filter("1e309 - 1e309"), null_input)
+  let literal_nan_out = must_execute(parse_filter("1e309 - 1e309"), null_input)
   assert_eq(literal_nan_out.length(), 1)
   assert_eq(literal_nan_out[0].to_json_string(), "null")
 }
@@ -1377,23 +1435,25 @@ test "execute arithmetic" {
 ///|
 test "execute multiply compatibility" {
   let j = must_parse("null")
-  assert_eq(must_eval(parse_filter("\"ab\" * 2"), j), [Json::string("abab")])
-  assert_eq(must_eval(parse_filter("2 * \"ab\""), j), [Json::string("abab")])
-  assert_eq(must_eval(parse_filter("\"ab\" * 2.9"), j), [Json::string("abab")])
-  assert_eq(must_eval(parse_filter("\"ab\" * 0"), j), [Json::string("")])
-  assert_eq(must_eval(parse_filter("\"ab\" * -1"), j), [Json::null()])
+  assert_eq(must_execute(parse_filter("\"ab\" * 2"), j), [Json::string("abab")])
+  assert_eq(must_execute(parse_filter("2 * \"ab\""), j), [Json::string("abab")])
+  assert_eq(must_execute(parse_filter("\"ab\" * 2.9"), j), [
+    Json::string("abab"),
+  ])
+  assert_eq(must_execute(parse_filter("\"ab\" * 0"), j), [Json::string("")])
+  assert_eq(must_execute(parse_filter("\"ab\" * -1"), j), [Json::null()])
   assert_eq(
-    must_eval(parse_filter("{\"a\":{\"x\":1}} * {\"a\":{\"y\":2}}"), j),
+    must_execute(parse_filter("{\"a\":{\"x\":1}} * {\"a\":{\"y\":2}}"), j),
     [
       Json::object({
         "a": Json::object({ "x": Json::number(1.0), "y": Json::number(2.0) }),
       }),
     ],
   )
-  assert_eq(must_eval(parse_filter("{\"a\":{\"x\":1}} * {\"a\":2}"), j), [
+  assert_eq(must_execute(parse_filter("{\"a\":{\"x\":1}} * {\"a\":2}"), j), [
     Json::object({ "a": Json::number(2.0) }),
   ])
-  assert_eq(must_eval(parse_filter("{\"a\":1} * {\"b\":2}"), j), [
+  assert_eq(must_execute(parse_filter("{\"a\":1} * {\"b\":2}"), j), [
     Json::object({ "a": Json::number(1.0), "b": Json::number(2.0) }),
   ])
 }
@@ -1410,10 +1470,10 @@ test "execute multiply repeat too long error" {
 ///|
 test "execute array subtraction compatibility" {
   let j = must_parse("null")
-  assert_eq(must_eval(parse_filter("[1,2,2,3] - [2]"), j), [
+  assert_eq(must_execute(parse_filter("[1,2,2,3] - [2]"), j), [
     Json::array([Json::number(1.0), Json::number(3.0)]),
   ])
-  assert_eq(must_eval(parse_filter("[1,{\"a\":1}] - [{\"a\":1}]"), j), [
+  assert_eq(must_execute(parse_filter("[1,{\"a\":1}] - [{\"a\":1}]"), j), [
     Json::array([Json::number(1.0)]),
   ])
 }
@@ -1436,22 +1496,22 @@ test "execute division by zero compatibility" {
 ///|
 test "execute arithmetic stream cross product" {
   let j = must_parse("null")
-  assert_eq(must_eval(parse_filter("(1,2) + (10,20)"), j), [
+  assert_eq(must_execute(parse_filter("(1,2) + (10,20)"), j), [
     Json::number(11.0),
     Json::number(12.0),
     Json::number(21.0),
     Json::number(22.0),
   ])
-  assert_eq(must_eval(parse_filter("(empty) + 1"), j), [])
+  assert_eq(must_execute(parse_filter("(empty) + 1"), j), [])
 }
 
 ///|
 test "execute add arrays and objects" {
   let j = must_parse("{\"a\":[1],\"b\":[2],\"x\":{\"k\":1},\"y\":{\"k\":2}}")
-  assert_eq(must_eval(parse_filter(".a + .b"), j), [
+  assert_eq(must_execute(parse_filter(".a + .b"), j), [
     Json::array([Json::number(1.0), Json::number(2.0)]),
   ])
-  assert_eq(must_eval(parse_filter(".x + .y"), j), [
+  assert_eq(must_execute(parse_filter(".x + .y"), j), [
     Json::object({ "k": Json::number(2.0) }),
   ])
 }
@@ -1459,14 +1519,14 @@ test "execute add arrays and objects" {
 ///|
 test "execute add null identity compatibility" {
   let j = must_parse("null")
-  assert_eq(must_eval(parse_filter("null + 1"), j), [Json::number(1.0)])
-  assert_eq(must_eval(parse_filter("1 + null"), j), [Json::number(1.0)])
-  assert_eq(must_eval(parse_filter("null + null"), j), [Json::null()])
-  assert_eq(must_eval(parse_filter("true + null"), j), [Json::boolean(true)])
-  assert_eq(must_eval(parse_filter("null + [1]"), j), [
+  assert_eq(must_execute(parse_filter("null + 1"), j), [Json::number(1.0)])
+  assert_eq(must_execute(parse_filter("1 + null"), j), [Json::number(1.0)])
+  assert_eq(must_execute(parse_filter("null + null"), j), [Json::null()])
+  assert_eq(must_execute(parse_filter("true + null"), j), [Json::boolean(true)])
+  assert_eq(must_execute(parse_filter("null + [1]"), j), [
     Json::array([Json::number(1.0)]),
   ])
-  assert_eq(must_eval(parse_filter("{\"a\":1} + null"), j), [
+  assert_eq(must_execute(parse_filter("{\"a\":1} + null"), j), [
     Json::object({ "a": Json::number(1.0) }),
   ])
 }
@@ -1474,67 +1534,75 @@ test "execute add null identity compatibility" {
 ///|
 test "execute update assignment compatibility" {
   let obj = must_parse("{\"a\":1,\"b\":2}")
-  assert_eq(must_eval(parse_filter(".a |= . + 1"), obj), [
+  assert_eq(must_execute(parse_filter(".a |= . + 1"), obj), [
     Json::object({ "a": Json::number(2.0), "b": Json::number(2.0) }),
   ])
-  assert_eq(must_eval(parse_filter(".a += 4"), must_parse("{\"a\":1}")), [
+  assert_eq(must_execute(parse_filter(".a += 4"), must_parse("{\"a\":1}")), [
     Json::object({ "a": Json::number(5.0) }),
   ])
-  assert_eq(must_eval(parse_filter(".a //= 9"), must_parse("{\"a\":null}")), [
-    Json::object({ "a": Json::number(9.0) }),
-  ])
-  assert_eq(must_eval(parse_filter(".[1] *= 10"), must_parse("[1,2,3]")), [
+  assert_eq(
+    must_execute(parse_filter(".a //= 9"), must_parse("{\"a\":null}")),
+    [Json::object({ "a": Json::number(9.0) })],
+  )
+  assert_eq(must_execute(parse_filter(".[1] *= 10"), must_parse("[1,2,3]")), [
     Json::array([Json::number(1.0), Json::number(20.0), Json::number(3.0)]),
   ])
   assert_eq(
-    must_eval(parse_filter(".a.b |= . + 1"), must_parse("{\"a\":{\"b\":1}}")),
+    must_execute(parse_filter(".a.b |= . + 1"), must_parse("{\"a\":{\"b\":1}}")),
     [Json::object({ "a": Json::object({ "b": Json::number(2.0) }) })],
   )
-  assert_eq(must_eval(parse_filter(".a.b //= 9"), must_parse("{\"a\":{}}")), [
-    Json::object({ "a": Json::object({ "b": Json::number(9.0) }) }),
-  ])
-  assert_eq(must_eval(parse_filter(".[2] += 5"), must_parse("[]")), [
+  assert_eq(
+    must_execute(parse_filter(".a.b //= 9"), must_parse("{\"a\":{}}")),
+    [Json::object({ "a": Json::object({ "b": Json::number(9.0) }) })],
+  )
+  assert_eq(must_execute(parse_filter(".[2] += 5"), must_parse("[]")), [
     Json::array([Json::null(), Json::null(), Json::number(5.0)]),
   ])
-  assert_eq(must_eval(parse_filter(".[-1] += 1"), must_parse("[1,2,3]")), [
+  assert_eq(must_execute(parse_filter(".[-1] += 1"), must_parse("[1,2,3]")), [
     Json::array([Json::number(1.0), Json::number(2.0), Json::number(4.0)]),
   ])
-  assert_eq(must_eval(parse_filter(".a = 9"), must_parse("{\"a\":1}")), [
+  assert_eq(must_execute(parse_filter(".a = 9"), must_parse("{\"a\":1}")), [
     Json::object({ "a": Json::number(9.0) }),
   ])
   assert_eq(
-    must_eval(parse_filter(".foo = .bar"), must_parse("{\"bar\":42}")),
+    must_execute(parse_filter(".foo = .bar"), must_parse("{\"bar\":42}")),
     [Json::object({ "bar": Json::number(42.0), "foo": Json::number(42.0) })],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter(".a = .b"),
       must_parse("{\"a\":{\"b\":10},\"b\":20}"),
     ),
     [Json::object({ "a": Json::number(20.0), "b": Json::number(20.0) })],
   )
   assert_eq(
-    must_eval(parse_filter(".foo += .foo"), must_parse("{\"foo\":2}")),
+    must_execute(parse_filter(".foo += .foo"), must_parse("{\"foo\":2}")),
     [Json::object({ "foo": Json::number(4.0) })],
   )
-  assert_eq(must_eval(parse_filter("(.a,.b) = range(3)"), must_parse("null")), [
-    Json::object({ "a": Json::number(0.0), "b": Json::number(0.0) }),
-    Json::object({ "a": Json::number(1.0), "b": Json::number(1.0) }),
-    Json::object({ "a": Json::number(2.0), "b": Json::number(2.0) }),
-  ])
   assert_eq(
-    must_eval(parse_filter("(.a,.b) |= range(3)"), must_parse("null")),
+    must_execute(parse_filter("(.a,.b) = range(3)"), must_parse("null")),
+    [
+      Json::object({ "a": Json::number(0.0), "b": Json::number(0.0) }),
+      Json::object({ "a": Json::number(1.0), "b": Json::number(1.0) }),
+      Json::object({ "a": Json::number(2.0), "b": Json::number(2.0) }),
+    ],
+  )
+  assert_eq(
+    must_execute(parse_filter("(.a,.b) |= range(3)"), must_parse("null")),
     [Json::object({ "a": Json::number(0.0), "b": Json::number(0.0) })],
   )
-  assert_eq(must_eval(parse_filter("(.a,.b) += (1,2)"), must_parse("null")), [
-    Json::object({ "a": Json::number(1.0), "b": Json::number(1.0) }),
-    Json::object({ "a": Json::number(2.0), "b": Json::number(2.0) }),
-  ])
-  assert_eq(must_eval(parse_filter(".[] += .[0]"), must_parse("[1,2]")), [
+  assert_eq(
+    must_execute(parse_filter("(.a,.b) += (1,2)"), must_parse("null")),
+    [
+      Json::object({ "a": Json::number(1.0), "b": Json::number(1.0) }),
+      Json::object({ "a": Json::number(2.0), "b": Json::number(2.0) }),
+    ],
+  )
+  assert_eq(must_execute(parse_filter(".[] += .[0]"), must_parse("[1,2]")), [
     Json::array([Json::number(2.0), Json::number(3.0)]),
   ])
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter(".[2:4] = ([], [\"a\",\"b\"], [\"a\",\"b\",\"c\"])"),
       must_parse("[0,1,2,3,4,5,6,7]"),
     ),
@@ -1575,7 +1643,7 @@ test "execute update assignment compatibility" {
     err.to_string() == "A slice of an array can only be assigned another array" else {
     fail("expected slice assignment array-only error")
   }
-  assert_eq(must_eval(parse_filter(".a %= 4"), must_parse("{\"a\":9}")), [
+  assert_eq(must_execute(parse_filter(".a %= 4"), must_parse("{\"a\":9}")), [
     Json::object({ "a": Json::number(1.0) }),
   ])
 }
@@ -1583,23 +1651,23 @@ test "execute update assignment compatibility" {
 ///|
 test "execute object literal stream product" {
   let j = must_parse("null")
-  assert_eq(must_eval(parse_filter("{a:(1,2)}"), j), [
+  assert_eq(must_execute(parse_filter("{a:(1,2)}"), j), [
     Json::object({ "a": Json::number(1.0) }),
     Json::object({ "a": Json::number(2.0) }),
   ])
-  assert_eq(must_eval(parse_filter("{a:(1,2), b:(3,4)}"), j), [
+  assert_eq(must_execute(parse_filter("{a:(1,2), b:(3,4)}"), j), [
     Json::object({ "a": Json::number(1.0), "b": Json::number(3.0) }),
     Json::object({ "a": Json::number(1.0), "b": Json::number(4.0) }),
     Json::object({ "a": Json::number(2.0), "b": Json::number(3.0) }),
     Json::object({ "a": Json::number(2.0), "b": Json::number(4.0) }),
   ])
-  assert_eq(must_eval(parse_filter("{a:(empty)}"), j), [])
+  assert_eq(must_execute(parse_filter("{a:(empty)}"), j), [])
 }
 
 ///|
 test "execute map" {
   let j = must_parse("[1,2,3]")
-  assert_eq(must_eval(parse_filter("map(. + 1)"), j), [
+  assert_eq(must_execute(parse_filter("map(. + 1)"), j), [
     Json::array([Json::number(2.0), Json::number(3.0), Json::number(4.0)]),
   ])
 }
@@ -1607,13 +1675,15 @@ test "execute map" {
 ///|
 test "execute map object compatibility" {
   let j = must_parse("{\"a\":1}")
-  assert_eq(must_eval(parse_filter("map(. + 1)"), j), [
+  assert_eq(must_execute(parse_filter("map(. + 1)"), j), [
     Json::array([Json::number(2.0)]),
   ])
-  assert_eq(must_eval(parse_filter("map((., . + 1))"), j), [
+  assert_eq(must_execute(parse_filter("map((., . + 1))"), j), [
     Json::array([Json::number(1.0), Json::number(2.0)]),
   ])
-  assert_eq(must_eval(parse_filter("map(select(. > 1))"), j), [Json::array([])])
+  assert_eq(must_execute(parse_filter("map(select(. > 1))"), j), [
+    Json::array([]),
+  ])
 }
 
 ///|
@@ -1632,20 +1702,20 @@ test "execute map iter errors" {
 ///|
 test "execute map_values jq semantics" {
   let obj = must_parse("{\"a\":1,\"b\":2}")
-  assert_eq(must_eval(parse_filter("map_values(select(. > 1))"), obj), [
+  assert_eq(must_execute(parse_filter("map_values(select(. > 1))"), obj), [
     Json::object({ "b": Json::number(2.0) }),
   ])
-  assert_eq(must_eval(parse_filter("map_values((., . + 1))"), obj), [
+  assert_eq(must_execute(parse_filter("map_values((., . + 1))"), obj), [
     Json::object({ "a": Json::number(1.0), "b": Json::number(2.0) }),
   ])
   let arr = must_parse("[1,2,3]")
-  assert_eq(must_eval(parse_filter("map_values(. + 1)"), arr), [
+  assert_eq(must_execute(parse_filter("map_values(. + 1)"), arr), [
     Json::array([Json::number(2.0), Json::number(3.0), Json::number(4.0)]),
   ])
-  assert_eq(must_eval(parse_filter("map_values(select(. > 1))"), arr), [
+  assert_eq(must_execute(parse_filter("map_values(select(. > 1))"), arr), [
     Json::array([Json::number(2.0), Json::number(3.0)]),
   ])
-  assert_eq(must_eval(parse_filter("map_values((., . + 1))"), arr), [
+  assert_eq(must_execute(parse_filter("map_values((., . + 1))"), arr), [
     Json::array([Json::number(1.0), Json::number(2.0), Json::number(3.0)]),
   ])
 }
@@ -1667,19 +1737,21 @@ test "execute map_values iter errors" {
 ///|
 test "execute as and variable" {
   let j = must_parse("{\"a\":1,\"b\":2}")
-  assert_eq(must_eval(parse_filter(".a as $x | $x"), j), [Json::number(1.0)])
-  assert_eq(must_eval(parse_filter(".a as $x | .b"), j), [Json::number(2.0)])
-  assert_eq(must_eval(parse_filter(".a as $x | $x + 1"), j), [Json::number(2.0)])
-  assert_eq(must_eval(parse_filter(". as $x | $x[]"), must_parse("[1,2,3]")), [
-    Json::number(1.0),
+  assert_eq(must_execute(parse_filter(".a as $x | $x"), j), [Json::number(1.0)])
+  assert_eq(must_execute(parse_filter(".a as $x | .b"), j), [Json::number(2.0)])
+  assert_eq(must_execute(parse_filter(".a as $x | $x + 1"), j), [
     Json::number(2.0),
-    Json::number(3.0),
-  ])
-  assert_eq(must_eval(parse_filter("[-1 as $x | 1,$x]"), must_parse("null")), [
-    Json::array([Json::number(1.0), Json::number(-1.0)]),
   ])
   assert_eq(
-    must_eval(
+    must_execute(parse_filter(". as $x | $x[]"), must_parse("[1,2,3]")),
+    [Json::number(1.0), Json::number(2.0), Json::number(3.0)],
+  )
+  assert_eq(
+    must_execute(parse_filter("[-1 as $x | 1,$x]"), must_parse("null")),
+    [Json::array([Json::number(1.0), Json::number(-1.0)])],
+  )
+  assert_eq(
+    must_execute(
       parse_filter(
         "[\"foo\",1] as $p | getpath($p), setpath($p; 20), delpaths([$p])",
       ),
@@ -1696,7 +1768,7 @@ test "execute as and variable" {
 ///|
 test "execute as pattern bindings" {
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter(".[] as [$a,$b] | [$b,$a]"),
       must_parse("[[1],[1,2,3]]"),
     ),
@@ -1706,28 +1778,28 @@ test "execute as pattern bindings" {
     ],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter(". as {$a, $b:[$c,$d]} | [$a, $b, $c, $d]"),
       must_parse("{\"a\":1,\"b\":[2,{\"d\":3}]}"),
     ),
     [must_parse("[1,[2,{\"d\":3}],2,{\"d\":3}]")],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter(".[] | . as {a:$a} ?// [$a] | $a"),
       must_parse("[{\"a\":1},[2]]"),
     ),
     [Json::number(1.0), Json::number(2.0)],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("[1, {c:3, d:4}] as [$a, {c:$b, b:$c}] | $a, $b, $c"),
       must_parse("null"),
     ),
     [Json::number(1.0), Json::number(3.0), Json::null()],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter(
         ".[] as [$a] ?// [$b] | if $a != null then error(\"err: \\($a)\") else {$a,$b} end",
       ),
@@ -1736,7 +1808,7 @@ test "execute as pattern bindings" {
     [must_parse("{\"a\":null,\"b\":3}")],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter(
         ".[] | . as {$a, b: [$c, {$d}]} ?// [$a, {$b}, $e] ?// $f | [$a, $b, $c, $d, $e, $f]",
       ),
@@ -1751,7 +1823,7 @@ test "execute as pattern bindings" {
     ],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter(". as {(\"e\"+\"x\"+\"p\"):$exp} | $exp"),
       must_parse("{\"exp\":3}"),
     ),
@@ -1761,11 +1833,11 @@ test "execute as pattern bindings" {
 
 ///|
 test "execute special variables compatibility" {
-  assert_eq(must_eval(parse_filter("$ENV.PAGER"), must_parse("null")), [
+  assert_eq(must_execute(parse_filter("$ENV.PAGER"), must_parse("null")), [
     Json::null(),
   ])
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("{ a, $__loc__, c }"),
       must_parse("{\"a\":[1,2,3],\"b\":\"foo\",\"c\":{\"hi\":\"hey\"}}"),
     ),
@@ -1780,25 +1852,25 @@ test "execute special variables compatibility" {
 ///|
 test "execute dynamic bracket index" {
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter(".foo[.baz]"),
       must_parse("{\"foo\":{\"bar\":4},\"baz\":\"bar\"}"),
     ),
     [Json::number(4.0)],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("[1,2,3][] as $x | [4,5,6,7][$x]"),
       must_parse("null"),
     ),
     [Json::number(5.0), Json::number(6.0), Json::number(7.0)],
   )
   assert_eq(
-    must_eval(parse_filter("[][.]"), must_parse("1000000000000000000")),
+    must_execute(parse_filter("[][.]"), must_parse("1000000000000000000")),
     [Json::null()],
   )
   assert_eq(
-    must_eval(parse_filter("[range(5)] | .[1.1]"), must_parse("null")),
+    must_execute(parse_filter("[range(5)] | .[1.1]"), must_parse("null")),
     [Json::number(1.0)],
   )
 }
@@ -1806,15 +1878,17 @@ test "execute dynamic bracket index" {
 ///|
 test "execute try" {
   let j = must_parse("{\"a\":\"hi\"}")
-  assert_eq(must_eval(parse_filter("(.a + 1)?"), j), [])
-  assert_eq(must_eval(parse_filter("(.a | .b)?"), j), [])
+  assert_eq(must_execute(parse_filter("(.a + 1)?"), j), [])
+  assert_eq(must_execute(parse_filter("(.a | .b)?"), j), [])
 }
 
 ///|
 test "execute try/catch" {
   let j = must_parse("{\"a\":\"hi\",\"b\":1}")
-  assert_eq(must_eval(parse_filter("try .a catch .b"), j), [Json::string("hi")])
-  assert_eq(must_eval(parse_filter("try (.a + 1) catch .b"), j), [
+  assert_eq(must_execute(parse_filter("try .a catch .b"), j), [
+    Json::string("hi"),
+  ])
+  assert_eq(must_execute(parse_filter("try (.a + 1) catch .b"), j), [
     Json::number(1.0),
   ])
 }
@@ -1822,28 +1896,28 @@ test "execute try/catch" {
 ///|
 test "execute reduce/foreach" {
   let j = must_parse("[1,2,3]")
-  assert_eq(must_eval(parse_filter("reduce .[] as $x (0; . + $x)"), j), [
+  assert_eq(must_execute(parse_filter("reduce .[] as $x (0; . + $x)"), j), [
     Json::number(6.0),
   ])
-  assert_eq(must_eval(parse_filter("foreach .[] as $x (0; . + $x)"), j), [
+  assert_eq(must_execute(parse_filter("foreach .[] as $x (0; . + $x)"), j), [
     Json::number(1.0),
     Json::number(3.0),
     Json::number(6.0),
   ])
-  assert_eq(must_eval(parse_filter("foreach .[] as $x (0; . + $x; .)"), j), [
+  assert_eq(must_execute(parse_filter("foreach .[] as $x (0; . + $x; .)"), j), [
     Json::number(1.0),
     Json::number(3.0),
     Json::number(6.0),
   ])
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("reduce .[] as [$i,$j] (0; . + $i * $j)"),
       must_parse("[[1,2],[3,4],[5,6]]"),
     ),
     [Json::number(44.0)],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("foreach .[] as [$i,$j] (0; . + $i * $j; [$i,$j,.])"),
       must_parse("[[1,2],[3,4]]"),
     ),
@@ -1854,42 +1928,42 @@ test "execute reduce/foreach" {
 ///|
 test "execute if-then-else" {
   let j = must_parse("{\"a\":true,\"b\":1,\"c\":2}")
-  assert_eq(must_eval(parse_filter("if .a then .b else .c end"), j), [
+  assert_eq(must_execute(parse_filter("if .a then .b else .c end"), j), [
     Json::number(1.0),
   ])
   let j2 = must_parse("{\"a\":null,\"b\":1,\"c\":2}")
-  assert_eq(must_eval(parse_filter("if .a then .b else .c end"), j2), [
+  assert_eq(must_execute(parse_filter("if .a then .b else .c end"), j2), [
     Json::number(2.0),
   ])
   let j3 = must_parse("{\"a\":false,\"c\":true,\"d\":3,\"e\":4}")
   assert_eq(
-    must_eval(parse_filter("if .a then .b elif .c then .d else .e end"), j3),
+    must_execute(parse_filter("if .a then .b elif .c then .d else .e end"), j3),
     [Json::number(3.0)],
   )
-  assert_eq(must_eval(parse_filter("if .a then .b end"), j2), [])
+  assert_eq(must_execute(parse_filter("if .a then .b end"), j2), [])
 }
 
 ///|
 test "execute fallback and empty" {
   let j = must_parse("{\"a\":1,\"b\":2}")
-  assert_eq(must_eval(parse_filter(".a // .b"), j), [Json::number(1.0)])
-  assert_eq(must_eval(parse_filter("empty // .b"), j), [Json::number(2.0)])
-  assert_eq(must_eval(parse_filter("empty"), j), [])
+  assert_eq(must_execute(parse_filter(".a // .b"), j), [Json::number(1.0)])
+  assert_eq(must_execute(parse_filter("empty // .b"), j), [Json::number(2.0)])
+  assert_eq(must_execute(parse_filter("empty"), j), [])
 }
 
 ///|
 test "execute fallback jq semantics with null/false and streams" {
   let j = must_parse("null")
-  assert_eq(must_eval(parse_filter("null // 1"), j), [Json::number(1.0)])
-  assert_eq(must_eval(parse_filter("false // 1"), j), [Json::number(1.0)])
-  assert_eq(must_eval(parse_filter("true // 1"), j), [Json::boolean(true)])
-  assert_eq(must_eval(parse_filter("[false,1] | .[] // 9"), j), [
+  assert_eq(must_execute(parse_filter("null // 1"), j), [Json::number(1.0)])
+  assert_eq(must_execute(parse_filter("false // 1"), j), [Json::number(1.0)])
+  assert_eq(must_execute(parse_filter("true // 1"), j), [Json::boolean(true)])
+  assert_eq(must_execute(parse_filter("[false,1] | .[] // 9"), j), [
     Json::number(1.0),
   ])
-  assert_eq(must_eval(parse_filter("[null,false] | .[] // 9"), j), [
+  assert_eq(must_execute(parse_filter("[null,false] | .[] // 9"), j), [
     Json::number(9.0),
   ])
-  assert_eq(must_eval(parse_filter("(1,2) // 9"), j), [
+  assert_eq(must_execute(parse_filter("(1,2) // 9"), j), [
     Json::number(1.0),
     Json::number(2.0),
   ])
@@ -1898,62 +1972,62 @@ test "execute fallback jq semantics with null/false and streams" {
 ///|
 test "execute string contains/starts/ends" {
   let j = must_parse("\"hello\"")
-  assert_eq(must_eval(parse_filter("contains(\"ell\")"), j), [
+  assert_eq(must_execute(parse_filter("contains(\"ell\")"), j), [
     Json::boolean(true),
   ])
-  assert_eq(must_eval(parse_filter("contains((\"he\",\"zz\"))"), j), [
-    Json::boolean(true),
-    Json::boolean(false),
-  ])
-  assert_eq(must_eval(parse_filter("contains(empty)"), j), [])
-  assert_eq(must_eval(parse_filter("startswith(\"he\")"), j), [
-    Json::boolean(true),
-  ])
-  assert_eq(must_eval(parse_filter("startswith((\"h\",\"x\"))"), j), [
+  assert_eq(must_execute(parse_filter("contains((\"he\",\"zz\"))"), j), [
     Json::boolean(true),
     Json::boolean(false),
   ])
-  assert_eq(must_eval(parse_filter("startswith(empty)"), j), [])
-  assert_eq(must_eval(parse_filter("endswith(\"lo\")"), j), [
+  assert_eq(must_execute(parse_filter("contains(empty)"), j), [])
+  assert_eq(must_execute(parse_filter("startswith(\"he\")"), j), [
     Json::boolean(true),
   ])
-  assert_eq(must_eval(parse_filter("endswith((\"o\",\"x\"))"), j), [
+  assert_eq(must_execute(parse_filter("startswith((\"h\",\"x\"))"), j), [
     Json::boolean(true),
     Json::boolean(false),
   ])
-  assert_eq(must_eval(parse_filter("endswith(empty)"), j), [])
+  assert_eq(must_execute(parse_filter("startswith(empty)"), j), [])
+  assert_eq(must_execute(parse_filter("endswith(\"lo\")"), j), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_execute(parse_filter("endswith((\"o\",\"x\"))"), j), [
+    Json::boolean(true),
+    Json::boolean(false),
+  ])
+  assert_eq(must_execute(parse_filter("endswith(empty)"), j), [])
 }
 
 ///|
 test "execute trimstr compatibility" {
   let j = must_parse("\"foobar\"")
-  assert_eq(must_eval(parse_filter("ltrimstr(\"foo\")"), j), [
+  assert_eq(must_execute(parse_filter("ltrimstr(\"foo\")"), j), [
     Json::string("bar"),
   ])
-  assert_eq(must_eval(parse_filter("ltrimstr(\"bar\")"), j), [
+  assert_eq(must_execute(parse_filter("ltrimstr(\"bar\")"), j), [
     Json::string("foobar"),
   ])
-  assert_eq(must_eval(parse_filter("rtrimstr(\"bar\")"), j), [
+  assert_eq(must_execute(parse_filter("rtrimstr(\"bar\")"), j), [
     Json::string("foo"),
   ])
-  assert_eq(must_eval(parse_filter("rtrimstr(\"foo\")"), j), [
+  assert_eq(must_execute(parse_filter("rtrimstr(\"foo\")"), j), [
     Json::string("foobar"),
   ])
-  assert_eq(must_eval(parse_filter("ltrimstr((\"foo\",\"bar\"))"), j), [
+  assert_eq(must_execute(parse_filter("ltrimstr((\"foo\",\"bar\"))"), j), [
     Json::string("bar"),
     Json::string("foobar"),
   ])
-  assert_eq(must_eval(parse_filter("ltrimstr(empty)"), j), [])
+  assert_eq(must_execute(parse_filter("ltrimstr(empty)"), j), [])
 }
 
 ///|
 test "execute trim/ltrim/rtrim compatibility" {
   assert_eq(
-    must_eval(parse_filter("trim, ltrim, rtrim"), must_parse("\" abc \"")),
+    must_execute(parse_filter("trim, ltrim, rtrim"), must_parse("\" abc \"")),
     [Json::string("abc"), Json::string("abc "), Json::string(" abc")],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("[.[]|trimstr(\"foo\")]"),
       must_parse("[\"fo\",\"foo\",\"barfoo\",\"foobarfoo\",\"foob\"]"),
     ),
@@ -2013,23 +2087,23 @@ test "execute trimstr errors" {
 ///|
 test "execute abs/have_decnum/isempty compatibility" {
   assert_eq(
-    must_eval(parse_filter("map(abs)"), must_parse("[-10,-1.1,-1e-1]")),
+    must_execute(parse_filter("map(abs)"), must_parse("[-10,-1.1,-1e-1]")),
     [Json::array([Json::number(10.0), Json::number(1.1), Json::number(0.1)])],
   )
-  assert_eq(must_eval(parse_filter("have_decnum"), must_parse("null")), [
+  assert_eq(must_execute(parse_filter("have_decnum"), must_parse("null")), [
     Json::boolean(true),
   ])
-  assert_eq(must_eval(parse_filter("isempty(empty)"), must_parse("null")), [
+  assert_eq(must_execute(parse_filter("isempty(empty)"), must_parse("null")), [
     Json::boolean(true),
   ])
-  assert_eq(must_eval(parse_filter("isempty(.[])"), must_parse("[]")), [
+  assert_eq(must_execute(parse_filter("isempty(.[])"), must_parse("[]")), [
     Json::boolean(true),
   ])
-  assert_eq(must_eval(parse_filter("isempty(.[])"), must_parse("[1,2,3]")), [
+  assert_eq(must_execute(parse_filter("isempty(.[])"), must_parse("[1,2,3]")), [
     Json::boolean(false),
   ])
   assert_eq(
-    must_eval(parse_filter("isempty((1,error(\"x\")))"), must_parse("null")),
+    must_execute(parse_filter("isempty((1,error(\"x\")))"), must_parse("null")),
     [Json::boolean(false)],
   )
 }
@@ -2037,7 +2111,7 @@ test "execute abs/have_decnum/isempty compatibility" {
 ///|
 test "execute numeric/meta builtins compatibility" {
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("map(toboolean)"),
       must_parse("[\"false\",\"true\",false,true]"),
     ),
@@ -2051,21 +2125,21 @@ test "execute numeric/meta builtins compatibility" {
     ],
   )
   assert_eq(
-    must_eval(parse_filter("[.[]|floor]"), must_parse("[-1.1,1.1,1.9]")),
+    must_execute(parse_filter("[.[]|floor]"), must_parse("[-1.1,1.1,1.9]")),
     [Json::array([Json::number(-2.0), Json::number(1.0), Json::number(1.0)])],
   )
-  assert_eq(must_eval(parse_filter("[.[]|sqrt]"), must_parse("[4,9]")), [
+  assert_eq(must_execute(parse_filter("[.[]|sqrt]"), must_parse("[4,9]")), [
     Json::array([Json::number(2.0), Json::number(3.0)]),
   ])
-  assert_eq(must_eval(parse_filter("pow(2;10)"), must_parse("null")), [
+  assert_eq(must_execute(parse_filter("pow(2;10)"), must_parse("null")), [
     Json::number(1024.0),
   ])
   assert_eq(
-    must_eval(parse_filter("pow(2;8)|log2|round"), must_parse("null")),
+    must_execute(parse_filter("pow(2;8)|log2|round"), must_parse("null")),
     [Json::number(8.0)],
   )
   assert_eq(
-    must_eval(parse_filter("map(fabs)"), must_parse("[-0,0,-10,-1.1]")),
+    must_execute(parse_filter("map(fabs)"), must_parse("[-0,0,-10,-1.1]")),
     [
       Json::array([
         Json::number(0.0),
@@ -2076,26 +2150,35 @@ test "execute numeric/meta builtins compatibility" {
     ],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("atan * 4 * 1000000|floor / 1000000"),
       must_parse("1"),
     ),
     [Json::number(3.141592)],
   )
   assert_eq(
-    must_eval(parse_filter("infinite | type, nan | type"), must_parse("null")),
+    must_execute(
+      parse_filter("infinite | type, nan | type"),
+      must_parse("null"),
+    ),
     [Json::string("number"), Json::string("number")],
   )
   assert_eq(
-    must_eval(parse_filter("modulemeta | .deps | length"), must_parse("\"c\"")),
+    must_execute(
+      parse_filter("modulemeta | .deps | length"),
+      must_parse("\"c\""),
+    ),
     [Json::number(0.0)],
   )
   assert_eq(
-    must_eval(parse_filter("modulemeta | .defs | length"), must_parse("\"c\"")),
+    must_execute(
+      parse_filter("modulemeta | .defs | length"),
+      must_parse("\"c\""),
+    ),
     [Json::number(0.0)],
   )
   assert_eq(
-    must_eval(parse_filter("builtins|length > 10"), must_parse("null")),
+    must_execute(parse_filter("builtins|length > 10"), must_parse("null")),
     [Json::boolean(true)],
   )
 }
@@ -2150,12 +2233,13 @@ test "execute abs/fabs/isempty errors" {
 ///|
 test "execute ascii case compatibility" {
   assert_eq(
-    must_eval(parse_filter("ascii_downcase"), must_parse("\"AbC_é\"")),
+    must_execute(parse_filter("ascii_downcase"), must_parse("\"AbC_é\"")),
     [Json::string("abc_é")],
   )
-  assert_eq(must_eval(parse_filter("ascii_upcase"), must_parse("\"AbC_é\"")), [
-    Json::string("ABC_é"),
-  ])
+  assert_eq(
+    must_execute(parse_filter("ascii_upcase"), must_parse("\"AbC_é\"")),
+    [Json::string("ABC_é")],
+  )
 }
 
 ///|
@@ -2175,11 +2259,11 @@ test "execute ascii case errors" {
 ///|
 test "execute utf8bytelength compatibility" {
   assert_eq(
-    must_eval(parse_filter("utf8bytelength"), must_parse("\"asdf\\u03bc\"")),
+    must_execute(parse_filter("utf8bytelength"), must_parse("\"asdf\\u03bc\"")),
     [Json::number(6.0)],
   )
   assert_eq(
-    must_eval(parse_filter("utf8bytelength"), must_parse("\"\\u03bc\"")),
+    must_execute(parse_filter("utf8bytelength"), must_parse("\"\\u03bc\"")),
     [Json::number(2.0)],
   )
 }

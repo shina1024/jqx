@@ -1,31 +1,32 @@
 ///|
 test "execute getpath compatibility" {
   let j = must_parse("{\"a\":[1,2],\"b\":{\"c\":3}}")
-  assert_eq(must_eval(parse_filter("getpath([\"a\",1])"), j), [
+  assert_eq(must_execute(parse_filter("getpath([\"a\",1])"), j), [
     Json::number(2.0),
   ])
-  assert_eq(must_eval(parse_filter("getpath([\"b\",\"c\"])"), j), [
+  assert_eq(must_execute(parse_filter("getpath([\"b\",\"c\"])"), j), [
     Json::number(3.0),
   ])
-  assert_eq(must_eval(parse_filter("getpath([\"a\",9])"), j), [Json::null()])
-  assert_eq(must_eval(parse_filter("getpath([\"x\"])"), j), [Json::null()])
-  assert_eq(must_eval(parse_filter("getpath(( [\"a\",0], [\"a\",1] ))"), j), [
-    Json::number(1.0),
-    Json::number(2.0),
-  ])
-  assert_eq(must_eval(parse_filter("getpath([])"), j), [j])
-  assert_eq(must_eval(parse_filter("getpath(empty)"), j), [])
+  assert_eq(must_execute(parse_filter("getpath([\"a\",9])"), j), [Json::null()])
+  assert_eq(must_execute(parse_filter("getpath([\"x\"])"), j), [Json::null()])
   assert_eq(
-    must_eval(parse_filter("getpath([1.9])"), must_parse("[10,20,30]")),
+    must_execute(parse_filter("getpath(( [\"a\",0], [\"a\",1] ))"), j),
+    [Json::number(1.0), Json::number(2.0)],
+  )
+  assert_eq(must_execute(parse_filter("getpath([])"), j), [j])
+  assert_eq(must_execute(parse_filter("getpath(empty)"), j), [])
+  assert_eq(
+    must_execute(parse_filter("getpath([1.9])"), must_parse("[10,20,30]")),
     [Json::number(20.0)],
   )
-  assert_eq(must_eval(parse_filter("getpath([\"a\"])"), must_parse("null")), [
+  assert_eq(
+    must_execute(parse_filter("getpath([\"a\"])"), must_parse("null")),
+    [Json::null()],
+  )
+  assert_eq(must_execute(parse_filter("getpath([0])"), must_parse("null")), [
     Json::null(),
   ])
-  assert_eq(must_eval(parse_filter("getpath([0])"), must_parse("null")), [
-    Json::null(),
-  ])
-  assert_eq(must_eval(parse_filter("getpath([{}])"), must_parse("null")), [
+  assert_eq(must_execute(parse_filter("getpath([{}])"), must_parse("null")), [
     Json::null(),
   ])
 }
@@ -67,33 +68,37 @@ test "execute getpath errors" {
 ///|
 test "execute setpath compatibility" {
   assert_eq(
-    must_eval(parse_filter("setpath([\"a\"];2)"), must_parse("{\"a\":1}")),
+    must_execute(parse_filter("setpath([\"a\"];2)"), must_parse("{\"a\":1}")),
     [Json::object({ "a": Json::number(2.0) })],
   )
   assert_eq(
-    must_eval(parse_filter("setpath([\"a\",\"b\"];1)"), must_parse("{}")),
+    must_execute(parse_filter("setpath([\"a\",\"b\"];1)"), must_parse("{}")),
     [Json::object({ "a": Json::object({ "b": Json::number(1.0) }) })],
   )
-  assert_eq(must_eval(parse_filter("setpath([2];1)"), must_parse("[]")), [
+  assert_eq(must_execute(parse_filter("setpath([2];1)"), must_parse("[]")), [
     Json::array([Json::null(), Json::null(), Json::number(1.0)]),
   ])
-  assert_eq(must_eval(parse_filter("setpath([-1];9)"), must_parse("[0,1]")), [
-    Json::array([Json::number(0.0), Json::number(9.0)]),
-  ])
-  assert_eq(must_eval(parse_filter("setpath([1.9];9)"), must_parse("[0,1]")), [
-    Json::array([Json::number(0.0), Json::number(9.0)]),
-  ])
-  assert_eq(must_eval(parse_filter("setpath([\"a\"];2)"), must_parse("null")), [
-    Json::object({ "a": Json::number(2.0) }),
-  ])
-  assert_eq(must_eval(parse_filter("setpath([0];2)"), must_parse("null")), [
+  assert_eq(
+    must_execute(parse_filter("setpath([-1];9)"), must_parse("[0,1]")),
+    [Json::array([Json::number(0.0), Json::number(9.0)])],
+  )
+  assert_eq(
+    must_execute(parse_filter("setpath([1.9];9)"), must_parse("[0,1]")),
+    [Json::array([Json::number(0.0), Json::number(9.0)])],
+  )
+  assert_eq(
+    must_execute(parse_filter("setpath([\"a\"];2)"), must_parse("null")),
+    [Json::object({ "a": Json::number(2.0) })],
+  )
+  assert_eq(must_execute(parse_filter("setpath([0];2)"), must_parse("null")), [
     Json::array([Json::number(2.0)]),
   ])
-  assert_eq(must_eval(parse_filter("setpath([];2)"), must_parse("{\"a\":1}")), [
-    Json::number(2.0),
-  ])
   assert_eq(
-    must_eval(
+    must_execute(parse_filter("setpath([];2)"), must_parse("{\"a\":1}")),
+    [Json::number(2.0)],
+  )
+  assert_eq(
+    must_execute(
       parse_filter("setpath(([\"a\"],[\"b\"]);(2,3))"),
       must_parse("{\"a\":1}"),
     ),
@@ -105,28 +110,35 @@ test "execute setpath compatibility" {
     ],
   )
   assert_eq(
-    must_eval(parse_filter("setpath(empty;2)"), must_parse("{\"a\":1}")),
+    must_execute(parse_filter("setpath(empty;2)"), must_parse("{\"a\":1}")),
     [],
   )
   assert_eq(
-    must_eval(parse_filter("setpath([\"a\"];empty)"), must_parse("{\"a\":1}")),
+    must_execute(
+      parse_filter("setpath([\"a\"];empty)"),
+      must_parse("{\"a\":1}"),
+    ),
     [],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("setpath((empty,[\"a\"]);2)"),
       must_parse("{\"a\":1}"),
     ),
     [Json::object({ "a": Json::number(2.0) })],
   )
-  assert_eq(must_eval(parse_filter("setpath([\"a\",2];1)"), must_parse("{}")), [
-    Json::object({
-      "a": Json::array([Json::null(), Json::null(), Json::number(1.0)]),
-    }),
-  ])
-  assert_eq(must_eval(parse_filter("setpath([0,\"a\"];1)"), must_parse("[]")), [
-    Json::array([Json::object({ "a": Json::number(1.0) })]),
-  ])
+  assert_eq(
+    must_execute(parse_filter("setpath([\"a\",2];1)"), must_parse("{}")),
+    [
+      Json::object({
+        "a": Json::array([Json::null(), Json::null(), Json::number(1.0)]),
+      }),
+    ],
+  )
+  assert_eq(
+    must_execute(parse_filter("setpath([0,\"a\"];1)"), must_parse("[]")),
+    [Json::array([Json::object({ "a": Json::number(1.0) })])],
+  )
 }
 
 ///|
@@ -215,76 +227,85 @@ test "execute setpath errors" {
     err.to_string() == "Cannot update field at array index of array" else {
     fail("expected setpath array index-in-array error")
   }
-  assert_eq(must_eval(parse_filter("setpath(.foo;empty)"), must_parse("1")), [])
-  assert_eq(must_eval(parse_filter("setpath(\"a\";empty)"), must_parse("1")), [])
+  assert_eq(
+    must_execute(parse_filter("setpath(.foo;empty)"), must_parse("1")),
+    [],
+  )
+  assert_eq(
+    must_execute(parse_filter("setpath(\"a\";empty)"), must_parse("1")),
+    [],
+  )
 }
 
 ///|
 test "execute delpaths compatibility" {
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("delpaths([[\"a\"]])"),
       must_parse("{\"a\":1,\"b\":2}"),
     ),
     [Json::object({ "b": Json::number(2.0) })],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("delpaths([[\"a\",\"b\"],[\"d\"]])"),
       must_parse("{\"a\":{\"b\":1,\"c\":2},\"d\":3}"),
     ),
     [Json::object({ "a": Json::object({ "c": Json::number(2.0) }) })],
   )
   assert_eq(
-    must_eval(parse_filter("delpaths([[1]])"), must_parse("[10,20,30]")),
+    must_execute(parse_filter("delpaths([[1]])"), must_parse("[10,20,30]")),
     [Json::array([Json::number(10.0), Json::number(30.0)])],
   )
   assert_eq(
-    must_eval(parse_filter("delpaths([[1],[0]])"), must_parse("[10,20,30]")),
+    must_execute(parse_filter("delpaths([[1],[0]])"), must_parse("[10,20,30]")),
     [Json::array([Json::number(30.0)])],
   )
   assert_eq(
-    must_eval(parse_filter("delpaths([[-1]])"), must_parse("[10,20,30]")),
+    must_execute(parse_filter("delpaths([[-1]])"), must_parse("[10,20,30]")),
     [Json::array([Json::number(10.0), Json::number(20.0)])],
   )
   assert_eq(
-    must_eval(parse_filter("delpaths([[9]])"), must_parse("[10,20,30]")),
+    must_execute(parse_filter("delpaths([[9]])"), must_parse("[10,20,30]")),
     [Json::array([Json::number(10.0), Json::number(20.0), Json::number(30.0)])],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("delpaths([[\"a\"],[0],[true]])"),
       must_parse("null"),
     ),
     [Json::null()],
   )
   assert_eq(
-    must_eval(parse_filter("delpaths([[]])"), must_parse("{\"a\":1}")),
+    must_execute(parse_filter("delpaths([[]])"), must_parse("{\"a\":1}")),
     [Json::null()],
   )
-  assert_eq(must_eval(parse_filter("delpaths([[]])"), must_parse("1")), [
+  assert_eq(must_execute(parse_filter("delpaths([[]])"), must_parse("1")), [
     Json::null(),
   ])
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("delpaths([[\"a\",\"x\"]])"),
       must_parse("{\"a\":{\"b\":1}}"),
     ),
     [Json::object({ "a": Json::object({ "b": Json::number(1.0) }) })],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("delpaths([[\"a\",\"x\"]])"),
       must_parse("{\"a\":null}"),
     ),
     [Json::object({ "a": Json::null() })],
   )
   assert_eq(
-    must_eval(parse_filter("delpaths(empty)"), must_parse("{\"a\":1}")),
+    must_execute(parse_filter("delpaths(empty)"), must_parse("{\"a\":1}")),
     [],
   )
   assert_eq(
-    must_eval(parse_filter("delpaths(([[\"a\"]],[]))"), must_parse("{\"a\":1}")),
+    must_execute(
+      parse_filter("delpaths(([[\"a\"]],[]))"),
+      must_parse("{\"a\":1}"),
+    ),
     [Json::object(Map::new()), Json::object({ "a": Json::number(1.0) })],
   )
 }
@@ -384,22 +405,22 @@ test "execute delpaths errors" {
 
 ///|
 test "execute path compatibility" {
-  assert_eq(must_eval(parse_filter("path(.foo[0,1])"), must_parse("null")), [
+  assert_eq(must_execute(parse_filter("path(.foo[0,1])"), must_parse("null")), [
     Json::array([Json::string("foo"), Json::number(0.0)]),
     Json::array([Json::string("foo"), Json::number(1.0)]),
   ])
   assert_eq(
-    must_eval(parse_filter("path(.[] | select(.>3))"), must_parse("[1,5,3]")),
+    must_execute(parse_filter("path(.[] | select(.>3))"), must_parse("[1,5,3]")),
     [Json::array([Json::number(1.0)])],
   )
-  assert_eq(must_eval(parse_filter("path(.)"), must_parse("42")), [
+  assert_eq(must_execute(parse_filter("path(.)"), must_parse("42")), [
     Json::array([]),
   ])
-  assert_eq(must_eval(parse_filter("path(.a[0].b)"), must_parse("null")), [
+  assert_eq(must_execute(parse_filter("path(.a[0].b)"), must_parse("null")), [
     Json::array([Json::string("a"), Json::number(0.0), Json::string("b")]),
   ])
   assert_eq(
-    must_eval(parse_filter("[path(..)]"), must_parse("{\"a\":[{\"b\":1}]}")),
+    must_execute(parse_filter("[path(..)]"), must_parse("{\"a\":[{\"b\":1}]}")),
     [
       Json::array([
         Json::array([]),
@@ -453,14 +474,14 @@ test "execute path invalid expression errors" {
 ///|
 test "execute del compatibility" {
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("del(.[2:4],.[0],.[-2:])"),
       must_parse("[0,1,2,3,4,5,6,7]"),
     ),
     [Json::array([Json::number(1.0), Json::number(4.0), Json::number(5.0)])],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter(
         "del(.), del(empty), del((.foo,.bar,.baz) | .[2,3,0]), del(.foo[0], .bar[0], .foo, .baz.bar[0].x)",
       ),
@@ -486,7 +507,7 @@ test "execute del compatibility" {
     ],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("del(.[1], .[-6], .[2], .[-3:9])"),
       must_parse("[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]"),
     ),
@@ -501,20 +522,20 @@ test "execute del compatibility" {
     ],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("del(.foo)"),
       must_parse("{\"foo\": 42, \"bar\": 9001, \"baz\": 42}"),
     ),
     [Json::object({ "bar": Json::number(9001.0), "baz": Json::number(42.0) })],
   )
   assert_eq(
-    must_eval(
+    must_execute(
       parse_filter("del(.[1, 2])"),
       must_parse("[\"foo\", \"bar\", \"baz\"]"),
     ),
     [Json::array([Json::string("foo")])],
   )
-  assert_eq(must_eval(parse_filter("del(empty)"), must_parse("1")), [
+  assert_eq(must_execute(parse_filter("del(empty)"), must_parse("1")), [
     Json::number(1.0),
   ])
 }
@@ -522,40 +543,46 @@ test "execute del compatibility" {
 ///|
 test "execute paths compatibility" {
   let obj = must_parse("{\"a\":1,\"b\":[2,3]}")
-  assert_eq(must_eval(parse_filter("paths"), obj), [
+  assert_eq(must_execute(parse_filter("paths"), obj), [
     Json::array([Json::string("a")]),
     Json::array([Json::string("b")]),
     Json::array([Json::string("b"), Json::number(0.0)]),
     Json::array([Json::string("b"), Json::number(1.0)]),
   ])
-  assert_eq(must_eval(parse_filter("paths(type==\"number\")"), obj), [
+  assert_eq(must_execute(parse_filter("paths(type==\"number\")"), obj), [
     Json::array([Json::string("a")]),
     Json::array([Json::string("b"), Json::number(0.0)]),
     Json::array([Json::string("b"), Json::number(1.0)]),
   ])
-  assert_eq(must_eval(parse_filter("paths(type==\"array\" or .==3)"), obj), [
+  assert_eq(must_execute(parse_filter("paths(type==\"array\" or .==3)"), obj), [
     Json::array([Json::string("b")]),
     Json::array([Json::string("b"), Json::number(1.0)]),
   ])
-  assert_eq(must_eval(parse_filter("paths"), must_parse("[1,[2],{\"a\":3}]")), [
-    Json::array([Json::number(0.0)]),
-    Json::array([Json::number(1.0)]),
-    Json::array([Json::number(1.0), Json::number(0.0)]),
-    Json::array([Json::number(2.0)]),
-    Json::array([Json::number(2.0), Json::string("a")]),
-  ])
-  assert_eq(must_eval(parse_filter("paths"), must_parse("1")), [])
-  assert_eq(must_eval(parse_filter("paths"), must_parse("null")), [])
-  assert_eq(must_eval(parse_filter("paths"), must_parse("{}")), [])
-  assert_eq(must_eval(parse_filter("paths"), must_parse("[]")), [])
-  assert_eq(must_eval(parse_filter("paths(.)"), must_parse("1")), [])
   assert_eq(
-    must_eval(parse_filter("paths(values)"), must_parse("{\"a\":null,\"b\":1}")),
+    must_execute(parse_filter("paths"), must_parse("[1,[2],{\"a\":3}]")),
+    [
+      Json::array([Json::number(0.0)]),
+      Json::array([Json::number(1.0)]),
+      Json::array([Json::number(1.0), Json::number(0.0)]),
+      Json::array([Json::number(2.0)]),
+      Json::array([Json::number(2.0), Json::string("a")]),
+    ],
+  )
+  assert_eq(must_execute(parse_filter("paths"), must_parse("1")), [])
+  assert_eq(must_execute(parse_filter("paths"), must_parse("null")), [])
+  assert_eq(must_execute(parse_filter("paths"), must_parse("{}")), [])
+  assert_eq(must_execute(parse_filter("paths"), must_parse("[]")), [])
+  assert_eq(must_execute(parse_filter("paths(.)"), must_parse("1")), [])
+  assert_eq(
+    must_execute(
+      parse_filter("paths(values)"),
+      must_parse("{\"a\":null,\"b\":1}"),
+    ),
     [Json::array([Json::string("b")])],
   )
-  assert_eq(must_eval(parse_filter("paths(empty)"), obj), [])
+  assert_eq(must_execute(parse_filter("paths(empty)"), obj), [])
   assert_eq(
-    must_eval(parse_filter("paths((true,true))"), must_parse("{\"a\":1}")),
+    must_execute(parse_filter("paths((true,true))"), must_parse("{\"a\":1}")),
     [Json::array([Json::string("a")])],
   )
 }
