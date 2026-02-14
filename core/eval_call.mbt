@@ -338,6 +338,22 @@ fn eval_call(
       } else {
         raise UnknownFunction("nth")
       }
+    "pow" =>
+      if args.length() != 2 {
+        raise UnknownFunction("pow")
+      } else {
+        let bases = eval_with_env(args[0], input, env)
+        let exponents = eval_with_env(args[1], input, env)
+        let out = []
+        for base_value in bases {
+          let base = call_require_number("pow", base_value)
+          for exponent_value in exponents {
+            let exponent = call_require_number("pow", exponent_value)
+            out.push(json_number_value(@math.pow(base, exponent)))
+          }
+        }
+        out
+      }
     "range" =>
       if args.length() == 0 || args.length() > 3 {
         raise UnknownFunction("range")

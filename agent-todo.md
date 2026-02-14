@@ -30,10 +30,12 @@ Updated: 2026-02-14
 - [x] upstream unknown-functionクラスタの第1段を実施する（127→87、`range`/`limit`/`skip`/`IN`/`nth(i; expr)`）
 - [x] upstream unknown-functionクラスタの第2段を実施する（87→77、`path`/`del`/再帰下降 `..`）
 - [x] upstream unknown-function上位クラスタを潰す（77→0、`have_decnum`/`abs`/`isempty`/`trimstr`/`trim`系を実装）
+- [x] upstream unknown-functionホットスポットを追加で縮小する（21→18、`pow`/`fabs`/`log2`/`round`）
 - [x] Objectキー順の扱いを安定化する方針を決めて実装する（辞書順正規化で安定化）
 - [ ] エラーメッセージ差分を縮小する（`expect_error` ケース追加は進捗あり、正規化改善を継続）
 - [x] differentialケースを拡張する（`reduce`/`foreach`/`try-catch`/演算の境界系を11件追加、smoke 169→180）
 - [x] differentialケースをさらに拡張する（upstream pass群から `def` 系3件を取り込み、smoke 180→185）
+- [x] differentialケースをさらに拡張する（`pow`/`fabs`/`log2` 3件を追加、smoke 185→188）
 
 ## P1: JS/TS公開に向けた仕上げ
 

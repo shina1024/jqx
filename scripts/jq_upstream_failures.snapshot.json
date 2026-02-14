@@ -616,22 +616,6 @@
     "jqx_out": "0"
   },
   {
-    "name": "upstream-jq-test-l2033",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true",
-    "jqx_out": "jqx: error: Unknown function: pow"
-  },
-  {
-    "name": "upstream-jq-test-l2037",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "",
-    "jqx_out": "jqx: error: Unknown function: pow"
-  },
-  {
     "name": "upstream-jq-test-l2055",
     "category": "unknown-function",
     "jq_status": "0",
@@ -726,14 +710,6 @@
     "jqx_status": "0",
     "jq_out": "[-0,0,10,1.1]",
     "jqx_out": "[0,0,10,1.1]"
-  },
-  {
-    "name": "upstream-jq-test-l2224",
-    "category": "unknown-function",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,0,10,1.1]",
-    "jqx_out": "jqx: error: Unknown function: fabs"
   },
   {
     "name": "upstream-jq-test-l2233",

@@ -2997,6 +2997,24 @@ test "eval numeric/meta builtins compatibility" {
   assert_eq(must_eval(parse_filter("[.[]|sqrt]"), must_parse("[4,9]")), [
     Json::array([Json::number(2.0), Json::number(3.0)]),
   ])
+  assert_eq(must_eval(parse_filter("pow(2;10)"), must_parse("null")), [
+    Json::number(1024.0),
+  ])
+  assert_eq(
+    must_eval(parse_filter("pow(2;8)|log2|round"), must_parse("null")),
+    [Json::number(8.0)],
+  )
+  assert_eq(
+    must_eval(parse_filter("map(fabs)"), must_parse("[-0,0,-10,-1.1]")),
+    [
+      Json::array([
+        Json::number(0.0),
+        Json::number(0.0),
+        Json::number(10.0),
+        Json::number(1.1),
+      ]),
+    ],
+  )
   assert_eq(
     must_eval(
       parse_filter("atan * 4 * 1000000|floor / 1000000"),
@@ -3037,10 +3055,19 @@ test "eval numeric/meta builtins errors" {
     err.to_string() == "boolean (true) only numbers have floor" else {
     fail("expected floor type error")
   }
+  guard (try? eval(parse_filter("pow(\"x\";2)"), must_parse("null")))
+    is Err(err) &&
+    err.to_string() == "pow() requires numeric arguments" else {
+    fail("expected pow type error")
+  }
+  guard (try? eval(parse_filter("log2"), must_parse("\"x\""))) is Err(err) &&
+    err.to_string() == "string (\"x\") only numbers have log2" else {
+    fail("expected log2 type error")
+  }
 }
 
 ///|
-test "eval abs/isempty errors" {
+test "eval abs/fabs/isempty errors" {
   guard (try? eval(parse_filter("abs"), must_parse("null"))) is Err(err) &&
     err.to_string() == "null (null) cannot be negated" else {
     fail("expected abs null type error")
@@ -3048,6 +3075,10 @@ test "eval abs/isempty errors" {
   guard (try? eval(parse_filter("abs"), must_parse("true"))) is Err(err) &&
     err.to_string() == "boolean (true) cannot be negated" else {
     fail("expected abs boolean type error")
+  }
+  guard (try? eval(parse_filter("fabs"), must_parse("\"x\""))) is Err(err) &&
+    err.to_string() == "string (\"x\") cannot be negated" else {
+    fail("expected fabs string type error")
   }
   guard (try? eval(parse_filter("isempty(.[0])"), must_parse("{\"a\":1}")))
     is Err(err) &&

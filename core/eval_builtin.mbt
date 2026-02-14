@@ -73,6 +73,17 @@ fn builtin_to_boolean(input : Json) -> Json raise EvalError {
 }
 
 ///|
+fn builtin_fabs_number(n : Double) -> Double {
+  if n == 0.0 {
+    0.0
+  } else if n < 0.0 {
+    -n
+  } else {
+    n
+  }
+}
+
+///|
 fn format_filter_input_string(input : Json) -> String {
   match input {
     String(s) => s
@@ -457,14 +468,14 @@ fn format_base64_decode(
 fn builtin_list() -> Array[Json] {
   let names = [
     "abs/0", "add/0", "all/0", "any/0", "ascii_downcase/0", "ascii_upcase/0", "atan/0",
-    "builtins/0", "cos/0", "endswith/1", "error/0", "error/1", "explode/0", "first/0",
-    "flatten/0", "floor/0", "from_entries/0", "fromjson/0", "group_by/1", "implode/0",
-    "infinite/0", "inside/1", "isfinite/0", "isinfinite/0", "isempty/0", "isnan/0",
-    "join/1", "keys/0", "last/0", "length/0", "ltrim/0", "map/1", "map_values/1",
-    "max/0", "min/0", "modulemeta/0", "nan/0", "paths/0", "reverse/0", "rtrim/0",
-    "sin/0", "sort/0", "split/1", "sqrt/0", "startswith/1", "to_entries/0", "toboolean/0",
-    "tojson/0", "tonumber/0", "tostring/0", "utf8bytelength/0", "transpose/0", "trim/0",
-    "type/0", "unique/0", "values/0",
+    "builtins/0", "cos/0", "endswith/1", "error/0", "error/1", "explode/0", "fabs/0",
+    "first/0", "flatten/0", "floor/0", "from_entries/0", "fromjson/0", "group_by/1",
+    "implode/0", "infinite/0", "inside/1", "isfinite/0", "isinfinite/0", "isempty/0",
+    "isnan/0", "join/1", "keys/0", "last/0", "length/0", "log2/0", "ltrim/0", "map/1",
+    "map_values/1", "max/0", "min/0", "modulemeta/0", "nan/0", "paths/0", "pow/2",
+    "reverse/0", "round/0", "rtrim/0", "sin/0", "sort/0", "split/1", "sqrt/0", "startswith/1",
+    "to_entries/0", "toboolean/0", "tojson/0", "tonumber/0", "tostring/0", "utf8bytelength/0",
+    "transpose/0", "trim/0", "type/0", "unique/0", "values/0",
   ]
   let out = []
   for name in names {
@@ -520,6 +531,22 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
             json_type_with_value(input) + " only numbers have sqrt",
           )
       }
+    "log2" =>
+      match input {
+        Number(n, _) => [json_number_value(@math.log2(n))]
+        _ =>
+          raise TypeError(
+            json_type_with_value(input) + " only numbers have log2",
+          )
+      }
+    "round" =>
+      match input {
+        Number(n, _) => [json_number_value(@math.round(n))]
+        _ =>
+          raise TypeError(
+            json_type_with_value(input) + " only numbers have round",
+          )
+      }
     "sin" =>
       match input {
         Number(n, _) => [json_number_value(@math.sin(n))]
@@ -561,6 +588,11 @@ fn eval_builtin(name : String, input : Json) -> Array[Json] raise EvalError {
           } else {
             [Json::number(n)]
           }
+        _ => raise TypeError(json_type_with_value(input) + " cannot be negated")
+      }
+    "fabs" =>
+      match input {
+        Number(n, _) => [json_number_value(builtin_fabs_number(n))]
         _ => raise TypeError(json_type_with_value(input) + " cannot be negated")
       }
     "trim" =>
