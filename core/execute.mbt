@@ -115,12 +115,6 @@ pub fn execute(filter : Filter, input : Json) -> Array[Json] raise EvalError {
 }
 
 ///|
-/// Legacy alias. Prefer `execute` for jq-aligned naming.
-pub fn eval(filter : Filter, input : Json) -> Array[Json] raise EvalError {
-  execute(filter, input)
-}
-
-///|
 fn execute_with_env(
   filter : Filter,
   input : Json,

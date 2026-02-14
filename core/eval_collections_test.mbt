@@ -47,28 +47,28 @@ test "eval contains jq semantics" {
 ///|
 test "eval contains/startswith/endswith type errors" {
   let array_input = must_parse("[1,2,3]")
-  guard (try? eval(parse_filter("contains(2)"), array_input)) is Err(err) &&
+  guard (try? execute(parse_filter("contains(2)"), array_input)) is Err(err) &&
     err.to_string() ==
     "array ([1,2,3]) and number (2) cannot have their containment checked" else {
     fail("expected jq-compatible contains type error for array/number")
   }
-  guard (try? eval(parse_filter("contains(false)"), must_parse("true")))
+  guard (try? execute(parse_filter("contains(false)"), must_parse("true")))
     is Err(err) &&
     err.to_string() ==
     "boolean (true) and boolean (false) cannot have their containment checked" else {
     fail("expected jq-compatible contains type error for boolean mismatch")
   }
   let s = must_parse("\"hello\"")
-  guard (try? eval(parse_filter("startswith(1)"), s)) is Err(err) &&
+  guard (try? execute(parse_filter("startswith(1)"), s)) is Err(err) &&
     err.to_string() == "startswith() requires string inputs" else {
     fail("expected startswith type error")
   }
-  guard (try? eval(parse_filter("endswith(1)"), s)) is Err(err) &&
+  guard (try? execute(parse_filter("endswith(1)"), s)) is Err(err) &&
     err.to_string() == "endswith() requires string inputs" else {
     fail("expected endswith type error")
   }
   let n = must_parse("1")
-  guard (try? eval(parse_filter("startswith(\"1\")"), n)) is Err(err) &&
+  guard (try? execute(parse_filter("startswith(\"1\")"), n)) is Err(err) &&
     err.to_string() == "startswith() requires string inputs" else {
     fail("expected startswith type error for non-string input")
   }
@@ -115,18 +115,18 @@ test "eval inside jq semantics" {
 
 ///|
 test "eval inside type errors" {
-  guard (try? eval(parse_filter("inside(false)"), must_parse("true")))
+  guard (try? execute(parse_filter("inside(false)"), must_parse("true")))
     is Err(err) &&
     err.to_string() ==
     "boolean (false) and boolean (true) cannot have their containment checked" else {
     fail("expected inside boolean mismatch error")
   }
-  guard (try? eval(parse_filter("inside(1)"), must_parse("[1]"))) is Err(err) &&
+  guard (try? execute(parse_filter("inside(1)"), must_parse("[1]"))) is Err(err) &&
     err.to_string() ==
     "number (1) and array ([1]) cannot have their containment checked" else {
     fail("expected inside number/array mismatch error")
   }
-  guard (try? eval(parse_filter("inside([1])"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("inside([1])"), must_parse("1"))) is Err(err) &&
     err.to_string() ==
     "array ([1]) and number (1) cannot have their containment checked" else {
     fail("expected inside array/number mismatch error")
@@ -163,17 +163,17 @@ test "eval has jq semantics" {
 ///|
 test "eval has type errors" {
   let obj = must_parse("{\"a\":1}")
-  guard (try? eval(parse_filter("has(0)"), obj)) is Err(err) &&
+  guard (try? execute(parse_filter("has(0)"), obj)) is Err(err) &&
     err.to_string() == "Cannot check whether object has a number key" else {
     fail("expected object has(number) type error")
   }
   let arr = must_parse("[1,2]")
-  guard (try? eval(parse_filter("has(\"0\")"), arr)) is Err(err) &&
+  guard (try? execute(parse_filter("has(\"0\")"), arr)) is Err(err) &&
     err.to_string() == "Cannot check whether array has a string key" else {
     fail("expected array has(string) type error")
   }
   let s = must_parse("\"abc\"")
-  guard (try? eval(parse_filter("has(0)"), s)) is Err(err) &&
+  guard (try? execute(parse_filter("has(0)"), s)) is Err(err) &&
     err.to_string() == "Cannot check whether string has a number key" else {
     fail("expected string has(number) type error")
   }
@@ -203,17 +203,17 @@ test "eval in jq semantics" {
 
 ///|
 test "eval in type errors" {
-  guard (try? eval(parse_filter("\"a\" | in(1)"), must_parse("null")))
+  guard (try? execute(parse_filter("\"a\" | in(1)"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "Cannot check whether number has a string key" else {
     fail("expected in(number, string) type error")
   }
-  guard (try? eval(parse_filter("1 | in({\"a\":1})"), must_parse("null")))
+  guard (try? execute(parse_filter("1 | in({\"a\":1})"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "Cannot check whether object has a number key" else {
     fail("expected in(object, number) type error")
   }
-  guard (try? eval(parse_filter("\"a\" | in([1,2])"), must_parse("null")))
+  guard (try? execute(parse_filter("\"a\" | in([1,2])"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "Cannot check whether array has a string key" else {
     fail("expected in(array, string) type error")
@@ -224,7 +224,7 @@ test "eval in type errors" {
 test "eval iter non-array errors" {
   let j = must_parse("1")
   let f = parse_filter(".[]")
-  guard (try? eval(f, j)) is Err(_) else {
+  guard (try? execute(f, j)) is Err(_) else {
     fail("expected error for iter over non-array/object")
   }
 }
@@ -261,7 +261,7 @@ test "eval slice compatibility" {
   assert_eq(must_eval(parse_filter(".[1:2]"), n), [Json::null()])
   assert_eq(must_eval(parse_filter(".[1:2]?"), n), [Json::null()])
   let num = must_parse("1")
-  guard (try? eval(parse_filter(".[1:2]"), num)) is Err(err) &&
+  guard (try? execute(parse_filter(".[1:2]"), num)) is Err(err) &&
     err.to_string() == "Cannot index number with object" else {
     fail("expected type error for number slice")
   }
@@ -297,7 +297,10 @@ test "eval dynamic slice compatibility" {
     must_eval(parse_filter("[range(3)] | .[1:nan]"), must_parse("null")),
     [Json::array([Json::number(1.0), Json::number(2.0)])],
   )
-  guard (try? eval(parse_filter("[range(3)] | .[\"x\":1]"), must_parse("null")))
+  guard (try? execute(
+      parse_filter("[range(3)] | .[\"x\":1]"),
+      must_parse("null"),
+    ))
     is Err(err) &&
     err.to_string() == "Array/string slice indices must be integers" else {
     fail("expected dynamic slice endpoint type error")

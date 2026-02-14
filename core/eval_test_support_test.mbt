@@ -7,7 +7,7 @@ pub fn must_parse(input : String) -> Json raise Failure {
 
 ///|
 pub fn must_eval(f : Filter, j : Json) -> Array[Json] raise Failure {
-  eval(f, j) catch {
+  execute(f, j) catch {
     err => fail("eval failed: " + err.to_string())
   }
 }

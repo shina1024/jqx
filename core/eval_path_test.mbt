@@ -32,32 +32,32 @@ test "eval getpath compatibility" {
 
 ///|
 test "eval getpath errors" {
-  guard (try? eval(parse_filter("getpath(\"a\")"), must_parse("{\"a\":1}")))
+  guard (try? execute(parse_filter("getpath(\"a\")"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Path must be specified as an array" else {
     fail("expected getpath path-array type error")
   }
-  guard (try? eval(parse_filter("getpath([\"a\"])"), must_parse("1")))
+  guard (try? execute(parse_filter("getpath([\"a\"])"), must_parse("1")))
     is Err(err) &&
     err.to_string() == "Cannot index number with string \"a\"" else {
     fail("expected getpath number string-index error")
   }
-  guard (try? eval(parse_filter("getpath([0])"), must_parse("{\"a\":1}")))
+  guard (try? execute(parse_filter("getpath([0])"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Cannot index object with number" else {
     fail("expected getpath object number-index error")
   }
-  guard (try? eval(parse_filter("getpath([\"a\"])"), must_parse("[1,2]")))
+  guard (try? execute(parse_filter("getpath([\"a\"])"), must_parse("[1,2]")))
     is Err(err) &&
     err.to_string() == "Cannot index array with string \"a\"" else {
     fail("expected getpath array string-index error")
   }
-  guard (try? eval(parse_filter("getpath([true])"), must_parse("null")))
+  guard (try? execute(parse_filter("getpath([true])"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "Cannot index null with boolean" else {
     fail("expected getpath null boolean-index error")
   }
-  guard (try? eval(parse_filter("getpath([[]])"), must_parse("null")))
+  guard (try? execute(parse_filter("getpath([[]])"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "Cannot index null with array" else {
     fail("expected getpath null array-index error")
@@ -131,17 +131,17 @@ test "eval setpath compatibility" {
 
 ///|
 test "eval setpath errors" {
-  guard (try? eval(parse_filter("setpath(\"a\";2)"), must_parse("{\"a\":1}")))
+  guard (try? execute(parse_filter("setpath(\"a\";2)"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Path must be specified as an array" else {
     fail("expected setpath path-array error")
   }
-  guard (try? eval(parse_filter("setpath([{}];2)"), must_parse("{\"a\":1}")))
+  guard (try? execute(parse_filter("setpath([{}];2)"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Cannot index object with object" else {
     fail("expected setpath object-key type error")
   }
-  guard (try? eval(
+  guard (try? execute(
       parse_filter("setpath([[\"a\"]];2)"),
       must_parse("{\"a\":1}"),
     ))
@@ -149,41 +149,45 @@ test "eval setpath errors" {
     err.to_string() == "Cannot index object with array" else {
     fail("expected setpath array-key type error")
   }
-  guard (try? eval(parse_filter("setpath([\"a\"];2)"), must_parse("[1,2]")))
+  guard (try? execute(parse_filter("setpath([\"a\"];2)"), must_parse("[1,2]")))
     is Err(err) &&
     err.to_string() == "Cannot index array with string \"a\"" else {
     fail("expected setpath array string-index error")
   }
-  guard (try? eval(parse_filter("setpath([0];2)"), must_parse("{\"a\":1}")))
+  guard (try? execute(parse_filter("setpath([0];2)"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Cannot index object with number" else {
     fail("expected setpath object number-index error")
   }
-  guard (try? eval(parse_filter("setpath([\"a\"];2)"), must_parse("1")))
+  guard (try? execute(parse_filter("setpath([\"a\"];2)"), must_parse("1")))
     is Err(err) &&
     err.to_string() == "Cannot index number with string \"a\"" else {
     fail("expected setpath number string-index error")
   }
-  guard (try? eval(parse_filter("setpath([0];2)"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("setpath([0];2)"), must_parse("1")))
+    is Err(err) &&
     err.to_string() == "Cannot index number with number" else {
     fail("expected setpath number index error")
   }
-  guard (try? eval(parse_filter("setpath([true];2)"), must_parse("null")))
+  guard (try? execute(parse_filter("setpath([true];2)"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "Cannot index null with boolean" else {
     fail("expected setpath null boolean-index error")
   }
-  guard (try? eval(parse_filter("setpath([[]];2)"), must_parse("null")))
+  guard (try? execute(parse_filter("setpath([[]];2)"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "Cannot index null with array" else {
     fail("expected setpath null array-index error")
   }
-  guard (try? eval(parse_filter("setpath([(1e308 * 10)];2)"), must_parse("[]")))
+  guard (try? execute(
+      parse_filter("setpath([(1e308 * 10)];2)"),
+      must_parse("[]"),
+    ))
     is Err(err) &&
     err.to_string() == "Array index too large" else {
     fail("expected setpath array index too large error")
   }
-  guard (try? eval(
+  guard (try? execute(
       parse_filter("setpath([((1e308 * 10) - (1e308 * 10))];2)"),
       must_parse("[]"),
     ))
@@ -191,22 +195,22 @@ test "eval setpath errors" {
     err.to_string() == "Cannot set array element at NaN index" else {
     fail("expected setpath NaN index error")
   }
-  guard (try? eval(parse_filter("setpath([-1];2)"), must_parse("[]")))
+  guard (try? execute(parse_filter("setpath([-1];2)"), must_parse("[]")))
     is Err(err) &&
     err.to_string() == "Out of bounds negative array index" else {
     fail("expected setpath negative index error")
   }
-  guard (try? eval(parse_filter("setpath([\"a\",-1];1)"), must_parse("{}")))
+  guard (try? execute(parse_filter("setpath([\"a\",-1];1)"), must_parse("{}")))
     is Err(err) &&
     err.to_string() == "Out of bounds negative array index" else {
     fail("expected setpath nested negative index error")
   }
-  guard (try? eval(parse_filter("setpath([{}];2)"), must_parse("[1,2]")))
+  guard (try? execute(parse_filter("setpath([{}];2)"), must_parse("[1,2]")))
     is Err(err) &&
     err.to_string() == "Array/string slice indices must be integers" else {
     fail("expected setpath object index-in-array error")
   }
-  guard (try? eval(parse_filter("setpath([[]];2)"), must_parse("[1,2]")))
+  guard (try? execute(parse_filter("setpath([[]];2)"), must_parse("[1,2]")))
     is Err(err) &&
     err.to_string() == "Cannot update field at array index of array" else {
     fail("expected setpath array index-in-array error")
@@ -287,82 +291,91 @@ test "eval delpaths compatibility" {
 
 ///|
 test "eval delpaths errors" {
-  guard (try? eval(parse_filter("delpaths(\"a\")"), must_parse("{\"a\":1}")))
+  guard (try? execute(parse_filter("delpaths(\"a\")"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Paths must be specified as an array" else {
     fail("expected delpaths paths-array error")
   }
-  guard (try? eval(parse_filter("delpaths([\"a\"])"), must_parse("{\"a\":1}")))
+  guard (try? execute(
+      parse_filter("delpaths([\"a\"])"),
+      must_parse("{\"a\":1}"),
+    ))
     is Err(err) &&
     err.to_string() == "Path must be specified as array, not string" else {
     fail("expected delpaths path type error")
   }
-  guard (try? eval(parse_filter("delpaths([1])"), must_parse("{\"a\":1}")))
+  guard (try? execute(parse_filter("delpaths([1])"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Path must be specified as array, not number" else {
     fail("expected delpaths numeric path type error")
   }
-  guard (try? eval(parse_filter("delpaths([[\"a\"]])"), must_parse("1")))
+  guard (try? execute(parse_filter("delpaths([[\"a\"]])"), must_parse("1")))
     is Err(err) &&
     err.to_string() == "Cannot delete fields from number" else {
     fail("expected delpaths scalar delete error")
   }
-  guard (try? eval(parse_filter("delpaths([[0]])"), must_parse("\"x\"")))
+  guard (try? execute(parse_filter("delpaths([[0]])"), must_parse("\"x\"")))
     is Err(err) &&
     err.to_string() == "Cannot delete fields from string" else {
     fail("expected delpaths string delete error")
   }
-  guard (try? eval(parse_filter("delpaths([[0]])"), must_parse("true")))
+  guard (try? execute(parse_filter("delpaths([[0]])"), must_parse("true")))
     is Err(err) &&
     err.to_string() == "Cannot delete fields from boolean" else {
     fail("expected delpaths boolean delete error")
   }
-  guard (try? eval(parse_filter("delpaths([[0]])"), must_parse("{\"a\":1}")))
+  guard (try? execute(parse_filter("delpaths([[0]])"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Cannot delete number field of object" else {
     fail("expected delpaths object number-field error")
   }
-  guard (try? eval(parse_filter("delpaths([[true]])"), must_parse("{\"a\":1}")))
+  guard (try? execute(
+      parse_filter("delpaths([[true]])"),
+      must_parse("{\"a\":1}"),
+    ))
     is Err(err) &&
     err.to_string() == "Cannot delete boolean field of object" else {
     fail("expected delpaths object boolean-field error")
   }
-  guard (try? eval(parse_filter("delpaths([[{}]])"), must_parse("{\"a\":1}")))
+  guard (try? execute(parse_filter("delpaths([[{}]])"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Cannot delete object field of object" else {
     fail("expected delpaths object object-field error")
   }
-  guard (try? eval(parse_filter("delpaths([[[]]])"), must_parse("{\"a\":1}")))
+  guard (try? execute(parse_filter("delpaths([[[]]])"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Cannot delete array field of object" else {
     fail("expected delpaths object array-field error")
   }
-  guard (try? eval(parse_filter("delpaths([[null]])"), must_parse("{\"a\":1}")))
+  guard (try? execute(
+      parse_filter("delpaths([[null]])"),
+      must_parse("{\"a\":1}"),
+    ))
     is Err(err) &&
     err.to_string() == "Cannot delete null field of object" else {
     fail("expected delpaths object null-field error")
   }
-  guard (try? eval(parse_filter("delpaths([[\"a\"]])"), must_parse("[1,2]")))
+  guard (try? execute(parse_filter("delpaths([[\"a\"]])"), must_parse("[1,2]")))
     is Err(err) &&
     err.to_string() == "Cannot delete string element of array" else {
     fail("expected delpaths array string-element error")
   }
-  guard (try? eval(parse_filter("delpaths([[true]])"), must_parse("[1,2]")))
+  guard (try? execute(parse_filter("delpaths([[true]])"), must_parse("[1,2]")))
     is Err(err) &&
     err.to_string() == "Cannot delete boolean element of array" else {
     fail("expected delpaths array boolean-element error")
   }
-  guard (try? eval(parse_filter("delpaths([[null]])"), must_parse("[1,2]")))
+  guard (try? execute(parse_filter("delpaths([[null]])"), must_parse("[1,2]")))
     is Err(err) &&
     err.to_string() == "Cannot delete null element of array" else {
     fail("expected delpaths array null-element error")
   }
-  guard (try? eval(parse_filter("delpaths([[[]]])"), must_parse("[1,2]")))
+  guard (try? execute(parse_filter("delpaths([[[]]])"), must_parse("[1,2]")))
     is Err(err) &&
     err.to_string() == "Cannot delete array element of array" else {
     fail("expected delpaths array array-element error")
   }
-  guard (try? eval(parse_filter("delpaths([[{}]])"), must_parse("[1,2]")))
+  guard (try? execute(parse_filter("delpaths([[{}]])"), must_parse("[1,2]")))
     is Err(err) &&
     err.to_string() == "Array/string slice indices must be integers" else {
     fail("expected delpaths array object-index error")
@@ -400,7 +413,7 @@ test "eval path compatibility" {
 
 ///|
 test "eval path invalid expression errors" {
-  guard (try? eval(
+  guard (try? execute(
       parse_filter("path(.a | map(select(.b == 0)))"),
       must_parse("{\"a\":[{\"b\":0}]}"),
     ))
@@ -408,7 +421,7 @@ test "eval path invalid expression errors" {
     err.to_string() == "Invalid path expression with result [{\"b\":0}]" else {
     fail("expected invalid path expression result error")
   }
-  guard (try? eval(
+  guard (try? execute(
       parse_filter("path(.a | map(select(.b == 0)) | .[0])"),
       must_parse("{\"a\":[{\"b\":0}]}"),
     ))
@@ -417,7 +430,7 @@ test "eval path invalid expression errors" {
     "Invalid path expression near attempt to access element 0 of [{\"b\":0}]" else {
     fail("expected invalid path expression index access error")
   }
-  guard (try? eval(
+  guard (try? execute(
       parse_filter("path(.a | map(select(.b == 0)) | .c)"),
       must_parse("{\"a\":[{\"b\":0}]}"),
     ))
@@ -426,7 +439,7 @@ test "eval path invalid expression errors" {
     "Invalid path expression near attempt to access element \"c\" of [{\"b\":0}]" else {
     fail("expected invalid path expression field access error")
   }
-  guard (try? eval(
+  guard (try? execute(
       parse_filter("path(.a | map(select(.b == 0)) | .[])"),
       must_parse("{\"a\":[{\"b\":0}]}"),
     ))
@@ -549,12 +562,12 @@ test "eval paths compatibility" {
 
 ///|
 test "eval paths errors" {
-  guard (try? eval(parse_filter("paths(.foo)"), must_parse("{\"a\":1}")))
+  guard (try? execute(parse_filter("paths(.foo)"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Cannot index number with string \"foo\"" else {
     fail("expected paths predicate string-index error")
   }
-  guard (try? eval(parse_filter("paths(.[0])"), must_parse("{\"a\":1}")))
+  guard (try? execute(parse_filter("paths(.[0])"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Cannot index number with number" else {
     fail("expected paths predicate number-index error")

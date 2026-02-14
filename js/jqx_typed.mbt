@@ -123,7 +123,7 @@ pub fn try_catch(
 }
 
 ///|
-pub fn evalQuery(
+pub fn executeQuery(
   query : Query[@core.Json, @core.Json],
   input : @core.Json,
 ) -> Result[Array[@core.Json], String] {

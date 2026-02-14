@@ -50,7 +50,7 @@ jqx でも同じ思想を取り、言語仕様の差を保ったまま次の対�
 未採番期間のため、公開API名も jq 寄せで進める。
 
 - parser API: `compile` を正とし、`parse_filter` は互換alias扱い
-- evaluator API: `execute` を正とし、`eval` は互換alias扱い
+- evaluator API: `execute` を正とする
 - JS公開APIも同方針（`compile`/`execute` を主、旧名は alias）
 - internal builtin dispatch: `builtin_call_*` 系へ統一する
 

@@ -28,9 +28,9 @@ test "typed map query" {
 }
 
 ///|
-test "typed evalQuery" {
+test "typed executeQuery" {
   let input = parseJson("{\"foo\":7}")
-  let out = evalQuery(field("foo"), input)
+  let out = executeQuery(field("foo"), input)
   guard out is Ok(values) else { fail("expected Ok") }
   assert_eq(values.length(), 1)
   assert_eq(values[0].to_json_string(), "7")

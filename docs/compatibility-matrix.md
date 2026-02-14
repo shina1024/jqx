@@ -66,7 +66,7 @@ Implemented builtins/functions in `core/execute.mbt` + `core/builtin*.mbt` inclu
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Dynamic API | supported | compatibility lane: `run`/`runCompat`/`evalToJsonStrings` (JSON text); convenience lane: `runValues`/`safeRunValues` (core `Json` values) |
+| Dynamic API | supported | compatibility lane: `run`/`runCompat`/`executeToJsonStrings` (JSON text); convenience lane: `runValues`/`safeRunValues` (core `Json` values) |
 | Typed DSL | partial | `Query[I, O]` scaffold + practical combinators (`identity`, `field`, `index`, `iter`, `pipe`, `comma`, `literal`, `call`, `select`, `eq`, `add`, `fallback`, `try_catch`, `map`) with `evalQuery` / `runQuery` |
 | jq string partial inference layer | supported | `runWithInferred` + `InferJqOutput` are available in `ts/zod-adapter`, `ts/yup-adapter`, `ts/valibot-adapter`; unsupported jq syntax falls back to `unknown` (default) or `Json` |
 | TS compile-time inference tests | supported | `expectTypeOf`-based compile-time assertions are present in `ts/zod-adapter`, `ts/yup-adapter`, and `ts/valibot-adapter` |

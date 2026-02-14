@@ -91,27 +91,25 @@ Functions:
 - `execute(filter, json)` -> Json[] (JS-friendly)
 - `tryExecute(filter, json)` -> `Result<Json[], string>`
 - `safeExecute(filter, json)` -> `Result<Json[], string>` (JS-friendly)
-- `eval(filter, json)` -> Json[] (compat alias)
-- `evalToJsonStrings(filter, jsonText)` -> `Result<string[], string>`
+- `executeToJsonStrings(filter, jsonText)` -> `Result<string[], string>`
   (JSON strings / error message)
 - `tryParseJson(text)` -> `Result<Json, string>`
 - `tryCompile(text)` -> `Result<Filter, string>`
 - `tryParseFilter(text)` -> `Result<Filter, string>` (compat alias)
-- `tryEval(filter, json)` -> `Result<Json[], string>`
 - `run(filter, jsonText)` -> `Result<string[], string>` (compatibility lane alias)
 - `runCompat(filter, jsonText)` -> `Result<string[], string>` (compatibility lane)
 - `runValues(filter, jsonText)` -> `Result<Json[], string>` (convenience lane)
 - `safeRunValues(filter, jsonText)` -> `Result<Json[], string>` (convenience lane alias)
 
 Lanes:
-- Compatibility lane (`run`/`runCompat`/`evalToJsonStrings`) keeps JSON text output to preserve numeric representation.
+- Compatibility lane (`run`/`runCompat`/`executeToJsonStrings`) keeps JSON text output to preserve numeric representation.
 - Convenience lane (`runValues`/`safeRunValues`) returns `Json` values directly (`Number` uses Double semantics).
 
 Typed lane (scaffold):
 - `Query[I, O]`
 - `identity`, `field`, `index`, `pipe`, `map`
 - `iter`, `comma`, `literal`, `call`, `select`, `eq`, `add`, `fallback`, `try_catch`
-- `evalQuery(query, json)` -> `Result<Json[], string>`
+- `executeQuery(query, json)` -> `Result<Json[], string>`
 - `runQuery(query, jsonText)` -> `Result<string[], string>`
 - Current combinators focus on `Json -> Json`; `I/O` parameters are reserved for further typed expansion.
 

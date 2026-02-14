@@ -4,8 +4,6 @@ package "shina1024/jqx/core"
 // Values
 pub fn compile(StringView) -> Filter raise FilterError
 
-pub fn eval(Filter, Json) -> Array[Json] raise EvalError
-
 pub fn execute(Filter, Json) -> Array[Json] raise EvalError
 
 pub fn parse(StringView, max_nesting_depth? : Int) -> Json raise ParseError

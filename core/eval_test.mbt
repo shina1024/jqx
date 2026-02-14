@@ -23,19 +23,19 @@ test "eval field/index type errors and optional suppression" {
   let array_json = must_parse("[1,2]")
   let object_json = must_parse("{\"a\":1}")
   let null_json = must_parse("null")
-  guard (try? eval(parse_filter(".foo"), number_json)) is Err(err) &&
+  guard (try? execute(parse_filter(".foo"), number_json)) is Err(err) &&
     err.to_string() == "Cannot index number with string \"foo\"" else {
     fail("expected type error for number .foo")
   }
-  guard (try? eval(parse_filter(".foo"), array_json)) is Err(err) &&
+  guard (try? execute(parse_filter(".foo"), array_json)) is Err(err) &&
     err.to_string() == "Cannot index array with string \"foo\"" else {
     fail("expected type error for array .foo")
   }
-  guard (try? eval(parse_filter(".[0]"), number_json)) is Err(err) &&
+  guard (try? execute(parse_filter(".[0]"), number_json)) is Err(err) &&
     err.to_string() == "Cannot index number with number" else {
     fail("expected type error for number .[0]")
   }
-  guard (try? eval(parse_filter(".[0]"), object_json)) is Err(err) &&
+  guard (try? execute(parse_filter(".[0]"), object_json)) is Err(err) &&
     err.to_string() == "Cannot index object with number" else {
     fail("expected type error for object .[0]")
   }
@@ -76,11 +76,11 @@ test "eval chained index without extra dot" {
 ///|
 test "eval string index jq compatibility" {
   let s = must_parse("\"abc\"")
-  guard (try? eval(parse_filter(".[0]"), s)) is Err(err) &&
+  guard (try? execute(parse_filter(".[0]"), s)) is Err(err) &&
     err.to_string() == "Cannot index string with number" else {
     fail("expected string index type error")
   }
-  guard (try? eval(parse_filter(".[-1]"), s)) is Err(err) &&
+  guard (try? execute(parse_filter(".[-1]"), s)) is Err(err) &&
     err.to_string() == "Cannot index string with number" else {
     fail("expected string negative index type error")
   }
@@ -292,20 +292,21 @@ test "eval first/last/nth compatibility" {
 
 ///|
 test "eval first/last/nth errors" {
-  guard (try? eval(parse_filter("first"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("first"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot index number with number" else {
     fail("expected first number index error")
   }
-  guard (try? eval(parse_filter("last"), must_parse("{}"))) is Err(err) &&
+  guard (try? execute(parse_filter("last"), must_parse("{}"))) is Err(err) &&
     err.to_string() == "Cannot index object with number" else {
     fail("expected last object index error")
   }
-  guard (try? eval(parse_filter("nth(\"a\")"), must_parse("[1,2,3]")))
+  guard (try? execute(parse_filter("nth(\"a\")"), must_parse("[1,2,3]")))
     is Err(err) &&
     err.to_string() == "Cannot index array with string \"a\"" else {
     fail("expected nth array string-key error")
   }
-  guard (try? eval(parse_filter("nth(true)"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(parse_filter("nth(true)"), must_parse("null")))
+    is Err(err) &&
     err.to_string() == "Cannot index null with boolean" else {
     fail("expected nth null boolean-key error")
   }
@@ -359,30 +360,30 @@ test "eval flatten compatibility" {
 
 ///|
 test "eval flatten errors" {
-  guard (try? eval(parse_filter("flatten"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("flatten"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected flatten non-array iterate error")
   }
-  guard (try? eval(parse_filter("flatten"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(parse_filter("flatten"), must_parse("null"))) is Err(err) &&
     err.to_string() == "Cannot iterate over null (null)" else {
     fail("expected flatten null iterate error")
   }
-  guard (try? eval(parse_filter("flatten(-1)"), must_parse("[1,[2]]")))
+  guard (try? execute(parse_filter("flatten(-1)"), must_parse("[1,[2]]")))
     is Err(err) &&
     err.to_string() == "flatten depth must not be negative" else {
     fail("expected flatten negative depth error")
   }
-  guard (try? eval(parse_filter("flatten(null)"), must_parse("[1,[2]]")))
+  guard (try? execute(parse_filter("flatten(null)"), must_parse("[1,[2]]")))
     is Err(err) &&
     err.to_string() == "flatten depth must not be negative" else {
     fail("expected flatten null depth error")
   }
-  guard (try? eval(parse_filter("flatten(true)"), must_parse("[1,[2]]")))
+  guard (try? execute(parse_filter("flatten(true)"), must_parse("[1,[2]]")))
     is Err(err) &&
     err.to_string() == "flatten depth must not be negative" else {
     fail("expected flatten bool depth error")
   }
-  guard (try? eval(parse_filter("flatten(\"x\")"), must_parse("[1,[2]]")))
+  guard (try? execute(parse_filter("flatten(\"x\")"), must_parse("[1,[2]]")))
     is Err(err) &&
     err.to_string() == "string (\"x\") and number (1) cannot be subtracted" else {
     fail("expected flatten string depth error")
@@ -431,29 +432,31 @@ test "eval transpose compatibility" {
 
 ///|
 test "eval transpose errors" {
-  guard (try? eval(parse_filter("transpose"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("transpose"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected transpose non-array iterate error")
   }
-  guard (try? eval(parse_filter("transpose"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(parse_filter("transpose"), must_parse("null")))
+    is Err(err) &&
     err.to_string() == "Cannot iterate over null (null)" else {
     fail("expected transpose null iterate error")
   }
-  guard (try? eval(parse_filter("transpose"), must_parse("[1]"))) is Err(err) &&
+  guard (try? execute(parse_filter("transpose"), must_parse("[1]"))) is Err(err) &&
     err.to_string() == "Cannot index number with number" else {
     fail("expected transpose number index error")
   }
-  guard (try? eval(parse_filter("transpose"), must_parse("[[1],{}]")))
+  guard (try? execute(parse_filter("transpose"), must_parse("[[1],{}]")))
     is Err(err) &&
     err.to_string() == "Cannot index object with number" else {
     fail("expected transpose object index error")
   }
-  guard (try? eval(parse_filter("transpose"), must_parse("[[1],\"x\"]")))
+  guard (try? execute(parse_filter("transpose"), must_parse("[[1],\"x\"]")))
     is Err(err) &&
     err.to_string() == "Cannot index string with number" else {
     fail("expected transpose string index error")
   }
-  guard (try? eval(parse_filter("transpose"), must_parse("[true]"))) is Err(err) &&
+  guard (try? execute(parse_filter("transpose"), must_parse("[true]")))
+    is Err(err) &&
     err.to_string() == "boolean (true) has no length" else {
     fail("expected transpose boolean length error")
   }
@@ -502,24 +505,29 @@ test "eval to_entries/from_entries/with_entries compatibility" {
 
 ///|
 test "eval to_entries/from_entries/with_entries errors" {
-  guard (try? eval(parse_filter("to_entries"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("to_entries"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) has no keys" else {
     fail("expected to_entries no-keys error")
   }
-  guard (try? eval(parse_filter("from_entries"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("from_entries"), must_parse("1")))
+    is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected from_entries iterate error")
   }
-  guard (try? eval(parse_filter("from_entries"), must_parse("[1]"))) is Err(err) &&
+  guard (try? execute(parse_filter("from_entries"), must_parse("[1]")))
+    is Err(err) &&
     err.to_string() == "Cannot index number with string \"key\"" else {
     fail("expected from_entries entry index error")
   }
-  guard (try? eval(parse_filter("from_entries"), must_parse("[{\"value\":1}]")))
+  guard (try? execute(
+      parse_filter("from_entries"),
+      must_parse("[{\"value\":1}]"),
+    ))
     is Err(err) &&
     err.to_string() == "Cannot use null (null) as object key" else {
     fail("expected from_entries null key error")
   }
-  guard (try? eval(
+  guard (try? execute(
       parse_filter("from_entries"),
       must_parse("[{\"key\":1,\"value\":2}]"),
     ))
@@ -527,12 +535,12 @@ test "eval to_entries/from_entries/with_entries errors" {
     err.to_string() == "Cannot use number (1) as object key" else {
     fail("expected from_entries number key error")
   }
-  guard (try? eval(parse_filter("with_entries(.)"), must_parse("1")))
+  guard (try? execute(parse_filter("with_entries(.)"), must_parse("1")))
     is Err(err) &&
     err.to_string() == "number (1) has no keys" else {
     fail("expected with_entries no-keys error")
   }
-  guard (try? eval(parse_filter("with_entries(.)"), must_parse("[10,20]")))
+  guard (try? execute(parse_filter("with_entries(.)"), must_parse("[10,20]")))
     is Err(err) &&
     err.to_string() == "Cannot use number (0) as object key" else {
     fail("expected with_entries array key type error")
@@ -556,11 +564,12 @@ test "eval keys compatibility errors and keys_unsorted" {
   assert_eq(must_eval(parse_filter("tojson"), obj), [
     Json::string("{\"a\":1,\"b\":2}"),
   ])
-  guard (try? eval(parse_filter("keys"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("keys"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) has no keys" else {
     fail("expected jq-compatible keys error")
   }
-  guard (try? eval(parse_filter("keys_unsorted"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("keys_unsorted"), must_parse("1")))
+    is Err(err) &&
     err.to_string() == "number (1) has no keys" else {
     fail("expected jq-compatible keys_unsorted error")
   }
@@ -663,17 +672,20 @@ test "eval format filter compatibility" {
     must_eval(parse_filter("(@base64|@base64d)"), must_parse("\"<>&'\\\"\\t\"")),
     [Json::string("<>&'\"\t")],
   )
-  guard (try? eval(parse_filter("@base64d"), must_parse("\"Not base64 data\"")))
+  guard (try? execute(
+      parse_filter("@base64d"),
+      must_parse("\"Not base64 data\""),
+    ))
     is Err(err) &&
     err.to_string() == "string (\"Not base64...\") is not valid base64 data" else {
     fail("expected @base64d invalid data error")
   }
-  guard (try? eval(parse_filter("@base64d"), must_parse("\"QUJDa\"")))
+  guard (try? execute(parse_filter("@base64d"), must_parse("\"QUJDa\"")))
     is Err(err) &&
     err.to_string() == "string (\"QUJDa\") trailing base64 byte found" else {
     fail("expected @base64d trailing byte error")
   }
-  guard (try? eval(parse_filter("@urid"), must_parse("\"%FX%9F%98%8E\"")))
+  guard (try? execute(parse_filter("@urid"), must_parse("\"%FX%9F%98%8E\"")))
     is Err(err) &&
     err.to_string() == "string (\"%FX%9F%98%8E\") is not a valid uri encoding" else {
     fail("expected @urid invalid encoding error")
@@ -682,27 +694,28 @@ test "eval format filter compatibility" {
 
 ///|
 test "eval fromjson errors" {
-  guard (try? eval(parse_filter("fromjson"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("fromjson"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) only strings can be parsed" else {
     fail("expected fromjson number type error")
   }
-  guard (try? eval(parse_filter("fromjson"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(parse_filter("fromjson"), must_parse("null"))) is Err(err) &&
     err.to_string() == "null (null) only strings can be parsed" else {
     fail("expected fromjson null type error")
   }
-  guard (try? eval(parse_filter("fromjson"), must_parse("{}"))) is Err(err) &&
+  guard (try? execute(parse_filter("fromjson"), must_parse("{}"))) is Err(err) &&
     err.to_string() == "object ({}) only strings can be parsed" else {
     fail("expected fromjson object type error")
   }
-  guard (try? eval(parse_filter("fromjson"), must_parse("\"x\""))) is Err(err) &&
+  guard (try? execute(parse_filter("fromjson"), must_parse("\"x\"")))
+    is Err(err) &&
     err.to_string().contains("while parsing 'x'") else {
     fail("expected fromjson invalid token parse context")
   }
-  guard (try? eval(parse_filter("fromjson"), must_parse("\"\""))) is Err(err) &&
+  guard (try? execute(parse_filter("fromjson"), must_parse("\"\""))) is Err(err) &&
     err.to_string().contains("while parsing ''") else {
     fail("expected fromjson empty parse context")
   }
-  guard (try? eval(parse_filter("fromjson"), must_parse("\"[1,2\"")))
+  guard (try? execute(parse_filter("fromjson"), must_parse("\"[1,2\"")))
     is Err(err) &&
     err.to_string().contains("while parsing '[1,2'") else {
     fail("expected fromjson unfinished array parse context")
@@ -711,15 +724,16 @@ test "eval fromjson errors" {
 
 ///|
 test "eval tonumber errors" {
-  guard (try? eval(parse_filter("tonumber"), must_parse("\"abc\""))) is Err(err) &&
+  guard (try? execute(parse_filter("tonumber"), must_parse("\"abc\"")))
+    is Err(err) &&
     err.to_string() == "string (\"abc\") cannot be parsed as a number" else {
     fail("expected tonumber string parse error")
   }
-  guard (try? eval(parse_filter("tonumber"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(parse_filter("tonumber"), must_parse("null"))) is Err(err) &&
     err.to_string() == "null (null) cannot be parsed as a number" else {
     fail("expected tonumber null parse error")
   }
-  guard (try? eval(parse_filter("tonumber"), must_parse("true"))) is Err(err) &&
+  guard (try? execute(parse_filter("tonumber"), must_parse("true"))) is Err(err) &&
     err.to_string() == "boolean (true) cannot be parsed as a number" else {
     fail("expected tonumber boolean parse error")
   }
@@ -749,20 +763,21 @@ test "eval reverse compatibility" {
 
 ///|
 test "eval reverse errors" {
-  guard (try? eval(parse_filter("reverse"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("reverse"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot index number with number" else {
     fail("expected reverse number index error")
   }
-  guard (try? eval(parse_filter("reverse"), must_parse("\"abc\""))) is Err(err) &&
+  guard (try? execute(parse_filter("reverse"), must_parse("\"abc\"")))
+    is Err(err) &&
     err.to_string() == "Cannot index string with number" else {
     fail("expected reverse string index error")
   }
-  guard (try? eval(parse_filter("reverse"), must_parse("{\"a\":1}")))
+  guard (try? execute(parse_filter("reverse"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Cannot index object with number" else {
     fail("expected reverse object index error")
   }
-  guard (try? eval(parse_filter("reverse"), must_parse("false"))) is Err(err) &&
+  guard (try? execute(parse_filter("reverse"), must_parse("false"))) is Err(err) &&
     err.to_string() == "boolean (false) has no length" else {
     fail("expected reverse boolean length error")
   }
@@ -792,16 +807,16 @@ test "eval join compatibility" {
 
 ///|
 test "eval join errors" {
-  guard (try? eval(parse_filter("join(\",\")"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("join(\",\")"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected join iterate error")
   }
-  guard (try? eval(parse_filter("join(1)"), must_parse("[\"a\",\"b\"]")))
+  guard (try? execute(parse_filter("join(1)"), must_parse("[\"a\",\"b\"]")))
     is Err(err) &&
     err.to_string() == "string (\"a\") and number (1) cannot be added" else {
     fail("expected join separator type error")
   }
-  guard (try? eval(parse_filter("join(\",\")"), must_parse("[{\"x\":1}]")))
+  guard (try? execute(parse_filter("join(\",\")"), must_parse("[{\"x\":1}]")))
     is Err(err) &&
     err.to_string() == "string (\"\") and object ({\"x\":1}) cannot be added" else {
     fail("expected join object element type error")
@@ -878,20 +893,23 @@ test "eval split compatibility" {
 
 ///|
 test "eval split errors" {
-  guard (try? eval(parse_filter("split(\",\")"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("split(\",\")"), must_parse("1")))
+    is Err(err) &&
     err.to_string() == "split input and separator must be strings" else {
     fail("expected split input type error")
   }
-  guard (try? eval(parse_filter("split(1)"), must_parse("\"a\""))) is Err(err) &&
+  guard (try? execute(parse_filter("split(1)"), must_parse("\"a\"")))
+    is Err(err) &&
     err.to_string() == "split input and separator must be strings" else {
     fail("expected split separator type error")
   }
-  guard (try? eval(parse_filter("split(\",\"; 1)"), must_parse("\"a\"")))
+  guard (try? execute(parse_filter("split(\",\"; 1)"), must_parse("\"a\"")))
     is Err(err) &&
     err.to_string() == "split flags must be a string or null" else {
     fail("expected split flags type error")
   }
-  guard (try? eval(parse_filter("splits(1)"), must_parse("\"a\""))) is Err(err) &&
+  guard (try? execute(parse_filter("splits(1)"), must_parse("\"a\"")))
+    is Err(err) &&
     err.to_string() == "splits input and separator must be strings" else {
     fail("expected splits separator type error")
   }
@@ -976,15 +994,16 @@ test "eval explode/implode compatibility" {
 
 ///|
 test "eval explode/implode errors" {
-  guard (try? eval(parse_filter("explode"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("explode"), must_parse("1"))) is Err(err) &&
     err.to_string() == "explode input must be a string" else {
     fail("expected explode input type error")
   }
-  guard (try? eval(parse_filter("implode"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("implode"), must_parse("1"))) is Err(err) &&
     err.to_string() == "implode input must be an array" else {
     fail("expected implode input type error")
   }
-  guard (try? eval(parse_filter("implode"), must_parse("[\"a\"]"))) is Err(err) &&
+  guard (try? execute(parse_filter("implode"), must_parse("[\"a\"]")))
+    is Err(err) &&
     err.to_string() ==
     "string (\"a\") can't be imploded, unicode codepoint needs to be numeric" else {
     fail("expected implode element type error")
@@ -1038,17 +1057,18 @@ test "eval index/rindex/indices compatibility" {
 
 ///|
 test "eval index/rindex/indices errors" {
-  guard (try? eval(parse_filter("index(1)"), must_parse("\"hello\"")))
+  guard (try? execute(parse_filter("index(1)"), must_parse("\"hello\"")))
     is Err(err) &&
     err.to_string() == "Cannot index string with number" else {
     fail("expected string index(number) type error")
   }
-  guard (try? eval(parse_filter("index(true)"), must_parse("\"hello\"")))
+  guard (try? execute(parse_filter("index(true)"), must_parse("\"hello\"")))
     is Err(err) &&
     err.to_string() == "Cannot index string with boolean" else {
     fail("expected string index(boolean) type error")
   }
-  guard (try? eval(parse_filter("index(\"a\")"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("index(\"a\")"), must_parse("1")))
+    is Err(err) &&
     err.to_string() == "Cannot index number with string \"a\"" else {
     fail("expected number index(string) type error")
   }
@@ -1231,17 +1251,18 @@ test "eval range/limit/skip/IN compatibility" {
 ///|
 test "eval range/limit/skip/nth stream errors" {
   let null_json = must_parse("null")
-  guard (try? eval(parse_filter("limit(-1; .[])"), must_parse("[1,2,3]")))
+  guard (try? execute(parse_filter("limit(-1; .[])"), must_parse("[1,2,3]")))
     is Err(err) &&
     err.to_string() == "limit doesn't support negative count" else {
     fail("expected limit negative count error")
   }
-  guard (try? eval(parse_filter("skip(-1; .[])"), must_parse("[1,2,3]")))
+  guard (try? execute(parse_filter("skip(-1; .[])"), must_parse("[1,2,3]")))
     is Err(err) &&
     err.to_string() == "skip doesn't support negative count" else {
     fail("expected skip negative count error")
   }
-  guard (try? eval(parse_filter("nth(-1; range(10))"), null_json)) is Err(err) &&
+  guard (try? execute(parse_filter("nth(-1; range(10))"), null_json))
+    is Err(err) &&
     err.to_string() == "nth doesn't support negative indices" else {
     fail("expected nth negative index error")
   }
@@ -1249,23 +1270,26 @@ test "eval range/limit/skip/nth stream errors" {
 
 ///|
 test "eval bsearch errors" {
-  guard (try? eval(parse_filter("bsearch(1)"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("bsearch(1)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) cannot be searched from" else {
     fail("expected bsearch number input error")
   }
-  guard (try? eval(parse_filter("bsearch(1)"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(parse_filter("bsearch(1)"), must_parse("null")))
+    is Err(err) &&
     err.to_string() == "null (null) cannot be searched from" else {
     fail("expected bsearch null input error")
   }
-  guard (try? eval(parse_filter("bsearch(1)"), must_parse("\"a\""))) is Err(err) &&
+  guard (try? execute(parse_filter("bsearch(1)"), must_parse("\"a\"")))
+    is Err(err) &&
     err.to_string() == "string (\"a\") cannot be searched from" else {
     fail("expected bsearch string input error")
   }
-  guard (try? eval(parse_filter("bsearch(1)"), must_parse("{}"))) is Err(err) &&
+  guard (try? execute(parse_filter("bsearch(1)"), must_parse("{}"))) is Err(err) &&
     err.to_string() == "object ({}) cannot be searched from" else {
     fail("expected bsearch object input error")
   }
-  guard (try? eval(parse_filter("bsearch(1)"), must_parse("true"))) is Err(err) &&
+  guard (try? execute(parse_filter("bsearch(1)"), must_parse("true")))
+    is Err(err) &&
     err.to_string() == "boolean (true) cannot be searched from" else {
     fail("expected bsearch boolean input error")
   }
@@ -1377,7 +1401,7 @@ test "eval multiply compatibility" {
 ///|
 test "eval multiply repeat too long error" {
   let j = must_parse("null")
-  guard (try? eval(parse_filter("\"x\" * 1000000000000"), j)) is Err(err) &&
+  guard (try? execute(parse_filter("\"x\" * 1000000000000"), j)) is Err(err) &&
     err.to_string() == "Repeat string result too long" else {
     fail("expected repeat-too-long error")
   }
@@ -1397,12 +1421,12 @@ test "eval array subtraction compatibility" {
 ///|
 test "eval division by zero compatibility" {
   let j = must_parse("null")
-  guard (try? eval(parse_filter("1 / 0"), j)) is Err(err) &&
+  guard (try? execute(parse_filter("1 / 0"), j)) is Err(err) &&
     err.to_string() ==
     "number (1) and number (0) cannot be divided because the divisor is zero" else {
     fail("expected jq-compatible division by zero error")
   }
-  guard (try? eval(parse_filter("1 % 0"), j)) is Err(err) &&
+  guard (try? execute(parse_filter("1 % 0"), j)) is Err(err) &&
     err.to_string() ==
     "number (1) and number (0) cannot be divided because the divisor is zero" else {
     fail("expected jq-compatible modulo by zero error")
@@ -1546,7 +1570,7 @@ test "eval update assignment compatibility" {
       ]),
     ],
   )
-  guard (try? eval(parse_filter(".[1:3] = 9"), must_parse("[0,1,2,3]")))
+  guard (try? execute(parse_filter(".[1:3] = 9"), must_parse("[0,1,2,3]")))
     is Err(err) &&
     err.to_string() == "A slice of an array can only be assigned another array" else {
     fail("expected slice assignment array-only error")
@@ -1594,11 +1618,12 @@ test "eval map object compatibility" {
 
 ///|
 test "eval map iter errors" {
-  guard (try? eval(parse_filter("map(. + 1)"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("map(. + 1)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected map number error")
   }
-  guard (try? eval(parse_filter("map(. + 1)"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(parse_filter("map(. + 1)"), must_parse("null")))
+    is Err(err) &&
     err.to_string() == "Cannot iterate over null (null)" else {
     fail("expected map null error")
   }
@@ -1627,12 +1652,12 @@ test "eval map_values jq semantics" {
 
 ///|
 test "eval map_values iter errors" {
-  guard (try? eval(parse_filter("map_values(. + 1)"), must_parse("1")))
+  guard (try? execute(parse_filter("map_values(. + 1)"), must_parse("1")))
     is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected map_values number error")
   }
-  guard (try? eval(parse_filter("map_values(. + 1)"), must_parse("null")))
+  guard (try? execute(parse_filter("map_values(. + 1)"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "Cannot iterate over null (null)" else {
     fail("expected map_values null error")
@@ -1946,38 +1971,40 @@ test "eval trim/ltrim/rtrim compatibility" {
 
 ///|
 test "eval trimstr errors" {
-  guard (try? eval(parse_filter("ltrimstr(\"1\")"), must_parse("1")))
+  guard (try? execute(parse_filter("ltrimstr(\"1\")"), must_parse("1")))
     is Err(err) &&
     err.to_string() == "ltrimstr() requires string inputs" else {
     fail("expected ltrimstr input type error")
   }
-  guard (try? eval(parse_filter("ltrimstr(1)"), must_parse("\"x\"")))
+  guard (try? execute(parse_filter("ltrimstr(1)"), must_parse("\"x\"")))
     is Err(err) &&
     err.to_string() == "ltrimstr() requires string inputs" else {
     fail("expected ltrimstr separator type error")
   }
-  guard (try? eval(parse_filter("rtrimstr(1)"), must_parse("\"x\"")))
+  guard (try? execute(parse_filter("rtrimstr(1)"), must_parse("\"x\"")))
     is Err(err) &&
     err.to_string() == "rtrimstr() requires string inputs" else {
     fail("expected rtrimstr separator type error")
   }
-  guard (try? eval(parse_filter("trim"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("trim"), must_parse("1"))) is Err(err) &&
     err.to_string() == "trim input must be a string" else {
     fail("expected trim input type error")
   }
-  guard (try? eval(parse_filter("ltrim"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("ltrim"), must_parse("1"))) is Err(err) &&
     err.to_string() == "trim input must be a string" else {
     fail("expected ltrim input type error")
   }
-  guard (try? eval(parse_filter("rtrim"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("rtrim"), must_parse("1"))) is Err(err) &&
     err.to_string() == "trim input must be a string" else {
     fail("expected rtrim input type error")
   }
-  guard (try? eval(parse_filter("trimstr(\"1\")"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("trimstr(\"1\")"), must_parse("1")))
+    is Err(err) &&
     err.to_string() == "startswith() requires string inputs" else {
     fail("expected trimstr input type error")
   }
-  guard (try? eval(parse_filter("trimstr(1)"), must_parse("\"x\""))) is Err(err) &&
+  guard (try? execute(parse_filter("trimstr(1)"), must_parse("\"x\"")))
+    is Err(err) &&
     err.to_string() == "startswith() requires string inputs" else {
     fail("expected trimstr separator type error")
   }
@@ -2075,25 +2102,25 @@ test "eval numeric/meta builtins compatibility" {
 
 ///|
 test "eval numeric/meta builtins errors" {
-  guard (try? eval(parse_filter("toboolean"), must_parse("\"tru\"")))
+  guard (try? execute(parse_filter("toboolean"), must_parse("\"tru\"")))
     is Err(err) &&
     err.to_string() == "string (\"tru\") cannot be parsed as a boolean" else {
     fail("expected toboolean parse error")
   }
-  guard (try? eval(parse_filter("sqrt"), must_parse("\"x\""))) is Err(err) &&
+  guard (try? execute(parse_filter("sqrt"), must_parse("\"x\""))) is Err(err) &&
     err.to_string() == "string (\"x\") only numbers have sqrt" else {
     fail("expected sqrt type error")
   }
-  guard (try? eval(parse_filter("floor"), must_parse("true"))) is Err(err) &&
+  guard (try? execute(parse_filter("floor"), must_parse("true"))) is Err(err) &&
     err.to_string() == "boolean (true) only numbers have floor" else {
     fail("expected floor type error")
   }
-  guard (try? eval(parse_filter("pow(\"x\";2)"), must_parse("null")))
+  guard (try? execute(parse_filter("pow(\"x\";2)"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "pow() requires numeric arguments" else {
     fail("expected pow type error")
   }
-  guard (try? eval(parse_filter("log2"), must_parse("\"x\""))) is Err(err) &&
+  guard (try? execute(parse_filter("log2"), must_parse("\"x\""))) is Err(err) &&
     err.to_string() == "string (\"x\") only numbers have log2" else {
     fail("expected log2 type error")
   }
@@ -2101,19 +2128,19 @@ test "eval numeric/meta builtins errors" {
 
 ///|
 test "eval abs/fabs/isempty errors" {
-  guard (try? eval(parse_filter("abs"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(parse_filter("abs"), must_parse("null"))) is Err(err) &&
     err.to_string() == "null (null) cannot be negated" else {
     fail("expected abs null type error")
   }
-  guard (try? eval(parse_filter("abs"), must_parse("true"))) is Err(err) &&
+  guard (try? execute(parse_filter("abs"), must_parse("true"))) is Err(err) &&
     err.to_string() == "boolean (true) cannot be negated" else {
     fail("expected abs boolean type error")
   }
-  guard (try? eval(parse_filter("fabs"), must_parse("\"x\""))) is Err(err) &&
+  guard (try? execute(parse_filter("fabs"), must_parse("\"x\""))) is Err(err) &&
     err.to_string() == "string (\"x\") cannot be negated" else {
     fail("expected fabs string type error")
   }
-  guard (try? eval(parse_filter("isempty(.[0])"), must_parse("{\"a\":1}")))
+  guard (try? execute(parse_filter("isempty(.[0])"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Cannot index object with number" else {
     fail("expected isempty to propagate pre-first error")
@@ -2133,11 +2160,12 @@ test "eval ascii case compatibility" {
 
 ///|
 test "eval ascii case errors" {
-  guard (try? eval(parse_filter("ascii_upcase"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("ascii_upcase"), must_parse("1")))
+    is Err(err) &&
     err.to_string() == "ascii_upcase input must be a string" else {
     fail("expected ascii_upcase type error")
   }
-  guard (try? eval(parse_filter("ascii_downcase"), must_parse("null")))
+  guard (try? execute(parse_filter("ascii_downcase"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "ascii_downcase input must be a string" else {
     fail("expected ascii_downcase type error")
@@ -2158,17 +2186,17 @@ test "eval utf8bytelength compatibility" {
 
 ///|
 test "eval utf8bytelength errors" {
-  guard (try? eval(parse_filter("utf8bytelength"), must_parse("[]")))
+  guard (try? execute(parse_filter("utf8bytelength"), must_parse("[]")))
     is Err(err) &&
     err.to_string() == "array ([]) only strings have UTF-8 byte length" else {
     fail("expected utf8bytelength array type error")
   }
-  guard (try? eval(parse_filter("utf8bytelength"), must_parse("{}")))
+  guard (try? execute(parse_filter("utf8bytelength"), must_parse("{}")))
     is Err(err) &&
     err.to_string() == "object ({}) only strings have UTF-8 byte length" else {
     fail("expected utf8bytelength object type error")
   }
-  guard (try? eval(parse_filter("utf8bytelength"), must_parse("55")))
+  guard (try? execute(parse_filter("utf8bytelength"), must_parse("55")))
     is Err(err) &&
     err.to_string() == "number (55) only strings have UTF-8 byte length" else {
     fail("expected utf8bytelength number type error")

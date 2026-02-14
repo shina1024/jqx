@@ -16,13 +16,11 @@ pub fn compile(String) -> @core.Filter raise @core.FilterError
 
 pub fn eq(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
 
-pub fn eval(@core.Filter, @core.Json) -> Array[@core.Json] raise @core.EvalError
-
-pub fn evalQuery(Query[@core.Json, @core.Json], @core.Json) -> Result[Array[@core.Json], String]
-
-pub fn evalToJsonStrings(String, String) -> Result[Array[String], String]
-
 pub fn execute(@core.Filter, @core.Json) -> Array[@core.Json] raise @core.EvalError
+
+pub fn executeQuery(Query[@core.Json, @core.Json], @core.Json) -> Result[Array[@core.Json], String]
+
+pub fn executeToJsonStrings(String, String) -> Result[Array[String], String]
 
 pub fn fallback(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
 
@@ -65,8 +63,6 @@ pub fn safeRunValues(String, String) -> Result[Array[@core.Json], String]
 pub fn select(Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
 
 pub fn tryCompile(String) -> Result[@core.Filter, String]
-
-pub fn tryEval(@core.Filter, @core.Json) -> Result[Array[@core.Json], String]
 
 pub fn tryExecute(@core.Filter, @core.Json) -> Result[Array[@core.Json], String]
 

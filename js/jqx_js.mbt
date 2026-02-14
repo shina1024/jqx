@@ -60,14 +60,6 @@ pub fn execute(
 }
 
 ///|
-pub fn eval(
-  filter : @core.Filter,
-  input : @core.Json,
-) -> Array[@core.Json] raise @core.EvalError {
-  execute(filter, input)
-}
-
-///|
 pub fn tryExecute(
   filter : @core.Filter,
   input : @core.Json,
@@ -75,14 +67,6 @@ pub fn tryExecute(
   Ok(@core.execute(filter, input)) catch {
     err => Err(err.to_string())
   }
-}
-
-///|
-pub fn tryEval(
-  filter : @core.Filter,
-  input : @core.Json,
-) -> Result[Array[@core.Json], String] {
-  tryExecute(filter, input)
 }
 
 ///|
@@ -96,7 +80,7 @@ pub fn safeExecute(
 ///|
 /// Compatibility lane:
 /// returns JSON text so large numbers and repr are preserved.
-pub fn evalToJsonStrings(
+pub fn executeToJsonStrings(
   filter : String,
   input : String,
 ) -> Result[Array[String], String] {
@@ -117,7 +101,7 @@ pub fn evalToJsonStrings(
 ///|
 /// Compatibility lane alias.
 pub fn run(filter : String, input : String) -> Result[Array[String], String] {
-  evalToJsonStrings(filter, input)
+  executeToJsonStrings(filter, input)
 }
 
 ///|
@@ -126,7 +110,7 @@ pub fn runCompat(
   filter : String,
   input : String,
 ) -> Result[Array[String], String] {
-  evalToJsonStrings(filter, input)
+  executeToJsonStrings(filter, input)
 }
 
 ///|

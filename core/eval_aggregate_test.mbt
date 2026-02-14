@@ -81,31 +81,31 @@ test "eval any/all compatibility" {
 
 ///|
 test "eval any/all errors" {
-  guard (try? eval(parse_filter("any"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("any"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected any number iterate error")
   }
-  guard (try? eval(parse_filter("all"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(parse_filter("all"), must_parse("null"))) is Err(err) &&
     err.to_string() == "Cannot iterate over null (null)" else {
     fail("expected all null iterate error")
   }
-  guard (try? eval(parse_filter("any"), must_parse("\"ab\""))) is Err(err) &&
+  guard (try? execute(parse_filter("any"), must_parse("\"ab\""))) is Err(err) &&
     err.to_string() == "Cannot iterate over string (\"ab\")" else {
     fail("expected any string iterate error")
   }
-  guard (try? eval(parse_filter("any(.)"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("any(.)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected any(cond) number iterate error")
   }
-  guard (try? eval(parse_filter("all(.)"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(parse_filter("all(.)"), must_parse("null"))) is Err(err) &&
     err.to_string() == "Cannot iterate over null (null)" else {
     fail("expected all(cond) null iterate error")
   }
-  guard (try? eval(parse_filter("error"), must_parse("\"x\""))) is Err(err) &&
+  guard (try? execute(parse_filter("error"), must_parse("\"x\""))) is Err(err) &&
     err.to_string() == "\"x\"" else {
     fail("expected error builtin")
   }
-  guard (try? eval(parse_filter("error(\"boom\")"), must_parse("null")))
+  guard (try? execute(parse_filter("error(\"boom\")"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "boom" else {
     fail("expected error(msg) call")
@@ -147,7 +147,8 @@ test "eval pick compatibility" {
 
 ///|
 test "eval pick errors" {
-  guard (try? eval(parse_filter("pick(last)"), must_parse("[1,2]"))) is Err(err) &&
+  guard (try? execute(parse_filter("pick(last)"), must_parse("[1,2]")))
+    is Err(err) &&
     err.to_string() == "Out of bounds negative array index" else {
     fail("expected pick(last) negative index error")
   }
@@ -221,15 +222,16 @@ test "eval add builtin compatibility" {
 
 ///|
 test "eval add builtin errors" {
-  guard (try? eval(parse_filter("add"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(parse_filter("add"), must_parse("null"))) is Err(err) &&
     err.to_string() == "Cannot iterate over null (null)" else {
     fail("expected add null iterate error")
   }
-  guard (try? eval(parse_filter("add"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("add"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected add number iterate error")
   }
-  guard (try? eval(parse_filter("add"), must_parse("[true,false]"))) is Err(err) &&
+  guard (try? execute(parse_filter("add"), must_parse("[true,false]")))
+    is Err(err) &&
     err.to_string() == "boolean (true) and boolean (false) cannot be added" else {
     fail("expected add type mismatch error")
   }
@@ -308,11 +310,11 @@ test "eval sort compatibility" {
 
 ///|
 test "eval sort errors" {
-  guard (try? eval(parse_filter("sort"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("sort"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) cannot be sorted, as it is not an array" else {
     fail("expected sort non-array type error")
   }
-  guard (try? eval(parse_filter("sort"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(parse_filter("sort"), must_parse("null"))) is Err(err) &&
     err.to_string() == "null (null) cannot be sorted, as it is not an array" else {
     fail("expected sort null type error")
   }
@@ -348,7 +350,7 @@ test "eval sort_by compatibility" {
 
 ///|
 test "eval sort_by errors" {
-  guard (try? eval(parse_filter("sort_by(.)"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("sort_by(.)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected sort_by non-array error")
   }
@@ -399,7 +401,7 @@ test "eval group_by compatibility" {
 
 ///|
 test "eval group_by errors" {
-  guard (try? eval(parse_filter("group_by(.)"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("group_by(.)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected group_by non-array error")
   }
@@ -427,11 +429,11 @@ test "eval min/max compatibility" {
 
 ///|
 test "eval min/max errors" {
-  guard (try? eval(parse_filter("min"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("min"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) and number (1) cannot be iterated over" else {
     fail("expected min non-array iterate error")
   }
-  guard (try? eval(parse_filter("max"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(parse_filter("max"), must_parse("null"))) is Err(err) &&
     err.to_string() == "null (null) and null (null) cannot be iterated over" else {
     fail("expected max null iterate error")
   }
@@ -484,11 +486,11 @@ test "eval min_by/max_by compatibility" {
 
 ///|
 test "eval min_by/max_by errors" {
-  guard (try? eval(parse_filter("min_by(.)"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("min_by(.)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected min_by non-array error")
   }
-  guard (try? eval(parse_filter("max_by(.)"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("max_by(.)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected max_by non-array error")
   }
@@ -518,11 +520,11 @@ test "eval unique compatibility" {
 
 ///|
 test "eval unique errors" {
-  guard (try? eval(parse_filter("unique"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("unique"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) cannot be sorted, as it is not an array" else {
     fail("expected unique non-array type error")
   }
-  guard (try? eval(parse_filter("unique"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(parse_filter("unique"), must_parse("null"))) is Err(err) &&
     err.to_string() == "null (null) cannot be sorted, as it is not an array" else {
     fail("expected unique null type error")
   }
@@ -570,7 +572,8 @@ test "eval unique_by compatibility" {
 
 ///|
 test "eval unique_by errors" {
-  guard (try? eval(parse_filter("unique_by(.)"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(parse_filter("unique_by(.)"), must_parse("1")))
+    is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected unique_by non-array error")
   }
