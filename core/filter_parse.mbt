@@ -2125,14 +2125,14 @@ fn FilterCursor::parse_comma(
 
 ///|
 fn find_filter_definition(
-  defs : Array[(String, Filter)],
+  defs : Array[(String, Array[String], Filter)],
   name : String,
-) -> Filter? {
+) -> (Array[String], Filter)? {
   for i in 0..<defs.length() {
     let idx = defs.length() - 1 - i
     let kv = defs[idx]
     if kv.0 == name {
-      return Some(kv.1)
+      return Some((kv.1, kv.2))
     }
   }
   None
@@ -2141,7 +2141,7 @@ fn find_filter_definition(
 ///|
 fn lower_filter_with_defs(
   filter : Filter,
-  defs : Array[(String, Filter)],
+  defs : Array[(String, Array[String], Filter)],
 ) -> Filter {
   match filter {
     Identity
@@ -2157,7 +2157,12 @@ fn lower_filter_with_defs(
       match filter {
         Builtin(name) =>
           match find_filter_definition(defs, name) {
-            Some(replaced) => replaced
+            Some((params, replaced)) =>
+              if params.length() == 0 {
+                replaced
+              } else {
+                filter
+              }
             None => filter
           }
         _ => filter
@@ -2187,14 +2192,21 @@ fn lower_filter_with_defs(
       )
     Builtin(name) =>
       match find_filter_definition(defs, name) {
-        Some(replaced) => replaced
+        Some((params, replaced)) =>
+          if params.length() == 0 {
+            replaced
+          } else {
+            filter
+          }
         None => filter
       }
     Call(name, args) => {
       let lowered_args = args.map(f => lower_filter_with_defs(f, defs))
       match find_filter_definition(defs, name) {
-        Some(replaced) =>
-          if lowered_args.length() == 0 {
+        Some((params, replaced)) =>
+          if params.length() == lowered_args.length() {
+            lower_filter_def_call(replaced, params, lowered_args)
+          } else if params.length() == 0 && lowered_args.length() == 0 {
             replaced
           } else {
             Filter::call(name, lowered_args)
@@ -2310,13 +2322,169 @@ fn lower_filter_with_defs(
 }
 
 ///|
+fn lower_filter_param_refs(filter : Filter, params : Array[String]) -> Filter {
+  match filter {
+    Builtin(name) =>
+      if params.contains(name) {
+        Filter::var_(name)
+      } else {
+        filter
+      }
+    Call(name, args) =>
+      if params.contains(name) && args.length() == 0 {
+        Filter::var_(name)
+      } else {
+        Filter::call(
+          name,
+          args.map(arg => lower_filter_param_refs(arg, params)),
+        )
+      }
+    Pipe(left, right) =>
+      Filter::pipe(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    Comma(left, right) =>
+      Filter::comma(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    Array(items) =>
+      Filter::Array(items.map(item => lower_filter_param_refs(item, params)))
+    Object(items) =>
+      Filter::Object(
+        items.map(kv => (kv.0, lower_filter_param_refs(kv.1, params))),
+      )
+    As(value, name, body) =>
+      Filter::as_(
+        lower_filter_param_refs(value, params),
+        name,
+        lower_filter_param_refs(body, params),
+      )
+    Try(inner) => Filter::try_(lower_filter_param_refs(inner, params))
+    TryCatch(inner, handler) =>
+      Filter::try_catch(
+        lower_filter_param_refs(inner, params),
+        lower_filter_param_refs(handler, params),
+      )
+    Reduce(source, name, init, update) =>
+      Filter::reduce(
+        lower_filter_param_refs(source, params),
+        name,
+        lower_filter_param_refs(init, params),
+        lower_filter_param_refs(update, params),
+      )
+    Foreach(source, name, init, update, extract) =>
+      Filter::foreach(
+        lower_filter_param_refs(source, params),
+        name,
+        lower_filter_param_refs(init, params),
+        lower_filter_param_refs(update, params),
+        lower_filter_param_refs(extract, params),
+      )
+    Eq(left, right) =>
+      Filter::eq(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    Neq(left, right) =>
+      Filter::neq(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    Lt(left, right) =>
+      Filter::lt(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    Lte(left, right) =>
+      Filter::lte(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    Gt(left, right) =>
+      Filter::gt(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    Gte(left, right) =>
+      Filter::gte(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    And(left, right) =>
+      Filter::and_(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    Or(left, right) =>
+      Filter::or_(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    Not(inner) => Filter::not(lower_filter_param_refs(inner, params))
+    Add(left, right) =>
+      Filter::add(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    Sub(left, right) =>
+      Filter::sub(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    Mul(left, right) =>
+      Filter::mul(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    Div(left, right) =>
+      Filter::div(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    Mod(left, right) =>
+      Filter::mod_(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    IfElse(cond, then_branch, else_branch) =>
+      Filter::if_else(
+        lower_filter_param_refs(cond, params),
+        lower_filter_param_refs(then_branch, params),
+        lower_filter_param_refs(else_branch, params),
+      )
+    Fallback(left, right) =>
+      Filter::fallback(
+        lower_filter_param_refs(left, params),
+        lower_filter_param_refs(right, params),
+      )
+    _ => filter
+  }
+}
+
+///|
+fn lower_filter_def_call(
+  body : Filter,
+  params : Array[String],
+  args : Array[Filter],
+) -> Filter {
+  let mut out = lower_filter_param_refs(body, params)
+  for i in 0..<params.length() {
+    let idx = params.length() - 1 - i
+    out = Filter::as_(args[idx], params[idx], out)
+  }
+  out
+}
+
+///|
 fn lower_definition_sequence(
-  defs : Array[(String, Filter)],
-) -> Array[(String, Filter)] {
+  defs : Array[(String, Array[String], Filter)],
+) -> Array[(String, Array[String], Filter)] {
   let lowered = []
   for kv in defs {
-    let body = lower_filter_with_defs(kv.1, lowered)
-    lowered.push((kv.0, body))
+    let body = lower_filter_with_defs(kv.2, lowered)
+    lowered.push((kv.0, kv.1, body))
   }
   lowered
 }
@@ -2370,7 +2538,46 @@ fn FilterCursor::read_until_top_level_semicolon(
 ///|
 fn FilterCursor::parse_definition_prefix(
   ctx : FilterCursor,
-) -> Array[(String, Filter)] raise FilterError {
+) -> Array[(String, Array[String], Filter)] raise FilterError {
+  fn parse_params() -> Array[String] raise FilterError {
+    ctx.skip_ws()
+    if ctx.peek_char() is Some('(') {
+      ctx.read_char() |> ignore
+      ctx.skip_ws()
+      if ctx.peek_char() is Some(')') {
+        ctx.read_char() |> ignore
+        return []
+      }
+      let params = []
+      for {
+        ctx.skip_ws()
+        let name = if ctx.peek_char() is Some('$') {
+          ctx.read_char() |> ignore
+          ctx.parse_identifier()
+        } else {
+          ctx.parse_identifier()
+        }
+        params.push(name)
+        ctx.skip_ws()
+        match ctx.peek_char() {
+          Some(';') => {
+            ctx.read_char() |> ignore
+            continue
+          }
+          Some(')') => {
+            ctx.read_char() |> ignore
+            break
+          }
+          Some(_) => ctx.invalid_char()
+          None => raise InvalidEof
+        }
+      }
+      params
+    } else {
+      []
+    }
+  }
+
   let defs = []
   for {
     ctx.skip_ws()
@@ -2378,14 +2585,10 @@ fn FilterCursor::parse_definition_prefix(
       break
     }
     let name = ctx.parse_identifier()
-    ctx.skip_ws()
-    // Minimal first pass: no-arg def only.
-    if ctx.peek_char() is Some('(') {
-      ctx.invalid_char()
-    }
+    let params = parse_params()
     ctx.expect_char(':')
     let body_source = ctx.read_until_top_level_semicolon()
-    defs.push((name, parse_filter(body_source)))
+    defs.push((name, params, parse_filter(body_source)))
   }
   defs
 }

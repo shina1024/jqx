@@ -214,6 +214,18 @@ test "eval def no-arg minimal" {
   assert_eq(must_eval(parse_filter("def length: 42; . | length"), j), [
     Json::number(42.0),
   ])
+  let obj = must_parse("{\"a\":1,\"b\":2}")
+  assert_eq(must_eval(parse_filter("def add(a;b): a + b; add(.a; .b)"), obj), [
+    Json::number(3.0),
+  ])
+  let arr = must_parse("[1,2]")
+  assert_eq(
+    must_eval(parse_filter("def addvalue(f): . + [f]; addvalue(.[0])"), arr),
+    [Json::array([Json::number(1.0), Json::number(2.0), Json::number(1.0)])],
+  )
+  assert_eq(must_eval(parse_filter("def plus($x): . + $x; plus(2)"), j), [
+    Json::number(3.0),
+  ])
 }
 
 ///|

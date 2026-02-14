@@ -60,6 +60,11 @@
     "input": "1"
   },
   {
+    "name": "def-params",
+    "filter": "def add(a;b): a + b; add(.a; .b)",
+    "input": "{\"a\":1,\"b\":2}"
+  },
+  {
     "name": "contains",
     "filter": "contains([1,3])",
     "input": "[1,2,3]"

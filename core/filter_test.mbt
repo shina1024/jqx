@@ -208,8 +208,8 @@ test "parse def no-arg minimal" {
     is Ok(_) else {
     fail("expected chained no-arg def parse")
   }
-  guard (try? parse_filter("def f(x): x; .")) is Err(_) else {
-    fail("expected parse error for def parameters in minimal mode")
+  guard (try? parse_filter("def f(x): x; [f(1), f(2)]")) is Ok(_) else {
+    fail("expected parse success for def parameters")
   }
 }
 

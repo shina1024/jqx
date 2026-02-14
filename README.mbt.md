@@ -65,7 +65,7 @@ moon run --target native cmd -- -e ".ok" '{"ok": false}'
 - Try: `expr?` (errors produce empty output)
 - Try/Catch: `try expr catch expr` (errors run handler)
 - Reduce/Foreach: `reduce <expr> as $x (init; update)`, `foreach <expr> as $x (init; update; extract)`
-- Definitions (minimal): `def f: <expr>; <expr>` (no-arg top-level only)
+- Definitions (minimal): `def f: <expr>; <expr>`, `def f(a;b): <expr>; <expr>`
 - Literals: numbers, strings, `true/false/null`, arrays `[ ... ]`, objects `{ ... }`
 - Pipe/comma: `|`, `,`
 - Builtins: `length`, `type`, `keys`

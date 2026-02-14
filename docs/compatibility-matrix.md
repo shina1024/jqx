@@ -25,7 +25,7 @@ Legend:
 | Control flow | supported | `if ... then ... else ... end`, `empty`, `//` |
 | Reduce / foreach | supported | minimal stream semantics |
 | Arithmetic / compare / logic | supported | `+ - * / %`, `== != < <= > >=`, `and or not` |
-| User-defined functions (`def`) | partial | minimal no-arg top-level definitions are supported via parser lowering; parameterized defs/recursive semantics remain pending |
+| User-defined functions (`def`) | partial | minimal top-level defs are supported via parser lowering (`def f: ...; ...`, `def f(a;b): ...; ...`); recursion and nested-def edge semantics remain pending |
 | Labels / break | planned | parser/evaluator not implemented |
 | Module system (`import`/`include`) | planned | parser/evaluator not implemented |
 | Update assignment (`=`, `|=`, `+=`, `-=`, `*=`, `/=`, `%=`, `//=`) | partial | minimal lowering via `setpath(getpath(...))` for static path LHS (`.foo`, `.[n]`, `.a.b`, `.a.[1]`) |
