@@ -5,23 +5,23 @@ fn eval_call(
   input : Json,
   env : Map[String, Json],
 ) -> Array[Json] raise EvalError {
-  match eval_call_path_builtin(name, args, input, env) {
+  match builtin_call_path(name, args, input, env) {
     Some(out) => return out
     None => ()
   }
-  match eval_call_string_builtin(name, args, input, env) {
+  match builtin_call_string(name, args, input, env) {
     Some(out) => return out
     None => ()
   }
-  match eval_call_collection_builtin(name, args, input, env) {
+  match builtin_call_collection(name, args, input, env) {
     Some(out) => return out
     None => ()
   }
-  match eval_call_numeric_builtin(name, args, input, env) {
+  match builtin_call_numeric(name, args, input, env) {
     Some(out) => return out
     None => ()
   }
-  match eval_call_stream_builtin(name, args, input, env) {
+  match builtin_call_stream(name, args, input, env) {
     Some(out) => return out
     None => ()
   }

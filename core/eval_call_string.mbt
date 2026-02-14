@@ -11,7 +11,7 @@ fn call_parse_regex_flags(
 }
 
 ///|
-fn eval_call_string_builtin(
+fn builtin_call_string(
   name : String,
   args : Array[Filter],
   input : Json,

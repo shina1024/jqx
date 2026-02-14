@@ -31,6 +31,7 @@ Updated: 2026-02-14
 - `core/eval_call.mbt` から numeric 系 call を `core/eval_call_numeric.mbt` へ分離済み（挙動不変）
 - `core/eval_call.mbt` から stream 系 call を `core/eval_call_stream.mbt` へ分離済み（挙動不変）
 - `core/eval_call.mbt` は call dispatcher の薄い入口へ整理済み
+- internal dispatch 命名を `eval_call_*` から `builtin_call_*` へ寄せ始めた（継続中）
 - 次の主対象は内部API命名の jq 寄せ整理（挙動不変）
 
 ## Upstream jq からの参照方針
@@ -51,6 +52,7 @@ jqx でも同じ思想を取り、言語仕様の差を保ったまま次の対�
 - parser API: `compile` を正とし、`parse_filter` は互換alias扱い
 - evaluator API: `execute` を正とし、`eval` は互換alias扱い
 - JS公開APIも同方針（`compile`/`execute` を主、旧名は alias）
+- internal builtin dispatch: `builtin_call_*` 系へ統一する
 
 ## Target file layout (core)
 

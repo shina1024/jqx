@@ -7,7 +7,7 @@ fn index_object_key(value : Json) -> String {
 }
 
 ///|
-fn eval_call_collection_builtin(
+fn builtin_call_collection(
   name : String,
   args : Array[Filter],
   input : Json,

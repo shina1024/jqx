@@ -192,7 +192,7 @@ fn eval_all_with_short_circuit(
 }
 
 ///|
-fn eval_call_stream_builtin(
+fn builtin_call_stream(
   name : String,
   args : Array[Filter],
   input : Json,

@@ -47,7 +47,7 @@ fn pick_static_path_segments(filter : Filter) -> Array[Json]? {
 }
 
 ///|
-fn eval_call_path_builtin(
+fn builtin_call_path(
   name : String,
   args : Array[Filter],
   input : Json,

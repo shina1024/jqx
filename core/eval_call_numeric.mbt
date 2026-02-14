@@ -159,7 +159,7 @@ fn parse_rfc3339_utc_seconds(s : String) -> Double? {
 }
 
 ///|
-fn eval_call_numeric_builtin(
+fn builtin_call_numeric(
   name : String,
   args : Array[Filter],
   input : Json,
