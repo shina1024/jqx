@@ -19,7 +19,8 @@ Updated: 2026-02-14
 - `core/eval.mbt` から path 系を `core/eval_path_ops.mbt` へ分離済み（挙動不変）
 - `core/eval.mbt` から collection 系を `core/eval_collection_ops.mbt` へ分離済み（挙動不変）
 - `core/eval.mbt` から json 系を `core/eval_json_ops.mbt` へ分離済み（挙動不変）
-- 現在の主対象は `filter_parse.mbt` 分割
+- `core/filter_parse.mbt` から cursor 系を `core/filter_parse_cursor.mbt` へ分離済み（挙動不変）
+- 現在の主対象は `filter_parse.mbt` の atom/expr/lowering 分割
 
 ## Upstream jq からの参照方針
 
