@@ -6,8 +6,8 @@ Updated: 2026-02-14
 
 現状、`core` には以下の巨大ファイルがあり、仕様追加と回帰修正の速度を落とし始めている。
 
-- `core/filter_parse_lowering.mbt`: 933 lines
-- `core/filter_parse_atom.mbt`: 849 lines
+- `core/parser_lowering.mbt`: 933 lines
+- `core/parser_atom.mbt`: 849 lines
 - `core/eval_test.mbt`: 2176 lines
 - `core/eval_builtin_stream.mbt`: 575 lines
 
@@ -20,11 +20,11 @@ Updated: 2026-02-14
 - `core/eval.mbt` から path 系を `core/eval_path_ops.mbt` へ分離済み（挙動不変）
 - `core/eval.mbt` から collection 系を `core/eval_collection_ops.mbt` へ分離済み（挙動不変）
 - `core/eval.mbt` から json 系を `core/eval_json_ops.mbt` へ分離済み（挙動不変）
-- `core/filter_parse.mbt` から cursor 系を `core/filter_parse_cursor.mbt` へ分離済み（挙動不変）
-- `core/filter_parse.mbt` から atom 系を `core/filter_parse_atom.mbt` へ分離済み（挙動不変）
-- `core/filter_parse.mbt` から expr 系を `core/filter_parse_expr.mbt` へ分離済み（挙動不変）
-- `core/filter_parse.mbt` から lowering 系を `core/filter_parse_lowering.mbt` へ分離済み（挙動不変）
-- `core/filter_parse.mbt` は public API（`compile`/`parse_filter`）とエラー定義のみを保持する薄い入口へ整理済み
+- `core/parser.mbt` から cursor 系を `core/parser_cursor.mbt` へ分離済み（挙動不変）
+- `core/parser.mbt` から atom 系を `core/parser_atom.mbt` へ分離済み（挙動不変）
+- `core/parser.mbt` から expr 系を `core/parser_expr.mbt` へ分離済み（挙動不変）
+- `core/parser.mbt` から lowering 系を `core/parser_lowering.mbt` へ分離済み（挙動不変）
+- `core/parser.mbt` は public API（`compile`/`parse_filter`）とエラー定義のみを保持する薄い入口へ整理済み
 - `core/eval_call.mbt` から path 系 call を `core/eval_builtin_path.mbt` へ分離済み（挙動不変）
 - `core/eval_call.mbt` から string/index 系 call を `core/eval_builtin_string.mbt` へ分離済み（挙動不変）
 - `core/eval_call.mbt` から collection 系 call を `core/eval_builtin_collection.mbt` へ分離済み（挙動不変）
@@ -39,7 +39,7 @@ Updated: 2026-02-14
 本家 jq は `src/` を責務で分離している（例: `parser.y` / `lexer.l` / `compile.c` / `execute.c` / `builtin.c` / `main.c`）。
 jqx でも同じ思想を取り、言語仕様の差を保ったまま次の対応関係を目標にする。
 
-- parser/lexer 相当: `filter_parse*`
+- parser/lexer 相当: `parser*`
 - execute 相当: `eval*`
 - builtin 相当: `eval_builtin*`, `eval_call*`
 - CLI 相当: `cmd/main*`
@@ -58,13 +58,13 @@ jqx でも同じ思想を取り、言語仕様の差を保ったまま次の対�
 
 段階的に次の構成へ寄せる。
 
-- `core/filter_parse_cursor.mbt`
+- `core/parser_cursor.mbt`
   - 文字走査、位置情報、キーワード判定、字句ユーティリティ
-- `core/filter_parse_atom.mbt`
+- `core/parser_atom.mbt`
   - primary/atom、リテラル、配列・オブジェクト、呼び出し素片
-- `core/filter_parse_expr.mbt`
+- `core/parser_expr.mbt`
   - 優先順位付き式パース（`parse_mul` 〜 `parse_comma`）
-- `core/filter_parse_lowering.mbt`
+- `core/parser_lowering.mbt`
   - `as` / `?//` / update assignment / `def` lowering
 
 - `core/eval_core.mbt`
@@ -99,7 +99,7 @@ Done criteria:
 
 ### Phase 2 (parser split, no behavior change, completed 2026-02-14)
 
-- `filter_parse.mbt` を cursor/atom/expr/lowering に分割
+- `parser.mbt` を cursor/atom/expr/lowering に分割
 - parser の public API とエラーメッセージは維持
 
 Done criteria:
