@@ -1407,6 +1407,21 @@ test "execute compare order and logical" {
   assert_eq(must_execute(parse_filter(".a and .b"), j), [Json::boolean(true)])
   assert_eq(must_execute(parse_filter("not .b"), j), [Json::boolean(false)])
   assert_eq(must_execute(parse_filter(".a or .b"), j), [Json::boolean(true)])
+  let n = must_parse("null")
+  assert_eq(must_execute(parse_filter("(true, false) or false"), n), [
+    Json::boolean(true),
+    Json::boolean(false),
+  ])
+  assert_eq(must_execute(parse_filter("(true, true) and (true, false)"), n), [
+    Json::boolean(true),
+    Json::boolean(false),
+    Json::boolean(true),
+    Json::boolean(false),
+  ])
+  assert_eq(must_execute(parse_filter("not (true,false)"), n), [
+    Json::boolean(false),
+    Json::boolean(true),
+  ])
 }
 
 ///|
@@ -1993,7 +2008,25 @@ test "execute if-then-else" {
     must_execute(parse_filter("if .a then .b elif .c then .d else .e end"), j3),
     [Json::number(3.0)],
   )
-  assert_eq(must_execute(parse_filter("if .a then .b end"), j2), [])
+  assert_eq(must_execute(parse_filter("if .a then .b end"), j2), [j2])
+  assert_eq(
+    must_execute(
+      parse_filter("[if 1,null,2 then 3 else 4 end]"),
+      must_parse("null"),
+    ),
+    [must_parse("[3,4,3]")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("[if empty then 3 else 4 end]"),
+      must_parse("null"),
+    ),
+    [Json::array([])],
+  )
+  assert_eq(
+    must_execute(parse_filter("[if false then 3 end]"), must_parse("7")),
+    [must_parse("[7]")],
+  )
 }
 
 ///|

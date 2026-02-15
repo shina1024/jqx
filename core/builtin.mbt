@@ -581,7 +581,7 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
             json_type_with_value(input) + " only strings have UTF-8 byte length",
           )
       }
-    "error" => raise TypeError(input.to_json_string())
+    "error" => raise Thrown(input)
     "abs" =>
       match input {
         Number(n, _) =>

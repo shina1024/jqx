@@ -1,13 +1,5 @@
 [
   {
-    "name": "upstream-jq-test-l205",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[\"KO\",[\"b\"]]",
-    "jqx_out": "[\"KO\",\"[\\\"b\\\"]\"]"
-  },
-  {
     "name": "upstream-jq-test-l229",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -29,7 +21,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"skip doesn't support negative count\"",
-    "jqx_out": "\"null\""
+    "jqx_out": "null"
   },
   {
     "name": "upstream-jq-test-l657",
@@ -160,38 +152,6 @@
     "jqx_out": "{\"bar\":42,\"foo\":[11,null,{\"bar\":1}]}"
   },
   {
-    "name": "upstream-jq-test-l1305",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[3,4,3]",
-    "jqx_out": "[3]"
-  },
-  {
-    "name": "upstream-jq-test-l1309",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[]",
-    "jqx_out": "[4]"
-  },
-  {
-    "name": "upstream-jq-test-l1325",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[7]",
-    "jqx_out": "[]"
-  },
-  {
-    "name": "upstream-jq-test-l1333",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[7]",
-    "jqx_out": "[]"
-  },
-  {
     "name": "upstream-jq-test-l1456",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -206,14 +166,6 @@
     "jqx_status": "0",
     "jq_out": "\"string (\\\"foo\\\") cannot be negated\"",
     "jqx_out": "\"Cannot apply - to number (0) and string (\\\"foo\\\")\""
-  },
-  {
-    "name": "upstream-jq-test-l1476",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "1\nnull\n2",
-    "jqx_out": "\"1\"\n\"null\"\n\"2\""
   },
   {
     "name": "upstream-jq-test-l1519",
@@ -461,7 +413,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"hi there!\"\n\"caught outside ho\"",
-    "jqx_out": "\"caught outside \\\"ho\\\"\""
+    "jqx_out": "\"caught outside ho\""
   },
   {
     "name": "upstream-jq-test-l2325",
@@ -469,23 +421,7 @@
     "jq_status": "5",
     "jqx_status": "0",
     "jq_out": "jq: error (at <stdin>:1): ho\n\"hi there!\"",
-    "jqx_out": "jqx: error: \"ho\""
-  },
-  {
-    "name": "upstream-jq-test-l2329",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"inner catch foo\"",
-    "jqx_out": "\"inner catch \\\"foo\\\"\""
-  },
-  {
-    "name": "upstream-jq-test-l2333",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"outer catch inner catch foo\"",
-    "jqx_out": "\"outer catch \\\"inner catch \\\\\\\"foo\\\\\\\"\\\"\""
+    "jqx_out": "jqx: error: ho"
   },
   {
     "name": "upstream-jq-test-l2356",
@@ -688,14 +624,6 @@
     "jqx_out": "{\"good\":true,\"name\":\"JSON\"}\n{\"good\":false,\"name\":\"XML\"}"
   },
   {
-    "name": "upstream-man-test-l333",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"error message\"",
-    "jqx_out": "\"\\\"error message\\\"\""
-  },
-  {
     "name": "upstream-man-test-l469",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -758,22 +686,6 @@
     "jqx_status": "0",
     "jq_out": "[2]",
     "jqx_out": "[]"
-  },
-  {
-    "name": "upstream-man-test-l781",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true\nfalse",
-    "jqx_out": "true"
-  },
-  {
-    "name": "upstream-man-test-l786",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true\nfalse\ntrue\nfalse",
-    "jqx_out": "true"
   },
   {
     "name": "upstream-man-test-l793",

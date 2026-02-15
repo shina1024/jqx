@@ -129,10 +129,7 @@ fn apply_fromstream_token(root : Json, token : Json) -> Json raise EvalError {
 
 ///|
 fn[T] raise_error_value(value : Json) -> T raise EvalError {
-  match value {
-    String(s) => raise TypeError(s)
-    _ => raise TypeError(value.to_json_string())
-  }
+  raise Thrown(value)
 }
 
 ///|

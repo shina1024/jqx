@@ -599,7 +599,7 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
         let else_branch = if ctx.try_keyword("else") {
           ctx.parse_comma()
         } else {
-          Filter::empty()
+          Filter::identity()
         }
         ctx.skip_ws()
         guard ctx.try_keyword("end") else { ctx.invalid_char() }

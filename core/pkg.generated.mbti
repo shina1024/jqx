@@ -15,6 +15,7 @@ pub fn valid(StringView) -> Bool
 // Errors
 pub suberror EvalError {
   TypeError(String)
+  Thrown(Json)
   UnknownFunction(String)
   UnknownVariable(String)
 }

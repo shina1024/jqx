@@ -357,7 +357,7 @@ test "parse if-then-else" {
   )
   inspect(
     parse_filter("if .a then .b end"),
-    content="IfElse(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")), Empty)",
+    content="IfElse(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")), Identity)",
   )
 }
 

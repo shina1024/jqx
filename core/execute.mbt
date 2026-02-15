@@ -13,6 +13,7 @@
 ///|
 pub suberror EvalError {
   TypeError(String)
+  Thrown(Json)
   UnknownFunction(String)
   UnknownVariable(String)
 } derive(Eq)
@@ -21,8 +22,21 @@ pub suberror EvalError {
 pub impl Show for EvalError with output(self, logger) {
   match self {
     TypeError(msg) => logger.write_string(msg)
+    Thrown(value) =>
+      match value {
+        String(s) => logger.write_string(s)
+        _ => logger.write_string(value.to_json_string())
+      }
     UnknownFunction(name) => logger.write_string("Unknown function: " + name)
     UnknownVariable(name) => logger.write_string("Unknown variable: $" + name)
+  }
+}
+
+///|
+fn eval_error_to_catch_input(err : EvalError) -> Json {
+  match err {
+    Thrown(value) => value
+    _ => Json::string(err.to_string())
   }
 }
 
@@ -248,7 +262,7 @@ fn execute_with_env(
       }
     TryCatch(inner, handler) =>
       try execute_with_env(inner, input, env) catch {
-        err => execute_with_env(handler, Json::string(err.to_string()), env)
+        err => execute_with_env(handler, eval_error_to_catch_input(err), env)
       } noraise {
         values => values
       }
@@ -377,33 +391,58 @@ fn execute_with_env(
     Gt(left, right) => execute_compare(">", left, right, input, env)
     Gte(left, right) => execute_compare(">=", left, right, input, env)
     And(left, right) => {
-      let l = execute_to_bool(left, input, env)
-      if l {
-        [Json::boolean(execute_to_bool(right, input, env))]
-      } else {
-        [Json::boolean(false)]
+      let out = []
+      for l in execute_with_env(left, input, env) {
+        if is_truthy(l) {
+          for r in execute_with_env(right, input, env) {
+            out.push(Json::boolean(is_truthy(r)))
+          }
+        } else {
+          out.push(Json::boolean(false))
+        }
       }
+      out
     }
     Or(left, right) => {
-      let l = execute_to_bool(left, input, env)
-      if l {
-        [Json::boolean(true)]
-      } else {
-        [Json::boolean(execute_to_bool(right, input, env))]
+      let out = []
+      for l in execute_with_env(left, input, env) {
+        if is_truthy(l) {
+          out.push(Json::boolean(true))
+        } else {
+          for r in execute_with_env(right, input, env) {
+            out.push(Json::boolean(is_truthy(r)))
+          }
+        }
       }
+      out
     }
-    Not(inner) => [Json::boolean(!execute_to_bool(inner, input, env))]
+    Not(inner) => {
+      let out = []
+      for v in execute_with_env(inner, input, env) {
+        out.push(Json::boolean(!is_truthy(v)))
+      }
+      out
+    }
     Add(left, right) => execute_add(left, right, input, env)
     Sub(left, right) => execute_arith("-", left, right, input, env)
     Mul(left, right) => execute_arith("*", left, right, input, env)
     Div(left, right) => execute_arith("/", left, right, input, env)
     Mod(left, right) => execute_arith("%", left, right, input, env)
-    IfElse(cond, then_branch, else_branch) =>
-      if execute_to_bool(cond, input, env) {
-        execute_with_env(then_branch, input, env)
-      } else {
-        execute_with_env(else_branch, input, env)
+    IfElse(cond, then_branch, else_branch) => {
+      let out = []
+      for cond_value in execute_with_env(cond, input, env) {
+        if is_truthy(cond_value) {
+          for v in execute_with_env(then_branch, input, env) {
+            out.push(v)
+          }
+        } else {
+          for v in execute_with_env(else_branch, input, env) {
+            out.push(v)
+          }
+        }
       }
+      out
+    }
     Fallback(left, right) => {
       let l = execute_with_env(left, input, env)
       let truthy_values = []

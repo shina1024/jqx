@@ -11,15 +11,15 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 578
-- failed: 99
+- passed: 589
+- failed: 88
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `output-mismatch` | 97 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
+| `output-mismatch` | 86 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
 | `runtime-error-vs-jq-success` | 0 | resolved in current baseline |
 | `unknown-variable` | 0 | resolved in current baseline |
 | `parser-invalid-character` | 2 | parse error wording/position mismatch in error text |
@@ -62,10 +62,15 @@ From current snapshot (`unknown-function` subset):
 - Upstream stage1 subset was expanded from 95 to 110 passing cases.
 - `try ... catch ...` の入力セマンティクスを jq 寄せに修正（catch側へエラーメッセージ文字列を入力）し、
   full upstream diff を `failed 132 -> 99` まで縮小。
+- 例外モデルを拡張し、`error` 系は JSON 値を保持したまま catch へ渡すように修正
+  （`error` 値の文字列化崩れを解消）。
+- `if` のストリーム分岐セマンティクス（複数条件出力 / 条件空出力）と、
+  `and`/`or`/`not` のストリーム評価セマンティクスを jq 寄せに修正し、
+  full upstream diff を `failed 99 -> 88` まで縮小。
 
 ## Priority Plan
 
-1. Triage `output-mismatch` (`97`) by subcategory:
+1. Triage `output-mismatch` (`86`) by subcategory:
    - intentional policy differences (e.g. object key order)
    - real behavioral regressions (streaming/error semantics).
 2. Triage `parser-invalid-character` (`2`) and align parser error wording/offset behavior.

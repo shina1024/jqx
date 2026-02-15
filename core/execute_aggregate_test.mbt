@@ -112,7 +112,7 @@ test "execute any/all errors" {
     fail("expected all(cond) null iterate error")
   }
   guard (try? execute(parse_filter("error"), must_parse("\"x\""))) is Err(err) &&
-    err.to_string() == "\"x\"" else {
+    err.to_string() == "x" else {
     fail("expected error builtin")
   }
   guard (try? execute(parse_filter("error(\"boom\")"), must_parse("null")))
