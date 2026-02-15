@@ -673,6 +673,16 @@ test "execute tojson/fromjson compatibility" {
   assert_eq(must_execute(parse_filter("tojson"), must_parse("true")), [
     Json::string("true"),
   ])
+  assert_eq(
+    must_execute(
+      parse_filter("tojson"),
+      must_parse("0.12345678901234567890123456789"),
+    ),
+    [Json::string("0.12345678901234567890123456789")],
+  )
+  assert_eq(must_execute(parse_filter("tojson"), must_parse("1E-999999999")), [
+    Json::string("1E-999999999"),
+  ])
   assert_eq(must_execute(parse_filter("fromjson"), must_parse("\"1\"")), [
     Json::number(1.0),
   ])
@@ -873,6 +883,15 @@ test "execute join errors" {
     is Err(err) &&
     err.to_string() == "string (\"\") and object ({\"x\":1}) cannot be added" else {
     fail("expected join object element type error")
+  }
+  guard (try? execute(
+      parse_filter("join(\",\")"),
+      must_parse("[\"1\",\"2\",{\"a\":{\"b\":{\"c\":33}}}]"),
+    ))
+    is Err(err) &&
+    err.to_string() ==
+    "string (\"1,2,\") and object ({\"a\":{\"b\":{...) cannot be added" else {
+    fail("expected join deep object preview error")
   }
 }
 
@@ -1107,6 +1126,10 @@ test "execute index/rindex/indices compatibility" {
   assert_eq(
     must_execute(parse_filter("indices(\"aa\")"), must_parse("\"aaa\"")),
     [Json::array([Json::number(0.0), Json::number(1.0)])],
+  )
+  assert_eq(
+    must_execute(parse_filter("indices(\"o\")"), must_parse("\"🇬🇧oo\"")),
+    [Json::array([Json::number(2.0), Json::number(3.0)])],
   )
   assert_eq(
     must_execute(parse_filter("index((\"l\",\"e\"))"), must_parse("\"hello\"")),
@@ -2110,6 +2133,22 @@ test "execute try/catch" {
       ),
     ],
   )
+  assert_eq(
+    must_execute(
+      parse_filter(
+        "try ([\"hi\",\"ho\"][] | if . == \"ho\" then error else . end) catch \"caught \\(.)\"",
+      ),
+      must_parse("null"),
+    ),
+    [Json::string("hi"), Json::string("caught ho")],
+  )
+  assert_eq(must_execute(parse_filter("[(.*2, error)?]"), must_parse("1")), [
+    Json::array([Json::number(2.0)]),
+  ])
+  assert_eq(
+    must_execute(parse_filter("[repeat(.*2, error)?]"), must_parse("1")),
+    [Json::array([Json::number(2.0)])],
+  )
 }
 
 ///|
@@ -2338,6 +2377,17 @@ test "execute abs/have_decnum/isempty compatibility" {
   assert_eq(
     must_execute(parse_filter("map(abs)"), must_parse("[-10,-1.1,-1e-1]")),
     [Json::array([Json::number(10.0), Json::number(1.1), Json::number(0.1)])],
+  )
+  assert_eq(
+    must_execute(parse_filter("map(abs)|tojson"), must_parse("[-0,0,-10,-1.1]")),
+    [Json::string("[-0,0,10,1.1]")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("map(abs)|tojson"),
+      must_parse("[0.1,1000000000000000002]"),
+    ),
+    [Json::string("[0.1,1000000000000000002]")],
   )
   assert_eq(must_execute(parse_filter("abs"), must_parse("\"abc\"")), [
     Json::string("abc"),

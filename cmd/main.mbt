@@ -37,8 +37,20 @@ fn main {
     let inputs = parse_cli_inputs(cfg, stdin_text)
     let outputs = []
     for j in inputs {
-      for v in @lib.execute(f, j) {
+      let result = @lib.execute_for_cli(f, j)
+      let values = result.0
+      for v in values {
         outputs.push(v)
+      }
+      match result.1 {
+        Some(msg) => {
+          println(format_error_message(msg))
+          for v in outputs {
+            println(format_output(raw, v))
+          }
+          jqx_exit(5)
+        }
+        None => ()
       }
     }
     for v in outputs {

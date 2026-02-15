@@ -11,15 +11,15 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 660
-- failed: 17
+- passed: 668
+- failed: 9
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `output-mismatch` | 17 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics) |
+| `output-mismatch` | 9 | evaluator semantics differences (numeric/decnum behavior, Unicode/encoding edge cases) |
 | `runtime-error-vs-jq-success` | 0 | resolved in current baseline |
 | `unknown-variable` | 0 | resolved in current baseline |
 | `parser-invalid-character` | 0 | resolved in current baseline |
@@ -33,6 +33,27 @@ From current snapshot (`unknown-function` subset):
 
 ## Latest Progress
 
+- Unicode/string index compatibility and stream error parity were expanded:
+  - `indices`/`index`/`rindex` string search now uses Unicode codepoint indexing
+    (fixes `upstream-jq-test-l1579`).
+  - `comma` now preserves prior stream outputs on downstream errors, and
+    `repeat(stream)` was implemented with partial-output propagation
+    (fixes `upstream-man-test-l654`).
+- Numeric formatting and error-preview compatibility were expanded:
+  - parser now preserves repr for high-significance decimals / large-exponent literals.
+  - `abs` now preserves positive numeric repr and `-0` rendering compatibility.
+  - deep object add-error preview was aligned with jq-style truncation.
+  - fixes: `upstream-jq-test-l2000`, `upstream-jq-test-l2220`,
+    `upstream-jq-test-l2233`, `upstream-man-test-l5`.
+- full upstream diff was reduced from `failed 15 -> 9`.
+- ストリーム評価の部分出力保持を jq 寄せに拡張:
+  - `pipe` 経由で先行出力済みの値を保持したままエラーを伝播できるように修正。
+  - 配列/オブジェクト構築コンテキストでは部分出力を外へ漏らさないよう補正。
+  - `upstream-jq-test-l2320` を解消。
+- CLI のエラー時出力順を jq 寄せに調整:
+  - error 行を先に出力し、その後に既出ストリーム結果を出力。
+  - `upstream-jq-test-l2325` を解消。
+- full upstream diff を `failed 17 -> 15` まで縮小。
 - deep `tojson` / `fromjson` 互換を jq 寄せに修正:
   - `tojson` に深さ上限時の `<skipped: too deep>` プレースホルダ出力を追加。
   - `fromjson` で同プレースホルダ入力時の数値リテラル系エラー位置を jq 寄せに調整。
@@ -134,7 +155,7 @@ From current snapshot (`unknown-function` subset):
 
 ## Priority Plan
 
-1. Triage `output-mismatch` (`17`) by subcategory:
+1. Triage `output-mismatch` (`9`) by subcategory:
    - real behavioral regressions (streaming/error semantics).
    - numeric/decnum precision and rendering mismatches.
 2. Continue `def` compatibility improvements (recursion and filter-argument semantics).

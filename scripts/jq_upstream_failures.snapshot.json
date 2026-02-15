@@ -13,7 +13,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "9E+999999999\n9.999999999E+999999999\n1E-999999999\n1E-999999999",
-    "jqx_out": "9E999999999\n9999999999E999999990\n0\n0"
+    "jqx_out": "9E999999999\n9999999999E999999990\n1E-999999999\n0.000000001E-999999990"
   },
   {
     "name": "upstream-jq-test-l689",
@@ -24,28 +24,12 @@
     "jqx_out": "[null,null,null,null,null,null]"
   },
   {
-    "name": "upstream-jq-test-l1579",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[2,3]",
-    "jqx_out": "[4,5]"
-  },
-  {
     "name": "upstream-jq-test-l1975",
     "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"string (\\\"☆☆☆...) cannot be negated\"\n\"string (\\\"xx☆☆...) cannot be negated\"\n\"string (\\\"xxxx☆☆...) cannot be negated\"\n\"string (\\\"xxxxxx☆...) cannot be negated\"\n\"string (\\\"xxxxxxxx...) cannot be negated\"\n\"string (\\\"xxxxxxxxxx...) cannot be negated\"",
     "jqx_out": "\"string (\\\"YYYYY\\\") cannot be negated\"\n\"string (\\\"xxYYYYY\\\") cannot be negated\"\n\"string (\\\"xxxxYYYYY\\\") cannot be negated\"\n\"string (\\\"xxxxxxYYYY...) cannot be negated\"\n\"string (\\\"xxxxxxxxYY...) cannot be negated\"\n\"string (\\\"xxxxxxxxxx...) cannot be negated\""
-  },
-  {
-    "name": "upstream-jq-test-l2000",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"string (\\\"1,2,\\\") and object ({\\\"a\\\":{\\\"b\\\":{...) cannot be added\"",
-    "jqx_out": "\"string (\\\"1,2,\\\") and object ({\\\"a\\\":{\\\"b\\\":{\\\"c\\\":33}}}) cannot be added\""
   },
   {
     "name": "upstream-jq-test-l2162",
@@ -72,46 +56,6 @@
     "jqx_out": "false"
   },
   {
-    "name": "upstream-jq-test-l2220",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[-0,0,10,1.1]",
-    "jqx_out": "[0,0,10,1.1]"
-  },
-  {
-    "name": "upstream-jq-test-l2233",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0.1,1000000000000000002]",
-    "jqx_out": "[0.1,1000000000000000000]"
-  },
-  {
-    "name": "upstream-jq-test-l2320",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"hi there!\"\n\"caught outside ho\"",
-    "jqx_out": "\"caught outside ho\""
-  },
-  {
-    "name": "upstream-jq-test-l2325",
-    "category": "output-mismatch",
-    "jq_status": "5",
-    "jqx_status": "0",
-    "jq_out": "jq: error (at <stdin>:1): ho\n\"hi there!\"",
-    "jqx_out": "jqx: error: ho"
-  },
-  {
-    "name": "upstream-man-test-l5",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "0.12345678901234567890123456789",
-    "jqx_out": "0.12345678901234568"
-  },
-  {
     "name": "upstream-man-test-l9",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -126,13 +70,5 @@
     "jqx_status": "0",
     "jq_out": "true",
     "jqx_out": "false"
-  },
-  {
-    "name": "upstream-man-test-l654",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[2]",
-    "jqx_out": "[]"
   }
 ]

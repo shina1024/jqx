@@ -463,23 +463,35 @@ fn bsearch_json_array(a : Array[Json], needle : Json) -> Int {
 
 ///|
 fn find_string_indices(haystack : String, pattern : String) -> Array[Int] {
-  if pattern.length() == 0 {
+  let source_chars = []
+  for ch in haystack {
+    source_chars.push(ch)
+  }
+  let pattern_chars = []
+  for ch in pattern {
+    pattern_chars.push(ch)
+  }
+  if pattern_chars.length() == 0 {
+    return []
+  }
+  if pattern_chars.length() > source_chars.length() {
     return []
   }
   let out = []
-  let mut start = 0
-  for {
-    let rest = haystack.view(start_offset=start)
-    match rest.find(pattern) {
-      Some(i) => {
-        let found = start + i
-        out.push(found)
-        start = found + 1
-        continue
+  let last_start = source_chars.length() - pattern_chars.length()
+  for start in 0..<(last_start + 1) {
+    let mut matched = true
+    for i in 0..<pattern_chars.length() {
+      if source_chars[start + i] != pattern_chars[i] {
+        matched = false
+        break
       }
-      None => return out
+    }
+    if matched {
+      out.push(start)
     }
   }
+  out
 }
 
 ///|

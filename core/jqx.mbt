@@ -1140,6 +1140,114 @@ fn ParseContext::lex_zero(
 }
 
 ///|
+fn number_literal_exponent_index(token : StringView) -> Int? {
+  for i in 0..<token.length() {
+    let ch = token.unsafe_get(i).to_int().unsafe_to_char()
+    if ch == 'e' || ch == 'E' {
+      return Some(i)
+    }
+  }
+  None
+}
+
+///|
+fn is_ascii_digit(ch : Char) -> Bool {
+  ch >= '0' && ch <= '9'
+}
+
+///|
+fn number_literal_has_large_exponent(token : StringView) -> Bool {
+  match number_literal_exponent_index(token) {
+    Some(exp_index) => {
+      let mut pos = exp_index + 1
+      if pos < token.length() {
+        let sign = token.unsafe_get(pos).to_int().unsafe_to_char()
+        if sign == '+' || sign == '-' {
+          pos += 1
+        }
+      }
+      let digit_count = token.length() - pos
+      if digit_count > 3 {
+        return true
+      }
+      let mut abs_exp = 0
+      for i in pos..<token.length() {
+        let ch = token.unsafe_get(i).to_int().unsafe_to_char()
+        if !is_ascii_digit(ch) {
+          return false
+        }
+        abs_exp = abs_exp * 10 + (ch.to_int() - '0'.to_int())
+      }
+      abs_exp > 308
+    }
+    None => false
+  }
+}
+
+///|
+fn number_literal_significant_digits(token : StringView) -> Int {
+  let end = match number_literal_exponent_index(token) {
+    Some(idx) => idx
+    None => token.length()
+  }
+  let mut start = 0
+  if start < end {
+    let first = token.unsafe_get(start).to_int().unsafe_to_char()
+    if first == '+' || first == '-' {
+      start += 1
+    }
+  }
+  let mut dot = end
+  for i in start..<end {
+    let ch = token.unsafe_get(i).to_int().unsafe_to_char()
+    if ch == '.' {
+      dot = i
+      break
+    }
+  }
+  let mut left_start = start
+  for {
+    if left_start < dot &&
+      token.unsafe_get(left_start).to_int().unsafe_to_char() == '0' {
+      left_start += 1
+    } else {
+      break
+    }
+  }
+  let left_digits = if dot > left_start { dot - left_start } else { 0 }
+  let mut right_start = end
+  if dot < end {
+    right_start = dot + 1
+  }
+  let mut right_end = end
+  for {
+    if right_end > right_start &&
+      token.unsafe_get(right_end - 1).to_int().unsafe_to_char() == '0' {
+      right_end -= 1
+    } else {
+      break
+    }
+  }
+  let right_digits = if right_end > right_start {
+    right_end - right_start
+  } else {
+    0
+  }
+  let digits = left_digits + right_digits
+  if digits == 0 {
+    1
+  } else {
+    digits
+  }
+}
+
+///|
+fn number_literal_should_preserve_repr(token : StringView) -> Bool {
+  number_literal_has_large_exponent(token) ||
+  number_literal_significant_digits(token) > 17
+}
+
+///|
 fn ParseContext::lex_number_end(
   ctx : ParseContext,
   start : Int,
@@ -1150,6 +1258,9 @@ fn ParseContext::lex_number_end(
     let parsed_int = try? @strconv.parse_int64(s)
     match parsed_int {
       Ok(i) => {
+        if s == "-0" {
+          return (-0.0, Some(s))
+        }
         let d = i.to_double()
         if i <= 9007199254740991 && i >= -9007199254740991 {
           return (d, None)
@@ -1172,7 +1283,12 @@ fn ParseContext::lex_number_end(
   } else {
     let parsed_double = try? @strconv.parse_double(s)
     match parsed_double {
-      Ok(d) => (d, None)
+      Ok(d) =>
+        if number_literal_should_preserve_repr(s) {
+          (d, Some(s))
+        } else {
+          (d, None)
+        }
       Err(_) =>
         if s is ['-', ..] {
           (@double.neg_infinity, Some(s))

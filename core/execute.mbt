@@ -16,6 +16,7 @@ pub suberror EvalError {
   Thrown(Json)
   UnknownFunction(String)
   UnknownVariable(String)
+  Partial(Array[Json], Json, String)
 } derive(Eq)
 
 ///|
@@ -29,14 +30,74 @@ pub impl Show for EvalError with output(self, logger) {
       }
     UnknownFunction(name) => logger.write_string("Unknown function: " + name)
     UnknownVariable(name) => logger.write_string("Unknown variable: $" + name)
+    Partial(_, _, message) => logger.write_string(message)
+  }
+}
+
+///|
+fn eval_error_to_message(err : EvalError) -> String {
+  match err {
+    Partial(_, _, message) => message
+    _ => err.to_string()
+  }
+}
+
+///|
+fn eval_error_prefix(err : EvalError) -> Array[Json] {
+  match err {
+    Partial(values, _, _) => values.copy()
+    _ => []
   }
 }
 
 ///|
 fn eval_error_to_catch_input(err : EvalError) -> Json {
   match err {
+    Partial(_, catch_input, _) => catch_input
     Thrown(value) => value
-    _ => Json::string(err.to_string())
+    _ => Json::string(eval_error_to_message(err))
+  }
+}
+
+///|
+pub fn eval_error_outputs(err : EvalError) -> Array[Json] {
+  eval_error_prefix(err)
+}
+
+///|
+pub fn eval_error_message(err : EvalError) -> String {
+  eval_error_to_message(err)
+}
+
+///|
+fn append_json_values(out : Array[Json], values : Array[Json]) -> Unit {
+  for v in values {
+    out.push(v)
+  }
+}
+
+///|
+fn[T] raise_with_prefix(
+  prefix : Array[Json],
+  err : EvalError,
+) -> T raise EvalError {
+  if prefix.length() == 0 {
+    raise err
+  }
+  let merged = prefix.copy()
+  append_json_values(merged, eval_error_prefix(err))
+  raise Partial(
+    merged,
+    eval_error_to_catch_input(err),
+    eval_error_to_message(err),
+  )
+}
+
+///|
+fn eval_error_without_prefix(err : EvalError) -> EvalError {
+  match err {
+    Partial(_, catch_input, message) => Partial([], catch_input, message)
+    _ => err
   }
 }
 
@@ -114,6 +175,15 @@ fn parse_fromjson_string(s : String) -> Json raise EvalError {
 pub fn execute(filter : Filter, input : Json) -> Array[Json] raise EvalError {
   let env = Map::new()
   execute_with_env(filter, input, env)
+}
+
+///|
+pub fn execute_for_cli(filter : Filter, input : Json) -> (Array[Json], String?) {
+  try (execute(filter, input), None) catch {
+    err => (eval_error_outputs(err), Some(eval_error_message(err)))
+  } noraise {
+    result => result
+  }
 }
 
 ///|
@@ -244,13 +314,28 @@ fn execute_with_env(
     }
     Try(inner) =>
       try execute_with_env(inner, input, env) catch {
-        _ => []
+        err =>
+          match err {
+            Partial(values, _, _) => values
+            _ => []
+          }
       } noraise {
         values => values
       }
     TryCatch(inner, handler) =>
       try execute_with_env(inner, input, env) catch {
-        err => execute_with_env(handler, eval_error_to_catch_input(err), env)
+        err => {
+          let prefix = eval_error_prefix(err)
+          let handled = try
+            execute_with_env(handler, eval_error_to_catch_input(err), env)
+          catch {
+            err2 => raise_with_prefix(prefix, err2)
+          } noraise {
+            values => values
+          }
+          append_json_values(prefix, handled)
+          prefix
+        }
       } noraise {
         values => values
       }
@@ -297,27 +382,46 @@ fn execute_with_env(
     }
     Pipe(left, right) => {
       let out = []
-      for v in execute_with_env(left, input, env) {
-        for v2 in execute_with_env(right, v, env) {
-          out.push(v2)
+      let left_values = try execute_with_env(left, input, env) catch {
+        err => raise_with_prefix(out, err)
+      } noraise {
+        values => values
+      }
+      for v in left_values {
+        let right_values = try execute_with_env(right, v, env) catch {
+          err => raise_with_prefix(out, err)
+        } noraise {
+          values => values
         }
+        append_json_values(out, right_values)
       }
       out
     }
     Comma(left, right) => {
       let out = []
-      for v in execute_with_env(left, input, env) {
-        out.push(v)
+      let left_values = try execute_with_env(left, input, env) catch {
+        err => raise_with_prefix(out, err)
+      } noraise {
+        values => values
       }
-      for v in execute_with_env(right, input, env) {
-        out.push(v)
+      append_json_values(out, left_values)
+      let right_values = try execute_with_env(right, input, env) catch {
+        err => raise_with_prefix(out, err)
+      } noraise {
+        values => values
       }
+      append_json_values(out, right_values)
       out
     }
     Array(items) => {
       let out = []
       for f in items {
-        for v in execute_with_env(f, input, env) {
+        let values = try execute_with_env(f, input, env) catch {
+          err => raise eval_error_without_prefix(err)
+        } noraise {
+          values => values
+        }
+        for v in values {
           out.push(v)
         }
       }
@@ -328,7 +432,11 @@ fn execute_with_env(
       for kv in items {
         let key = kv.0
         let f = kv.1
-        let vals = execute_with_env(f, input, env)
+        let vals = try execute_with_env(f, input, env) catch {
+          err => raise eval_error_without_prefix(err)
+        } noraise {
+          values => values
+        }
         if vals.length() == 0 {
           return []
         }

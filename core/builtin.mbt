@@ -116,6 +116,11 @@ fn builtin_fabs_number(n : Double) -> Double {
 }
 
 ///|
+fn builtin_is_negative_zero(n : Double) -> Bool {
+  n == 0.0 && 1.0 / n == @double.neg_infinity
+}
+
+///|
 fn format_filter_input_string(input : Json) -> String {
   match input {
     String(s) => s
@@ -631,11 +636,30 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
     "error" => raise Thrown(input)
     "abs" =>
       match input {
-        Number(n, _) =>
-          if n < 0.0 {
-            [Json::number(-n)]
+        Number(n, repr) =>
+          if n == @double.infinity || n == @double.neg_infinity || n != n {
+            [json_number_value(builtin_fabs_number(n))]
+          } else if n < 0.0 {
+            match repr {
+              Some(s) =>
+                if s.has_prefix("-") {
+                  [
+                    Json::number(
+                      -n,
+                      repr=s
+                        .view(start_offset=1, end_offset=s.length())
+                        .to_string(),
+                    ),
+                  ]
+                } else {
+                  [json_number_value(-n)]
+                }
+              None => [json_number_value(-n)]
+            }
+          } else if builtin_is_negative_zero(n) || repr == Some("-0") {
+            [Json::number(-0.0, repr="-0")]
           } else {
-            [Json::number(n)]
+            [Json::number(n, repr?)]
           }
         JNull | JTrue | JFalse =>
           raise TypeError(json_type_with_value(input) + " cannot be negated")

@@ -391,6 +391,32 @@ fn builtin_call_stream(
         }
         Some(out)
       }
+    "repeat" =>
+      if args.length() != 1 {
+        raise UnknownFunction("repeat")
+      } else {
+        let out = []
+        let mut frontier = [input]
+        for {
+          if frontier.length() == 0 {
+            break
+          }
+          let next = []
+          for value in frontier {
+            let produced = try execute_with_env(args[0], value, env) catch {
+              err => raise_with_prefix(out, err)
+            } noraise {
+              values => values
+            }
+            for v in produced {
+              out.push(v)
+              next.push(v)
+            }
+          }
+          frontier = next
+        }
+        Some(out)
+      }
     "any" =>
       if args.length() == 1 {
         let values = collection_values(input)

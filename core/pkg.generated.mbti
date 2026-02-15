@@ -4,7 +4,13 @@ package "shina1024/jqx/core"
 // Values
 pub fn compile(StringView) -> Filter raise FilterError
 
+pub fn eval_error_message(EvalError) -> String
+
+pub fn eval_error_outputs(EvalError) -> Array[Json]
+
 pub fn execute(Filter, Json) -> Array[Json] raise EvalError
+
+pub fn execute_for_cli(Filter, Json) -> (Array[Json], String?)
 
 pub fn parse(StringView, max_nesting_depth? : Int) -> Json raise ParseError
 
@@ -18,6 +24,7 @@ pub suberror EvalError {
   Thrown(Json)
   UnknownFunction(String)
   UnknownVariable(String)
+  Partial(Array[Json], Json, String)
 }
 pub impl Eq for EvalError
 pub impl Show for EvalError

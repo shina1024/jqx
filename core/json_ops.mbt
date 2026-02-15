@@ -16,6 +16,25 @@ fn json_type_with_value(j : Json) -> String {
 }
 
 ///|
+fn json_type_with_value_preview(j : Json) -> String {
+  match j {
+    Object(_) | Array(_) => {
+      let json = j.to_json_string()
+      let max_preview = 11
+      if json.length() <= max_preview {
+        json_type_name(j) + " (" + json + ")"
+      } else {
+        json_type_name(j) +
+        " (" +
+        json.view(start_offset=0, end_offset=max_preview).to_string() +
+        "...)"
+      }
+    }
+    _ => json_type_with_value(j)
+  }
+}
+
+///|
 fn json_number_value(n : Double) -> Json {
   Json::number(n)
 }
@@ -244,6 +263,7 @@ fn execute_compare(
 fn arith_operand_desc(op : String, value : Json) -> String {
   match (op, value) {
     ("-", String(s)) => format_filter_string_type_with_preview(s)
+    (_, Object(_) | Array(_)) => json_type_with_value_preview(value)
     _ => json_type_with_value(value)
   }
 }
@@ -452,9 +472,9 @@ fn json_add_pair(a : Json, b : Json) -> Json raise EvalError {
     }
     _ =>
       raise TypeError(
-        json_type_with_value(a) +
+        json_type_with_value_preview(a) +
         " and " +
-        json_type_with_value(b) +
+        json_type_with_value_preview(b) +
         " cannot be added",
       )
   }

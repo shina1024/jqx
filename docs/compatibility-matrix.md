@@ -115,7 +115,7 @@ Notes:
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.
 - Smoke differential currently covers 214 cases (as of 2026-02-15).
 - Full upstream differential baseline is currently:
-  total 824 / passed 660 / failed 17 / skipped 147
+  total 824 / passed 668 / failed 9 / skipped 147
   (see `scripts/jq_upstream_failures.snapshot.json` and `docs/upstream-failure-backlog.md`).
 - `expect_error: true` in smoke differential cases compares normalized jq/jqx
   error messages and accepts jqx `moon run` wrapper status behavior.
