@@ -11,18 +11,18 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 545
-- failed: 132
+- passed: 578
+- failed: 99
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `output-mismatch` | 132 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
+| `output-mismatch` | 97 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
 | `runtime-error-vs-jq-success` | 0 | resolved in current baseline |
 | `unknown-variable` | 0 | resolved in current baseline |
-| `parser-invalid-character` | 0 | resolved in current baseline |
+| `parser-invalid-character` | 2 | parse error wording/position mismatch in error text |
 | `unknown-function` | 0 | resolved in current baseline |
 
 ## Top Unknown Functions
@@ -60,11 +60,14 @@ From current snapshot (`unknown-function` subset):
   - full upstream runtime-error-vs-jq-success cluster reduced from `10` to `0`.
 - Differential smoke cases were expanded from 203 to 214.
 - Upstream stage1 subset was expanded from 95 to 110 passing cases.
+- `try ... catch ...` の入力セマンティクスを jq 寄せに修正（catch側へエラーメッセージ文字列を入力）し、
+  full upstream diff を `failed 132 -> 99` まで縮小。
 
 ## Priority Plan
 
-1. Triage `output-mismatch` (`132`) by subcategory:
+1. Triage `output-mismatch` (`97`) by subcategory:
    - intentional policy differences (e.g. object key order)
    - real behavioral regressions (streaming/error semantics).
-2. Continue `def` compatibility improvements (recursion and filter-argument semantics).
-3. Keep expanding stage1 allowlist incrementally with newly stable cases.
+2. Triage `parser-invalid-character` (`2`) and align parser error wording/offset behavior.
+3. Continue `def` compatibility improvements (recursion and filter-argument semantics).
+4. Keep expanding stage1 allowlist incrementally with newly stable cases.

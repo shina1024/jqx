@@ -248,7 +248,7 @@ fn execute_with_env(
       }
     TryCatch(inner, handler) =>
       try execute_with_env(inner, input, env) catch {
-        _ => execute_with_env(handler, input, env)
+        err => execute_with_env(handler, Json::string(err.to_string()), env)
       } noraise {
         values => values
       }

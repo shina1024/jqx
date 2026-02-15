@@ -1937,9 +1937,13 @@ test "execute try/catch" {
   assert_eq(must_execute(parse_filter("try .a catch .b"), j), [
     Json::string("hi"),
   ])
-  assert_eq(must_execute(parse_filter("try (.a + 1) catch .b"), j), [
-    Json::number(1.0),
+  assert_eq(must_execute(parse_filter("try (.a + 1) catch ."), j), [
+    Json::string("string (\"hi\") and number (1) cannot be added"),
   ])
+  assert_eq(
+    must_execute(parse_filter("try error(\"boom\") catch (. + \"!\")"), j),
+    [Json::string("boom!")],
+  )
 }
 
 ///|
