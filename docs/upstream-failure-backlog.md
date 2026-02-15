@@ -11,15 +11,15 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 668
-- failed: 9
+- passed: 677
+- failed: 0
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `output-mismatch` | 9 | evaluator semantics differences (numeric/decnum behavior, Unicode/encoding edge cases) |
+| `output-mismatch` | 0 | resolved in current baseline |
 | `runtime-error-vs-jq-success` | 0 | resolved in current baseline |
 | `unknown-variable` | 0 | resolved in current baseline |
 | `parser-invalid-character` | 0 | resolved in current baseline |
@@ -32,6 +32,15 @@ From current snapshot (`unknown-function` subset):
 - none (cluster is `0`)
 
 ## Latest Progress
+
+- Remaining `output-mismatch` cluster (`6`) was closed:
+  - string error preview truncation now matches jq byte-oriented behavior for Unicode text.
+  - `tostring` / `tojson` number rendering was aligned for decnum-gated compatibility cases.
+  - differential runner filter escaping now keeps `\uXXXX` as a single backslash sequence.
+- Differential snapshot writing was fixed for empty-failure runs:
+  - `scripts/jq_diff.ps1` now writes `[]` when no failures remain.
+- full upstream diff reached `failed 0`:
+  - total `824` / passed `677` / failed `0` / skipped `147`.
 
 - Unicode/string index compatibility and stream error parity were expanded:
   - `indices`/`index`/`rindex` string search now uses Unicode codepoint indexing
@@ -155,8 +164,6 @@ From current snapshot (`unknown-function` subset):
 
 ## Priority Plan
 
-1. Triage `output-mismatch` (`9`) by subcategory:
-   - real behavioral regressions (streaming/error semantics).
-   - numeric/decnum precision and rendering mismatches.
-2. Continue `def` compatibility improvements (recursion and filter-argument semantics).
+1. Keep differential at `failed 0` while expanding supported-feature coverage.
+2. Continue `def` compatibility improvements (recursion and full filter-argument semantics).
 3. Keep expanding stage1 allowlist incrementally with newly stable cases.

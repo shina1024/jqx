@@ -298,20 +298,34 @@ fn execute_arith(
       let a = l[i]
       match (a, b) {
         (Number(x, _), Number(y, _)) => {
+          fn modulo_operand(n : Double) -> Double {
+            if n == @double.infinity {
+              9223372036854775807.0
+            } else if n == @double.neg_infinity {
+              -9223372036854775808.0
+            } else {
+              n
+            }
+          }
           let v = match op {
             "-" => x - y
             "*" => x * y
-            "%" =>
-              if y == 0.0 {
+            "%" => {
+              let mx = modulo_operand(x)
+              let my = modulo_operand(y)
+              if my == 0.0 {
                 raise TypeError(
                   json_type_with_value(a) +
                   " and " +
                   json_type_with_value(b) +
                   " cannot be divided (remainder) because the divisor is zero",
                 )
+              } else if x == @double.neg_infinity && y == @double.infinity {
+                -1.0
               } else {
-                x.mod(y)
+                mx.mod(my)
               }
+            }
             _ =>
               if y == 0.0 {
                 raise TypeError(

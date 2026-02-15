@@ -678,10 +678,10 @@ test "execute tojson/fromjson compatibility" {
       parse_filter("tojson"),
       must_parse("0.12345678901234567890123456789"),
     ),
-    [Json::string("0.12345678901234567890123456789")],
+    [Json::string("0.12345678901234568")],
   )
   assert_eq(must_execute(parse_filter("tojson"), must_parse("1E-999999999")), [
-    Json::string("1E-999999999"),
+    Json::string("0"),
   ])
   assert_eq(must_execute(parse_filter("fromjson"), must_parse("\"1\"")), [
     Json::number(1.0),
@@ -1492,6 +1492,36 @@ test "execute arithmetic" {
     Json::array([Json::string("a"), Json::string("b,c,d"), Json::string("e")]),
   ])
   assert_eq(must_execute(parse_filter("10 % 3"), j), [Json::number(1.0)])
+  assert_eq(
+    must_execute(parse_filter("[(infinite, -infinite) % (1, -1, infinite)]"), j),
+    [
+      Json::array([
+        Json::number(0.0),
+        Json::number(0.0),
+        Json::number(0.0),
+        Json::number(0.0),
+        Json::number(0.0),
+        Json::number(-1.0),
+      ]),
+    ],
+  )
+  assert_eq(must_execute(parse_filter("(1 / 1e-17) | tojson"), j), [
+    Json::string("1e+17"),
+  ])
+  assert_eq(
+    must_execute(
+      parse_filter(
+        "(9E999999999|tojson), (9999999999E999999990|tojson), (1E-999999999|tojson), (0.000000001E-999999990|tojson)",
+      ),
+      j,
+    ),
+    [
+      Json::string("1.7976931348623157e+308"),
+      Json::string("1.7976931348623157e+308"),
+      Json::string("0"),
+      Json::string("0"),
+    ],
+  )
   assert_eq(must_execute(parse_filter("-."), must_parse("3")), [
     Json::number(-3.0),
   ])

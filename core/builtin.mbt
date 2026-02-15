@@ -130,11 +130,31 @@ fn format_filter_input_string(input : Json) -> String {
 
 ///|
 fn format_filter_string_preview(s : String) -> String {
-  let max_preview = 10
-  if s.length() <= max_preview {
-    s
+  let max_preview_bytes = 10
+  let buf = StringBuilder::new()
+  let mut used = 0
+  for ch in s {
+    let code = ch.to_int()
+    let bytes = if code <= 0x7f {
+      1
+    } else if code <= 0x7ff {
+      2
+    } else if code <= 0xffff {
+      3
+    } else {
+      4
+    }
+    if used + bytes > max_preview_bytes {
+      break
+    }
+    used += bytes
+    buf.write_char(ch)
+  }
+  let preview = buf.to_string()
+  if preview == s {
+    preview
   } else {
-    s.view(start_offset=0, end_offset=max_preview).to_string() + "..."
+    preview + "..."
   }
 }
 
@@ -805,6 +825,7 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
     "tostring" =>
       match input {
         String(_) => [input]
+        Number(n, _) => [Json::string(Json::number(n).to_json_string())]
         _ => [Json::string(input.to_json_string())]
       }
     "@uri" =>
@@ -838,7 +859,11 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
           )
       }
     }
-    "tojson" => [Json::string(input.to_json_string())]
+    "tojson" =>
+      match input {
+        Number(n, _) => [Json::string(Json::number(n).to_json_string())]
+        _ => [Json::string(input.to_json_string())]
+      }
     "tostream" => [Json::array([Json::array([]), input])]
     "tonumber" =>
       match input {

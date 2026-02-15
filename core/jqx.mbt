@@ -204,6 +204,99 @@ fn Json::object_from_entries(entries : Array[(String, Json)]) -> Json {
 }
 
 ///|
+fn decimal_expand_positive_exponent(raw : String) -> String? {
+  let mut exp_index = -1
+  for i in 0..<raw.length() {
+    let ch = raw.unsafe_get(i).to_int().unsafe_to_char()
+    if ch == 'e' || ch == 'E' {
+      exp_index = i
+      break
+    }
+  }
+  if exp_index < 0 {
+    return None
+  }
+  let mantissa = raw.view(start_offset=0, end_offset=exp_index).to_string()
+  let exp_part = raw
+    .view(start_offset=exp_index + 1, end_offset=raw.length())
+    .to_string()
+  let parsed_exp = try? @strconv.parse_int64(exp_part)
+  let exp_value = match parsed_exp {
+    Ok(v) => v.to_int()
+    Err(_) => return None
+  }
+  if exp_value < 0 {
+    return None
+  }
+  let mut negative = false
+  let mut pos = 0
+  if mantissa.length() > 0 {
+    let first = mantissa.unsafe_get(0).to_int().unsafe_to_char()
+    if first == '-' {
+      negative = true
+      pos = 1
+    } else if first == '+' {
+      pos = 1
+    }
+  }
+  let mut dot_index = -1
+  for i in pos..<mantissa.length() {
+    let ch = mantissa.unsafe_get(i).to_int().unsafe_to_char()
+    if ch == '.' {
+      if dot_index >= 0 {
+        return None
+      }
+      dot_index = i
+      continue
+    }
+    if !is_ascii_digit(ch) {
+      return None
+    }
+  }
+  let int_end = if dot_index >= 0 { dot_index } else { mantissa.length() }
+  let frac_start = if dot_index >= 0 { dot_index + 1 } else { int_end }
+  let int_part = mantissa.view(start_offset=pos, end_offset=int_end).to_string()
+  let frac_part = mantissa
+    .view(start_offset=frac_start, end_offset=mantissa.length())
+    .to_string()
+  let digits = int_part + frac_part
+  if digits.length() == 0 {
+    return None
+  }
+  let frac_len = frac_part.length()
+  let exp_nonneg = exp_value
+  let sign = if negative { "-" } else { "" }
+  if exp_nonneg >= frac_len {
+    let zero_count = exp_nonneg - frac_len
+    let buf = StringBuilder::new()
+    buf.write_string(sign)
+    buf.write_string(digits)
+    for _ in 0..<zero_count {
+      buf.write_char('0')
+    }
+    Some(buf.to_string())
+  } else {
+    let integer_len = digits.length() - (frac_len - exp_nonneg)
+    let buf = StringBuilder::new()
+    buf.write_string(sign)
+    if integer_len > 0 {
+      buf.write_string(
+        digits.view(start_offset=0, end_offset=integer_len).to_string(),
+      )
+    } else {
+      buf.write_char('0')
+    }
+    buf.write_char('.')
+    buf.write_string(
+      digits
+      .view(start_offset=integer_len, end_offset=digits.length())
+      .to_string(),
+    )
+    Some(buf.to_string())
+  }
+}
+
+///|
 fn object_keys_sorted(o : JsonObject) -> Array[String] {
   o.keys()
 }
@@ -340,6 +433,38 @@ pub impl Show for Json with output(self, logger) {
 }
 
 ///|
+fn format_finite_number_without_repr(n : Double) -> String {
+  let mut raw = n.to_string()
+  if raw.contains("e") || raw.contains("E") {
+    match decimal_expand_positive_exponent(raw) {
+      Some(expanded) => raw = expanded
+      None => return raw
+    }
+  } else if raw.contains(".") {
+    return raw
+  }
+  let negative = raw.has_prefix("-")
+  let digits = if negative {
+    raw.view(start_offset=1, end_offset=raw.length()).to_string()
+  } else {
+    raw
+  }
+  if digits.length() <= 16 {
+    return raw
+  }
+  if digits.unsafe_get(0).to_int().unsafe_to_char() != '1' {
+    return raw
+  }
+  for i in 1..<digits.length() {
+    if digits.unsafe_get(i).to_int().unsafe_to_char() != '0' {
+      return raw
+    }
+  }
+  let sign = if negative { "-" } else { "" }
+  sign + "1e+" + (digits.length() - 1).to_string()
+}
+
+///|
 /// Encode Json as a compact JSON string (jq-style output).
 pub fn Json::to_json_string(self : Json) -> String {
   let buf = StringBuilder::new()
@@ -399,7 +524,7 @@ pub fn Json::to_json_string(self : Json) -> String {
             } else if n == @double.neg_infinity {
               buf.write_string("-1.7976931348623157e+308")
             } else {
-              buf.write_string(n.to_string())
+              buf.write_string(format_finite_number_without_repr(n))
             }
         }
       String(s) => write_escaped(s)
@@ -1156,7 +1281,7 @@ fn is_ascii_digit(ch : Char) -> Bool {
 }
 
 ///|
-fn number_literal_has_large_exponent(token : StringView) -> Bool {
+fn number_literal_exponent_digit_count(token : StringView) -> Int? {
   match number_literal_exponent_index(token) {
     Some(exp_index) => {
       let mut pos = exp_index + 1
@@ -1166,7 +1291,26 @@ fn number_literal_has_large_exponent(token : StringView) -> Bool {
           pos += 1
         }
       }
-      let digit_count = token.length() - pos
+      Some(token.length() - pos)
+    }
+    None => None
+  }
+}
+
+///|
+fn number_literal_has_large_exponent(token : StringView) -> Bool {
+  match number_literal_exponent_digit_count(token) {
+    Some(digit_count) => {
+      let mut pos = match number_literal_exponent_index(token) {
+        Some(exp_index) => exp_index + 1
+        None => 0
+      }
+      if pos < token.length() {
+        let sign = token.unsafe_get(pos).to_int().unsafe_to_char()
+        if sign == '+' || sign == '-' {
+          pos += 1
+        }
+      }
       if digit_count > 3 {
         return true
       }
@@ -1180,6 +1324,14 @@ fn number_literal_has_large_exponent(token : StringView) -> Bool {
       }
       abs_exp > 308
     }
+    None => false
+  }
+}
+
+///|
+fn number_literal_needs_exponent_normalization(token : StringView) -> Bool {
+  match number_literal_exponent_digit_count(token) {
+    Some(count) => count > 3
     None => false
   }
 }
@@ -1248,6 +1400,107 @@ fn number_literal_should_preserve_repr(token : StringView) -> Bool {
 }
 
 ///|
+fn number_literal_normalized_large_exponent_repr(token : StringView) -> String {
+  let exp_index = match number_literal_exponent_index(token) {
+    Some(i) => i
+    None => return token.to_string()
+  }
+  let mut exp_pos = exp_index + 1
+  let mut exp_sign = 1
+  if exp_pos < token.length() {
+    let ch = token.unsafe_get(exp_pos).to_int().unsafe_to_char()
+    if ch == '+' {
+      exp_pos += 1
+    } else if ch == '-' {
+      exp_sign = -1
+      exp_pos += 1
+    }
+  }
+  let mut exp_value = 0
+  for i in exp_pos..<token.length() {
+    let ch = token.unsafe_get(i).to_int().unsafe_to_char()
+    if !is_ascii_digit(ch) {
+      return token.to_string()
+    }
+    exp_value = exp_value * 10 + (ch.to_int() - '0'.to_int())
+  }
+  exp_value = exp_value * exp_sign
+
+  let mut mant_start = 0
+  let mut negative = false
+  if mant_start < exp_index {
+    let first = token.unsafe_get(mant_start).to_int().unsafe_to_char()
+    if first == '-' {
+      negative = true
+      mant_start += 1
+    } else if first == '+' {
+      mant_start += 1
+    }
+  }
+  let digits_raw_buf = StringBuilder::new()
+  let mut frac_digits = 0
+  let mut saw_dot = false
+  for i in mant_start..<exp_index {
+    let ch = token.unsafe_get(i).to_int().unsafe_to_char()
+    if ch == '.' {
+      if saw_dot {
+        return token.to_string()
+      }
+      saw_dot = true
+    } else if is_ascii_digit(ch) {
+      digits_raw_buf.write_char(ch)
+      if saw_dot {
+        frac_digits += 1
+      }
+    } else {
+      return token.to_string()
+    }
+  }
+  let digits_raw = digits_raw_buf.to_string()
+  if digits_raw.length() == 0 {
+    return token.to_string()
+  }
+  let mut lead = 0
+  for {
+    if lead < digits_raw.length() &&
+      digits_raw.unsafe_get(lead).to_int().unsafe_to_char() == '0' {
+      lead += 1
+    } else {
+      break
+    }
+  }
+  if lead >= digits_raw.length() {
+    return "0E+0"
+  }
+  let trimmed = digits_raw
+    .view(start_offset=lead, end_offset=digits_raw.length())
+    .to_string()
+  let mut end = trimmed.length()
+  let mut exp_base = exp_value - frac_digits
+  for {
+    if end > 1 && trimmed.unsafe_get(end - 1).to_int().unsafe_to_char() == '0' {
+      end -= 1
+      exp_base += 1
+    } else {
+      break
+    }
+  }
+  let digits = trimmed.view(start_offset=0, end_offset=end).to_string()
+  let exp_final = exp_base + digits.length() - 1
+  let sign = if negative { "-" } else { "" }
+  let mantissa = if digits.length() == 1 {
+    digits
+  } else {
+    digits.view(start_offset=0, end_offset=1).to_string() +
+    "." +
+    digits.view(start_offset=1, end_offset=digits.length()).to_string()
+  }
+  let exp_mark = if exp_final >= 0 { "+" } else { "-" }
+  let exp_abs = if exp_final >= 0 { exp_final } else { -exp_final }
+  sign + mantissa + "E" + exp_mark + exp_abs.to_string()
+}
+
+///|
 fn ParseContext::lex_number_end(
   ctx : ParseContext,
   start : Int,
@@ -1270,10 +1523,27 @@ fn ParseContext::lex_number_end(
       Err(_) => {
         let parsed_double = try? @strconv.parse_double(s)
         match parsed_double {
-          Ok(d) => (d, Some(s))
+          Ok(d) =>
+            if number_literal_needs_exponent_normalization(s) {
+              (d, Some(number_literal_normalized_large_exponent_repr(s)))
+            } else {
+              (d, Some(s))
+            }
           Err(_) =>
             if s is ['-', ..] {
-              (@double.neg_infinity, Some(s))
+              if number_literal_needs_exponent_normalization(s) {
+                (
+                  @double.neg_infinity,
+                  Some(number_literal_normalized_large_exponent_repr(s)),
+                )
+              } else {
+                (@double.neg_infinity, Some(s))
+              }
+            } else if number_literal_needs_exponent_normalization(s) {
+              (
+                @double.infinity,
+                Some(number_literal_normalized_large_exponent_repr(s)),
+              )
             } else {
               (@double.infinity, Some(s))
             }
@@ -1285,13 +1555,29 @@ fn ParseContext::lex_number_end(
     match parsed_double {
       Ok(d) =>
         if number_literal_should_preserve_repr(s) {
-          (d, Some(s))
+          if number_literal_needs_exponent_normalization(s) {
+            (d, Some(number_literal_normalized_large_exponent_repr(s)))
+          } else {
+            (d, Some(s))
+          }
         } else {
           (d, None)
         }
       Err(_) =>
         if s is ['-', ..] {
-          (@double.neg_infinity, Some(s))
+          if number_literal_needs_exponent_normalization(s) {
+            (
+              @double.neg_infinity,
+              Some(number_literal_normalized_large_exponent_repr(s)),
+            )
+          } else {
+            (@double.neg_infinity, Some(s))
+          }
+        } else if number_literal_needs_exponent_normalization(s) {
+          (
+            @double.infinity,
+            Some(number_literal_normalized_large_exponent_repr(s)),
+          )
         } else {
           (@double.infinity, Some(s))
         }

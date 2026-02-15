@@ -95,6 +95,31 @@ function Normalize-ErrorMessage {
   return $normalized
 }
 
+function Convert-FilterForJqx {
+  param([string]$Filter)
+
+  $sb = New-Object System.Text.StringBuilder
+  $i = 0
+  while ($i -lt $Filter.Length) {
+    $u = [int][char]$Filter[$i]
+    if ($u -ge 0xD800 -and $u -le 0xDBFF -and $i + 1 -lt $Filter.Length) {
+      $u2 = [int][char]$Filter[$i + 1]
+      if ($u2 -ge 0xDC00 -and $u2 -le 0xDFFF) {
+        [void]$sb.AppendFormat("\u{0:X4}\u{1:X4}", $u, $u2)
+        $i += 2
+        continue
+      }
+    }
+    if ($u -gt 0x7F) {
+      [void]$sb.AppendFormat("\u{0:X4}", $u)
+    } else {
+      [void]$sb.Append([char]$u)
+    }
+    $i += 1
+  }
+  return $sb.ToString()
+}
+
 function Classify-Failure {
   param(
     [int]$JqStatus,
@@ -248,7 +273,8 @@ try {
     $jqStatus = $jqRun.Status
     $jqOut = Normalize-Output $jqRun.Raw
 
-    $jqxCmd = @("run", "--target", "native", "cmd", "--") + $jqxArgs + @($filter)
+    $jqxFilter = Convert-FilterForJqx -Filter $filter
+    $jqxCmd = @("run", "--target", "native", "cmd", "--") + $jqxArgs + @($jqxFilter)
     $jqxRun = if ($jqxUseStdin) {
       Invoke-NativeCapture `
         -Exe $resolvedMoon `
@@ -329,7 +355,8 @@ try {
     if ($snapshotDir -ne "" -and -not (Test-Path $snapshotDir)) {
       New-Item -ItemType Directory -Path $snapshotDir | Out-Null
     }
-    $failureRecords | ConvertTo-Json -Depth 5 | Set-Content -Path $snapshotFile -Encoding UTF8
+    $snapshotJson = ConvertTo-Json -InputObject @($failureRecords) -Depth 5
+    Set-Content -Path $snapshotFile -Encoding UTF8 -Value $snapshotJson
     Write-Host "Wrote snapshot: $snapshotFile"
   }
   if ($failed -ne 0) {
