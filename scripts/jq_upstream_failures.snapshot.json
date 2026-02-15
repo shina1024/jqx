@@ -8,22 +8,6 @@
     "jqx_out": ""
   },
   {
-    "name": "upstream-jq-test-l277",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "1\n2\n3",
-    "jqx_out": "{\"x\":1}\n{\"x\":2}\n3"
-  },
-  {
-    "name": "upstream-jq-test-l389",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"skip doesn't support negative count\"",
-    "jqx_out": "null"
-  },
-  {
     "name": "upstream-jq-test-l657",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -46,14 +30,6 @@
     "jqx_status": "0",
     "jq_out": "[0,0,0,0,0,-1]",
     "jqx_out": "[null,null,null,null,null,null]"
-  },
-  {
-    "name": "upstream-jq-test-l693",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[true,true]",
-    "jqx_out": "[null,true]"
   },
   {
     "name": "upstream-jq-test-l716",
@@ -166,38 +142,6 @@
     "jqx_status": "0",
     "jq_out": "\"string (\\\"foo\\\") cannot be negated\"",
     "jqx_out": "\"Cannot apply - to number (0) and string (\\\"foo\\\")\""
-  },
-  {
-    "name": "upstream-jq-test-l1519",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[\"\",\"\",\"\"]",
-    "jqx_out": "[\"a\",\"xx\",\"\"]"
-  },
-  {
-    "name": "upstream-jq-test-l1523",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[\"\",\"\",\"\"]",
-    "jqx_out": "[\"a\",\"xx\",\"\"]"
-  },
-  {
-    "name": "upstream-jq-test-l1537",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[\"\",\"\",\"\",\"a\",\"a\",\"abc\",\"abc\",\"abc\",\"abc\"]\n[\"\",\"\",\"\",\"a\",\"a \",\"abc\",\"abc  \",\"abc\",\"abc  \"]\n[\"\",\"\",\"\",\"a\",\" a\",\"abc\",\"  abc\",\"  abc\",\"abc\"]",
-    "jqx_out": "[\"\\f\\u000b\",\"\",\"\",\"a\",\"a\",\"abc\",\"abc\",\"abc\",\"abc\"]\n[\"\\f\\u000b\",\"\",\"\",\"a\",\"a \",\"abc\",\"abc  \",\"abc\",\"abc  \"]\n[\" \\n\\t\\r\\f\\u000b\",\"\",\"\",\"a\",\" a\",\"abc\",\"  abc\",\"  abc\",\"abc\"]"
-  },
-  {
-    "name": "upstream-jq-test-l1543",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"abc\"\n\"abc\\t\\n\\u000b\\f\\r \u0085             \u2028\u2029  　\"\n\"\\t\\n\\u000b\\f\\r \u0085             \u2028\u2029  　abc\"",
-    "jqx_out": "\"\\u000b\\f\\r \u0085             \u2028\u2029  　abc\\t\\n\\u000b\\f\\r \u0085             \u2028\u2029  　\"\n\"\\u000b\\f\\r \u0085             \u2028\u2029  　abc\\t\\n\\u000b\\f\\r \u0085             \u2028\u2029  　\"\n\"\\t\\n\\u000b\\f\\r \u0085             \u2028\u2029  　abc\\t\\n\\u000b\\f\\r \u0085             \u2028\u2029  　\""
   },
   {
     "name": "upstream-jq-test-l1575",
@@ -320,14 +264,6 @@
     "jqx_out": "false"
   },
   {
-    "name": "upstream-jq-test-l2198",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true",
-    "jqx_out": "false"
-  },
-  {
     "name": "upstream-jq-test-l2207",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -420,7 +356,7 @@
     "category": "output-mismatch",
     "jq_status": "5",
     "jqx_status": "0",
-    "jq_out": "jq: error (at <stdin>:1): ho\n\"hi there!\"",
+    "jq_out": "\"hi there!\"\njq: error (at <stdin>:1): ho",
     "jqx_out": "jqx: error: ho"
   },
   {
@@ -432,108 +368,12 @@
     "jqx_out": ""
   },
   {
-    "name": "upstream-jq-test-l2373",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[\"implode input must be an array\",\"string (\\\"a\\\") can't be imploded, unicode codepoint needs to be numeric\",\"number (null) can't be imploded, unicode codepoint needs to be numeric\"]",
-    "jqx_out": "[\"implode input must be an array\",\"string (\\\"a\\\") can't be imploded, unicode codepoint needs to be numeric\",\"\\u0000\"]"
-  },
-  {
-    "name": "upstream-jq-test-l2401",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,2,3]",
-    "jqx_out": "[1,2]"
-  },
-  {
-    "name": "upstream-jq-test-l2405",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,2,3]",
-    "jqx_out": "[1,2]"
-  },
-  {
-    "name": "upstream-jq-test-l2409",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,2,3]",
-    "jqx_out": "[1,2]"
-  },
-  {
-    "name": "upstream-jq-test-l2437",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "null",
-    "jqx_out": "0"
-  },
-  {
-    "name": "upstream-jq-test-l2441",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"Cannot set array element at NaN index\"",
-    "jqx_out": "[9,1,2]"
-  },
-  {
-    "name": "upstream-jq-test-l2445",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"Cannot update string slices\"",
-    "jqx_out": "\"A slice of an array can only be assigned another array\""
-  },
-  {
-    "name": "upstream-jq-test-l2449",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,\"xyz\",4,5,6,7,8,9]",
-    "jqx_out": "[0,\"xyz\",3,4,5,6,7,8,9]"
-  },
-  {
     "name": "upstream-jq-test-l2464",
     "category": "parser-invalid-character",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"Invalid string literal; expected \\\", but got ' at line 1, column 5 (while parsing '{'a': 123}')\"",
     "jqx_out": "\"Invalid character '\\\\'' at line 1, column 2 (while parsing '{'a': 123}')\""
-  },
-  {
-    "name": "upstream-jq-test-l2470",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"ok\"\n\"ok\"",
-    "jqx_out": "\"x\"\n\"ok\""
-  },
-  {
-    "name": "upstream-jq-test-l2475",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"ok\"\n\"ok\"",
-    "jqx_out": "\"x\"\n\"ok\""
-  },
-  {
-    "name": "upstream-jq-test-l2482",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[\"ko\",\"startswith() requires string inputs\"]\n[\"ko\",\"startswith() requires string inputs\"]\n[\"ok\",\"\"]\n[\"ko\",\"startswith() requires string inputs\"]",
-    "jqx_out": "[\"ko\",\"ltrimstr() requires string inputs\"]\n[\"ko\",\"ltrimstr() requires string inputs\"]\n[\"ok\",\"\"]\n[\"ko\",\"ltrimstr() requires string inputs\"]"
-  },
-  {
-    "name": "upstream-jq-test-l2489",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[\"ko\",\"endswith() requires string inputs\"]\n[\"ko\",\"endswith() requires string inputs\"]\n[\"ok\",\"\"]\n[\"ko\",\"endswith() requires string inputs\"]",
-    "jqx_out": "[\"ko\",\"rtrimstr() requires string inputs\"]\n[\"ko\",\"rtrimstr() requires string inputs\"]\n[\"ok\",\"\"]\n[\"ko\",\"rtrimstr() requires string inputs\"]"
   },
   {
     "name": "upstream-jq-test-l2504",
@@ -584,14 +424,6 @@
     "jqx_out": "0.12345678901234568"
   },
   {
-    "name": "upstream-man-test-l13",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true",
-    "jqx_out": "false"
-  },
-  {
     "name": "upstream-man-test-l21",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -622,14 +454,6 @@
     "jqx_status": "0",
     "jq_out": "{\"name\":\"JSON\",\"good\":true}\n{\"name\":\"XML\",\"good\":false}",
     "jqx_out": "{\"good\":true,\"name\":\"JSON\"}\n{\"good\":false,\"name\":\"XML\"}"
-  },
-  {
-    "name": "upstream-man-test-l469",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"number\"\n\"number\"",
-    "jqx_out": "1.7976931348623157e+308\n\"number\""
   },
   {
     "name": "upstream-man-test-l478",
@@ -686,14 +510,6 @@
     "jqx_status": "0",
     "jq_out": "[2]",
     "jqx_out": "[]"
-  },
-  {
-    "name": "upstream-man-test-l793",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[false,true]",
-    "jqx_out": "[true,true]"
   },
   {
     "name": "upstream-man-test-l939",

@@ -145,15 +145,18 @@ fn nth_on_input(input : Json, key : Json) -> Json raise EvalError {
   match input {
     Array(a) =>
       match key {
-        Number(n, _) => {
-          let i = n.to_int()
-          let idx = if i < 0 { a.length() + i } else { i }
-          if idx >= 0 && idx < a.length() {
-            a[idx]
-          } else {
+        Number(n, _) =>
+          if n != n || n == @double.infinity || n == @double.neg_infinity {
             Json::null()
+          } else {
+            let i = n.to_int()
+            let idx = if i < 0 { a.length() + i } else { i }
+            if idx >= 0 && idx < a.length() {
+              a[idx]
+            } else {
+              Json::null()
+            }
           }
-        }
         _ => index_type_error(input, key)
       }
     JNull =>

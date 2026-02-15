@@ -369,12 +369,12 @@ fn builtin_call_stream(
         let stream = args[1]
         let out = []
         for count_value in counts {
-          let values = execute_with_env(stream, input, env)
           match
             call_parse_non_negative_count(
               count_value, "skip doesn't support negative count",
             ) {
             Some(skip_count) => {
+              let values = execute_with_env(stream, input, env)
               let start = if skip_count < values.length() {
                 skip_count
               } else {
@@ -384,7 +384,7 @@ fn builtin_call_stream(
                 out.push(values[i])
               }
             }
-            None => ()
+            None => ignore(execute_with_env(stream, input, env))
           }
         }
         Some(out)

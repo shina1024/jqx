@@ -111,11 +111,24 @@ fn FilterCursor::lower_bracket_keys_on_base(
 }
 
 ///|
-fn slice_index_from_filter(filter : Filter) -> Int? {
+fn slice_start_index_from_filter(filter : Filter) -> Int? {
   match filter {
     Literal(Number(n, _)) =>
       if n == n && n != @double.infinity && n != @double.neg_infinity {
-        Some(n.to_int())
+        Some(n.floor().to_int())
+      } else {
+        None
+      }
+    _ => None
+  }
+}
+
+///|
+fn slice_end_index_from_filter(filter : Filter) -> Int? {
+  match filter {
+    Literal(Number(n, _)) =>
+      if n == n && n != @double.infinity && n != @double.neg_infinity {
+        Some(n.ceil().to_int())
       } else {
         None
       }
@@ -144,11 +157,11 @@ fn FilterCursor::lower_bracket_slice_on_base(
   }
 
   let start_static = match start_expr {
-    Some(v) => slice_index_from_filter(v)
+    Some(v) => slice_start_index_from_filter(v)
     None => None
   }
   let end_static = match end_expr {
-    Some(v) => slice_index_from_filter(v)
+    Some(v) => slice_end_index_from_filter(v)
     None => None
   }
   let start_is_static = match start_expr {
@@ -211,7 +224,7 @@ fn FilterCursor::parse_bracket_postfix(
   let first = if ctx.peek_char() is Some(':') {
     None
   } else {
-    Some(ctx.parse_pipe(allow_as=false))
+    Some(ctx.parse_pipe_no_comma(allow_as=false))
   }
   ctx.skip_ws()
 
@@ -221,7 +234,7 @@ fn FilterCursor::parse_bracket_postfix(
     let end_expr = if ctx.peek_char() is Some(']') {
       None
     } else {
-      Some(ctx.parse_pipe(allow_as=false))
+      Some(ctx.parse_pipe_no_comma(allow_as=false))
     }
     ctx.skip_ws()
     ctx.expect_char(']')
@@ -245,7 +258,7 @@ fn FilterCursor::parse_bracket_postfix(
     match ctx.peek_char() {
       Some(',') => {
         ctx.read_char() |> ignore
-        keys.push(ctx.parse_pipe(allow_as=false))
+        keys.push(ctx.parse_pipe_no_comma(allow_as=false))
       }
       Some(']') => {
         ctx.read_char() |> ignore
@@ -690,25 +703,10 @@ fn FilterCursor::parse_array_literal(
     ctx.read_char() |> ignore
     return Filter::Array([])
   }
-  let items = []
-  for {
-    let elem = ctx.parse_pipe_scoped()
-    items.push(elem)
-    ctx.skip_ws()
-    match ctx.peek_char() {
-      Some(',') => {
-        ctx.read_char() |> ignore
-        continue
-      }
-      Some(']') => {
-        ctx.read_char() |> ignore
-        break
-      }
-      Some(_) => ctx.invalid_char()
-      None => raise InvalidEof
-    }
-  }
-  Filter::Array(items)
+  let expr = ctx.parse_comma()
+  ctx.skip_ws()
+  ctx.expect_char(']')
+  Filter::Array([expr])
 }
 
 ///|

@@ -99,11 +99,111 @@ fn FilterCursor::parse_add(ctx : FilterCursor) -> Filter raise FilterError {
 }
 
 ///|
-fn FilterCursor::parse_pipe(
+fn FilterCursor::parse_pipe_no_comma(
   ctx : FilterCursor,
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
   let mut left = ctx.parse_fallback(allow_as~)
+  for {
+    ctx.skip_ws()
+    if allow_as && ctx.try_keyword("as") {
+      let pattern = ctx.parse_as_pattern()
+      ctx.skip_ws()
+      if ctx.try_qslash_fallback_sep() {
+        let patterns = [pattern]
+        for {
+          patterns.push(ctx.parse_as_pattern())
+          if ctx.try_qslash_fallback_sep() {
+            continue
+          }
+          break
+        }
+        ctx.skip_ws()
+        ctx.expect_char('|')
+        let body = if ctx.peek_keyword("def") {
+          ctx.parse_scoped(allow_as~)
+        } else {
+          ctx.parse_pipe_no_comma(allow_as~)
+        }
+        let source_tmp = ctx.fresh_as_tmp()
+        let source_var = Filter::var_(source_tmp)
+        let mut branch = ctx.lower_as_pattern_with_source(
+          source_var,
+          patterns[patterns.length() - 1],
+          body,
+        )
+        for i in 0..<(patterns.length() - 1) {
+          let idx = patterns.length() - 2 - i
+          let candidate = ctx.lower_as_pattern_with_source(
+            source_var,
+            patterns[idx],
+            body,
+          )
+          branch = Filter::try_catch(candidate, branch)
+        }
+        branch = lower_with_null_defaults_for_patterns(branch, patterns)
+        return Filter::as_(left, source_tmp, branch)
+      } else {
+        ctx.expect_char('|')
+        let right = if ctx.peek_keyword("def") {
+          ctx.parse_scoped(allow_as~)
+        } else {
+          ctx.parse_pipe_no_comma(allow_as~)
+        }
+        return ctx.lower_as_pattern_with_source(left, pattern, right)
+      }
+    }
+    match ctx.peek_char() {
+      Some('|') => {
+        let saved = ctx.offset
+        ctx.read_char() |> ignore
+        if ctx.peek_char() is Some('=') {
+          ctx.offset = saved
+          break
+        }
+        let right = if ctx.peek_keyword("def") {
+          ctx.parse_scoped(allow_as~)
+        } else {
+          ctx.parse_fallback(allow_as~)
+        }
+        left = Filter::pipe(left, right)
+      }
+      _ => break
+    }
+  }
+  left
+}
+
+///|
+fn FilterCursor::parse_comma_tight(
+  ctx : FilterCursor,
+  allow_as? : Bool = true,
+) -> Filter raise FilterError {
+  let mut left = ctx.parse_fallback(allow_as~)
+  for {
+    ctx.skip_ws()
+    match ctx.peek_char() {
+      Some(',') => {
+        ctx.read_char() |> ignore
+        let right = if ctx.peek_keyword("def") {
+          ctx.parse_scoped(allow_as~)
+        } else {
+          ctx.parse_fallback(allow_as~)
+        }
+        left = Filter::comma(left, right)
+      }
+      _ => break
+    }
+  }
+  left
+}
+
+///|
+fn FilterCursor::parse_pipe(
+  ctx : FilterCursor,
+  allow_as? : Bool = true,
+) -> Filter raise FilterError {
+  let mut left = ctx.parse_comma_tight(allow_as~)
   for {
     ctx.skip_ws()
     if allow_as && ctx.try_keyword("as") {
@@ -164,7 +264,7 @@ fn FilterCursor::parse_pipe(
         let right = if ctx.peek_keyword("def") {
           ctx.parse_scoped(allow_as~)
         } else {
-          ctx.parse_fallback(allow_as~)
+          ctx.parse_comma_tight(allow_as~)
         }
         left = Filter::pipe(left, right)
       }
@@ -180,7 +280,7 @@ fn FilterCursor::parse_pipe_scoped(
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
   let defs = ctx.parse_definition_prefix()
-  let raw_filter = ctx.parse_pipe(allow_as~)
+  let raw_filter = ctx.parse_pipe_no_comma(allow_as~)
   if defs.length() == 0 {
     raw_filter
   } else {
@@ -441,23 +541,7 @@ fn FilterCursor::parse_comma(
   ctx : FilterCursor,
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
-  let mut left = ctx.parse_pipe(allow_as~)
-  for {
-    ctx.skip_ws()
-    match ctx.peek_char() {
-      Some(',') => {
-        ctx.read_char() |> ignore
-        let right = if ctx.peek_keyword("def") {
-          ctx.parse_scoped(allow_as~)
-        } else {
-          ctx.parse_pipe(allow_as~)
-        }
-        left = Filter::comma(left, right)
-      }
-      _ => break
-    }
-  }
-  left
+  ctx.parse_pipe(allow_as~)
 }
 
 ///|

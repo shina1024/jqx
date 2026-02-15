@@ -64,7 +64,7 @@ fn builtin_call_string(
               } else {
                 out.push(Json::string(h))
               }
-            _ => raise TypeError("ltrimstr() requires string inputs")
+            _ => raise TypeError("startswith() requires string inputs")
           }
         }
         Some(out)
@@ -77,21 +77,24 @@ fn builtin_call_string(
         let out = []
         for needle in needles {
           match (input, needle) {
-            (String(h), String(n)) => {
-              let mut trimmed = h
-              if trimmed.has_prefix(n) {
-                trimmed = trimmed.view(start_offset=n.length()).to_string()
+            (String(h), String(n)) =>
+              if n.length() == 0 {
+                out.push(Json::string(""))
+              } else {
+                let mut trimmed = h
+                if trimmed.has_prefix(n) {
+                  trimmed = trimmed.view(start_offset=n.length()).to_string()
+                }
+                if trimmed.has_suffix(n) {
+                  trimmed = trimmed
+                    .view(
+                      start_offset=0,
+                      end_offset=trimmed.length() - n.length(),
+                    )
+                    .to_string()
+                }
+                out.push(Json::string(trimmed))
               }
-              if trimmed.has_suffix(n) {
-                trimmed = trimmed
-                  .view(
-                    start_offset=0,
-                    end_offset=trimmed.length() - n.length(),
-                  )
-                  .to_string()
-              }
-              out.push(Json::string(trimmed))
-            }
             _ => raise TypeError("startswith() requires string inputs")
           }
         }
@@ -106,7 +109,9 @@ fn builtin_call_string(
         for needle in needles {
           match (input, needle) {
             (String(h), String(n)) =>
-              if h.has_suffix(n) {
+              if n.length() == 0 {
+                out.push(Json::string(""))
+              } else if h.has_suffix(n) {
                 out.push(
                   Json::string(
                     h
@@ -117,7 +122,7 @@ fn builtin_call_string(
               } else {
                 out.push(Json::string(h))
               }
-            _ => raise TypeError("rtrimstr() requires string inputs")
+            _ => raise TypeError("endswith() requires string inputs")
           }
         }
         Some(out)

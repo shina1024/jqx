@@ -3,7 +3,8 @@ fn builtin_ltrim_ascii_ws(s : String) -> String {
   let mut start = 0
   let end = s.length()
   for {
-    if start < end && is_ascii_ws(s.unsafe_get(start).to_int().unsafe_to_char()) {
+    if start < end &&
+      builtin_is_trim_ws(s.unsafe_get(start).to_int().unsafe_to_char()) {
       start += 1
     } else {
       break
@@ -18,13 +19,33 @@ fn builtin_rtrim_ascii_ws(s : String) -> String {
   let mut end = s.length()
   for {
     if end > start &&
-      is_ascii_ws(s.unsafe_get(end - 1).to_int().unsafe_to_char()) {
+      builtin_is_trim_ws(s.unsafe_get(end - 1).to_int().unsafe_to_char()) {
       end -= 1
     } else {
       break
     }
   }
   s.view(start_offset=start, end_offset=end).to_string()
+}
+
+///|
+fn builtin_is_trim_ws(ch : Char) -> Bool {
+  let code = ch.to_int()
+  code == 0x09 || // \t
+  code == 0x0A || // \n
+  code == 0x0B || // \v
+  code == 0x0C || // \f
+  code == 0x0D || // \r
+  code == 0x20 || // space
+  code == 0x85 ||
+  code == 0xA0 ||
+  code == 0x1680 ||
+  (code >= 0x2000 && code <= 0x200A) ||
+  code == 0x2028 ||
+  code == 0x2029 ||
+  code == 0x202F ||
+  code == 0x205F ||
+  code == 0x3000
 }
 
 ///|

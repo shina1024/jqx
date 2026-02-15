@@ -11,15 +11,15 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 589
-- failed: 88
+- passed: 612
+- failed: 65
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `output-mismatch` | 86 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
+| `output-mismatch` | 63 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
 | `runtime-error-vs-jq-success` | 0 | resolved in current baseline |
 | `unknown-variable` | 0 | resolved in current baseline |
 | `parser-invalid-character` | 2 | parse error wording/position mismatch in error text |
@@ -33,7 +33,6 @@ From current snapshot (`unknown-function` subset):
 
 ## Latest Progress
 
-- Parser invalid-character cluster has been reduced to `0` in full upstream diff.
 - Local `def` parsing was expanded:
   - `def` in nested/local expression positions (`|`/`,`/括弧/配列要素内) is parsed.
   - nested `def` semicolon scanning was fixed for definition-body extraction.
@@ -67,10 +66,22 @@ From current snapshot (`unknown-function` subset):
 - `if` のストリーム分岐セマンティクス（複数条件出力 / 条件空出力）と、
   `and`/`or`/`not` のストリーム評価セマンティクスを jq 寄せに修正し、
   full upstream diff を `failed 99 -> 88` まで縮小。
+- スライス/配列更新/文字列処理の互換性を集中修正:
+  - `skip(n; stream)` の評価順序修正（負数エラー時に stream を先行評価しない）
+  - `trim/ltrim/rtrim` の空白判定拡張、`trimstr` 系の型エラーメッセージ整合
+  - `implode` の `NaN/±Inf` 要素エラー化
+  - `.[start:end]` の小数境界丸め（start=floor, end=ceil）
+  - `.[nan]` / `setpath` / `getpath` 系の `NaN/±Inf` インデックス扱い整合
+  - 代入スライスのエラー優先順位修正（文字列入力は `Cannot update string slices` 優先）
+- `pipe` と `comma` の優先順位を jq 寄せに修正し、
+  `a,b | f` / `x | y,z` 系の評価順序差分を解消。
+- 配列リテラルを jq の `[expr]` セマンティクスに寄せ、
+  `as` 束縛と `,` 生成子のスコープ互換性を改善。
+- full upstream diff を `failed 88 -> 65` まで縮小。
 
 ## Priority Plan
 
-1. Triage `output-mismatch` (`86`) by subcategory:
+1. Triage `output-mismatch` (`63`) by subcategory:
    - intentional policy differences (e.g. object key order)
    - real behavioral regressions (streaming/error semantics).
 2. Triage `parser-invalid-character` (`2`) and align parser error wording/offset behavior.

@@ -171,7 +171,11 @@ test "parse dynamic slice bounds" {
 test "parse pipe and comma" {
   inspect(
     parse_filter(".foo | .bar, .baz"),
-    content="Comma(Pipe(Pipe(Identity, Field(\"foo\")), Pipe(Identity, Field(\"bar\"))), Pipe(Identity, Field(\"baz\")))",
+    content="Pipe(Pipe(Identity, Field(\"foo\")), Comma(Pipe(Identity, Field(\"bar\")), Pipe(Identity, Field(\"baz\"))))",
+  )
+  inspect(
+    parse_filter("{x:(1,2)},{x:3} | .x"),
+    content="Pipe(Comma(Object([(\"x\", Comma(Literal(Number(1)), Literal(Number(2))))]), Object([(\"x\", Literal(Number(3)))])), Pipe(Identity, Field(\"x\")))",
   )
 }
 
@@ -432,11 +436,11 @@ test "parse update assignment precedence" {
 test "parse array and object literals" {
   inspect(
     parse_filter("[.a, .b]"),
-    content="Array([Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\"))])",
+    content="Array([Comma(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))])",
   )
   inspect(
     parse_filter("[10 > 0, 1 == 2]"),
-    content="Array([Gt(Literal(Number(10)), Literal(Number(0))), Eq(Literal(Number(1)), Literal(Number(2)))])",
+    content="Array([Comma(Gt(Literal(Number(10)), Literal(Number(0))), Eq(Literal(Number(1)), Literal(Number(2))))])",
   )
   inspect(
     parse_filter("{\"a\": .b, c: .d}"),
@@ -461,7 +465,7 @@ test "parse array and object literals" {
   )
   inspect(
     parse_filter("[1,2][]"),
-    content="Pipe(Array([Literal(Number(1)), Literal(Number(2))]), Iter)",
+    content="Pipe(Array([Comma(Literal(Number(1)), Literal(Number(2)))]), Iter)",
   )
   guard (try? parse_filter("{a,b,(.d):.a,e:.b}")) is Ok(_) else {
     fail("expected dynamic object key parse")

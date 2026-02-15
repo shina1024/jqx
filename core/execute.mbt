@@ -810,11 +810,17 @@ fn implode_array(a : Array[Json]) -> String raise EvalError {
   let buf = StringBuilder::new()
   for v in a {
     match v {
-      Number(n, _) => {
-        let code = n.to_int()
-        let ch = codepoint_or_replacement(code)
-        buf.write_char(ch)
-      }
+      Number(n, _) =>
+        if n != n || n == @double.infinity || n == @double.neg_infinity {
+          raise TypeError(
+            json_type_with_value(v) +
+            " can't be imploded, unicode codepoint needs to be numeric",
+          )
+        } else {
+          let code = n.to_int()
+          let ch = codepoint_or_replacement(code)
+          buf.write_char(ch)
+        }
       _ =>
         raise TypeError(
           json_type_with_value(v) +
@@ -947,14 +953,27 @@ fn set_slice_on_input(
   end : Int?,
   value : Json,
 ) -> Json raise EvalError {
-  let replacement = match value {
-    Array(a) => a
-    _ =>
-      raise TypeError("A slice of an array can only be assigned another array")
-  }
   match input {
-    Array(a) => Json::array(set_slice_array(a, start, end, replacement))
-    JNull => Json::array(set_slice_array([], start, end, replacement))
+    Array(a) => {
+      let replacement = match value {
+        Array(v) => v
+        _ =>
+          raise TypeError(
+            "A slice of an array can only be assigned another array",
+          )
+      }
+      Json::array(set_slice_array(a, start, end, replacement))
+    }
+    JNull => {
+      let replacement = match value {
+        Array(v) => v
+        _ =>
+          raise TypeError(
+            "A slice of an array can only be assigned another array",
+          )
+      }
+      Json::array(set_slice_array([], start, end, replacement))
+    }
     String(_) => raise TypeError("Cannot update string slices")
     _ => index_type_error(input, Json::object(Map::new()))
   }

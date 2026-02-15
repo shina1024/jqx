@@ -17,15 +17,18 @@ fn getpath_on_input(input : Json, path : Json) -> Json raise EvalError {
             }
           Array(a) =>
             match key {
-              Number(n, _) => {
-                let i = n.to_int()
-                let idx = if i < 0 { a.length() + i } else { i }
-                if idx >= 0 && idx < a.length() {
-                  a[idx]
-                } else {
+              Number(n, _) =>
+                if n != n || n == @double.infinity || n == @double.neg_infinity {
                   Json::null()
+                } else {
+                  let i = n.to_int()
+                  let idx = if i < 0 { a.length() + i } else { i }
+                  if idx >= 0 && idx < a.length() {
+                    a[idx]
+                  } else {
+                    Json::null()
+                  }
                 }
-              }
               _ => index_type_error(cur, key)
             }
           JNull =>
@@ -585,7 +588,13 @@ fn path_getpath_step(
 ) -> Array[PathEvalState] raise EvalError {
   match segment {
     String(name) => path_field_state(state, name, false)
-    Number(n, _) => path_index_state(state, n.to_int(), false)
+    Number(n, _) =>
+      if n != n || n == @double.infinity || n == @double.neg_infinity {
+        let next_path = path_with_segment(state.path, Json::number(n))
+        [path_eval_state(Json::null(), next_path, true)]
+      } else {
+        path_index_state(state, n.to_int(), false)
+      }
     _ => raise TypeError("Path must be specified as an array")
   }
 }

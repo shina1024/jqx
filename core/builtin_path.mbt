@@ -1,5 +1,8 @@
 ///|
-fn call_parse_slice_index(value : Json) -> Int? raise EvalError {
+fn call_parse_slice_index(
+  value : Json,
+  end? : Bool = false,
+) -> Int? raise EvalError {
   let int_min = -2147483647 - 1
   let int_max = 2147483647
   match value {
@@ -12,12 +15,13 @@ fn call_parse_slice_index(value : Json) -> Int? raise EvalError {
       } else if n == @double.neg_infinity {
         Some(int_min)
       } else {
-        let index = if n > int_max.to_double() {
+        let rounded = if end { n.ceil() } else { n.floor() }
+        let index = if rounded > int_max.to_double() {
           int_max
-        } else if n < int_min.to_double() {
+        } else if rounded < int_min.to_double() {
           int_min
         } else {
-          n.to_int()
+          rounded.to_int()
         }
         Some(index)
       }
@@ -112,7 +116,7 @@ fn builtin_call_path(
         for start_value in starts {
           let start = call_parse_slice_index(start_value)
           for end_value in ends {
-            let end = call_parse_slice_index(end_value)
+            let end = call_parse_slice_index(end_value, end=true)
             for v in execute_slice(start, end, input, optional=false) {
               out.push(v)
             }
@@ -131,7 +135,7 @@ fn builtin_call_path(
         for start_value in starts {
           let start = call_parse_slice_index(start_value)
           for end_value in ends {
-            let end = call_parse_slice_index(end_value)
+            let end = call_parse_slice_index(end_value, end=true)
             for value in values {
               out.push(set_slice_on_input(input, start, end, value))
             }

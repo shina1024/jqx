@@ -65,6 +65,18 @@ test "execute index and iter" {
     Json::number(3.0),
   ])
   assert_eq(must_execute(f3, j), [Json::number(2.0), Json::number(3.0)])
+  assert_eq(
+    must_execute(parse_filter("[range(10)] | .[1.2:3.5]"), must_parse("null")),
+    [Json::array([Json::number(1.0), Json::number(2.0), Json::number(3.0)])],
+  )
+  assert_eq(
+    must_execute(parse_filter("[range(10)] | .[1.5:3.5]"), must_parse("null")),
+    [Json::array([Json::number(1.0), Json::number(2.0), Json::number(3.0)])],
+  )
+  assert_eq(
+    must_execute(parse_filter("[range(10)] | .[1.7:3.5]"), must_parse("null")),
+    [Json::array([Json::number(1.0), Json::number(2.0), Json::number(3.0)])],
+  )
 }
 
 ///|
@@ -109,7 +121,11 @@ test "execute optional access" {
 test "execute pipe and comma" {
   let j = must_parse("{\"a\":{\"b\":2},\"c\":3}")
   let f = parse_filter(".a | .b, .c")
-  assert_eq(must_execute(f, j), [Json::number(2.0), Json::number(3.0)])
+  assert_eq(must_execute(f, j), [Json::number(2.0), Json::null()])
+  assert_eq(
+    must_execute(parse_filter("{x:(1,2)},{x:3} | .x"), must_parse("null")),
+    [Json::number(1.0), Json::number(2.0), Json::number(3.0)],
+  )
 }
 
 ///|
@@ -1049,6 +1065,12 @@ test "execute explode/implode errors" {
     "string (\"a\") can't be imploded, unicode codepoint needs to be numeric" else {
     fail("expected implode element type error")
   }
+  guard (try? execute(parse_filter("[nan] | implode"), must_parse("null")))
+    is Err(err) &&
+    err.to_string() ==
+    "number (null) can't be imploded, unicode codepoint needs to be numeric" else {
+    fail("expected implode NaN type error")
+  }
 }
 
 ///|
@@ -1707,6 +1729,38 @@ test "execute update assignment compatibility" {
     err.to_string() == "A slice of an array can only be assigned another array" else {
     fail("expected slice assignment array-only error")
   }
+  assert_eq(
+    must_execute(
+      parse_filter("try (\"foobar\" | .[1.5:3.5] = \"xyz\") catch ."),
+      must_parse("null"),
+    ),
+    [Json::string("Cannot update string slices")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("try ([range(3)] | .[nan] = 9) catch ."),
+      must_parse("null"),
+    ),
+    [Json::string("Cannot set array element at NaN index")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("try ([range(10)] | .[1.5:3.5] = [\"xyz\"]) catch ."),
+      must_parse("null"),
+    ),
+    [
+      Json::array([
+        Json::number(0.0),
+        Json::string("xyz"),
+        Json::number(4.0),
+        Json::number(5.0),
+        Json::number(6.0),
+        Json::number(7.0),
+        Json::number(8.0),
+        Json::number(9.0),
+      ]),
+    ],
+  )
   assert_eq(must_execute(parse_filter(".a %= 4"), must_parse("{\"a\":9}")), [
     Json::object({ "a": Json::number(1.0) }),
   ])
@@ -2104,6 +2158,11 @@ test "execute trimstr compatibility" {
     Json::string("foobar"),
   ])
   assert_eq(must_execute(parse_filter("ltrimstr(empty)"), j), [])
+  assert_eq(must_execute(parse_filter("ltrimstr(\"\")"), j), [
+    Json::string("foobar"),
+  ])
+  assert_eq(must_execute(parse_filter("rtrimstr(\"\")"), j), [Json::string("")])
+  assert_eq(must_execute(parse_filter("trimstr(\"\")"), j), [Json::string("")])
 }
 
 ///|
@@ -2133,17 +2192,17 @@ test "execute trim/ltrim/rtrim compatibility" {
 test "execute trimstr errors" {
   guard (try? execute(parse_filter("ltrimstr(\"1\")"), must_parse("1")))
     is Err(err) &&
-    err.to_string() == "ltrimstr() requires string inputs" else {
+    err.to_string() == "startswith() requires string inputs" else {
     fail("expected ltrimstr input type error")
   }
   guard (try? execute(parse_filter("ltrimstr(1)"), must_parse("\"x\"")))
     is Err(err) &&
-    err.to_string() == "ltrimstr() requires string inputs" else {
+    err.to_string() == "startswith() requires string inputs" else {
     fail("expected ltrimstr separator type error")
   }
   guard (try? execute(parse_filter("rtrimstr(1)"), must_parse("\"x\"")))
     is Err(err) &&
-    err.to_string() == "rtrimstr() requires string inputs" else {
+    err.to_string() == "endswith() requires string inputs" else {
     fail("expected rtrimstr separator type error")
   }
   guard (try? execute(parse_filter("trim"), must_parse("1"))) is Err(err) &&
@@ -2270,7 +2329,7 @@ test "execute numeric/meta builtins compatibility" {
       parse_filter("infinite | type, nan | type"),
       must_parse("null"),
     ),
-    [Json::string("number"), Json::string("number")],
+    [Json::string("string"), Json::string("number")],
   )
   assert_eq(
     must_execute(
