@@ -34,7 +34,10 @@ pub suberror ParseError {
   InvalidChar(Position, Char)
   InvalidEof
   DepthLimitExceeded
+  InvalidNumericLiteral(Position)
   InvalidNumericLiteralAtEof(Position)
+  InvalidStringLiteral(Position)
+  InvalidStringLiteralAtEof(Position)
 }
 pub impl Eq for ParseError
 pub impl Show for ParseError

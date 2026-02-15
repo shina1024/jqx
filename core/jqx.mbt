@@ -255,7 +255,10 @@ pub suberror ParseError {
   InvalidChar(Position, Char)
   InvalidEof
   DepthLimitExceeded
+  InvalidNumericLiteral(Position)
   InvalidNumericLiteralAtEof(Position)
+  InvalidStringLiteral(Position)
+  InvalidStringLiteralAtEof(Position)
 } derive(Eq)
 
 ///|
@@ -274,9 +277,29 @@ pub impl Show for ParseError with output(self, logger) {
       logger.write_string(
         "Depth limit exceeded, please increase the max_nesting_depth parameter",
       )
+    InvalidNumericLiteral({ line, column }) =>
+      logger
+      ..write_string("Invalid numeric literal at line ")
+      ..write_object(line)
+      ..write_string(", column ")
+      .write_object(column)
     InvalidNumericLiteralAtEof({ line, column }) =>
       logger
       ..write_string("Invalid numeric literal at EOF at line ")
+      ..write_object(line)
+      ..write_string(", column ")
+      .write_object(column)
+    InvalidStringLiteral({ line, column }) =>
+      logger
+      ..write_string("Invalid string literal; expected \", but got ' at line ")
+      ..write_object(line)
+      ..write_string(", column ")
+      .write_object(column)
+    InvalidStringLiteralAtEof({ line, column }) =>
+      logger
+      ..write_string(
+        "Invalid string literal; expected \", but got ' at EOF at line ",
+      )
       ..write_object(line)
       ..write_string(", column ")
       .write_object(column)
@@ -320,6 +343,7 @@ pub impl Show for Json with output(self, logger) {
 /// Encode Json as a compact JSON string (jq-style output).
 pub fn Json::to_json_string(self : Json) -> String {
   let buf = StringBuilder::new()
+  let max_depth = 256
   fn write_escaped(s : String) {
     buf.write_char('"')
     for ch in s {
@@ -355,7 +379,11 @@ pub fn Json::to_json_string(self : Json) -> String {
     buf.write_char('"')
   }
 
-  fn write_value(j : Json) {
+  fn write_value(j : Json, depth : Int) {
+    if depth > max_depth {
+      buf.write_string("<skipped: too deep>")
+      return
+    }
     match j {
       JNull => buf.write_string("null")
       JTrue => buf.write_string("true")
@@ -384,7 +412,7 @@ pub fn Json::to_json_string(self : Json) -> String {
           } else {
             buf.write_char(',')
           }
-          write_value(v)
+          write_value(v, depth + 1)
         }
         buf.write_char(']')
       }
@@ -401,14 +429,14 @@ pub fn Json::to_json_string(self : Json) -> String {
           }
           write_escaped(k)
           buf.write_char(':')
-          write_value(v)
+          write_value(v, depth + 1)
         }
         buf.write_char('}')
       }
     }
   }
 
-  write_value(self)
+  write_value(self, 0)
   buf.to_string()
 }
 
@@ -639,11 +667,13 @@ fn ParseContext::lex_nonfinite_number(
   ctx : ParseContext,
   start~ : Int,
 ) -> Token raise ParseError {
+  let mut ended_at_separator = false
   for {
     match ctx.read_char() {
       Some(c) if is_ascii_alpha(c) || c is ('0'..='9') => continue
       Some(c) => {
         ctx.offset -= c.utf16_len()
+        ended_at_separator = true
         break
       }
       None => break
@@ -657,16 +687,20 @@ fn ParseContext::lex_nonfinite_number(
     "-inf" | "-infinity" => Number(@double.neg_infinity, None)
     "nan" | "+nan" | "-nan" => Number(@double.infinity - @double.infinity, None)
     _ =>
-      raise InvalidNumericLiteralAtEof(
-        offset_to_position(
-          ctx.input,
-          if ctx.offset > start {
-            ctx.offset - 1
-          } else {
-            start
-          },
-        ),
-      )
+      if ended_at_separator {
+        raise InvalidNumericLiteral(offset_to_position(ctx.input, ctx.offset))
+      } else {
+        raise InvalidNumericLiteralAtEof(
+          offset_to_position(
+            ctx.input,
+            if ctx.offset > start {
+              ctx.offset - 1
+            } else {
+              start
+            },
+          ),
+        )
+      }
   }
 }
 
@@ -739,6 +773,7 @@ fn ParseContext::lex_property_name(
   ctx.lex_skip_whitespace()
   match ctx.read_char() {
     Some('}') => RBrace
+    Some('\'') => ctx.invalid_single_quoted_string()
     Some('"') => {
       let s = ctx.lex_string()
       String(s)
@@ -754,6 +789,7 @@ fn ParseContext::lex_property_name2(
 ) -> Token raise ParseError {
   ctx.lex_skip_whitespace()
   match ctx.read_char() {
+    Some('\'') => ctx.invalid_single_quoted_string()
     Some('"') => {
       let s = ctx.lex_string()
       String(s)
@@ -790,6 +826,7 @@ fn ParseContext::lex_value(
       }
     Some('N' | 'i' | 'I') =>
       return ctx.lex_nonfinite_number(start=ctx.offset - 1)
+    Some('<') => return ctx.lex_nonfinite_number(start=ctx.offset - 1)
     Some('+') =>
       match ctx.read_char() {
         Some('i' | 'I' | 'n' | 'N') =>
@@ -839,6 +876,7 @@ fn ParseContext::lex_value(
       let s = ctx.lex_string()
       return String(s)
     }
+    Some('\'') => ctx.invalid_single_quoted_string()
     Some(c) => {
       let shift = -c.utf16_len()
       ctx.invalid_char(shift~)
@@ -894,6 +932,50 @@ fn ParseContext::lex_string(ctx : ParseContext) -> String raise ParseError {
     }
   }
   buf.to_string()
+}
+
+///|
+fn[T] ParseContext::invalid_single_quoted_string(
+  ctx : ParseContext,
+) -> T raise ParseError {
+  let mut has_closing_quote = false
+  for {
+    match ctx.read_char() {
+      Some('\'') => {
+        has_closing_quote = true
+        break
+      }
+      Some(_) => continue
+      None => break
+    }
+  }
+  if has_closing_quote {
+    if ctx.offset < ctx.end_offset {
+      raise InvalidStringLiteral(offset_to_position(ctx.input, ctx.offset))
+    } else {
+      raise InvalidStringLiteralAtEof(
+        offset_to_position(
+          ctx.input,
+          if ctx.offset > 0 {
+            ctx.offset - 1
+          } else {
+            0
+          },
+        ),
+      )
+    }
+  } else {
+    raise InvalidStringLiteralAtEof(
+      offset_to_position(
+        ctx.input,
+        if ctx.offset > 0 {
+          ctx.offset - 1
+        } else {
+          0
+        },
+      ),
+    )
+  }
 }
 
 ///|

@@ -11,18 +11,18 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 656
-- failed: 21
+- passed: 660
+- failed: 17
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `output-mismatch` | 20 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics) |
+| `output-mismatch` | 17 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics) |
 | `runtime-error-vs-jq-success` | 0 | resolved in current baseline |
 | `unknown-variable` | 0 | resolved in current baseline |
-| `parser-invalid-character` | 1 | parse error wording/position mismatch in error text |
+| `parser-invalid-character` | 0 | resolved in current baseline |
 | `unknown-function` | 0 | resolved in current baseline |
 
 ## Top Unknown Functions
@@ -33,6 +33,14 @@ From current snapshot (`unknown-function` subset):
 
 ## Latest Progress
 
+- deep `tojson` / `fromjson` 互換を jq 寄せに修正:
+  - `tojson` に深さ上限時の `<skipped: too deep>` プレースホルダ出力を追加。
+  - `fromjson` で同プレースホルダ入力時の数値リテラル系エラー位置を jq 寄せに調整。
+  - `upstream-jq-test-l2524`, `upstream-jq-test-l2529`, `upstream-jq-test-l2534` を解消。
+- single quote の JSON 文字列リテラルエラー文言を jq 寄せに修正:
+  - `Invalid string literal; expected \", but got '` 系の位置情報を実装。
+  - `upstream-jq-test-l2464` を解消。
+- full upstream diff を `failed 21 -> 17` まで縮小。
 - `sort_by` / `group_by` / `unique_by` / `min_by` / `max_by` の
   複数キー評価を jq 寄せに修正:
   - key filter の複数出力を先頭1件ではなく配列キー全体として比較に使用。
@@ -126,9 +134,8 @@ From current snapshot (`unknown-function` subset):
 
 ## Priority Plan
 
-1. Triage `output-mismatch` (`20`) by subcategory:
+1. Triage `output-mismatch` (`17`) by subcategory:
    - real behavioral regressions (streaming/error semantics).
    - numeric/decnum precision and rendering mismatches.
-2. Triage `parser-invalid-character` (`1`) and align parser error wording/offset behavior.
-3. Continue `def` compatibility improvements (recursion and filter-argument semantics).
-4. Keep expanding stage1 allowlist incrementally with newly stable cases.
+2. Continue `def` compatibility improvements (recursion and filter-argument semantics).
+3. Keep expanding stage1 allowlist incrementally with newly stable cases.

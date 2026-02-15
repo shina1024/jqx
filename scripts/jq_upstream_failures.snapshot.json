@@ -104,38 +104,6 @@
     "jqx_out": "jqx: error: ho"
   },
   {
-    "name": "upstream-jq-test-l2464",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"Invalid string literal; expected \\\", but got ' at line 1, column 5 (while parsing '{'a': 123}')\"",
-    "jqx_out": "\"Invalid character '\\\\'' at line 1, column 2 (while parsing '{'a': 123}')\""
-  },
-  {
-    "name": "upstream-jq-test-l2524",
-    "category": "output-mismatch",
-    "jq_status": "5",
-    "jqx_status": "0",
-    "jq_out": "jq: error (at <stdin>:1): Invalid numeric literal at line 1, column 266 (while parsing '[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[<skipped: too deep>]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]')",
-    "jqx_out": ""
-  },
-  {
-    "name": "upstream-jq-test-l2529",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "false",
-    "jqx_out": ""
-  },
-  {
-    "name": "upstream-jq-test-l2534",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true",
-    "jqx_out": ""
-  },
-  {
     "name": "upstream-man-test-l5",
     "category": "output-mismatch",
     "jq_status": "0",
