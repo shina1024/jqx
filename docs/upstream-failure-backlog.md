@@ -1,6 +1,6 @@
 # Upstream Failure Backlog (jq Differential)
 
-Updated: 2026-02-14
+Updated: 2026-02-15
 
 This document tracks failing upstream differential cases so they do not stay
 "postponed forever". Snapshot source:
@@ -58,7 +58,7 @@ From current snapshot (`unknown-function` subset):
   - `abs` now matches jq for non-numeric scalar/container inputs (null/bool are still type errors).
   - `path()` evaluation now keeps variable-bound path state through `as` and dynamic `getpath`.
   - full upstream runtime-error-vs-jq-success cluster reduced from `10` to `0`.
-- Differential smoke cases were expanded from 203 to 210.
+- Differential smoke cases were expanded from 203 to 211.
 - Upstream stage1 subset was expanded from 95 to 110 passing cases.
 
 ## Priority Plan

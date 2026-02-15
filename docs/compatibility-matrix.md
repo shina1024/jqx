@@ -112,7 +112,7 @@ Notes:
 - CLI compatibility cases can specify `jq_args` / `jqx_args` and
   `jqx_use_stdin` for option-aware differential runs.
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.
-- Smoke differential currently covers 210 cases (as of 2026-02-15).
+- Smoke differential currently covers 211 cases (as of 2026-02-15).
 - Full upstream differential baseline is currently:
   total 824 / passed 545 / failed 132 / skipped 147
   (see `scripts/jq_upstream_failures.snapshot.json` and `docs/upstream-failure-backlog.md`).

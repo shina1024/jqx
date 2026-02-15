@@ -997,6 +997,11 @@
     "input": "null"
   },
   {
+    "name": "env-var-pager-null",
+    "filter": "$ENV.PAGER",
+    "input": "null"
+  },
+  {
     "name": "truncate-stream-basic",
     "filter": "truncate_stream([[0],\"a\"],[[1,0],\"b\"],[[1,0]],[[1]])",
     "input": "1"
