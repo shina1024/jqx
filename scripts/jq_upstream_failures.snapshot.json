@@ -1,13 +1,5 @@
 [
   {
-    "name": "upstream-jq-test-l229",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"Array index too large\"",
-    "jqx_out": ""
-  },
-  {
     "name": "upstream-jq-test-l657",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -102,14 +94,6 @@
     "jqx_status": "0",
     "jq_out": "{\"foo\":[11,null,{\"bar\":1}],\"bar\":42}",
     "jqx_out": "{\"bar\":42,\"foo\":[11,null,{\"bar\":1}]}"
-  },
-  {
-    "name": "upstream-jq-test-l1456",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "7",
-    "jqx_out": "3"
   },
   {
     "name": "upstream-jq-test-l1464",

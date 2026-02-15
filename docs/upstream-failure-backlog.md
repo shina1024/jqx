@@ -11,15 +11,15 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 616
-- failed: 61
+- passed: 618
+- failed: 59
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `output-mismatch` | 59 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
+| `output-mismatch` | 57 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
 | `runtime-error-vs-jq-success` | 0 | resolved in current baseline |
 | `unknown-variable` | 0 | resolved in current baseline |
 | `parser-invalid-character` | 2 | parse error wording/position mismatch in error text |
@@ -83,6 +83,13 @@ From current snapshot (`unknown-function` subset):
   - `.[].|=...` 系の複数削除で index シフトを避けるため、削除 path を集約して `delpaths` を適用
   - `tonumber` は前後空白付き文字列を拒否（`" 4"`, `"5 "` を parse しない）へ調整
 - full upstream diff を `failed 65 -> 61` まで縮小。
+- `try/catch` の結合規則を jq 寄せに修正:
+  - `try` / `catch` は次の単項式にのみ結合（`try .a + 1` は `(try .a) + 1`）
+  - `1 + try 2 catch 3 + 4` / `try (1/0) catch 9 + 2` の優先順位差分を解消
+- `setpath`/更新代入の巨大添字で空出力になる挙動を修正:
+  - 配列拡張上限を超える添字は `"Array index too large"` を返す
+  - `try (.[999999999] = 0) catch .` を jq と同じ結果へ修正
+- full upstream diff を `failed 61 -> 59` まで縮小。
 
 ## Priority Plan
 

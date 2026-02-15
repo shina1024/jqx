@@ -96,6 +96,17 @@ test "parse try/catch" {
     parse_filter("try .a"),
     content="TryCatch(Pipe(Identity, Field(\"a\")), Empty)",
   )
+  inspect(
+    parse_filter("1 + try 2 catch 3 + 4"),
+    content="Add(Add(Literal(Number(1)), TryCatch(Literal(Number(2)), Literal(Number(3)))), Literal(Number(4)))",
+  )
+  inspect(
+    parse_filter("try (1/0) catch 9 + 2"),
+    content="Add(TryCatch(Div(Literal(Number(1)), Literal(Number(0))), Literal(Number(9))), Literal(Number(2)))",
+  )
+  guard (try? parse_filter("try 1/0 catch 9")) is Err(_) else {
+    fail("expected parse error for unparenthesized try/catch arithmetic")
+  }
 }
 
 ///|

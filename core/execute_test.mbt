@@ -2057,6 +2057,32 @@ test "execute try/catch" {
     must_execute(parse_filter("try error(\"boom\") catch (. + \"!\")"), j),
     [Json::string("boom!")],
   )
+  assert_eq(
+    must_execute(parse_filter("try 2 catch 3 + 4"), must_parse("null")),
+    [Json::number(6.0)],
+  )
+  assert_eq(
+    must_execute(parse_filter("1 + try 2 catch 3 + 4"), must_parse("null")),
+    [Json::number(7.0)],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("1 + try error(0) catch 3 + 4"),
+      must_parse("null"),
+    ),
+    [Json::number(8.0)],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("try (.[999999999] = 0) catch ."),
+      must_parse("null"),
+    ),
+    [Json::string("Array index too large")],
+  )
+  guard (try? execute(parse_filter("try .a + 1"), j)) is Err(err) &&
+    err.to_string() == "string (\"hi\") and number (1) cannot be added" else {
+    fail("expected try precedence to match (try .a) + 1")
+  }
 }
 
 ///|

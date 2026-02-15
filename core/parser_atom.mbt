@@ -550,10 +550,11 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
       if ctx.try_keyword("true") {
         Filter::literal(Json::boolean(true))
       } else if ctx.try_keyword("try") {
-        let inner = ctx.parse_update()
+        // jq's `try` binds only to the next unary expression unless grouped.
+        let inner = ctx.parse_unary()
         ctx.skip_ws()
         if ctx.try_keyword("catch") {
-          let handler = ctx.parse_update()
+          let handler = ctx.parse_unary()
           Filter::try_catch(inner, handler)
         } else {
           Filter::try_catch(inner, Filter::empty())

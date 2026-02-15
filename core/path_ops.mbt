@@ -54,6 +54,31 @@ fn normalize_setpath_arg(path : Json) -> Array[Json] raise EvalError {
 }
 
 ///|
+fn setpath_max_expand_index() -> Int {
+  // Native backend currently cannot materialize arrays beyond this length.
+  134217727
+}
+
+///|
+fn parse_setpath_array_index(n : Double) -> Int raise EvalError {
+  if n != n {
+    raise TypeError("Cannot set array element at NaN index")
+  } else if n == @double.infinity || n == @double.neg_infinity {
+    raise TypeError("Array index too large")
+  } else {
+    let max_index = setpath_max_expand_index().to_double()
+    let min_index = (-1 - setpath_max_expand_index()).to_double()
+    if n > max_index {
+      raise TypeError("Array index too large")
+    } else if n < min_index {
+      raise TypeError("Out of bounds negative array index")
+    } else {
+      n.to_int()
+    }
+  }
+}
+
+///|
 fn setpath_on_input(
   input : Json,
   path : Array[Json],
@@ -84,37 +109,30 @@ fn setpath_on_input(
       }
     Array(a) =>
       match key {
-        Number(n, _) =>
-          if n != n {
-            raise TypeError("Cannot set array element at NaN index")
-          } else if n == @double.infinity || n == @double.neg_infinity {
-            raise TypeError("Array index too large")
-          } else if n > 2147483647.0 || n < -2147483648.0 {
-            raise TypeError("Array index too large")
-          } else {
-            let i = n.to_int()
-            if i < 0 {
-              let idx = a.length() + i
-              if idx < 0 {
-                raise TypeError("Out of bounds negative array index")
-              } else {
-                let out = a.copy()
-                out[idx] = setpath_on_input(out[idx], rest, value)
-                Json::array(out)
-              }
+        Number(n, _) => {
+          let i = parse_setpath_array_index(n)
+          if i < 0 {
+            let idx = a.length() + i
+            if idx < 0 {
+              raise TypeError("Out of bounds negative array index")
             } else {
               let out = a.copy()
-              for {
-                if out.length() <= i {
-                  out.push(Json::null())
-                } else {
-                  break
-                }
-              }
-              out[i] = setpath_on_input(out[i], rest, value)
+              out[idx] = setpath_on_input(out[idx], rest, value)
               Json::array(out)
             }
+          } else {
+            let out = a.copy()
+            for {
+              if out.length() <= i {
+                out.push(Json::null())
+              } else {
+                break
+              }
+            }
+            out[i] = setpath_on_input(out[i], rest, value)
+            Json::array(out)
           }
+        }
         Object(_) =>
           raise TypeError("Array/string slice indices must be integers")
         Array(_) =>
@@ -129,30 +147,23 @@ fn setpath_on_input(
           out[name] = updated
           Json::object(out)
         }
-        Number(n, _) =>
-          if n != n {
-            raise TypeError("Cannot set array element at NaN index")
-          } else if n == @double.infinity || n == @double.neg_infinity {
-            raise TypeError("Array index too large")
-          } else if n > 2147483647.0 || n < -2147483648.0 {
-            raise TypeError("Array index too large")
+        Number(n, _) => {
+          let i = parse_setpath_array_index(n)
+          if i < 0 {
+            raise TypeError("Out of bounds negative array index")
           } else {
-            let i = n.to_int()
-            if i < 0 {
-              raise TypeError("Out of bounds negative array index")
-            } else {
-              let out = []
-              for {
-                if out.length() <= i {
-                  out.push(Json::null())
-                } else {
-                  break
-                }
+            let out = []
+            for {
+              if out.length() <= i {
+                out.push(Json::null())
+              } else {
+                break
               }
-              out[i] = setpath_on_input(out[i], rest, value)
-              Json::array(out)
             }
+            out[i] = setpath_on_input(out[i], rest, value)
+            Json::array(out)
           }
+        }
         _ => index_type_error(input, key)
       }
     _ => index_type_error(input, key)

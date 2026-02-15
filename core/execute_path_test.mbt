@@ -203,6 +203,22 @@ test "execute setpath errors" {
     fail("expected setpath array index too large error")
   }
   guard (try? execute(
+      parse_filter("setpath([134217728];2)"),
+      must_parse("null"),
+    ))
+    is Err(err) &&
+    err.to_string() == "Array index too large" else {
+    fail("expected setpath expansion-limit array index too large error")
+  }
+  guard (try? execute(
+      parse_filter("setpath([999999999];2)"),
+      must_parse("null"),
+    ))
+    is Err(err) &&
+    err.to_string() == "Array index too large" else {
+    fail("expected setpath huge array index too large error")
+  }
+  guard (try? execute(
       parse_filter("setpath([((1e308 * 10) - (1e308 * 10))];2)"),
       must_parse("[]"),
     ))
@@ -214,6 +230,14 @@ test "execute setpath errors" {
     is Err(err) &&
     err.to_string() == "Out of bounds negative array index" else {
     fail("expected setpath negative index error")
+  }
+  guard (try? execute(
+      parse_filter("setpath([-999999999];2)"),
+      must_parse("null"),
+    ))
+    is Err(err) &&
+    err.to_string() == "Out of bounds negative array index" else {
+    fail("expected setpath huge negative index error")
   }
   guard (try? execute(parse_filter("setpath([\"a\",-1];1)"), must_parse("{}")))
     is Err(err) &&
