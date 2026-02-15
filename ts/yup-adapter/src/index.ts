@@ -4,12 +4,22 @@ export type JqxResult<T, E = string> = { ok: true; value: T } | { ok: false; err
 
 export type MaybePromise<T> = T | Promise<T>;
 
+export interface JqxError {
+  code: string;
+  message: string;
+  line: number;
+  column: number;
+  offset: number;
+}
+
+export type JqxRuntimeError = string | JqxError;
+
 export interface JqxDynamicRuntime {
-  run(filter: string, input: string): MaybePromise<JqxResult<string[]>>;
+  run(filter: string, input: string): MaybePromise<JqxResult<string[], JqxRuntimeError>>;
 }
 
 export interface JqxTypedRuntime<Q = unknown> {
-  runQuery(query: Q, input: string): MaybePromise<JqxResult<string[]>>;
+  runQuery(query: Q, input: string): MaybePromise<JqxResult<string[], JqxRuntimeError>>;
 }
 
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
@@ -108,6 +118,7 @@ export type YupAdapterError =
   | {
       kind: "runtime";
       message: string;
+      runtimeError: JqxRuntimeError;
     }
   | {
       kind: "output_parse";
@@ -138,6 +149,10 @@ export interface ExecuteWithYupOptions<Q, InSchema extends yup.AnySchema, OutSch
 
 function fail<T>(error: YupAdapterError): JqxResult<T, YupAdapterError> {
   return { ok: false, error };
+}
+
+function runtimeErrorToMessage(error: JqxRuntimeError): string {
+  return typeof error === "string" ? error : error.message;
 }
 
 function parseRuntimeJsonOutputs(rawValues: string[]): JqxResult<unknown[]> {
@@ -227,7 +242,11 @@ export async function safeRunWithYup<InSchema extends yup.AnySchema, OutSchema e
   const rawInput = JSON.stringify(parsedIn.value);
   const runtimeOut = await runtime.run(options.filter, rawInput);
   if (!runtimeOut.ok) {
-    return fail({ kind: "runtime", message: runtimeOut.error });
+    return fail({
+      kind: "runtime",
+      message: runtimeErrorToMessage(runtimeOut.error),
+      runtimeError: runtimeOut.error,
+    });
   }
   return parseAndValidateOutput(options.outputSchema, runtimeOut.value);
 }
@@ -242,7 +261,7 @@ export async function runWithInferred<
 ): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], string>> {
   const runtimeOut = await runtime.run(options.filter, JSON.stringify(options.input));
   if (!runtimeOut.ok) {
-    return runtimeOut;
+    return { ok: false, error: runtimeErrorToMessage(runtimeOut.error) };
   }
   const parsed = parseRuntimeJsonOutputs(runtimeOut.value);
   if (!parsed.ok) {
@@ -266,7 +285,11 @@ export async function safeExecuteWithYup<Q, InSchema extends yup.AnySchema, OutS
   const rawInput = JSON.stringify(parsedIn.value);
   const runtimeOut = await runtime.runQuery(options.query, rawInput);
   if (!runtimeOut.ok) {
-    return fail({ kind: "runtime", message: runtimeOut.error });
+    return fail({
+      kind: "runtime",
+      message: runtimeErrorToMessage(runtimeOut.error),
+      runtimeError: runtimeOut.error,
+    });
   }
   return parseAndValidateOutput(options.outputSchema, runtimeOut.value);
 }

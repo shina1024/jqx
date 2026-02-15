@@ -83,23 +83,29 @@ target and import the generated bundle.
 
 Functions:
 - `parseJson(text)` -> Json
-- `safeParseJson(text)` -> `Result<Json, string>` (JS-friendly)
+- `safeParseJson(text)` -> `Result<Json, JqxError>` (JS-friendly)
 - `compile(text)` -> Filter
-- `safeCompile(text)` -> `Result<Filter, string>` (JS-friendly)
+- `safeCompile(text)` -> `Result<Filter, JqxError>` (JS-friendly)
 - `parseFilter(text)` -> Filter (compat alias)
-- `safeParseFilter(text)` -> `Result<Filter, string>` (compat alias)
+- `safeParseFilter(text)` -> `Result<Filter, JqxError>` (compat alias)
 - `execute(filter, json)` -> Json[] (JS-friendly)
-- `tryExecute(filter, json)` -> `Result<Json[], string>`
-- `safeExecute(filter, json)` -> `Result<Json[], string>` (JS-friendly)
-- `executeToJsonStrings(filter, jsonText)` -> `Result<string[], string>`
-  (JSON strings / error message)
-- `tryParseJson(text)` -> `Result<Json, string>`
-- `tryCompile(text)` -> `Result<Filter, string>`
-- `tryParseFilter(text)` -> `Result<Filter, string>` (compat alias)
-- `run(filter, jsonText)` -> `Result<string[], string>` (compatibility lane alias)
-- `runCompat(filter, jsonText)` -> `Result<string[], string>` (compatibility lane)
-- `runValues(filter, jsonText)` -> `Result<Json[], string>` (convenience lane)
-- `safeRunValues(filter, jsonText)` -> `Result<Json[], string>` (convenience lane alias)
+- `tryExecute(filter, json)` -> `Result<Json[], JqxError>`
+- `safeExecute(filter, json)` -> `Result<Json[], JqxError>` (JS-friendly)
+- `executeToJsonStrings(filter, jsonText)` -> `Result<string[], JqxError>`
+- `tryParseJson(text)` -> `Result<Json, JqxError>`
+- `tryCompile(text)` -> `Result<Filter, JqxError>`
+- `tryParseFilter(text)` -> `Result<Filter, JqxError>` (compat alias)
+- `run(filter, jsonText)` -> `Result<string[], JqxError>` (compatibility lane alias)
+- `runCompat(filter, jsonText)` -> `Result<string[], JqxError>` (compatibility lane)
+- `runCompiled(filter, jsonText)` -> `Result<string[], JqxError>` (compiled-filter lane)
+- `runValues(filter, jsonText)` -> `Result<Json[], JqxError>` (convenience lane)
+- `runCompiledValues(filter, jsonText)` -> `Result<Json[], JqxError>` (compiled-filter lane)
+- `safeRunValues(filter, jsonText)` -> `Result<Json[], JqxError>` (convenience lane alias)
+
+`JqxError` fields:
+- `code`: stable error code (`parse_*`, `filter_*`, `eval_*`)
+- `message`: human-readable message
+- `line`, `column`, `offset`: source location (`-1` when unavailable)
 
 Lanes:
 - Compatibility lane (`run`/`runCompat`/`executeToJsonStrings`) keeps JSON text output to preserve numeric representation.

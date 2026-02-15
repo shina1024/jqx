@@ -8,7 +8,8 @@ test "js executeToJsonStrings success" {
 ///|
 test "js executeToJsonStrings parse error" {
   let out = executeToJsonStrings(".foo", "{")
-  guard out is Err(_) else { fail("expected Err") }
+  guard out is Err(err) else { fail("expected Err") }
+  assert_eq(err.code, "parse_invalid_eof")
 }
 
 ///|
@@ -30,13 +31,15 @@ test "js parseJson preserves large integer repr in output" {
 ///|
 test "js tryParseJson returns Err on invalid input" {
   let out = tryParseJson("{")
-  guard out is Err(_) else { fail("expected Err") }
+  guard out is Err(err) else { fail("expected Err") }
+  assert_eq(err.code, "parse_invalid_eof")
 }
 
 ///|
 test "js safeParseJson alias" {
   let out = safeParseJson("{")
-  guard out is Err(_) else { fail("expected Err") }
+  guard out is Err(err) else { fail("expected Err") }
+  assert_eq(err.code, "parse_invalid_eof")
 }
 
 ///|
@@ -92,4 +95,38 @@ test "js runValues convenience lane" {
   guard safe_out is Ok(safe_values) else { fail("expected Ok") }
   assert_eq(safe_values.length(), 1)
   assert_eq(safe_values[0].to_json_string(), "9")
+}
+
+///|
+test "js runCompiled and runCompiledValues" {
+  let compiled = compile(".foo")
+  let out = runCompiled(compiled, "{\"foo\": 3}")
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values, ["3"])
+  let out_values = runCompiledValues(compiled, "{\"foo\": 4}")
+  guard out_values is Ok(values2) else { fail("expected Ok") }
+  assert_eq(values2.length(), 1)
+  assert_eq(values2[0].to_json_string(), "4")
+}
+
+///|
+test "js structured error with position" {
+  let out = tryCompile(".['x']")
+  guard out is Err(err) else { fail("expected Err") }
+  assert_eq(err.code, "filter_invalid_char")
+  assert_eq(err.line, 1)
+  assert_eq(err.column, 3)
+  assert_eq(err.offset, 2)
+}
+
+///|
+test "js structured runtime error" {
+  let filter = compile(".foo + 1")
+  let input = parseJson("{\"foo\":\"x\"}")
+  let out = tryExecute(filter, input)
+  guard out is Err(err) else { fail("expected Err") }
+  assert_eq(err.code, "eval_type_error")
+  assert_eq(err.line, -1)
+  assert_eq(err.column, -1)
+  assert_eq(err.offset, -1)
 }
