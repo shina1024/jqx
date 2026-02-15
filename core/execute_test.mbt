@@ -2435,20 +2435,11 @@ test "execute numeric/meta builtins compatibility" {
     ),
     [Json::string("string"), Json::string("number")],
   )
-  assert_eq(
-    must_execute(
-      parse_filter("modulemeta | .deps | length"),
-      must_parse("\"c\""),
-    ),
-    [Json::number(0.0)],
-  )
-  assert_eq(
-    must_execute(
-      parse_filter("modulemeta | .defs | length"),
-      must_parse("\"c\""),
-    ),
-    [Json::number(0.0)],
-  )
+  guard (try? execute(parse_filter("modulemeta"), must_parse("\"c\"")))
+    is Err(err) &&
+    err.to_string() == "module not found: c" else {
+    fail("expected modulemeta missing-module error")
+  }
   assert_eq(
     must_execute(parse_filter("builtins|length > 10"), must_parse("null")),
     [Json::boolean(true)],

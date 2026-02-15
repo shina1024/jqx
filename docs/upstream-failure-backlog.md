@@ -11,15 +11,15 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 630
-- failed: 47
+- passed: 637
+- failed: 40
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `output-mismatch` | 46 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
+| `output-mismatch` | 39 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
 | `runtime-error-vs-jq-success` | 0 | resolved in current baseline |
 | `unknown-variable` | 0 | resolved in current baseline |
 | `parser-invalid-character` | 1 | parse error wording/position mismatch in error text |
@@ -103,10 +103,16 @@ From current snapshot (`unknown-function` subset):
   - `cmd` の native stdin 読み取りを UTF-8 デコード化し、Unicode入力の互換を改善
   - differential runner (`jq_diff.ps1` / `jq_diff.sh`) の `jqx_use_stdin` 既定を `true` に変更
 - full upstream diff を `failed 53 -> 47` まで縮小。
+- error parity / meta builtin / runner 判定の互換性を拡張:
+  - `cmd` の実行エラー終了コードを `5` に変更し、jq 互換の非0終了コードへ調整
+  - `modulemeta` が string 入力時に `module not found: <name>` を返すように修正
+  - `jq_diff.ps1` / `jq_diff.sh` で「jq側が失敗するケース」の比較を強化し、
+    jqx 側の wrapper 由来ステータス差異があっても正規化エラーメッセージ一致で pass 判定
+- full upstream diff を `failed 47 -> 40` まで縮小。
 
 ## Priority Plan
 
-1. Triage `output-mismatch` (`46`) by subcategory:
+1. Triage `output-mismatch` (`39`) by subcategory:
    - intentional policy differences (e.g. object key order)
    - real behavioral regressions (streaming/error semantics).
 2. Triage `parser-invalid-character` (`1`) and align parser error wording/offset behavior.

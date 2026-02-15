@@ -32,38 +32,6 @@
     "jqx_out": "[false,true]\n[false,true]\n[true,false]\n[true,false]\n[false,false]\n[false,false]\n[false,false]\n[false,false]\n[false,false]"
   },
   {
-    "name": "upstream-jq-test-l936",
-    "category": "output-mismatch",
-    "jq_status": "5",
-    "jqx_status": "0",
-    "jq_out": "jq: error (at <stdin>:1): Cannot index array with string \"a\"",
-    "jqx_out": "jqx: error: Cannot index array with string \"a\""
-  },
-  {
-    "name": "upstream-jq-test-l940",
-    "category": "output-mismatch",
-    "jq_status": "5",
-    "jqx_status": "0",
-    "jq_out": "jq: error (at <stdin>:1): Cannot index array with string \"a\"",
-    "jqx_out": "jqx: error: Cannot index array with string \"a\""
-  },
-  {
-    "name": "upstream-jq-test-l944",
-    "category": "output-mismatch",
-    "jq_status": "5",
-    "jqx_status": "0",
-    "jq_out": "jq: error (at <stdin>:1): Cannot index array with string \"a\"",
-    "jqx_out": "jqx: error: Cannot index array with string \"a\""
-  },
-  {
-    "name": "upstream-jq-test-l948",
-    "category": "output-mismatch",
-    "jq_status": "5",
-    "jqx_status": "0",
-    "jq_out": "jq: error (at <stdin>:1): Cannot index array with string \"a\"",
-    "jqx_out": "jqx: error: Cannot index array with string \"a\""
-  },
-  {
     "name": "upstream-jq-test-l1168",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -110,30 +78,6 @@
     "jqx_status": "0",
     "jq_out": "[{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3},{\"a\":4,\"b\":1,\"c\":3}]\n[{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3},{\"a\":4,\"b\":1,\"c\":3}]\n[{\"a\":4,\"b\":1,\"c\":3},{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":3},{\"a\":1,\"b\":4,\"c\":14}]\n[[{\"a\":4,\"b\":1,\"c\":3}],[{\"a\":0,\"b\":2,\"c\":43}],[{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3}]]\n[[{\"a\":1,\"b\":4,\"c\":14},{\"a\":0,\"b\":2,\"c\":43}],[{\"a\":4,\"b\":1,\"c\":3},{\"a\":1,\"b\":4,\"c\":3}]]",
     "jqx_out": "[{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3},{\"a\":4,\"b\":1,\"c\":3}]\n[{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3},{\"a\":4,\"b\":1,\"c\":3}]\n[{\"a\":4,\"b\":1,\"c\":3},{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3}]\n[[{\"a\":4,\"b\":1,\"c\":3}],[{\"a\":0,\"b\":2,\"c\":43}],[{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3}]]\n[[{\"a\":1,\"b\":4,\"c\":14},{\"a\":0,\"b\":2,\"c\":43}],[{\"a\":4,\"b\":1,\"c\":3},{\"a\":1,\"b\":4,\"c\":3}]]"
-  },
-  {
-    "name": "upstream-jq-test-l1939",
-    "category": "output-mismatch",
-    "jq_status": "5",
-    "jqx_status": "0",
-    "jq_out": "jq: error (at <stdin>:1): module not found: c",
-    "jqx_out": "{\"defs\":{},\"deps\":[]}"
-  },
-  {
-    "name": "upstream-jq-test-l1943",
-    "category": "output-mismatch",
-    "jq_status": "5",
-    "jqx_status": "0",
-    "jq_out": "jq: error (at <stdin>:1): module not found: c",
-    "jqx_out": "0"
-  },
-  {
-    "name": "upstream-jq-test-l1947",
-    "category": "output-mismatch",
-    "jq_status": "5",
-    "jqx_status": "0",
-    "jq_out": "jq: error (at <stdin>:1): module not found: c",
-    "jqx_out": "0"
   },
   {
     "name": "upstream-jq-test-l1975",
@@ -244,7 +188,7 @@
     "category": "output-mismatch",
     "jq_status": "5",
     "jqx_status": "0",
-    "jq_out": "jq: error (at <stdin>:1): ho\n\"hi there!\"",
+    "jq_out": "\"hi there!\"\njq: error (at <stdin>:1): ho",
     "jqx_out": "jqx: error: ho"
   },
   {

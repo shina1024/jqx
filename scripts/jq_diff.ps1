@@ -283,6 +283,13 @@ try {
     } else {
       if ($jqStatus -eq 0 -and $jqxStatus -eq 0 -and $jqOut -eq $jqxOut) {
         $ok = $true
+      } elseif ($jqStatus -ne 0) {
+        $jqMessage = Normalize-ErrorMessage $jqOut
+        $jqxMessage = Normalize-ErrorMessage $jqxOut
+        $jqxHasError = $jqxStatus -ne 0 -or $jqxOut.StartsWith("jqx: error")
+        if ($jqxHasError -and $jqMessage -eq $jqxMessage) {
+          $ok = $true
+        }
       }
     }
 

@@ -186,6 +186,16 @@ while IFS= read -r case_json; do
   else
     if [[ ${jq_status} -eq 0 && ${jqx_status} -eq 0 && "${jq_out}" == "${jqx_out}" ]]; then
       ok=true
+    elif [[ ${jq_status} -ne 0 ]]; then
+      jq_msg="$(normalize_error_message "${jq_out}")"
+      jqx_msg="$(normalize_error_message "${jqx_out}")"
+      jqx_has_error=false
+      if [[ ${jqx_status} -ne 0 || "${jqx_out}" == jqx:\ error* ]]; then
+        jqx_has_error=true
+      fi
+      if [[ "${jqx_has_error}" == "true" && "${jq_msg}" == "${jqx_msg}" ]]; then
+        ok=true
+      fi
     fi
   fi
 

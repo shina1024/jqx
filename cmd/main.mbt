@@ -51,7 +51,7 @@ fn main {
     err => {
       let msg = format_error_message(err.to_string())
       println(msg)
-      jqx_exit(1)
+      jqx_exit(5)
     }
   }
 }
