@@ -58,7 +58,7 @@ From current snapshot (`unknown-function` subset):
   - `abs` now matches jq for non-numeric scalar/container inputs (null/bool are still type errors).
   - `path()` evaluation now keeps variable-bound path state through `as` and dynamic `getpath`.
   - full upstream runtime-error-vs-jq-success cluster reduced from `10` to `0`.
-- Differential smoke cases were expanded from 203 to 213.
+- Differential smoke cases were expanded from 203 to 214.
 - Upstream stage1 subset was expanded from 95 to 110 passing cases.
 
 ## Priority Plan

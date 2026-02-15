@@ -205,6 +205,11 @@
     "input": "[1,[2],[],{\"foo\":3},{\"foo\":{\"bar\":4}},{}]"
   },
   {
+    "name": "recurse-all-values",
+    "filter": "[..]",
+    "input": "[1,[[2]],{\"a\":[1]}]"
+  },
+  {
     "name": "try-catch",
     "filter": "try (.a + 1) catch 1",
     "input": "{\"a\":\"hi\",\"b\":1}"
