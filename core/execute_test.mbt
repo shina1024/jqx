@@ -1761,6 +1761,50 @@ test "execute update assignment compatibility" {
       ]),
     ],
   )
+  assert_eq(
+    must_execute(
+      parse_filter("(.[] | select(. >= 2)) |= empty"),
+      must_parse("[1,5,3,0,7]"),
+    ),
+    [Json::array([Json::number(1.0), Json::number(0.0)])],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter(".[] |= select(. % 2 == 0)"),
+      must_parse("[0,1,2,3,4,5]"),
+    ),
+    [Json::array([Json::number(0.0), Json::number(2.0), Json::number(4.0)])],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter(".foo[1,4,2,3] |= empty"),
+      must_parse("{\"foo\":[0,1,2,3,4,5]}"),
+    ),
+    [
+      Json::object({
+        "foo": Json::array([Json::number(0.0), Json::number(5.0)]),
+      }),
+    ],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter(".[] |= try tonumber"),
+      must_parse(
+        "[\"1\", \"2a\", \"3\", \" 4\", \"5 \", \"6.7\", \".89\", \"-876\", \"+5.43\", 21]",
+      ),
+    ),
+    [
+      Json::array([
+        Json::number(1.0),
+        Json::number(3.0),
+        Json::number(6.7),
+        Json::number(0.89),
+        Json::number(-876.0),
+        Json::number(5.43),
+        Json::number(21.0),
+      ]),
+    ],
+  )
   assert_eq(must_execute(parse_filter(".a %= 4"), must_parse("{\"a\":9}")), [
     Json::object({ "a": Json::number(1.0) }),
   ])

@@ -96,30 +96,6 @@
     "jqx_out": "{\"a\":[{\"b\":5}]}\n{\"a\":[{\"b\":5}],\"b\":0}\n\"Cannot index number with number\"\n{\"a\":[{\"b\":5}]}\n\"Cannot index number with string \\\"b\\\"\"\n\"Cannot index object with number\"\n{\"a\":[{\"b\":5}]}\n{\"a\":[{\"b\":5,\"c\":3}]}"
   },
   {
-    "name": "upstream-jq-test-l1253",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,0]",
-    "jqx_out": ""
-  },
-  {
-    "name": "upstream-jq-test-l1257",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[0,2,4]",
-    "jqx_out": ""
-  },
-  {
-    "name": "upstream-jq-test-l1261",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"foo\":[0,5]}",
-    "jqx_out": ""
-  },
-  {
     "name": "upstream-jq-test-l1269",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -358,14 +334,6 @@
     "jqx_status": "0",
     "jq_out": "\"hi there!\"\njq: error (at <stdin>:1): ho",
     "jqx_out": "jqx: error: ho"
-  },
-  {
-    "name": "upstream-jq-test-l2356",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[1,3,6.7,0.89,-876,5.43,21]",
-    "jqx_out": ""
   },
   {
     "name": "upstream-jq-test-l2464",

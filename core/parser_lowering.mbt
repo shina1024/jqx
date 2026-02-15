@@ -342,32 +342,96 @@ fn FilterCursor::lower_update_assignment(
 
   match update_path_from_filter(left) {
     Some(path) => {
-      let getpath_arg = Filter::literal(Json::array(path.copy()))
-      let setpath_arg = Filter::literal(Json::array(path))
-      let current_value = Filter::call("getpath", [getpath_arg])
-      let updated_value = lower_update_assign_op(op, current_value, right)
-      Filter::call("setpath", [setpath_arg, updated_value])
+      let current_value = Filter::call("getpath", [
+        Filter::literal(Json::array(path.copy())),
+      ])
+      match op {
+        Update => {
+          let rhs_values = Filter::pipe(current_value, right)
+          let is_empty = Filter::call("isempty", [rhs_values])
+          let set_value = Filter::call("first", [
+            Filter::pipe(current_value, right),
+          ])
+          let set_expr = Filter::call("setpath", [
+            Filter::literal(Json::array(path.copy())),
+            set_value,
+          ])
+          let del_expr = Filter::call("delpaths", [
+            Filter::literal(Json::array([Json::array(path)])),
+          ])
+          Filter::if_else(is_empty, del_expr, set_expr)
+        }
+        _ => {
+          let updated_value = lower_update_assign_op(op, current_value, right)
+          Filter::call("setpath", [
+            Filter::literal(Json::array(path)),
+            updated_value,
+          ])
+        }
+      }
     }
     None => {
       // Lower dynamic/complex update lhs via reduce(path(lhs)).
       let input_tmp = ctx.fresh_as_tmp()
       let path_tmp = ctx.fresh_as_tmp()
+      let paths_tmp = ctx.fresh_as_tmp()
+      let updated_tmp = ctx.fresh_as_tmp()
       let input_var = Filter::var_(input_tmp)
-      let path_var = Filter::var_(path_tmp)
       let source = Filter::pipe(input_var, Filter::call("path", [left]))
       let init = input_var
       match op {
         Update => {
-          let current_value = Filter::call("getpath", [path_var])
-          let updated_value = lower_update_assign_op(op, current_value, right)
-          let update = Filter::call("setpath", [path_var, updated_value])
+          let paths_var = Filter::var_(paths_tmp)
+          let updated_var = Filter::var_(updated_tmp)
+          let path_stream = Filter::pipe(paths_var, Filter::iter())
+          let original_value = Filter::pipe(
+            input_var,
+            Filter::call("getpath", [Filter::var_(path_tmp)]),
+          )
+          let update_step = Filter::if_else(
+            Filter::call("isempty", [Filter::pipe(original_value, right)]),
+            Filter::identity(),
+            Filter::call("setpath", [
+              Filter::var_(path_tmp),
+              Filter::call("first", [Filter::pipe(original_value, right)]),
+            ]),
+          )
+          let updated_root = Filter::reduce(
+            path_stream, path_tmp, init, update_step,
+          )
+          let delete_step = Filter::if_else(
+            Filter::call("isempty", [Filter::pipe(original_value, right)]),
+            Filter::add(
+              Filter::identity(),
+              Filter::Array([Filter::var_(path_tmp)]),
+            ),
+            Filter::identity(),
+          )
+          let delete_paths = Filter::reduce(
+            path_stream,
+            path_tmp,
+            Filter::Array([]),
+            delete_step,
+          )
           Filter::as_(
             Filter::identity(),
             input_tmp,
-            Filter::reduce(source, path_tmp, init, update),
+            Filter::as_(
+              Filter::Array([source]),
+              paths_tmp,
+              Filter::as_(
+                updated_root,
+                updated_tmp,
+                Filter::pipe(
+                  updated_var,
+                  Filter::call("delpaths", [delete_paths]),
+                ),
+              ),
+            ),
           )
         }
         _ => {
+          let path_var = Filter::var_(path_tmp)
           let value_tmp = ctx.fresh_as_tmp()
           let value_var = Filter::var_(value_tmp)
           let current_value = Filter::call("getpath", [path_var])

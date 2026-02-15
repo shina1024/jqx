@@ -378,7 +378,7 @@ test "parse fallback and empty" {
 test "parse update assignment operators" {
   inspect(
     parse_filter(".a |= . + 1"),
-    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Call(\"first\", [Pipe(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Add(Identity, Literal(Number(1))))])])",
+    content="IfElse(Call(\"isempty\", [Pipe(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Add(Identity, Literal(Number(1))))]), Call(\"delpaths\", [Literal(Array([Array([String(\"a\")])]))]), Call(\"setpath\", [Literal(Array([String(\"a\")])), Call(\"first\", [Pipe(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Add(Identity, Literal(Number(1))))])]))",
   )
   inspect(
     parse_filter(".a += 2"),

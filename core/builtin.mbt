@@ -55,6 +55,17 @@ fn builtin_trim_ascii_ws(s : String) -> String {
 }
 
 ///|
+fn builtin_has_outer_trim_ws(s : String) -> Bool {
+  if s.length() == 0 {
+    false
+  } else {
+    let first = s.unsafe_get(0).to_int().unsafe_to_char()
+    let last = s.unsafe_get(s.length() - 1).to_int().unsafe_to_char()
+    builtin_is_trim_ws(first) || builtin_is_trim_ws(last)
+  }
+}
+
+///|
 fn builtin_utf8_byte_length(s : String) -> Int {
   let mut total = 0
   for ch in s {
@@ -794,6 +805,11 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
       match input {
         Number(_, _) => [input]
         String(s) => {
+          if builtin_has_outer_trim_ws(s) {
+            raise TypeError(
+              json_type_with_value(input) + " cannot be parsed as a number",
+            )
+          }
           let parsed_double = try? @strconv.parse_double(s)
           match parsed_double {
             Ok(n) => [json_number_value(n)]
