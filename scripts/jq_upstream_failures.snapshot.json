@@ -96,14 +96,6 @@
     "jqx_out": "{\"bar\":42,\"foo\":[11,null,{\"bar\":1}]}"
   },
   {
-    "name": "upstream-jq-test-l1575",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"正\"",
-    "jqx_out": "\"г\""
-  },
-  {
     "name": "upstream-jq-test-l1579",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -118,14 +110,6 @@
     "jqx_status": "0",
     "jq_out": "[{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3},{\"a\":4,\"b\":1,\"c\":3}]\n[{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3},{\"a\":4,\"b\":1,\"c\":3}]\n[{\"a\":4,\"b\":1,\"c\":3},{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":3},{\"a\":1,\"b\":4,\"c\":14}]\n[[{\"a\":4,\"b\":1,\"c\":3}],[{\"a\":0,\"b\":2,\"c\":43}],[{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3}]]\n[[{\"a\":1,\"b\":4,\"c\":14},{\"a\":0,\"b\":2,\"c\":43}],[{\"a\":4,\"b\":1,\"c\":3},{\"a\":1,\"b\":4,\"c\":3}]]",
     "jqx_out": "[{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3},{\"a\":4,\"b\":1,\"c\":3}]\n[{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3},{\"a\":4,\"b\":1,\"c\":3}]\n[{\"a\":4,\"b\":1,\"c\":3},{\"a\":0,\"b\":2,\"c\":43},{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3}]\n[[{\"a\":4,\"b\":1,\"c\":3}],[{\"a\":0,\"b\":2,\"c\":43}],[{\"a\":1,\"b\":4,\"c\":14},{\"a\":1,\"b\":4,\"c\":3}]]\n[[{\"a\":1,\"b\":4,\"c\":14},{\"a\":0,\"b\":2,\"c\":43}],[{\"a\":4,\"b\":1,\"c\":3},{\"a\":1,\"b\":4,\"c\":3}]]"
-  },
-  {
-    "name": "upstream-jq-test-l1797",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"USEFUL BUT NOT FOR é\"",
-    "jqx_out": "\"USEFUL BUT NOT FOR E\""
   },
   {
     "name": "upstream-jq-test-l1939",
@@ -168,7 +152,7 @@
     "jqx_out": "\"string (\\\"1,2,\\\") and object ({\\\"a\\\":{\\\"b\\\":{\\\"c\\\":33}}}) cannot be added\""
   },
   {
-    "name": "upstream-jq-test-l2190",
+    "name": "upstream-jq-test-l2162",
     "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
@@ -176,7 +160,23 @@
     "jqx_out": "false"
   },
   {
-    "name": "upstream-jq-test-l2194",
+    "name": "upstream-jq-test-l2166",
+    "category": "output-mismatch",
+    "jq_status": "0",
+    "jqx_status": "0",
+    "jq_out": "true",
+    "jqx_out": "false"
+  },
+  {
+    "name": "upstream-jq-test-l2170",
+    "category": "output-mismatch",
+    "jq_status": "0",
+    "jqx_status": "0",
+    "jq_out": "true",
+    "jqx_out": "false"
+  },
+  {
+    "name": "upstream-jq-test-l2198",
     "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
@@ -208,22 +208,6 @@
     "jqx_out": "[0.1,1000000000000000000]"
   },
   {
-    "name": "upstream-jq-test-l2237",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true",
-    "jqx_out": "false"
-  },
-  {
-    "name": "upstream-jq-test-l2241",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true",
-    "jqx_out": "false"
-  },
-  {
     "name": "upstream-jq-test-l2259",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -248,22 +232,6 @@
     "jqx_out": "{\"2\":4,\"3\":5,\"x\":1,\"as\":8,\"if\":6,\"foo\":7}"
   },
   {
-    "name": "upstream-jq-test-l2281",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true",
-    "jqx_out": "false"
-  },
-  {
-    "name": "upstream-jq-test-l2290",
-    "category": "parser-invalid-character",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true\ntrue\n\"Invalid numeric literal at EOF at line 1, column 4 (while parsing 'NaN1')\"\n\"Invalid numeric literal at EOF at line 1, column 5 (while parsing 'NaN10')\"\n\"Invalid numeric literal at EOF at line 1, column 6 (while parsing 'NaN100')\"\n\"Invalid numeric literal at EOF at line 1, column 7 (while parsing 'NaN1000')\"\n\"Invalid numeric literal at EOF at line 1, column 8 (while parsing 'NaN10000')\"\n\"Invalid numeric literal at EOF at line 1, column 9 (while parsing 'NaN100000')\"",
-    "jqx_out": "false\nfalse\n\"Invalid character '1' at line 1, column 4 (while parsing 'NaN1')\"\n\"Invalid character '1' at line 1, column 4 (while parsing 'NaN10')\"\n\"Invalid character '1' at line 1, column 4 (while parsing 'NaN100')\"\n\"Invalid character '1' at line 1, column 4 (while parsing 'NaN1000')\"\n\"Invalid character '1' at line 1, column 4 (while parsing 'NaN10000')\"\n\"Invalid character '1' at line 1, column 4 (while parsing 'NaN100000')\""
-  },
-  {
     "name": "upstream-jq-test-l2320",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -286,14 +254,6 @@
     "jqx_status": "0",
     "jq_out": "\"Invalid string literal; expected \\\", but got ' at line 1, column 5 (while parsing '{'a': 123}')\"",
     "jqx_out": "\"Invalid character '\\\\'' at line 1, column 2 (while parsing '{'a': 123}')\""
-  },
-  {
-    "name": "upstream-jq-test-l2504",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "1\n3\n2\n4",
-    "jqx_out": "1\n2\n3\n4"
   },
   {
     "name": "upstream-jq-test-l2524",
@@ -328,7 +288,7 @@
     "jqx_out": "0.12345678901234568"
   },
   {
-    "name": "upstream-man-test-l21",
+    "name": "upstream-man-test-l9",
     "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
@@ -336,7 +296,7 @@
     "jqx_out": "false"
   },
   {
-    "name": "upstream-man-test-l25",
+    "name": "upstream-man-test-l13",
     "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
@@ -398,14 +358,6 @@
     "jqx_status": "0",
     "jq_out": "[{\"foo\":1,\"bar\":2},{\"foo\":4,\"bar\":5}]",
     "jqx_out": "[{\"bar\":2,\"foo\":1},{\"bar\":5,\"foo\":4}]"
-  },
-  {
-    "name": "upstream-man-test-l646",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"USEFUL BUT NOT FOR é\"",
-    "jqx_out": "\"USEFUL BUT NOT FOR E\""
   },
   {
     "name": "upstream-man-test-l654",

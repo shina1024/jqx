@@ -87,10 +87,11 @@ fn trim_ascii_ws(s : String) -> String {
 fn fromjson_fallback_token(s : String) -> Json? {
   let t = ascii_downcase_string(trim_ascii_ws(s))
   match t {
-    "nan" | "+nan" | "-nan" => Some(Json::null())
+    "nan" | "+nan" | "-nan" =>
+      Some(Json::number(@double.infinity - @double.infinity))
     "inf" | "+inf" | "infinity" | "+infinity" =>
-      Some(Json::number(1.7976931348623157e+308))
-    "-inf" | "-infinity" => Some(Json::number(-1.7976931348623157e+308))
+      Some(Json::number(@double.infinity))
+    "-inf" | "-infinity" => Some(Json::number(@double.neg_infinity))
     _ => None
   }
 }
@@ -105,20 +106,7 @@ fn parse_fromjson_string(s : String) -> Json raise EvalError {
           raise TypeError(err.to_string() + " (while parsing '" + s + "')")
       }
   } noraise {
-    j =>
-      match j {
-        Number(n, _) =>
-          if n != n {
-            Json::null()
-          } else if n == @double.infinity {
-            Json::number(1.7976931348623157e+308)
-          } else if n == @double.neg_infinity {
-            Json::number(-1.7976931348623157e+308)
-          } else {
-            j
-          }
-        _ => j
-      }
+    j => j
   }
 }
 
@@ -283,24 +271,27 @@ fn execute_with_env(
       accs
     }
     Foreach(source, name, init, update, extract) => {
-      let mut accs = execute_with_env(init, input, env)
       let items = execute_with_env(source, input, env)
+      let accs = execute_with_env(init, input, env)
       let out = []
-      for item in items {
-        let next_env = env.copy()
-        next_env[name] = item
-        let next_accs = []
-        for acc in accs {
-          for v in execute_with_env(update, acc, next_env) {
-            next_accs.push(v)
+      for seed in accs {
+        let mut states = [seed]
+        for item in items {
+          let next_env = env.copy()
+          next_env[name] = item
+          let next_states = []
+          for acc in states {
+            for v in execute_with_env(update, acc, next_env) {
+              next_states.push(v)
+            }
           }
-        }
-        for acc in next_accs {
-          for v in execute_with_env(extract, acc, next_env) {
-            out.push(v)
+          for acc in next_states {
+            for v in execute_with_env(extract, acc, next_env) {
+              out.push(v)
+            }
           }
+          states = next_states
         }
-        accs = next_accs
       }
       out
     }

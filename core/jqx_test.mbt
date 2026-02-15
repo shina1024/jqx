@@ -52,6 +52,10 @@ test "parse non-finite number tokens" {
     obj.to_json_string(),
     "{\"a\":null,\"b\":null,\"c\":1.7976931348623157e+308,\"d\":-1.7976931348623157e+308}",
   )
+  guard (try? parse("NaN10"))
+    is Err(InvalidNumericLiteralAtEof({ line: 1, column: 5 })) else {
+    fail("expected NaN10 parse to report invalid numeric literal at EOF")
+  }
 }
 
 ///|

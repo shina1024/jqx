@@ -11,18 +11,18 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 624
-- failed: 53
+- passed: 630
+- failed: 47
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `output-mismatch` | 51 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
+| `output-mismatch` | 46 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
 | `runtime-error-vs-jq-success` | 0 | resolved in current baseline |
 | `unknown-variable` | 0 | resolved in current baseline |
-| `parser-invalid-character` | 2 | parse error wording/position mismatch in error text |
+| `parser-invalid-character` | 1 | parse error wording/position mismatch in error text |
 | `unknown-function` | 0 | resolved in current baseline |
 
 ## Top Unknown Functions
@@ -95,12 +95,20 @@ From current snapshot (`unknown-function` subset):
   - `-` の型エラー文言を jq 寄せ（`cannot be negated` / `cannot be subtracted`）
   - `%` の 0 除算文言を jq 寄せ（`cannot be divided (remainder) ...`）
 - full upstream diff を `failed 59 -> 53` まで縮小。
+- `fromjson`/`foreach`/CLI入出力の互換性を拡張:
+  - `fromjson` が `NaN`/`±Inf` を内部数値として保持し、`isnan`/`isinfinite` 互換を改善
+  - 非有限数値トークンの不正サフィックス（例: `NaN10`）で jq 寄せ文言
+    (`Invalid numeric literal at EOF ...`) を返す
+  - `foreach` の複数初期状態ストリーム順序を jq 寄せに修正
+  - `cmd` の native stdin 読み取りを UTF-8 デコード化し、Unicode入力の互換を改善
+  - differential runner (`jq_diff.ps1` / `jq_diff.sh`) の `jqx_use_stdin` 既定を `true` に変更
+- full upstream diff を `failed 53 -> 47` まで縮小。
 
 ## Priority Plan
 
-1. Triage `output-mismatch` (`51`) by subcategory:
+1. Triage `output-mismatch` (`46`) by subcategory:
    - intentional policy differences (e.g. object key order)
    - real behavioral regressions (streaming/error semantics).
-2. Triage `parser-invalid-character` (`2`) and align parser error wording/offset behavior.
+2. Triage `parser-invalid-character` (`1`) and align parser error wording/offset behavior.
 3. Continue `def` compatibility improvements (recursion and filter-argument semantics).
 4. Keep expanding stage1 allowlist incrementally with newly stable cases.

@@ -119,7 +119,7 @@ while IFS= read -r case_json; do
   expect_error_mode="$("${JQ_BIN_RESOLVED}" -r '(.expect_error_mode // "strict") | tostring' <<<"${case_json}")"
   expect_status="$("${JQ_BIN_RESOLVED}" -r 'if has("expect_status") then (.expect_status | tostring) else "" end' <<<"${case_json}")"
   skip_reason="$("${JQ_BIN_RESOLVED}" -r 'if has("skip_reason") and .skip_reason != null then (.skip_reason | tostring) else "" end' <<<"${case_json}")"
-  jqx_use_stdin="$("${JQ_BIN_RESOLVED}" -r '(.jqx_use_stdin // false) | tostring' <<<"${case_json}")"
+  jqx_use_stdin="$("${JQ_BIN_RESOLVED}" -r '(.jqx_use_stdin // true) | tostring' <<<"${case_json}")"
   name="${name%$'\r'}"
   filter="${filter%$'\r'}"
   input="${input%$'\r'}"

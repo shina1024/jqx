@@ -526,7 +526,7 @@ fn builtin_list() -> Array[Json] {
 ///|
 fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
   match name {
-    "have_decnum" => [Json::boolean(true)]
+    "have_decnum" => [Json::boolean(false)]
     "modulemeta" =>
       [Json::object({ "deps": Json::array([]), "defs": Json::object({}) })]
     "env" => [Json::object(Map::new())]

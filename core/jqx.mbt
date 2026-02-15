@@ -73,6 +73,7 @@ pub suberror ParseError {
   InvalidChar(Position, Char)
   InvalidEof
   DepthLimitExceeded
+  InvalidNumericLiteralAtEof(Position)
 } derive(Eq)
 
 ///|
@@ -91,6 +92,12 @@ pub impl Show for ParseError with output(self, logger) {
       logger.write_string(
         "Depth limit exceeded, please increase the max_nesting_depth parameter",
       )
+    InvalidNumericLiteralAtEof({ line, column }) =>
+      logger
+      ..write_string("Invalid numeric literal at EOF at line ")
+      ..write_object(line)
+      ..write_string(", column ")
+      .write_object(column)
   }
 }
 
@@ -448,7 +455,7 @@ fn ParseContext::lex_nonfinite_number(
 ) -> Token raise ParseError {
   for {
     match ctx.read_char() {
-      Some(c) if is_ascii_alpha(c) => continue
+      Some(c) if is_ascii_alpha(c) || c is ('0'..='9') => continue
       Some(c) => {
         ctx.offset -= c.utf16_len()
         break
@@ -463,10 +470,17 @@ fn ParseContext::lex_nonfinite_number(
     "inf" | "+inf" | "infinity" | "+infinity" => Number(@double.infinity, None)
     "-inf" | "-infinity" => Number(@double.neg_infinity, None)
     "nan" | "+nan" | "-nan" => Number(@double.infinity - @double.infinity, None)
-    _ => {
-      let shift = -(ctx.offset - start)
-      ctx.invalid_char(shift~)
-    }
+    _ =>
+      raise InvalidNumericLiteralAtEof(
+        offset_to_position(
+          ctx.input,
+          if ctx.offset > start {
+            ctx.offset - 1
+          } else {
+            start
+          },
+        ),
+      )
   }
 }
 

@@ -228,7 +228,7 @@ try {
     if ($case.PSObject.Properties.Name -contains "jqx_args" -and $null -ne $case.jqx_args) {
       $jqxArgs = @($case.jqx_args | ForEach-Object { [string]$_ })
     }
-    $jqxUseStdin = $false
+    $jqxUseStdin = $true
     if ($case.PSObject.Properties.Name -contains "jqx_use_stdin" -and $null -ne $case.jqx_use_stdin) {
       $jqxUseStdin = [bool]$case.jqx_use_stdin
     }

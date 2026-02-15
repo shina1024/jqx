@@ -689,15 +689,18 @@ test "execute tojson/fromjson compatibility" {
   assert_eq(must_execute(parse_filter("fromjson"), must_parse("\" true \"")), [
     Json::boolean(true),
   ])
-  assert_eq(must_execute(parse_filter("fromjson"), must_parse("\"nan\"")), [
-    Json::null(),
-  ])
-  assert_eq(must_execute(parse_filter("fromjson"), must_parse("\"INF\"")), [
-    Json::number(1.7976931348623157e+308),
-  ])
-  assert_eq(must_execute(parse_filter("fromjson"), must_parse("\"-inf\"")), [
-    Json::number(-1.7976931348623157e+308),
-  ])
+  assert_eq(
+    must_execute(parse_filter("fromjson | isnan"), must_parse("\"nan\"")),
+    [Json::boolean(true)],
+  )
+  assert_eq(
+    must_execute(parse_filter("fromjson | isinfinite"), must_parse("\"INF\"")),
+    [Json::boolean(true)],
+  )
+  assert_eq(
+    must_execute(parse_filter("fromjson | isinfinite"), must_parse("\"-inf\"")),
+    [Json::boolean(true)],
+  )
 }
 
 ///|
@@ -760,6 +763,12 @@ test "execute fromjson errors" {
     is Err(err) &&
     err.to_string().contains("while parsing '[1,2'") else {
     fail("expected fromjson unfinished array parse context")
+  }
+  guard (try? execute(parse_filter("fromjson"), must_parse("\"NaN10\"")))
+    is Err(err) &&
+    err.to_string() ==
+    "Invalid numeric literal at EOF at line 1, column 5 (while parsing 'NaN10')" else {
+    fail("expected fromjson invalid non-finite suffix parse context")
   }
 }
 
@@ -2133,6 +2142,13 @@ test "execute reduce/foreach" {
     ),
     [must_parse("[1,2,2]"), must_parse("[3,4,14]")],
   )
+  assert_eq(
+    must_execute(
+      parse_filter("foreach .[] as $x (0, 1; . + $x)"),
+      must_parse("[1,2]"),
+    ),
+    [Json::number(1.0), Json::number(3.0), Json::number(2.0), Json::number(4.0)],
+  )
 }
 
 ///|
@@ -2333,7 +2349,7 @@ test "execute abs/have_decnum/isempty compatibility" {
     Json::object({ "a": Json::number(-1.0) }),
   ])
   assert_eq(must_execute(parse_filter("have_decnum"), must_parse("null")), [
-    Json::boolean(true),
+    Json::boolean(false),
   ])
   assert_eq(
     must_execute(
