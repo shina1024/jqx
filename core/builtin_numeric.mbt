@@ -166,6 +166,27 @@ fn builtin_call_numeric(
   env : Map[String, Json],
 ) -> Array[Json]? raise EvalError {
   match name {
+    "__neg" =>
+      if args.length() != 1 {
+        raise UnknownFunction("__neg")
+      } else {
+        let values = execute_with_env(args[0], input, env)
+        let out = []
+        for value in values {
+          match value {
+            Number(n, _) => out.push(json_number_value(-n))
+            String(s) =>
+              raise TypeError(
+                format_filter_string_type_with_preview(s) + " cannot be negated",
+              )
+            _ =>
+              raise TypeError(
+                json_type_with_value(value) + " cannot be negated",
+              )
+          }
+        }
+        Some(out)
+      }
     "pow" =>
       if args.length() != 2 {
         raise UnknownFunction("pow")

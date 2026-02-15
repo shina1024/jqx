@@ -241,6 +241,27 @@ fn execute_compare(
 }
 
 ///|
+fn arith_operand_desc(op : String, value : Json) -> String {
+  match (op, value) {
+    ("-", String(s)) => format_filter_string_type_with_preview(s)
+    _ => json_type_with_value(value)
+  }
+}
+
+///|
+fn arith_type_error_message(op : String, left : Json, right : Json) -> String {
+  let l = arith_operand_desc(op, left)
+  let r = arith_operand_desc(op, right)
+  match op {
+    "-" => l + " and " + r + " cannot be subtracted"
+    "/" => l + " and " + r + " cannot be divided"
+    "%" => l + " and " + r + " cannot be divided (remainder)"
+    "*" => l + " and " + r + " cannot be multiplied"
+    _ => "Cannot apply " + op + " to " + l + " and " + r
+  }
+}
+
+///|
 fn execute_arith(
   op : String,
   left : Filter,
@@ -266,7 +287,7 @@ fn execute_arith(
                   json_type_with_value(a) +
                   " and " +
                   json_type_with_value(b) +
-                  " cannot be divided because the divisor is zero",
+                  " cannot be divided (remainder) because the divisor is zero",
                 )
               } else {
                 x.mod(y)
@@ -289,53 +310,25 @@ fn execute_arith(
           if op == "/" {
             out.push(Json::array(split_string(s, sep)))
           } else {
-            raise TypeError(
-              "Cannot apply " +
-              op +
-              " to " +
-              json_type_with_value(a) +
-              " and " +
-              json_type_with_value(b),
-            )
+            raise TypeError(arith_type_error_message(op, a, b))
           }
         (String(s), Number(n, _)) =>
           if op == "*" {
             out.push(multiply_string_number(s, n))
           } else {
-            raise TypeError(
-              "Cannot apply " +
-              op +
-              " to " +
-              json_type_with_value(a) +
-              " and " +
-              json_type_with_value(b),
-            )
+            raise TypeError(arith_type_error_message(op, a, b))
           }
         (Number(n, _), String(s)) =>
           if op == "*" {
             out.push(multiply_string_number(s, n))
           } else {
-            raise TypeError(
-              "Cannot apply " +
-              op +
-              " to " +
-              json_type_with_value(a) +
-              " and " +
-              json_type_with_value(b),
-            )
+            raise TypeError(arith_type_error_message(op, a, b))
           }
         (Object(x), Object(y)) =>
           if op == "*" {
             out.push(Json::object(merge_objects_recursive(x, y)))
           } else {
-            raise TypeError(
-              "Cannot apply " +
-              op +
-              " to " +
-              json_type_with_value(a) +
-              " and " +
-              json_type_with_value(b),
-            )
+            raise TypeError(arith_type_error_message(op, a, b))
           }
         (Array(x), Array(y)) =>
           if op == "-" {
@@ -354,24 +347,9 @@ fn execute_arith(
             }
             out.push(Json::array(filtered))
           } else {
-            raise TypeError(
-              "Cannot apply " +
-              op +
-              " to " +
-              json_type_with_value(a) +
-              " and " +
-              json_type_with_value(b),
-            )
+            raise TypeError(arith_type_error_message(op, a, b))
           }
-        _ =>
-          raise TypeError(
-            "Cannot apply " +
-            op +
-            " to " +
-            json_type_with_value(a) +
-            " and " +
-            json_type_with_value(b),
-          )
+        _ => raise TypeError(arith_type_error_message(op, a, b))
       }
     }
   }

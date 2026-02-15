@@ -12,7 +12,7 @@ fn FilterCursor::parse_unary(ctx : FilterCursor) -> Filter raise FilterError {
         }
         _ => {
           let right = ctx.parse_unary()
-          Filter::sub(Filter::literal(Json::number(0.0)), right)
+          Filter::call("__neg", [right])
         }
       }
     }

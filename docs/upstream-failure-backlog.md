@@ -11,15 +11,15 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 618
-- failed: 59
+- passed: 624
+- failed: 53
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `output-mismatch` | 57 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
+| `output-mismatch` | 51 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
 | `runtime-error-vs-jq-success` | 0 | resolved in current baseline |
 | `unknown-variable` | 0 | resolved in current baseline |
 | `parser-invalid-character` | 2 | parse error wording/position mismatch in error text |
@@ -90,10 +90,15 @@ From current snapshot (`unknown-function` subset):
   - 配列拡張上限を超える添字は `"Array index too large"` を返す
   - `try (.[999999999] = 0) catch .` を jq と同じ結果へ修正
 - full upstream diff を `failed 61 -> 59` まで縮小。
+- 単項マイナスの内部表現を `Sub(0, x)` から `__neg(x)` へ変更し、jq 互換のエラー文言系を集中修正:
+  - 長い文字列プレビューを jq 形式 (`"....`) に整形
+  - `-` の型エラー文言を jq 寄せ（`cannot be negated` / `cannot be subtracted`）
+  - `%` の 0 除算文言を jq 寄せ（`cannot be divided (remainder) ...`）
+- full upstream diff を `failed 59 -> 53` まで縮小。
 
 ## Priority Plan
 
-1. Triage `output-mismatch` (`59`) by subcategory:
+1. Triage `output-mismatch` (`51`) by subcategory:
    - intentional policy differences (e.g. object key order)
    - real behavioral regressions (streaming/error semantics).
 2. Triage `parser-invalid-character` (`2`) and align parser error wording/offset behavior.

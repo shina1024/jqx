@@ -96,14 +96,6 @@
     "jqx_out": "{\"bar\":42,\"foo\":[11,null,{\"bar\":1}]}"
   },
   {
-    "name": "upstream-jq-test-l1464",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"string (\\\"foo\\\") cannot be negated\"",
-    "jqx_out": "\"Cannot apply - to number (0) and string (\\\"foo\\\")\""
-  },
-  {
     "name": "upstream-jq-test-l1575",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -160,28 +152,12 @@
     "jqx_out": "0"
   },
   {
-    "name": "upstream-jq-test-l1967",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"string (\\\"very-long-...) cannot be negated\"",
-    "jqx_out": "\"Cannot apply - to number (0) and string (\\\"very-long-string\\\")\""
-  },
-  {
-    "name": "upstream-jq-test-l1971",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"string (\\\"very-long-...) and string (\\\"very-long-...) cannot be subtracted\"",
-    "jqx_out": "\"Cannot apply - to string (\\\"very-long-string\\\") and string (\\\"very-long-string\\\")\""
-  },
-  {
     "name": "upstream-jq-test-l1975",
     "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "\"string (\\\"☆☆☆...) cannot be negated\"\n\"string (\\\"xx☆☆...) cannot be negated\"\n\"string (\\\"xxxx☆☆...) cannot be negated\"\n\"string (\\\"xxxxxx☆...) cannot be negated\"\n\"string (\\\"xxxxxxxx...) cannot be negated\"\n\"string (\\\"xxxxxxxxxx...) cannot be negated\"",
-    "jqx_out": "\"Cannot apply - to number (0) and string (\\\"YYYYY\\\")\"\n\"Cannot apply - to number (0) and string (\\\"xxYYYYY\\\")\"\n\"Cannot apply - to number (0) and string (\\\"xxxxYYYYY\\\")\"\n\"Cannot apply - to number (0) and string (\\\"xxxxxxYYYYY\\\")\"\n\"Cannot apply - to number (0) and string (\\\"xxxxxxxxYYYYY\\\")\"\n\"Cannot apply - to number (0) and string (\\\"xxxxxxxxxxYYYYY\\\")\""
+    "jqx_out": "\"string (\\\"YYYYY\\\") cannot be negated\"\n\"string (\\\"xxYYYYY\\\") cannot be negated\"\n\"string (\\\"xxxxYYYYY\\\") cannot be negated\"\n\"string (\\\"xxxxxxYYYY...) cannot be negated\"\n\"string (\\\"xxxxxxxxYY...) cannot be negated\"\n\"string (\\\"xxxxxxxxxx...) cannot be negated\""
   },
   {
     "name": "upstream-jq-test-l2000",
@@ -190,22 +166,6 @@
     "jqx_status": "0",
     "jq_out": "\"string (\\\"1,2,\\\") and object ({\\\"a\\\":{\\\"b\\\":{...) cannot be added\"",
     "jqx_out": "\"string (\\\"1,2,\\\") and object ({\\\"a\\\":{\\\"b\\\":{\\\"c\\\":33}}}) cannot be added\""
-  },
-  {
-    "name": "upstream-jq-test-l2024",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"number (1) and number (0) cannot be divided (remainder) because the divisor is zero\"",
-    "jqx_out": "\"number (1) and number (0) cannot be divided because the divisor is zero\""
-  },
-  {
-    "name": "upstream-jq-test-l2028",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"number (1) and number (0) cannot be divided (remainder) because the divisor is zero\"",
-    "jqx_out": "\"number (1) and number (0) cannot be divided because the divisor is zero\""
   },
   {
     "name": "upstream-jq-test-l2190",
@@ -316,7 +276,7 @@
     "category": "output-mismatch",
     "jq_status": "5",
     "jqx_status": "0",
-    "jq_out": "\"hi there!\"\njq: error (at <stdin>:1): ho",
+    "jq_out": "jq: error (at <stdin>:1): ho\n\"hi there!\"",
     "jqx_out": "jqx: error: ho"
   },
   {
@@ -358,14 +318,6 @@
     "jqx_status": "0",
     "jq_out": "true",
     "jqx_out": ""
-  },
-  {
-    "name": "upstream-base64-test-l40",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "\"string (\\\"Not base64...) is not valid base64 data\"",
-    "jqx_out": "\"string (\\\"Not base64...\\\") is not valid base64 data\""
   },
   {
     "name": "upstream-man-test-l5",

@@ -718,7 +718,7 @@ test "execute format filter compatibility" {
       must_parse("\"Not base64 data\""),
     ))
     is Err(err) &&
-    err.to_string() == "string (\"Not base64...\") is not valid base64 data" else {
+    err.to_string() == "string (\"Not base64...) is not valid base64 data" else {
     fail("expected @base64d invalid data error")
   }
   guard (try? execute(parse_filter("@base64d"), must_parse("\"QUJDa\"")))
@@ -1534,7 +1534,7 @@ test "execute division by zero compatibility" {
   }
   guard (try? execute(parse_filter("1 % 0"), j)) is Err(err) &&
     err.to_string() ==
-    "number (1) and number (0) cannot be divided because the divisor is zero" else {
+    "number (1) and number (0) cannot be divided (remainder) because the divisor is zero" else {
     fail("expected jq-compatible modulo by zero error")
   }
 }
@@ -2083,6 +2083,24 @@ test "execute try/catch" {
     err.to_string() == "string (\"hi\") and number (1) cannot be added" else {
     fail("expected try precedence to match (try .a) + 1")
   }
+  assert_eq(
+    must_execute(
+      parse_filter("try -. catch ."),
+      must_parse("\"very-long-string\""),
+    ),
+    [Json::string("string (\"very-long-...) cannot be negated")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("try (.-.) catch ."),
+      must_parse("\"very-long-string\""),
+    ),
+    [
+      Json::string(
+        "string (\"very-long-...) and string (\"very-long-...) cannot be subtracted",
+      ),
+    ],
+  )
 }
 
 ///|

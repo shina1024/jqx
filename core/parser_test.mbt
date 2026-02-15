@@ -353,10 +353,10 @@ test "parse arithmetic" {
     parse_filter("10 % 3"),
     content="Mod(Literal(Number(10)), Literal(Number(3)))",
   )
-  inspect(parse_filter("-."), content="Sub(Literal(Number(0)), Identity)")
+  inspect(parse_filter("-."), content="Call(\"__neg\", [Identity])")
   inspect(
     parse_filter("-(.a + 1)"),
-    content="Sub(Literal(Number(0)), Add(Pipe(Identity, Field(\"a\")), Literal(Number(1))))",
+    content="Call(\"__neg\", [Add(Pipe(Identity, Field(\"a\")), Literal(Number(1)))])",
   )
 }
 

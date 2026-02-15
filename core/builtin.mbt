@@ -140,9 +140,15 @@ fn format_filter_string_type_with_value(s : String) -> String {
 
 ///|
 fn format_filter_string_type_with_preview(s : String) -> String {
-  "string (" +
-  Json::string(format_filter_string_preview(s)).to_json_string() +
-  ")"
+  let preview = format_filter_string_preview(s)
+  let quoted = Json::string(preview).to_json_string()
+  if preview == s {
+    "string (" + quoted + ")"
+  } else {
+    "string (" +
+    quoted.view(start_offset=0, end_offset=quoted.length() - 1).to_string() +
+    ")"
+  }
 }
 
 ///|
