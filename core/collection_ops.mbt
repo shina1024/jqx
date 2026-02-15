@@ -142,7 +142,12 @@ fn to_entries_json(input : Json) -> Json raise EvalError {
     Object(o) => {
       let out = []
       for kv in object_entries_sorted(o) {
-        out.push(Json::object({ "key": Json::string(kv.0), "value": kv.1 }))
+        out.push(
+          Json::object_from_entries([
+            ("key", Json::string(kv.0)),
+            ("value", kv.1),
+          ]),
+        )
       }
       Json::array(out)
     }
@@ -150,7 +155,10 @@ fn to_entries_json(input : Json) -> Json raise EvalError {
       let out = []
       for i in 0..<a.length() {
         out.push(
-          Json::object({ "key": Json::number(i.to_double()), "value": a[i] }),
+          Json::object_from_entries([
+            ("key", Json::number(i.to_double())),
+            ("value", a[i]),
+          ]),
         )
       }
       Json::array(out)
@@ -198,17 +206,23 @@ fn from_entries_json(input : Json) -> Json raise EvalError {
   match input {
     Array(a) => {
       let out = Map::new()
+      let out_order = []
       for entry in a {
         let (key, value) = entry_key_value(entry)
         match key {
-          String(name) => out[name] = value
+          String(name) => {
+            if !out.contains(name) {
+              out_order.push(name)
+            }
+            out[name] = value
+          }
           _ =>
             raise TypeError(
               "Cannot use " + json_type_with_value(key) + " as object key",
             )
         }
       }
-      Json::object(out)
+      Json::object_with_order(out, out_order)
     }
     _ => raise TypeError("Cannot iterate over " + json_type_with_value(input))
   }
@@ -283,10 +297,8 @@ fn compare_json(a : Json, b : Json) -> Int {
       }
     }
     (Object(x), Object(y)) => {
-      let kx = Array::from_iter(x.keys())
-      let ky = Array::from_iter(y.keys())
-      kx.sort()
-      ky.sort()
+      let kx = object_keys_lex_sorted(x)
+      let ky = object_keys_lex_sorted(y)
       let key_cmp = compare_string_arrays(kx, ky)
       if key_cmp != 0 {
         return key_cmp

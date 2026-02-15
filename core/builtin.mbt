@@ -531,7 +531,12 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
       match input {
         String(name) => raise TypeError("module not found: " + name)
         _ =>
-          [Json::object({ "deps": Json::array([]), "defs": Json::object({}) })]
+          [
+            Json::object_from_entries([
+              ("deps", Json::array([])),
+              ("defs", Json::object(Map::new())),
+            ]),
+          ]
       }
     "env" => [Json::object(Map::new())]
     "builtins" => [Json::array(builtin_list())]
@@ -676,7 +681,7 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
       match input {
         Object(o) => {
           let out = []
-          for k in object_keys_sorted(o) {
+          for k in object_keys_lex_sorted(o) {
             out.push(Json::string(k))
           }
           [Json::array(out)]

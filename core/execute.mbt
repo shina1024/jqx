@@ -221,10 +221,10 @@ fn execute_with_env(
             [Json::object(Map::new())]
           } else if name == "__loc__" {
             [
-              Json::object({
-                "file": Json::string("<top-level>"),
-                "line": Json::number(1.0),
-              }),
+              Json::object_from_entries([
+                ("file", Json::string("<top-level>")),
+                ("line", Json::number(1.0)),
+              ]),
             ]
           } else {
             raise UnknownVariable(name)
@@ -324,7 +324,7 @@ fn execute_with_env(
       [Json::array(out)]
     }
     Object(items) => {
-      let mut partials = [Map::new()]
+      let mut partials = [(Map::new(), [])]
       for kv in items {
         let key = kv.0
         let f = kv.1
@@ -334,18 +334,24 @@ fn execute_with_env(
         }
         let next = []
         for partial in partials {
+          let base_map = partial.0
+          let base_order = partial.1
           for i in 0..<vals.length() {
             let v = vals[i]
-            let m = partial.copy()
+            let m = base_map.copy()
+            let order = base_order.copy()
+            if !m.contains(key) {
+              order.push(key)
+            }
             m[key] = v
-            next.push(m)
+            next.push((m, order))
           }
         }
         partials = next
       }
       let out = []
-      for m in partials {
-        out.push(Json::object(m))
+      for partial in partials {
+        out.push(Json::object_with_order(partial.0, partial.1))
       }
       out
     }

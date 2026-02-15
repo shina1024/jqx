@@ -261,14 +261,16 @@ fn builtin_call_stream(
         match input {
           Object(o) => {
             let out = Map::new()
+            let out_order = []
             let f = args[0]
             for kv in object_entries_sorted(o) {
               let vals = execute_with_env(f, kv.1, env)
               if vals.length() > 0 {
+                out_order.push(kv.0)
                 out[kv.0] = vals[0]
               }
             }
-            Some([Json::object(out)])
+            Some([Json::object_with_order(out, out_order)])
           }
           Array(a) => {
             let out = []

@@ -29,39 +29,7 @@
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[true,true,false,false,false,false,false,false,false]\n[true,true,false,false,false,false,false,false,false]\n[false,false,true,true,false,false,false,false,false]\n[false,false,true,true,false,false,false,false,false]\n[false,false,false,false,true,false,false,false,false]\n[false,false,false,false,false,true,false,false,false]\n[false,false,false,false,false,false,true,false,false]\n[false,false,false,false,false,false,false,true,false]\n[false,false,false,false,false,false,false,false,true]",
-    "jqx_out": "[false,true]\n[false,true]\n[true,false]\n[true,false]\n[false,false]\n[false,false]\n[false,false]\n[false,false]\n[false,false]"
-  },
-  {
-    "name": "upstream-jq-test-l1168",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "null\n{\"foo\":[0,1,2,3,4],\"bar\":[0,1]}\n{\"foo\":[1,4],\"bar\":[1]}\n{\"bar\":[1]}",
-    "jqx_out": "null\n{\"bar\":[0,1],\"foo\":[0,1,2,3,4]}\n{\"bar\":[1],\"foo\":[1,4]}\n{\"bar\":[1]}"
-  },
-  {
-    "name": "upstream-jq-test-l1232",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[{\"a\":{\"old\":1,\"new\":2},\"b\":2}]",
-    "jqx_out": "[{\"a\":{\"new\":2,\"old\":1},\"b\":2}]"
-  },
-  {
-    "name": "upstream-jq-test-l1241",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":[{\"b\":5}]}\n{\"b\":0,\"a\":[{\"b\":5}]}\n\"Cannot index number with number\"\n{\"a\":[{\"b\":5}]}\n\"Cannot index number with string \\\"b\\\"\"\n\"Cannot index object with number\"\n{\"a\":[{\"b\":5}]}\n{\"a\":[{\"c\":3,\"b\":5}]}",
-    "jqx_out": "{\"a\":[{\"b\":5}]}\n{\"a\":[{\"b\":5}],\"b\":0}\n\"Cannot index number with number\"\n{\"a\":[{\"b\":5}]}\n\"Cannot index number with string \\\"b\\\"\"\n\"Cannot index object with number\"\n{\"a\":[{\"b\":5}]}\n{\"a\":[{\"b\":5,\"c\":3}]}"
-  },
-  {
-    "name": "upstream-jq-test-l1269",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"foo\":[11,null,{\"bar\":1}],\"bar\":42}",
-    "jqx_out": "{\"bar\":42,\"foo\":[11,null,{\"bar\":1}]}"
+    "jqx_out": "[true,false]\n[true,false]\n[false,true]\n[false,true]\n[false,false]\n[false,false]\n[false,false]\n[false,false]\n[false,false]"
   },
   {
     "name": "upstream-jq-test-l1579",
@@ -112,28 +80,12 @@
     "jqx_out": "false"
   },
   {
-    "name": "upstream-jq-test-l2170",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "true",
-    "jqx_out": "false"
-  },
-  {
     "name": "upstream-jq-test-l2198",
     "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "true",
     "jqx_out": "false"
-  },
-  {
-    "name": "upstream-jq-test-l2207",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[-9007199254740992,\"-9007199254740992\",true]\n[-9007199254740992,\"-9007199254740992\",true]\n[9007199254740992,\"9007199254740992\",true]\n[9007199254740992,\"9007199254740992\",true]\n[13911860366432392,\"13911860366432392\",true]",
-    "jqx_out": "[-9007199254740992,\"-9007199254740992\",false]\n[-9007199254740992,\"-9007199254740992\",false]\n[9007199254740992,\"9007199254740992\",false]\n[9007199254740992,\"9007199254740992\",false]\n[13911860366432392,\"13911860366432392\",false]"
   },
   {
     "name": "upstream-jq-test-l2220",
@@ -152,30 +104,6 @@
     "jqx_out": "[0.1,1000000000000000000]"
   },
   {
-    "name": "upstream-jq-test-l2259",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"foreach\":1,\"and\":2,\"or\":3,\"a\":4}",
-    "jqx_out": "{\"a\":4,\"or\":3,\"and\":2,\"foreach\":1}"
-  },
-  {
-    "name": "upstream-jq-test-l2270",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"a\":[1,2,3],\"__loc__\":{\"file\":\"<top-level>\",\"line\":1},\"c\":{\"hi\":\"hey\"}}",
-    "jqx_out": "{\"a\":[1,2,3],\"c\":{\"hi\":\"hey\"},\"__loc__\":{\"file\":\"<top-level>\",\"line\":1}}"
-  },
-  {
-    "name": "upstream-jq-test-l2274",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"x\":1,\"as\":8,\"2\":4,\"3\":5,\"if\":6,\"foo\":7}",
-    "jqx_out": "{\"2\":4,\"3\":5,\"x\":1,\"as\":8,\"if\":6,\"foo\":7}"
-  },
-  {
     "name": "upstream-jq-test-l2320",
     "category": "output-mismatch",
     "jq_status": "0",
@@ -188,7 +116,7 @@
     "category": "output-mismatch",
     "jq_status": "5",
     "jqx_status": "0",
-    "jq_out": "\"hi there!\"\njq: error (at <stdin>:1): ho",
+    "jq_out": "jq: error (at <stdin>:1): ho\n\"hi there!\"",
     "jqx_out": "jqx: error: ho"
   },
   {
@@ -248,60 +176,12 @@
     "jqx_out": "false"
   },
   {
-    "name": "upstream-man-test-l57",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"name\":\"JSON\",\"good\":true}",
-    "jqx_out": "{\"good\":true,\"name\":\"JSON\"}"
-  },
-  {
-    "name": "upstream-man-test-l85",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"name\":\"JSON\",\"good\":true}\n{\"name\":\"XML\",\"good\":false}",
-    "jqx_out": "{\"good\":true,\"name\":\"JSON\"}\n{\"good\":false,\"name\":\"XML\"}"
-  },
-  {
-    "name": "upstream-man-test-l478",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[{\"foo\":2,\"bar\":1},{\"foo\":3,\"bar\":10},{\"foo\":4,\"bar\":10}]",
-    "jqx_out": "[{\"bar\":1,\"foo\":2},{\"bar\":10,\"foo\":3},{\"bar\":10,\"foo\":4}]"
-  },
-  {
     "name": "upstream-man-test-l482",
     "category": "output-mismatch",
     "jq_status": "0",
     "jqx_status": "0",
     "jq_out": "[{\"foo\":2,\"bar\":1},{\"foo\":3,\"bar\":10},{\"foo\":3,\"bar\":20},{\"foo\":4,\"bar\":10}]",
-    "jqx_out": "[{\"bar\":1,\"foo\":2},{\"bar\":20,\"foo\":3},{\"bar\":10,\"foo\":3},{\"bar\":10,\"foo\":4}]"
-  },
-  {
-    "name": "upstream-man-test-l486",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[[{\"foo\":1,\"bar\":10},{\"foo\":1,\"bar\":1}],[{\"foo\":3,\"bar\":100}]]",
-    "jqx_out": "[[{\"bar\":10,\"foo\":1},{\"bar\":1,\"foo\":1}],[{\"bar\":100,\"foo\":3}]]"
-  },
-  {
-    "name": "upstream-man-test-l494",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"foo\":2,\"bar\":3}",
-    "jqx_out": "{\"bar\":3,\"foo\":2}"
-  },
-  {
-    "name": "upstream-man-test-l502",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "[{\"foo\":1,\"bar\":2},{\"foo\":4,\"bar\":5}]",
-    "jqx_out": "[{\"bar\":2,\"foo\":1},{\"bar\":5,\"foo\":4}]"
+    "jqx_out": "[{\"foo\":2,\"bar\":1},{\"foo\":3,\"bar\":20},{\"foo\":3,\"bar\":10},{\"foo\":4,\"bar\":10}]"
   },
   {
     "name": "upstream-man-test-l654",
@@ -310,13 +190,5 @@
     "jqx_status": "0",
     "jq_out": "[2]",
     "jqx_out": "[]"
-  },
-  {
-    "name": "upstream-man-test-l939",
-    "category": "output-mismatch",
-    "jq_status": "0",
-    "jqx_status": "0",
-    "jq_out": "{\"index\":1,\"item\":\"foo\"}\n{\"index\":2,\"item\":\"bar\"}\n{\"index\":3,\"item\":\"baz\"}",
-    "jqx_out": "{\"item\":\"foo\",\"index\":1}\n{\"item\":\"bar\",\"index\":2}\n{\"item\":\"baz\",\"index\":3}"
   }
 ]

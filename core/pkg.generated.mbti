@@ -130,7 +130,7 @@ pub enum Json {
   Number(Double, String?)
   String(String)
   Array(Array[Json])
-  Object(Map[String, Json])
+  Object(JsonObject)
 }
 pub fn Json::array(Array[Self]) -> Self
 pub fn Json::boolean(Bool) -> Self
@@ -141,6 +141,8 @@ pub fn Json::string(String) -> Self
 pub fn Json::to_json_string(Self) -> String
 pub impl Eq for Json
 pub impl Show for Json
+
+type JsonObject
 
 pub struct Position {
   line : Int

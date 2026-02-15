@@ -326,7 +326,7 @@ fn execute_arith(
           }
         (Object(x), Object(y)) =>
           if op == "*" {
-            out.push(Json::object(merge_objects_recursive(x, y)))
+            out.push(Object(merge_objects_recursive(x, y)))
           } else {
             raise TypeError(arith_type_error_message(op, a, b))
           }
@@ -386,24 +386,23 @@ fn multiply_string_number(s : String, n : Double) -> Json raise EvalError {
 }
 
 ///|
-fn merge_objects_recursive(
-  left : Map[String, Json],
-  right : Map[String, Json],
-) -> Map[String, Json] {
-  let merged = Map::new()
-  for kv in left.iter() {
-    merged[kv.0] = kv.1
-  }
+fn merge_objects_recursive(left : JsonObject, right : JsonObject) -> JsonObject {
+  let merged = left.to_map().copy()
+  let merged_order = left.keys()
   for kv in right.iter() {
     let key = kv.0
     let right_value = kv.1
+    let exists = merged.contains(key)
     match (merged.get(key), right_value) {
       (Some(Object(left_obj)), Object(right_obj)) =>
-        merged[key] = Json::object(merge_objects_recursive(left_obj, right_obj))
+        merged[key] = Object(merge_objects_recursive(left_obj, right_obj))
       _ => merged[key] = right_value
     }
+    if !exists {
+      merged_order.push(key)
+    }
   }
-  merged
+  JsonObject::with_order(merged, merged_order)
 }
 
 ///|
@@ -441,14 +440,15 @@ fn json_add_pair(a : Json, b : Json) -> Json raise EvalError {
       Json::array(merged)
     }
     (Object(x), Object(y)) => {
-      let merged = Map::new()
-      for kv in x.iter() {
-        merged[kv.0] = kv.1
-      }
+      let merged = x.to_map().copy()
+      let merged_order = x.keys()
       for kv in y.iter() {
+        if !merged.contains(kv.0) {
+          merged_order.push(kv.0)
+        }
         merged[kv.0] = kv.1
       }
-      Json::object(merged)
+      Json::object_with_order(merged, merged_order)
     }
     _ =>
       raise TypeError(

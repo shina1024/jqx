@@ -6,8 +6,145 @@ pub enum Json {
   Number(Double, String?)
   String(String)
   Array(Array[Json])
-  Object(Map[String, Json])
-} derive(Eq)
+  Object(JsonObject)
+}
+
+///|
+struct JsonObject {
+  map : Map[String, Json]
+  key_order : Array[String]
+}
+
+///|
+fn object_keys_in_order(
+  map : Map[String, Json],
+  key_order : Array[String],
+) -> Array[String] {
+  let out = []
+  let seen = Map::new()
+  for key in key_order {
+    if !seen.contains(key) {
+      seen[key] = true
+      if map.contains(key) {
+        out.push(key)
+      }
+    }
+  }
+  for key in map.keys() {
+    if !seen.contains(key) {
+      seen[key] = true
+      out.push(key)
+    }
+  }
+  out
+}
+
+///|
+fn json_object_make(
+  map : Map[String, Json],
+  key_order : Array[String],
+) -> JsonObject {
+  { map, key_order: object_keys_in_order(map, key_order) }
+}
+
+///|
+fn JsonObject::from_map(map : Map[String, Json]) -> JsonObject {
+  json_object_make(map, Array::from_iter(map.keys()))
+}
+
+///|
+fn JsonObject::with_order(
+  map : Map[String, Json],
+  key_order : Array[String],
+) -> JsonObject {
+  json_object_make(map, key_order)
+}
+
+///|
+fn JsonObject::get(self : JsonObject, key : String) -> Json? {
+  self.map.get(key)
+}
+
+///|
+fn JsonObject::contains(self : JsonObject, key : String) -> Bool {
+  self.map.contains(key)
+}
+
+///|
+fn JsonObject::length(self : JsonObject) -> Int {
+  self.map.length()
+}
+
+///|
+fn JsonObject::keys(self : JsonObject) -> Array[String] {
+  object_keys_in_order(self.map, self.key_order)
+}
+
+///|
+fn JsonObject::iter(self : JsonObject) -> Array[(String, Json)] {
+  object_entries_sorted(self)
+}
+
+///|
+fn JsonObject::to_map(self : JsonObject) -> Map[String, Json] {
+  self.map
+}
+
+///|
+fn JsonObject::set(self : JsonObject, key : String, value : Json) -> JsonObject {
+  let next_map = self.map.copy()
+  let next_order = self.key_order.copy()
+  if !next_map.contains(key) {
+    next_order.push(key)
+  }
+  next_map[key] = value
+  json_object_make(next_map, next_order)
+}
+
+///|
+fn json_equal(a : Json, b : Json) -> Bool {
+  match (a, b) {
+    (JNull, JNull) => true
+    (JTrue, JTrue) => true
+    (JFalse, JFalse) => true
+    (Number(x, _), Number(y, _)) => x == y
+    (String(x), String(y)) => x == y
+    (Array(x), Array(y)) => {
+      if x.length() != y.length() {
+        return false
+      }
+      for i in 0..<x.length() {
+        if !json_equal(x[i], y[i]) {
+          return false
+        }
+      }
+      true
+    }
+    (Object(x), Object(y)) => {
+      if x.length() != y.length() {
+        return false
+      }
+      for kv in x.iter() {
+        match y.get(kv.0) {
+          Some(v) => if !json_equal(kv.1, v) { return false }
+          None => return false
+        }
+      }
+      true
+    }
+    _ => false
+  }
+}
+
+///|
+pub impl Eq for Json with equal(self, other) {
+  json_equal(self, other)
+}
+
+///|
+pub impl Eq for Json with not_equal(self, other) {
+  !json_equal(self, other)
+}
 
 ///|
 pub fn Json::null() -> Json {
@@ -40,18 +177,63 @@ pub fn Json::array(a : Array[Json]) -> Json {
 
 ///|
 pub fn Json::object(o : Map[String, Json]) -> Json {
-  Object(o)
+  Object(JsonObject::from_map(o))
 }
 
 ///|
-fn object_keys_sorted(o : Map[String, Json]) -> Array[String] {
-  let keys = Array::from_iter(o.keys())
-  keys.sort()
-  keys
+fn Json::object_with_order(
+  o : Map[String, Json],
+  key_order : Array[String],
+) -> Json {
+  Object(JsonObject::with_order(o, key_order))
 }
 
 ///|
-fn object_entries_sorted(o : Map[String, Json]) -> Array[(String, Json)] {
+fn Json::object_from_entries(entries : Array[(String, Json)]) -> Json {
+  let map = Map::new()
+  let key_order = []
+  for kv in entries {
+    let key = kv.0
+    let value = kv.1
+    if !map.contains(key) {
+      key_order.push(key)
+    }
+    map[key] = value
+  }
+  Json::object_with_order(map, key_order)
+}
+
+///|
+fn object_keys_sorted(o : JsonObject) -> Array[String] {
+  o.keys()
+}
+
+///|
+fn sort_strings_lex(input : Array[String]) -> Array[String] {
+  let sorted = input.copy()
+  for i in 1..<sorted.length() {
+    let v = sorted[i]
+    let mut j = i
+    for {
+      if j > 0 && sorted[j - 1].compare(v) > 0 {
+        sorted[j] = sorted[j - 1]
+        j -= 1
+      } else {
+        break
+      }
+    }
+    sorted[j] = v
+  }
+  sorted
+}
+
+///|
+fn object_keys_lex_sorted(o : JsonObject) -> Array[String] {
+  sort_strings_lex(object_keys_sorted(o))
+}
+
+///|
+fn object_entries_sorted(o : JsonObject) -> Array[(String, Json)] {
   let out = []
   for key in object_keys_sorted(o) {
     match o.get(key) {
@@ -128,7 +310,7 @@ pub impl Show for Json with output(self, logger) {
     }
     Object(o) => {
       logger.write_string("Object(")
-      Show::output(o, logger)
+      Show::output(o.to_map(), logger)
       logger.write_string(")")
     }
   }
@@ -320,19 +502,23 @@ fn ParseContext::parse_object(ctx : ParseContext) -> Json raise ParseError {
   }
   ctx.remaining_available_depth -= 1
   let map = Map::new()
+  let key_order = []
   loop ctx.lex_property_name() {
     RBrace => {
       ctx.remaining_available_depth += 1
-      Json::object(map)
+      Json::object_with_order(map, key_order)
     }
     String(name) => {
       ctx.lex_after_property_name()
+      if !map.contains(name) {
+        key_order.push(name)
+      }
       map[name] = ctx.parse_value()
       match ctx.lex_after_object_value() {
         Comma => continue ctx.lex_property_name2()
         RBrace => {
           ctx.remaining_available_depth += 1
-          Json::object(map)
+          Json::object_with_order(map, key_order)
         }
         _ => abort("unreachable")
       }

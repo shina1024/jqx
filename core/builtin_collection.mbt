@@ -98,13 +98,18 @@ fn builtin_call_collection(
       } else {
         let values = execute_with_env(args[0], input, env)
         let out = Map::new()
+        let out_order = []
         for value in values {
           let keys = execute_with_env(args[1], value, env)
           for key in keys {
-            out[index_object_key(key)] = value
+            let object_key = index_object_key(key)
+            if !out.contains(object_key) {
+              out_order.push(object_key)
+            }
+            out[object_key] = value
           }
         }
-        Some([Json::object(out)])
+        Some([Json::object_with_order(out, out_order)])
       }
     "sort_by" =>
       if args.length() != 1 {

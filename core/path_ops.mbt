@@ -98,12 +98,7 @@ fn setpath_on_input(
             None => Json::null()
           }
           let updated = setpath_on_input(child, rest, value)
-          let out = Map::new()
-          for kv in object_entries_sorted(o) {
-            out[kv.0] = kv.1
-          }
-          out[name] = updated
-          Json::object(out)
+          Object(o.set(name, updated))
         }
         _ => index_type_error(input, key)
       }
@@ -143,9 +138,7 @@ fn setpath_on_input(
       match key {
         String(name) => {
           let updated = setpath_on_input(Json::null(), rest, value)
-          let out = Map::new()
-          out[name] = updated
-          Json::object(out)
+          Json::object_from_entries([(name, updated)])
         }
         Number(n, _) => {
           let i = parse_setpath_array_index(n)
@@ -268,6 +261,7 @@ fn delpaths_on_input(
         }
       }
       let out = Map::new()
+      let out_order = []
       for kv in object_entries_sorted(o) {
         let name = kv.0
         let value = kv.1
@@ -276,12 +270,16 @@ fn delpaths_on_input(
             if has_empty_path(subpaths) {
               ()
             } else {
+              out_order.push(name)
               out[name] = delpaths_on_input(value, subpaths)
             }
-          None => out[name] = value
+          None => {
+            out_order.push(name)
+            out[name] = value
+          }
         }
       }
-      Json::object(out)
+      Json::object_with_order(out, out_order)
     }
     Array(a) => {
       let groups = Map::new()

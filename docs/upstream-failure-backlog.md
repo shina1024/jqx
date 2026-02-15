@@ -11,15 +11,15 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 637
-- failed: 40
+- passed: 653
+- failed: 24
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `output-mismatch` | 39 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
+| `output-mismatch` | 23 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
 | `runtime-error-vs-jq-success` | 0 | resolved in current baseline |
 | `unknown-variable` | 0 | resolved in current baseline |
 | `parser-invalid-character` | 1 | parse error wording/position mismatch in error text |
@@ -109,10 +109,15 @@ From current snapshot (`unknown-function` subset):
   - `jq_diff.ps1` / `jq_diff.sh` で「jq側が失敗するケース」の比較を強化し、
     jqx 側の wrapper 由来ステータス差異があっても正規化エラーメッセージ一致で pass 判定
 - full upstream diff を `failed 47 -> 40` まで縮小。
+- Object キー順を jq 準拠へ修正:
+  - `Json::Object` を `map + key_order` で保持し、parser/object-literal/setpath/delpaths/merge/add/from_entries/map_values/INDEX を順序保持化
+  - `to_json` / `.[]` / `keys_unsorted` の順序を入力・更新順へ揃え、`keys` は jq 準拠の文字列比較ソートを維持
+  - `Json` の `Eq` は object key order を無視して比較するよう維持（互換性保持）
+- full upstream diff を `failed 40 -> 24` まで縮小。
 
 ## Priority Plan
 
-1. Triage `output-mismatch` (`39`) by subcategory:
+1. Triage `output-mismatch` (`23`) by subcategory:
    - intentional policy differences (e.g. object key order)
    - real behavioral regressions (streaming/error semantics).
 2. Triage `parser-invalid-character` (`1`) and align parser error wording/offset behavior.

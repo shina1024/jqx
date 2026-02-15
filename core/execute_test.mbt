@@ -587,14 +587,14 @@ test "execute keys compatibility errors and keys_unsorted" {
   ])
   let obj = must_parse("{\"b\":2,\"a\":1}")
   assert_eq(must_execute(parse_filter("keys_unsorted"), obj), [
-    Json::array([Json::string("a"), Json::string("b")]),
+    Json::array([Json::string("b"), Json::string("a")]),
   ])
   assert_eq(must_execute(parse_filter(".[]"), obj), [
-    Json::number(1.0),
     Json::number(2.0),
+    Json::number(1.0),
   ])
   assert_eq(must_execute(parse_filter("tojson"), obj), [
-    Json::string("{\"a\":1,\"b\":2}"),
+    Json::string("{\"b\":2,\"a\":1}"),
   ])
   guard (try? execute(parse_filter("keys"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) has no keys" else {
