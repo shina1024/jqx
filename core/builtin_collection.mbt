@@ -7,6 +7,11 @@ fn index_object_key(value : Json) -> String {
 }
 
 ///|
+fn by_key_from_values(values : Array[Json]) -> Json {
+  Json::array(values)
+}
+
+///|
 fn builtin_call_collection(
   name : String,
   args : Array[Filter],
@@ -121,11 +126,7 @@ fn builtin_call_collection(
             let key_filter = args[0]
             for v in a {
               let key_values = execute_with_env(key_filter, v, env)
-              let key = if key_values.length() == 0 {
-                Json::null()
-              } else {
-                key_values[0]
-              }
+              let key = by_key_from_values(key_values)
               keyed.push((key, v))
             }
             let sorted = sort_keyed_pairs(keyed)
@@ -151,11 +152,7 @@ fn builtin_call_collection(
             let key_filter = args[0]
             for v in a {
               let key_values = execute_with_env(key_filter, v, env)
-              let key = if key_values.length() == 0 {
-                Json::null()
-              } else {
-                key_values[0]
-              }
+              let key = by_key_from_values(key_values)
               keyed.push((key, v))
             }
             let sorted = sort_keyed_pairs(keyed)
@@ -221,11 +218,7 @@ fn builtin_call_collection(
             let key_filter = args[0]
             for v in a {
               let key_values = execute_with_env(key_filter, v, env)
-              let key = if key_values.length() == 0 {
-                Json::null()
-              } else {
-                key_values[0]
-              }
+              let key = by_key_from_values(key_values)
               keyed.push((key, v))
             }
             let sorted = sort_keyed_pairs(keyed)

@@ -57,7 +57,6 @@ Implemented builtins/functions in `core/execute.mbt` + `core/builtin*.mbt` inclu
 
 | Topic | Status | Notes |
 | --- | --- | --- |
-| Object key order | partial | jqx canonicalizes object-key traversal/serialization in lexicographic order for deterministic outputs (jqの挿入順とは差分あり) |
 | Number edge behavior | partial | parser/evaluator now avoid non-finite JSON output (`NaN -> null`, `±Infinity -> ±MAX_DOUBLE` in numeric ops), but full jq decnum parity is still out of scope |
 | Exact error text | partial | close to jq style but not byte-for-byte compatible |
 | CLI option coverage | partial | currently `-r`, `-R`, `-c`, `-n`, `-s`, `-e` (`-R` is line-based without full JSON-stream parity) |
@@ -116,7 +115,7 @@ Notes:
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.
 - Smoke differential currently covers 214 cases (as of 2026-02-15).
 - Full upstream differential baseline is currently:
-  total 824 / passed 653 / failed 24 / skipped 147
+  total 824 / passed 656 / failed 21 / skipped 147
   (see `scripts/jq_upstream_failures.snapshot.json` and `docs/upstream-failure-backlog.md`).
 - `expect_error: true` in smoke differential cases compares normalized jq/jqx
   error messages and accepts jqx `moon run` wrapper status behavior.

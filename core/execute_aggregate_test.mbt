@@ -365,6 +365,19 @@ test "execute sort_by compatibility" {
       ]),
     ],
   )
+  assert_eq(
+    must_execute(
+      parse_filter("sort_by(.a, .b)"),
+      must_parse("[{\"a\":1,\"b\":2},{\"a\":1,\"b\":1},{\"a\":0,\"b\":3}]"),
+    ),
+    [
+      Json::array([
+        Json::object({ "a": Json::number(0.0), "b": Json::number(3.0) }),
+        Json::object({ "a": Json::number(1.0), "b": Json::number(1.0) }),
+        Json::object({ "a": Json::number(1.0), "b": Json::number(2.0) }),
+      ]),
+    ],
+  )
 }
 
 ///|

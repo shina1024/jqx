@@ -382,17 +382,14 @@ fn minmax_by_json_array(
   if a.length() == 0 {
     return Json::null()
   }
-  let mut best_value = a[0]
-  let first_keys = execute_with_env(key_filter, best_value, env)
-  let mut best_key = if first_keys.length() == 0 {
-    Json::null()
-  } else {
-    first_keys[0]
+  fn key_for(value : Json) -> Json raise EvalError {
+    Json::array(execute_with_env(key_filter, value, env))
   }
+  let mut best_value = a[0]
+  let mut best_key = key_for(best_value)
   for i in 1..<a.length() {
     let v = a[i]
-    let keys = execute_with_env(key_filter, v, env)
-    let key = if keys.length() == 0 { Json::null() } else { keys[0] }
+    let key = key_for(v)
     let cmp = compare_json(key, best_key)
     if choose_max {
       if cmp >= 0 {

@@ -11,15 +11,15 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 653
-- failed: 24
+- passed: 656
+- failed: 21
 - skipped: 147
 
 ## Failure Categories (Current)
 
 | Category | Count | Typical root cause |
 | --- | ---: | --- |
-| `output-mismatch` | 23 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics, key order policy) |
+| `output-mismatch` | 20 | evaluator semantics differences (streaming behavior, error propagation, numeric semantics) |
 | `runtime-error-vs-jq-success` | 0 | resolved in current baseline |
 | `unknown-variable` | 0 | resolved in current baseline |
 | `parser-invalid-character` | 1 | parse error wording/position mismatch in error text |
@@ -33,6 +33,15 @@ From current snapshot (`unknown-function` subset):
 
 ## Latest Progress
 
+- `sort_by` / `group_by` / `unique_by` / `min_by` / `max_by` の
+  複数キー評価を jq 寄せに修正:
+  - key filter の複数出力を先頭1件ではなく配列キー全体として比較に使用。
+  - `upstream-jq-test-l1651` と `upstream-man-test-l482` の差分を解消。
+- `as` の優先順位を jq 寄せに修正:
+  - `x | .[] as $v | ...` を `(x | (.[] as $v | ...))` と同等に解釈。
+  - `?//` を伴うパターン束縛分岐でも同様に RHS での束縛を優先。
+  - `upstream-jq-test-l716` の差分を解消。
+- full upstream diff を `failed 24 -> 21` まで縮小。
 - Local `def` parsing was expanded:
   - `def` in nested/local expression positions (`|`/`,`/括弧/配列要素内) is parsed.
   - nested `def` semicolon scanning was fixed for definition-body extraction.
@@ -117,9 +126,9 @@ From current snapshot (`unknown-function` subset):
 
 ## Priority Plan
 
-1. Triage `output-mismatch` (`23`) by subcategory:
-   - intentional policy differences (e.g. object key order)
+1. Triage `output-mismatch` (`20`) by subcategory:
    - real behavioral regressions (streaming/error semantics).
+   - numeric/decnum precision and rendering mismatches.
 2. Triage `parser-invalid-character` (`1`) and align parser error wording/offset behavior.
 3. Continue `def` compatibility improvements (recursion and filter-argument semantics).
 4. Keep expanding stage1 allowlist incrementally with newly stable cases.

@@ -161,10 +161,57 @@ fn FilterCursor::parse_pipe_no_comma(
           ctx.offset = saved
           break
         }
-        let right = if ctx.peek_keyword("def") {
+        let mut right = if ctx.peek_keyword("def") {
           ctx.parse_scoped(allow_as~)
         } else {
           ctx.parse_fallback(allow_as~)
+        }
+        if allow_as && ctx.try_keyword("as") {
+          let pattern = ctx.parse_as_pattern()
+          ctx.skip_ws()
+          if ctx.try_qslash_fallback_sep() {
+            let patterns = [pattern]
+            for {
+              patterns.push(ctx.parse_as_pattern())
+              if ctx.try_qslash_fallback_sep() {
+                continue
+              }
+              break
+            }
+            ctx.skip_ws()
+            ctx.expect_char('|')
+            let body = if ctx.peek_keyword("def") {
+              ctx.parse_scoped(allow_as~)
+            } else {
+              ctx.parse_pipe_no_comma(allow_as~)
+            }
+            let source_tmp = ctx.fresh_as_tmp()
+            let source_var = Filter::var_(source_tmp)
+            let mut branch = ctx.lower_as_pattern_with_source(
+              source_var,
+              patterns[patterns.length() - 1],
+              body,
+            )
+            for i in 0..<(patterns.length() - 1) {
+              let idx = patterns.length() - 2 - i
+              let candidate = ctx.lower_as_pattern_with_source(
+                source_var,
+                patterns[idx],
+                body,
+              )
+              branch = Filter::try_catch(candidate, branch)
+            }
+            branch = lower_with_null_defaults_for_patterns(branch, patterns)
+            right = Filter::as_(right, source_tmp, branch)
+          } else {
+            ctx.expect_char('|')
+            let body = if ctx.peek_keyword("def") {
+              ctx.parse_scoped(allow_as~)
+            } else {
+              ctx.parse_pipe_no_comma(allow_as~)
+            }
+            right = ctx.lower_as_pattern_with_source(right, pattern, body)
+          }
         }
         left = Filter::pipe(left, right)
       }
@@ -261,10 +308,57 @@ fn FilterCursor::parse_pipe(
           ctx.offset = saved
           break
         }
-        let right = if ctx.peek_keyword("def") {
+        let mut right = if ctx.peek_keyword("def") {
           ctx.parse_scoped(allow_as~)
         } else {
           ctx.parse_comma_tight(allow_as~)
+        }
+        if allow_as && ctx.try_keyword("as") {
+          let pattern = ctx.parse_as_pattern()
+          ctx.skip_ws()
+          if ctx.try_qslash_fallback_sep() {
+            let patterns = [pattern]
+            for {
+              patterns.push(ctx.parse_as_pattern())
+              if ctx.try_qslash_fallback_sep() {
+                continue
+              }
+              break
+            }
+            ctx.skip_ws()
+            ctx.expect_char('|')
+            let body = if ctx.peek_keyword("def") {
+              ctx.parse_scoped(allow_as~)
+            } else {
+              ctx.parse_comma(allow_as~)
+            }
+            let source_tmp = ctx.fresh_as_tmp()
+            let source_var = Filter::var_(source_tmp)
+            let mut branch = ctx.lower_as_pattern_with_source(
+              source_var,
+              patterns[patterns.length() - 1],
+              body,
+            )
+            for i in 0..<(patterns.length() - 1) {
+              let idx = patterns.length() - 2 - i
+              let candidate = ctx.lower_as_pattern_with_source(
+                source_var,
+                patterns[idx],
+                body,
+              )
+              branch = Filter::try_catch(candidate, branch)
+            }
+            branch = lower_with_null_defaults_for_patterns(branch, patterns)
+            right = Filter::as_(right, source_tmp, branch)
+          } else {
+            ctx.expect_char('|')
+            let body = if ctx.peek_keyword("def") {
+              ctx.parse_scoped(allow_as~)
+            } else {
+              ctx.parse_comma(allow_as~)
+            }
+            right = ctx.lower_as_pattern_with_source(right, pattern, body)
+          }
         }
         left = Filter::pipe(left, right)
       }
