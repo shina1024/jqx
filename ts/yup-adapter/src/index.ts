@@ -26,18 +26,23 @@ export type Json = null | boolean | number | string | Json[] | { [key: string]: 
 
 export type InferenceFallbackMode = "unknown" | "json";
 
-type InferenceFallbackValue<Mode extends InferenceFallbackMode> = Mode extends "json" ? Json : unknown;
+type InferenceFallbackValue<Mode extends InferenceFallbackMode> = Mode extends "json"
+  ? Json
+  : unknown;
 
 type TrimLeft<S extends string> = S extends ` ${infer Rest}` ? TrimLeft<Rest> : S;
 type TrimRight<S extends string> = S extends `${infer Rest} ` ? TrimRight<Rest> : S;
 type Trim<S extends string> = TrimLeft<TrimRight<S>>;
 
-type HasUnsupportedPathToken<S extends string> = S extends
-  `${string}${"|" | "," | "(" | ")" | ":" | ";" | "?" | "+" | "-" | "*" | "/" | "=" | "!" | "<" | ">" | "$" | "@" | "\"" | "'" | "`" | " " | "\n" | "\r" | "\t"}${string}`
-  ? true
-  : false;
+type HasUnsupportedPathToken<S extends string> =
+  S extends `${string}${"|" | "," | "(" | ")" | ":" | ";" | "?" | "+" | "-" | "*" | "/" | "=" | "!" | "<" | ">" | "$" | "@" | '"' | "'" | "`" | " " | "\n" | "\r" | "\t"}${string}`
+    ? true
+    : false;
 
-type ReadFieldToken<Path extends string, Acc extends string = ""> = Path extends `${infer Char}${infer Rest}`
+type ReadFieldToken<
+  Path extends string,
+  Acc extends string = "",
+> = Path extends `${infer Char}${infer Rest}`
   ? Char extends "." | "["
     ? [Acc, `${Char}${Rest}`]
     : ReadFieldToken<Rest, `${Acc}${Char}`>
@@ -49,22 +54,27 @@ type ArrayElement<Current, Mode extends InferenceFallbackMode> = Current extends
     ? Item
     : InferenceFallbackValue<Mode>;
 
-type AccessFieldSegment<Current, Field extends string, Mode extends InferenceFallbackMode> =
-  Current extends null | undefined
-    ? InferenceFallbackValue<Mode>
-    : Current extends object
-      ? Field extends keyof Current
-        ? Current[Field]
-        : InferenceFallbackValue<Mode>
-      : InferenceFallbackValue<Mode>;
+type AccessFieldSegment<
+  Current,
+  Field extends string,
+  Mode extends InferenceFallbackMode,
+> = Current extends null | undefined
+  ? InferenceFallbackValue<Mode>
+  : Current extends object
+    ? Field extends keyof Current
+      ? Current[Field]
+      : InferenceFallbackValue<Mode>
+    : InferenceFallbackValue<Mode>;
 
 type ParseBracketSegment<
   Current,
   Inner extends string,
   Mode extends InferenceFallbackMode,
-> = Inner extends "" ? ArrayElement<Current, Mode>
-  : Inner extends `${number}` ? ArrayElement<Current, Mode>
-  : InferenceFallbackValue<Mode>;
+> = Inner extends ""
+  ? ArrayElement<Current, Mode>
+  : Inner extends `${number}`
+    ? ArrayElement<Current, Mode>
+    : InferenceFallbackValue<Mode>;
 
 type ParsePath<Path extends string, Current, Mode extends InferenceFallbackMode> = Path extends ""
   ? Current
@@ -84,7 +94,11 @@ type ParsePath<Path extends string, Current, Mode extends InferenceFallbackMode>
             : InferenceFallbackValue<Mode>
           : InferenceFallbackValue<Mode>;
 
-type ParseFilter<Filter extends string, Input, Mode extends InferenceFallbackMode> = Filter extends "."
+type ParseFilter<
+  Filter extends string,
+  Input,
+  Mode extends InferenceFallbackMode,
+> = Filter extends "."
   ? Input
   : Filter extends `.${infer Path}`
     ? ParsePath<Path, Input, Mode>
@@ -99,7 +113,7 @@ export type InferJqOutput<
   Mode extends InferenceFallbackMode = "unknown",
 > = ParseFilter<Trim<Filter>, Input, Mode>;
 
-export interface RunWithInferredOptions<
+export interface InferredOptions<
   Filter extends string,
   Input,
   Mode extends InferenceFallbackMode = "unknown",
@@ -109,7 +123,7 @@ export interface RunWithInferredOptions<
   fallback?: Mode;
 }
 
-export type YupAdapterError =
+export type AdapterError =
   | {
       kind: "input_validation";
       message: string;
@@ -133,21 +147,36 @@ export type YupAdapterError =
       issues: string[];
     };
 
-export interface RunWithYupOptions<InSchema extends yup.AnySchema, OutSchema extends yup.AnySchema> {
+export interface FilterOptions<InSchema extends yup.AnySchema, OutSchema extends yup.AnySchema> {
   filter: string;
   input: unknown;
   inputSchema: InSchema;
   outputSchema: OutSchema;
 }
 
-export interface ExecuteWithYupOptions<Q, InSchema extends yup.AnySchema, OutSchema extends yup.AnySchema> {
+export interface QueryOptions<Q, InSchema extends yup.AnySchema, OutSchema extends yup.AnySchema> {
   query: Q;
   input: unknown;
   inputSchema: InSchema;
   outputSchema: OutSchema;
 }
 
-function fail<T>(error: YupAdapterError): JqxResult<T, YupAdapterError> {
+export interface DynamicAdapter {
+  filter<InSchema extends yup.AnySchema, OutSchema extends yup.AnySchema>(
+    options: FilterOptions<InSchema, OutSchema>,
+  ): Promise<JqxResult<yup.InferType<OutSchema>[], AdapterError>>;
+  inferred<Filter extends string, Input, Mode extends InferenceFallbackMode = "unknown">(
+    options: InferredOptions<Filter, Input, Mode>,
+  ): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], string>>;
+}
+
+export interface TypedAdapter<Q> extends DynamicAdapter {
+  query<InSchema extends yup.AnySchema, OutSchema extends yup.AnySchema>(
+    options: QueryOptions<Q, InSchema, OutSchema>,
+  ): Promise<JqxResult<yup.InferType<OutSchema>[], AdapterError>>;
+}
+
+function fail<T>(error: AdapterError): JqxResult<T, AdapterError> {
   return { ok: false, error };
 }
 
@@ -171,7 +200,9 @@ function parseRuntimeJsonOutputs(rawValues: string[]): JqxResult<unknown[]> {
 }
 
 function normalizeYupIssues(error: yup.ValidationError): string[] {
-  const issues = error.errors.filter((item): item is string => typeof item === "string" && item.length > 0);
+  const issues = error.errors.filter(
+    (item): item is string => typeof item === "string" && item.length > 0,
+  );
   if (issues.length > 0) {
     return issues;
   }
@@ -199,7 +230,7 @@ async function validateWithYup<TSchema extends yup.AnySchema>(
 async function parseAndValidateOutput<OutSchema extends yup.AnySchema>(
   outputSchema: OutSchema,
   rawValues: string[],
-): Promise<JqxResult<yup.InferType<OutSchema>[], YupAdapterError>> {
+): Promise<JqxResult<yup.InferType<OutSchema>[], AdapterError>> {
   const validated: yup.InferType<OutSchema>[] = [];
   for (const [index, raw] of rawValues.entries()) {
     let parsed: unknown;
@@ -227,10 +258,10 @@ async function parseAndValidateOutput<OutSchema extends yup.AnySchema>(
   return { ok: true, value: validated };
 }
 
-export async function safeRunWithYup<InSchema extends yup.AnySchema, OutSchema extends yup.AnySchema>(
+async function runFilterInternal<InSchema extends yup.AnySchema, OutSchema extends yup.AnySchema>(
   runtime: JqxDynamicRuntime,
-  options: RunWithYupOptions<InSchema, OutSchema>,
-): Promise<JqxResult<yup.InferType<OutSchema>[], YupAdapterError>> {
+  options: FilterOptions<InSchema, OutSchema>,
+): Promise<JqxResult<yup.InferType<OutSchema>[], AdapterError>> {
   const parsedIn = await validateWithYup(options.inputSchema, options.input);
   if (!parsedIn.ok) {
     return fail({
@@ -251,13 +282,13 @@ export async function safeRunWithYup<InSchema extends yup.AnySchema, OutSchema e
   return parseAndValidateOutput(options.outputSchema, runtimeOut.value);
 }
 
-export async function runWithInferred<
+async function runInferredInternal<
   Filter extends string,
   Input,
   Mode extends InferenceFallbackMode = "unknown",
 >(
   runtime: JqxDynamicRuntime,
-  options: RunWithInferredOptions<Filter, Input, Mode>,
+  options: InferredOptions<Filter, Input, Mode>,
 ): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], string>> {
   const runtimeOut = await runtime.run(options.filter, JSON.stringify(options.input));
   if (!runtimeOut.ok) {
@@ -270,10 +301,10 @@ export async function runWithInferred<
   return { ok: true, value: parsed.value as InferJqOutput<Input, Filter, Mode>[] };
 }
 
-export async function safeExecuteWithYup<Q, InSchema extends yup.AnySchema, OutSchema extends yup.AnySchema>(
+async function runQueryInternal<Q, InSchema extends yup.AnySchema, OutSchema extends yup.AnySchema>(
   runtime: JqxTypedRuntime<Q>,
-  options: ExecuteWithYupOptions<Q, InSchema, OutSchema>,
-): Promise<JqxResult<yup.InferType<OutSchema>[], YupAdapterError>> {
+  options: QueryOptions<Q, InSchema, OutSchema>,
+): Promise<JqxResult<yup.InferType<OutSchema>[], AdapterError>> {
   const parsedIn = await validateWithYup(options.inputSchema, options.input);
   if (!parsedIn.ok) {
     return fail({
@@ -294,19 +325,29 @@ export async function safeExecuteWithYup<Q, InSchema extends yup.AnySchema, OutS
   return parseAndValidateOutput(options.outputSchema, runtimeOut.value);
 }
 
-export function withYup(runtime: JqxDynamicRuntime) {
-  return {
-    safeRunWithYup<InSchema extends yup.AnySchema, OutSchema extends yup.AnySchema>(
-      options: RunWithYupOptions<InSchema, OutSchema>,
-    ) {
-      return safeRunWithYup(runtime, options);
+export function createAdapter<Q>(runtime: JqxDynamicRuntime & JqxTypedRuntime<Q>): TypedAdapter<Q>;
+export function createAdapter(runtime: JqxDynamicRuntime): DynamicAdapter;
+export function createAdapter<Q>(
+  runtime: JqxDynamicRuntime & Partial<JqxTypedRuntime<Q>>,
+): DynamicAdapter | TypedAdapter<Q> {
+  const dynamicAdapter: DynamicAdapter = {
+    filter(options) {
+      return runFilterInternal(runtime, options);
+    },
+    inferred(options) {
+      return runInferredInternal(runtime, options);
     },
   };
+
+  if (typeof runtime.runQuery === "function") {
+    const typedAdapter: TypedAdapter<Q> = {
+      ...dynamicAdapter,
+      query(options) {
+        return runQueryInternal(runtime as JqxTypedRuntime<Q>, options);
+      },
+    };
+    return typedAdapter;
+  }
+
+  return dynamicAdapter;
 }
-
-export const withY = withYup;
-
-export const runWithYup = safeRunWithYup;
-export const executeWithYup = safeExecuteWithYup;
-export const runWithY = safeRunWithYup;
-export const executeWithY = safeExecuteWithYup;

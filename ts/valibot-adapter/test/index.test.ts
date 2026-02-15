@@ -3,16 +3,9 @@ import { test } from "node:test";
 
 import * as v from "valibot";
 
-import {
-  type JqxDynamicRuntime,
-  type JqxTypedRuntime,
-  runWithInferred,
-  safeExecuteWithValibot,
-  safeRunWithValibot,
-  withV,
-} from "../src/index.js";
+import { createAdapter, type JqxDynamicRuntime, type JqxTypedRuntime } from "../src/index.js";
 
-test("safeRunWithValibot validates input and output", async () => {
+test("adapter.filter validates input and output", async () => {
   const runtime: JqxDynamicRuntime = {
     run(filter, input) {
       assert.equal(filter, ".user.name");
@@ -20,7 +13,8 @@ test("safeRunWithValibot validates input and output", async () => {
       return { ok: true, value: ['"alice"'] };
     },
   };
-  const result = await safeRunWithValibot(runtime, {
+  const adapter = createAdapter(runtime);
+  const result = await adapter.filter({
     filter: ".user.name",
     input: { user: { name: "alice" } },
     inputSchema: v.object({
@@ -36,13 +30,14 @@ test("safeRunWithValibot validates input and output", async () => {
   }
 });
 
-test("safeRunWithValibot returns input_validation error", async () => {
+test("adapter.filter returns input_validation error", async () => {
   const runtime: JqxDynamicRuntime = {
     run() {
       return { ok: true, value: ["1"] };
     },
   };
-  const result = await safeRunWithValibot(runtime, {
+  const adapter = createAdapter(runtime);
+  const result = await adapter.filter({
     filter: ".",
     input: { x: 1 },
     inputSchema: v.object({
@@ -58,13 +53,14 @@ test("safeRunWithValibot returns input_validation error", async () => {
   }
 });
 
-test("safeRunWithValibot returns runtime error", async () => {
+test("adapter.filter returns runtime error", async () => {
   const runtime: JqxDynamicRuntime = {
     run() {
       return { ok: false, error: "boom" };
     },
   };
-  const result = await safeRunWithValibot(runtime, {
+  const adapter = createAdapter(runtime);
+  const result = await adapter.filter({
     filter: ".",
     input: { x: 1 },
     inputSchema: v.object({
@@ -79,13 +75,14 @@ test("safeRunWithValibot returns runtime error", async () => {
   }
 });
 
-test("safeRunWithValibot returns output_parse error", async () => {
+test("adapter.filter returns output_parse error", async () => {
   const runtime: JqxDynamicRuntime = {
     run() {
       return { ok: true, value: ["not-json"] };
     },
   };
-  const result = await safeRunWithValibot(runtime, {
+  const adapter = createAdapter(runtime);
+  const result = await adapter.filter({
     filter: ".",
     input: { x: 1 },
     inputSchema: v.object({
@@ -102,13 +99,14 @@ test("safeRunWithValibot returns output_parse error", async () => {
   }
 });
 
-test("safeRunWithValibot returns output_validation error", async () => {
+test("adapter.filter returns output_validation error", async () => {
   const runtime: JqxDynamicRuntime = {
     run() {
       return { ok: true, value: ["1"] };
     },
   };
-  const result = await safeRunWithValibot(runtime, {
+  const adapter = createAdapter(runtime);
+  const result = await adapter.filter({
     filter: ".",
     input: { x: 1 },
     inputSchema: v.object({
@@ -125,15 +123,19 @@ test("safeRunWithValibot returns output_validation error", async () => {
   }
 });
 
-test("safeExecuteWithValibot validates through typed runtime", async () => {
-  const runtime: JqxTypedRuntime<{ kind: "Q" }> = {
+test("adapter.query validates through typed runtime", async () => {
+  const runtime: JqxDynamicRuntime & JqxTypedRuntime<{ kind: "Q" }> = {
+    run() {
+      return { ok: true, value: [] };
+    },
     runQuery(query, input) {
       assert.deepEqual(query, { kind: "Q" });
       assert.equal(input, '{"x":7}');
       return { ok: true, value: ["7"] };
     },
   };
-  const result = await safeExecuteWithValibot(runtime, {
+  const adapter = createAdapter(runtime);
+  const result = await adapter.query({
     query: { kind: "Q" },
     input: { x: 7 },
     inputSchema: v.object({
@@ -147,28 +149,7 @@ test("safeExecuteWithValibot validates through typed runtime", async () => {
   }
 });
 
-test("withV helper delegates to safeRunWithValibot", async () => {
-  const runtime: JqxDynamicRuntime = {
-    run() {
-      return { ok: true, value: ["2"] };
-    },
-  };
-  const helper = withV(runtime);
-  const result = await helper.safeRunWithValibot({
-    filter: ".",
-    input: { x: 1 },
-    inputSchema: v.object({
-      x: v.number(),
-    }),
-    outputSchema: v.number(),
-  });
-  assert.equal(result.ok, true);
-  if (result.ok) {
-    assert.deepEqual(result.value, [2]);
-  }
-});
-
-test("runWithInferred parses JSON outputs", async () => {
+test("adapter.inferred parses JSON outputs", async () => {
   const runtime: JqxDynamicRuntime = {
     run(filter, input) {
       assert.equal(filter, ".user.name");
@@ -176,7 +157,8 @@ test("runWithInferred parses JSON outputs", async () => {
       return { ok: true, value: ['"alice"'] };
     },
   };
-  const result = await runWithInferred(runtime, {
+  const adapter = createAdapter(runtime);
+  const result = await adapter.inferred({
     filter: ".user.name",
     input: { user: { name: "alice" } },
   });
@@ -186,13 +168,14 @@ test("runWithInferred parses JSON outputs", async () => {
   }
 });
 
-test("runWithInferred returns output_parse error for invalid JSON", async () => {
+test("adapter.inferred returns output_parse error for invalid JSON", async () => {
   const runtime: JqxDynamicRuntime = {
     run() {
       return { ok: true, value: ["not-json"] };
     },
   };
-  const result = await runWithInferred(runtime, {
+  const adapter = createAdapter(runtime);
+  const result = await adapter.inferred({
     filter: ".",
     input: { x: 1 },
   });

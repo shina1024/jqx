@@ -13,19 +13,16 @@ The architecture keeps MoonBit `core/` pure and places validator coupling in TS 
 Implemented adapters:
 
 1. `ts/zod-adapter`
-   - APIs: `safeRunWithZod`, `safeExecuteWithZod`
-   - Helpers/aliases: `withZod`, `withZ`, `runWithZod`, `executeWithZod`, `runWithZ`, `executeWithZ`
+   - API: `createAdapter(runtime)` with `.filter(...)`, `.query(...)`, `.inferred(...)`
 2. `ts/yup-adapter`
-   - APIs: `safeRunWithYup`, `safeExecuteWithYup`
-   - Helpers/aliases: `withYup`, `withY`, `runWithYup`, `executeWithYup`, `runWithY`, `executeWithY`
+   - API: `createAdapter(runtime)` with `.filter(...)`, `.query(...)`, `.inferred(...)`
 3. `ts/valibot-adapter`
-   - APIs: `safeRunWithValibot`, `safeExecuteWithValibot`
-   - Helpers/aliases: `withValibot`, `withV`, `runWithValibot`, `executeWithValibot`, `runWithV`, `executeWithV`
+   - API: `createAdapter(runtime)` with `.filter(...)`, `.query(...)`, `.inferred(...)`
 
 Each adapter includes runtime tests, `pnpm typecheck`, `expectTypeOf`-based compile-time assertions, and Linux CI coverage.
 Each adapter also provides jq-string partial inference via:
 - `InferJqOutput<Input, Filter, Mode>`
-- `runWithInferred(runtime, { filter, input, fallback? })`
+- `createAdapter(runtime).inferred({ filter, input, fallback? })`
 
 Still pending:
 
@@ -71,11 +68,11 @@ This keeps call sites explicit and stable for app-level error handling.
 When input shape is unknown, jq/filter text alone cannot provide strong static types.
 
 1. Dynamic lane:
-   - run with `run`/`safe*`
+   - run with `adapter.filter(...)`
    - treat values as `unknown`/`Json`
 2. Typed lane:
    - validate input with schema
-   - execute query
+   - run `adapter.query(...)`
    - validate outputs with schema
 
 ## jq String Partial Inference Rules

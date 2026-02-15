@@ -24,7 +24,7 @@ In real apps, `runtime.run(...)` should call your actual `jqx` JS runtime entryp
 
 ```ts
 import { z } from "zod";
-import { safeRunWithZod } from "@shina1024/jqx-zod-adapter";
+import { createAdapter } from "@shina1024/jqx-zod-adapter";
 
 const runtime = {
   async run(filter: string, input: string) {
@@ -40,7 +40,8 @@ const inputSchema = z.object({
 
 const outputSchema = z.string();
 
-const result = await safeRunWithZod(runtime, {
+const adapter = createAdapter(runtime);
+const result = await adapter.filter({
   filter: ".users[].name",
   input: { users: [{ name: "alice" }, { name: "bob" }] },
   inputSchema,
@@ -60,7 +61,7 @@ if (!result.ok) {
 
 ```ts
 import * as yup from "yup";
-import { safeRunWithYup } from "@shina1024/jqx-yup-adapter";
+import { createAdapter } from "@shina1024/jqx-yup-adapter";
 
 const runtime = {
   async run(filter: string, input: string) {
@@ -82,7 +83,8 @@ const outputSchema = yup
   })
   .required();
 
-const result = await safeRunWithYup(runtime, {
+const adapter = createAdapter(runtime);
+const result = await adapter.filter({
   filter: ".items[]",
   input: { items: [{ id: 1 }, { id: 2 }] },
   inputSchema,
@@ -101,7 +103,7 @@ if (!result.ok) {
 
 ```ts
 import * as v from "valibot";
-import { safeRunWithValibot } from "@shina1024/jqx-valibot-adapter";
+import { createAdapter } from "@shina1024/jqx-valibot-adapter";
 
 const runtime = {
   async run(filter: string, input: string) {
@@ -115,7 +117,8 @@ const inputSchema = v.object({
 
 const outputSchema = v.number();
 
-const result = await safeRunWithValibot(runtime, {
+const adapter = createAdapter(runtime);
+const result = await adapter.filter({
   filter: ".values[]",
   input: { values: [1, 2, 3] },
   inputSchema,
@@ -132,13 +135,14 @@ if (!result.ok) {
 
 ## Optional: jq String Partial Inference + Schema Validation
 
-If you want type hints from the jq string itself (best-effort), use `runWithInferred`.
+If you want type hints from the jq string itself (best-effort), use `adapter.inferred`.
 Then keep schema validation for runtime safety in production.
 
 ```ts
-import { runWithInferred } from "@shina1024/jqx-zod-adapter";
+import { createAdapter } from "@shina1024/jqx-zod-adapter";
 
-const inferred = await runWithInferred(runtime, {
+const adapter = createAdapter(runtime);
+const inferred = await adapter.inferred({
   filter: ".users[].name",
   input: { users: [{ name: "alice" }] },
 });

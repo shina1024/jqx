@@ -20,8 +20,8 @@ pnpm test
 
 ## Core APIs
 
-- `safeRunWithYup(runtime, options)`
-- `safeExecuteWithYup(runtime, options)`
-- `withYup(runtime)` / `withY(runtime)` helper
+- `createAdapter(runtime).filter(options)`
+- `createAdapter(runtime).query(options)` (when runtime provides `runQuery`)
+- `createAdapter(runtime).inferred(options)`
 
 See `src/index.ts` for full types.

@@ -26,18 +26,23 @@ export type Json = null | boolean | number | string | Json[] | { [key: string]: 
 
 export type InferenceFallbackMode = "unknown" | "json";
 
-type InferenceFallbackValue<Mode extends InferenceFallbackMode> = Mode extends "json" ? Json : unknown;
+type InferenceFallbackValue<Mode extends InferenceFallbackMode> = Mode extends "json"
+  ? Json
+  : unknown;
 
 type TrimLeft<S extends string> = S extends ` ${infer Rest}` ? TrimLeft<Rest> : S;
 type TrimRight<S extends string> = S extends `${infer Rest} ` ? TrimRight<Rest> : S;
 type Trim<S extends string> = TrimLeft<TrimRight<S>>;
 
-type HasUnsupportedPathToken<S extends string> = S extends
-  `${string}${"|" | "," | "(" | ")" | ":" | ";" | "?" | "+" | "-" | "*" | "/" | "=" | "!" | "<" | ">" | "$" | "@" | "\"" | "'" | "`" | " " | "\n" | "\r" | "\t"}${string}`
-  ? true
-  : false;
+type HasUnsupportedPathToken<S extends string> =
+  S extends `${string}${"|" | "," | "(" | ")" | ":" | ";" | "?" | "+" | "-" | "*" | "/" | "=" | "!" | "<" | ">" | "$" | "@" | '"' | "'" | "`" | " " | "\n" | "\r" | "\t"}${string}`
+    ? true
+    : false;
 
-type ReadFieldToken<Path extends string, Acc extends string = ""> = Path extends `${infer Char}${infer Rest}`
+type ReadFieldToken<
+  Path extends string,
+  Acc extends string = "",
+> = Path extends `${infer Char}${infer Rest}`
   ? Char extends "." | "["
     ? [Acc, `${Char}${Rest}`]
     : ReadFieldToken<Rest, `${Acc}${Char}`>
@@ -49,22 +54,27 @@ type ArrayElement<Current, Mode extends InferenceFallbackMode> = Current extends
     ? Item
     : InferenceFallbackValue<Mode>;
 
-type AccessFieldSegment<Current, Field extends string, Mode extends InferenceFallbackMode> =
-  Current extends null | undefined
-    ? InferenceFallbackValue<Mode>
-    : Current extends object
-      ? Field extends keyof Current
-        ? Current[Field]
-        : InferenceFallbackValue<Mode>
-      : InferenceFallbackValue<Mode>;
+type AccessFieldSegment<
+  Current,
+  Field extends string,
+  Mode extends InferenceFallbackMode,
+> = Current extends null | undefined
+  ? InferenceFallbackValue<Mode>
+  : Current extends object
+    ? Field extends keyof Current
+      ? Current[Field]
+      : InferenceFallbackValue<Mode>
+    : InferenceFallbackValue<Mode>;
 
 type ParseBracketSegment<
   Current,
   Inner extends string,
   Mode extends InferenceFallbackMode,
-> = Inner extends "" ? ArrayElement<Current, Mode>
-  : Inner extends `${number}` ? ArrayElement<Current, Mode>
-  : InferenceFallbackValue<Mode>;
+> = Inner extends ""
+  ? ArrayElement<Current, Mode>
+  : Inner extends `${number}`
+    ? ArrayElement<Current, Mode>
+    : InferenceFallbackValue<Mode>;
 
 type ParsePath<Path extends string, Current, Mode extends InferenceFallbackMode> = Path extends ""
   ? Current
@@ -84,7 +94,11 @@ type ParsePath<Path extends string, Current, Mode extends InferenceFallbackMode>
             : InferenceFallbackValue<Mode>
           : InferenceFallbackValue<Mode>;
 
-type ParseFilter<Filter extends string, Input, Mode extends InferenceFallbackMode> = Filter extends "."
+type ParseFilter<
+  Filter extends string,
+  Input,
+  Mode extends InferenceFallbackMode,
+> = Filter extends "."
   ? Input
   : Filter extends `.${infer Path}`
     ? ParsePath<Path, Input, Mode>
@@ -99,7 +113,7 @@ export type InferJqOutput<
   Mode extends InferenceFallbackMode = "unknown",
 > = ParseFilter<Trim<Filter>, Input, Mode>;
 
-export interface RunWithInferredOptions<
+export interface InferredOptions<
   Filter extends string,
   Input,
   Mode extends InferenceFallbackMode = "unknown",
@@ -109,7 +123,7 @@ export interface RunWithInferredOptions<
   fallback?: Mode;
 }
 
-export type ZodAdapterError =
+export type AdapterError =
   | {
       kind: "input_validation";
       message: string;
@@ -133,25 +147,36 @@ export type ZodAdapterError =
       issues: z.ZodIssue[];
     };
 
-export interface RunWithZodOptions<InSchema extends z.ZodTypeAny, OutSchema extends z.ZodTypeAny> {
+export interface FilterOptions<InSchema extends z.ZodTypeAny, OutSchema extends z.ZodTypeAny> {
   filter: string;
   input: unknown;
   inputSchema: InSchema;
   outputSchema: OutSchema;
 }
 
-export interface ExecuteWithZodOptions<
-  Q,
-  InSchema extends z.ZodTypeAny,
-  OutSchema extends z.ZodTypeAny,
-> {
+export interface QueryOptions<Q, InSchema extends z.ZodTypeAny, OutSchema extends z.ZodTypeAny> {
   query: Q;
   input: unknown;
   inputSchema: InSchema;
   outputSchema: OutSchema;
 }
 
-function fail<T>(error: ZodAdapterError): JqxResult<T, ZodAdapterError> {
+export interface DynamicAdapter {
+  filter<InSchema extends z.ZodTypeAny, OutSchema extends z.ZodTypeAny>(
+    options: FilterOptions<InSchema, OutSchema>,
+  ): Promise<JqxResult<z.output<OutSchema>[], AdapterError>>;
+  inferred<Filter extends string, Input, Mode extends InferenceFallbackMode = "unknown">(
+    options: InferredOptions<Filter, Input, Mode>,
+  ): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], string>>;
+}
+
+export interface TypedAdapter<Q> extends DynamicAdapter {
+  query<InSchema extends z.ZodTypeAny, OutSchema extends z.ZodTypeAny>(
+    options: QueryOptions<Q, InSchema, OutSchema>,
+  ): Promise<JqxResult<z.output<OutSchema>[], AdapterError>>;
+}
+
+function fail<T>(error: AdapterError): JqxResult<T, AdapterError> {
   return { ok: false, error };
 }
 
@@ -177,7 +202,7 @@ function parseRuntimeJsonOutputs(rawValues: string[]): JqxResult<unknown[]> {
 function parseAndValidateOutput<OutSchema extends z.ZodTypeAny>(
   outputSchema: OutSchema,
   rawValues: string[],
-): JqxResult<z.output<OutSchema>[], ZodAdapterError> {
+): JqxResult<z.output<OutSchema>[], AdapterError> {
   const validated: z.output<OutSchema>[] = [];
   for (const [index, raw] of rawValues.entries()) {
     let parsed: unknown;
@@ -205,10 +230,10 @@ function parseAndValidateOutput<OutSchema extends z.ZodTypeAny>(
   return { ok: true, value: validated };
 }
 
-export async function safeRunWithZod<InSchema extends z.ZodTypeAny, OutSchema extends z.ZodTypeAny>(
+async function runFilterInternal<InSchema extends z.ZodTypeAny, OutSchema extends z.ZodTypeAny>(
   runtime: JqxDynamicRuntime,
-  options: RunWithZodOptions<InSchema, OutSchema>,
-): Promise<JqxResult<z.output<OutSchema>[], ZodAdapterError>> {
+  options: FilterOptions<InSchema, OutSchema>,
+): Promise<JqxResult<z.output<OutSchema>[], AdapterError>> {
   const parsedIn = options.inputSchema.safeParse(options.input);
   if (!parsedIn.success) {
     return fail({
@@ -229,13 +254,13 @@ export async function safeRunWithZod<InSchema extends z.ZodTypeAny, OutSchema ex
   return parseAndValidateOutput(options.outputSchema, runtimeOut.value);
 }
 
-export async function runWithInferred<
+async function runInferredInternal<
   Filter extends string,
   Input,
   Mode extends InferenceFallbackMode = "unknown",
 >(
   runtime: JqxDynamicRuntime,
-  options: RunWithInferredOptions<Filter, Input, Mode>,
+  options: InferredOptions<Filter, Input, Mode>,
 ): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], string>> {
   const runtimeOut = await runtime.run(options.filter, JSON.stringify(options.input));
   if (!runtimeOut.ok) {
@@ -248,14 +273,10 @@ export async function runWithInferred<
   return { ok: true, value: parsed.value as InferJqOutput<Input, Filter, Mode>[] };
 }
 
-export async function safeExecuteWithZod<
-  Q,
-  InSchema extends z.ZodTypeAny,
-  OutSchema extends z.ZodTypeAny,
->(
+async function runQueryInternal<Q, InSchema extends z.ZodTypeAny, OutSchema extends z.ZodTypeAny>(
   runtime: JqxTypedRuntime<Q>,
-  options: ExecuteWithZodOptions<Q, InSchema, OutSchema>,
-): Promise<JqxResult<z.output<OutSchema>[], ZodAdapterError>> {
+  options: QueryOptions<Q, InSchema, OutSchema>,
+): Promise<JqxResult<z.output<OutSchema>[], AdapterError>> {
   const parsedIn = options.inputSchema.safeParse(options.input);
   if (!parsedIn.success) {
     return fail({
@@ -276,19 +297,29 @@ export async function safeExecuteWithZod<
   return parseAndValidateOutput(options.outputSchema, runtimeOut.value);
 }
 
-export function withZod(runtime: JqxDynamicRuntime) {
-  return {
-    safeRunWithZod<InSchema extends z.ZodTypeAny, OutSchema extends z.ZodTypeAny>(
-      options: RunWithZodOptions<InSchema, OutSchema>,
-    ) {
-      return safeRunWithZod(runtime, options);
+export function createAdapter<Q>(runtime: JqxDynamicRuntime & JqxTypedRuntime<Q>): TypedAdapter<Q>;
+export function createAdapter(runtime: JqxDynamicRuntime): DynamicAdapter;
+export function createAdapter<Q>(
+  runtime: JqxDynamicRuntime & Partial<JqxTypedRuntime<Q>>,
+): DynamicAdapter | TypedAdapter<Q> {
+  const dynamicAdapter: DynamicAdapter = {
+    filter(options) {
+      return runFilterInternal(runtime, options);
+    },
+    inferred(options) {
+      return runInferredInternal(runtime, options);
     },
   };
+
+  if (typeof runtime.runQuery === "function") {
+    const typedAdapter: TypedAdapter<Q> = {
+      ...dynamicAdapter,
+      query(options) {
+        return runQueryInternal(runtime as JqxTypedRuntime<Q>, options);
+      },
+    };
+    return typedAdapter;
+  }
+
+  return dynamicAdapter;
 }
-
-export const withZ = withZod;
-
-export const runWithZod = safeRunWithZod;
-export const executeWithZod = safeExecuteWithZod;
-export const runWithZ = safeRunWithZod;
-export const executeWithZ = safeExecuteWithZod;

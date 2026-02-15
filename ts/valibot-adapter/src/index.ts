@@ -26,18 +26,23 @@ export type Json = null | boolean | number | string | Json[] | { [key: string]: 
 
 export type InferenceFallbackMode = "unknown" | "json";
 
-type InferenceFallbackValue<Mode extends InferenceFallbackMode> = Mode extends "json" ? Json : unknown;
+type InferenceFallbackValue<Mode extends InferenceFallbackMode> = Mode extends "json"
+  ? Json
+  : unknown;
 
 type TrimLeft<S extends string> = S extends ` ${infer Rest}` ? TrimLeft<Rest> : S;
 type TrimRight<S extends string> = S extends `${infer Rest} ` ? TrimRight<Rest> : S;
 type Trim<S extends string> = TrimLeft<TrimRight<S>>;
 
-type HasUnsupportedPathToken<S extends string> = S extends
-  `${string}${"|" | "," | "(" | ")" | ":" | ";" | "?" | "+" | "-" | "*" | "/" | "=" | "!" | "<" | ">" | "$" | "@" | "\"" | "'" | "`" | " " | "\n" | "\r" | "\t"}${string}`
-  ? true
-  : false;
+type HasUnsupportedPathToken<S extends string> =
+  S extends `${string}${"|" | "," | "(" | ")" | ":" | ";" | "?" | "+" | "-" | "*" | "/" | "=" | "!" | "<" | ">" | "$" | "@" | '"' | "'" | "`" | " " | "\n" | "\r" | "\t"}${string}`
+    ? true
+    : false;
 
-type ReadFieldToken<Path extends string, Acc extends string = ""> = Path extends `${infer Char}${infer Rest}`
+type ReadFieldToken<
+  Path extends string,
+  Acc extends string = "",
+> = Path extends `${infer Char}${infer Rest}`
   ? Char extends "." | "["
     ? [Acc, `${Char}${Rest}`]
     : ReadFieldToken<Rest, `${Acc}${Char}`>
@@ -49,22 +54,27 @@ type ArrayElement<Current, Mode extends InferenceFallbackMode> = Current extends
     ? Item
     : InferenceFallbackValue<Mode>;
 
-type AccessFieldSegment<Current, Field extends string, Mode extends InferenceFallbackMode> =
-  Current extends null | undefined
-    ? InferenceFallbackValue<Mode>
-    : Current extends object
-      ? Field extends keyof Current
-        ? Current[Field]
-        : InferenceFallbackValue<Mode>
-      : InferenceFallbackValue<Mode>;
+type AccessFieldSegment<
+  Current,
+  Field extends string,
+  Mode extends InferenceFallbackMode,
+> = Current extends null | undefined
+  ? InferenceFallbackValue<Mode>
+  : Current extends object
+    ? Field extends keyof Current
+      ? Current[Field]
+      : InferenceFallbackValue<Mode>
+    : InferenceFallbackValue<Mode>;
 
 type ParseBracketSegment<
   Current,
   Inner extends string,
   Mode extends InferenceFallbackMode,
-> = Inner extends "" ? ArrayElement<Current, Mode>
-  : Inner extends `${number}` ? ArrayElement<Current, Mode>
-  : InferenceFallbackValue<Mode>;
+> = Inner extends ""
+  ? ArrayElement<Current, Mode>
+  : Inner extends `${number}`
+    ? ArrayElement<Current, Mode>
+    : InferenceFallbackValue<Mode>;
 
 type ParsePath<Path extends string, Current, Mode extends InferenceFallbackMode> = Path extends ""
   ? Current
@@ -84,7 +94,11 @@ type ParsePath<Path extends string, Current, Mode extends InferenceFallbackMode>
             : InferenceFallbackValue<Mode>
           : InferenceFallbackValue<Mode>;
 
-type ParseFilter<Filter extends string, Input, Mode extends InferenceFallbackMode> = Filter extends "."
+type ParseFilter<
+  Filter extends string,
+  Input,
+  Mode extends InferenceFallbackMode,
+> = Filter extends "."
   ? Input
   : Filter extends `.${infer Path}`
     ? ParsePath<Path, Input, Mode>
@@ -99,7 +113,7 @@ export type InferJqOutput<
   Mode extends InferenceFallbackMode = "unknown",
 > = ParseFilter<Trim<Filter>, Input, Mode>;
 
-export interface RunWithInferredOptions<
+export interface InferredOptions<
   Filter extends string,
   Input,
   Mode extends InferenceFallbackMode = "unknown",
@@ -113,7 +127,7 @@ export type ValibotSchema =
   | v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>
   | v.BaseSchemaAsync<unknown, unknown, v.BaseIssue<unknown>>;
 
-export type ValibotAdapterError =
+export type AdapterError =
   | {
       kind: "input_validation";
       message: string;
@@ -137,25 +151,36 @@ export type ValibotAdapterError =
       issues: string[];
     };
 
-export interface RunWithValibotOptions<InSchema extends ValibotSchema, OutSchema extends ValibotSchema> {
+export interface FilterOptions<InSchema extends ValibotSchema, OutSchema extends ValibotSchema> {
   filter: string;
   input: unknown;
   inputSchema: InSchema;
   outputSchema: OutSchema;
 }
 
-export interface ExecuteWithValibotOptions<
-  Q,
-  InSchema extends ValibotSchema,
-  OutSchema extends ValibotSchema,
-> {
+export interface QueryOptions<Q, InSchema extends ValibotSchema, OutSchema extends ValibotSchema> {
   query: Q;
   input: unknown;
   inputSchema: InSchema;
   outputSchema: OutSchema;
 }
 
-function fail<T>(error: ValibotAdapterError): JqxResult<T, ValibotAdapterError> {
+export interface DynamicAdapter {
+  filter<InSchema extends ValibotSchema, OutSchema extends ValibotSchema>(
+    options: FilterOptions<InSchema, OutSchema>,
+  ): Promise<JqxResult<v.InferOutput<OutSchema>[], AdapterError>>;
+  inferred<Filter extends string, Input, Mode extends InferenceFallbackMode = "unknown">(
+    options: InferredOptions<Filter, Input, Mode>,
+  ): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], string>>;
+}
+
+export interface TypedAdapter<Q> extends DynamicAdapter {
+  query<InSchema extends ValibotSchema, OutSchema extends ValibotSchema>(
+    options: QueryOptions<Q, InSchema, OutSchema>,
+  ): Promise<JqxResult<v.InferOutput<OutSchema>[], AdapterError>>;
+}
+
+function fail<T>(error: AdapterError): JqxResult<T, AdapterError> {
   return { ok: false, error };
 }
 
@@ -202,7 +227,7 @@ async function validateWithValibot<TSchema extends ValibotSchema>(
 async function parseAndValidateOutput<OutSchema extends ValibotSchema>(
   outputSchema: OutSchema,
   rawValues: string[],
-): Promise<JqxResult<v.InferOutput<OutSchema>[], ValibotAdapterError>> {
+): Promise<JqxResult<v.InferOutput<OutSchema>[], AdapterError>> {
   const validated: v.InferOutput<OutSchema>[] = [];
   for (const [index, raw] of rawValues.entries()) {
     let parsed: unknown;
@@ -230,10 +255,10 @@ async function parseAndValidateOutput<OutSchema extends ValibotSchema>(
   return { ok: true, value: validated };
 }
 
-export async function safeRunWithValibot<InSchema extends ValibotSchema, OutSchema extends ValibotSchema>(
+async function runFilterInternal<InSchema extends ValibotSchema, OutSchema extends ValibotSchema>(
   runtime: JqxDynamicRuntime,
-  options: RunWithValibotOptions<InSchema, OutSchema>,
-): Promise<JqxResult<v.InferOutput<OutSchema>[], ValibotAdapterError>> {
+  options: FilterOptions<InSchema, OutSchema>,
+): Promise<JqxResult<v.InferOutput<OutSchema>[], AdapterError>> {
   const parsedIn = await validateWithValibot(options.inputSchema, options.input);
   if (!parsedIn.ok) {
     return fail({
@@ -254,13 +279,13 @@ export async function safeRunWithValibot<InSchema extends ValibotSchema, OutSche
   return parseAndValidateOutput(options.outputSchema, runtimeOut.value);
 }
 
-export async function runWithInferred<
+async function runInferredInternal<
   Filter extends string,
   Input,
   Mode extends InferenceFallbackMode = "unknown",
 >(
   runtime: JqxDynamicRuntime,
-  options: RunWithInferredOptions<Filter, Input, Mode>,
+  options: InferredOptions<Filter, Input, Mode>,
 ): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], string>> {
   const runtimeOut = await runtime.run(options.filter, JSON.stringify(options.input));
   if (!runtimeOut.ok) {
@@ -273,14 +298,10 @@ export async function runWithInferred<
   return { ok: true, value: parsed.value as InferJqOutput<Input, Filter, Mode>[] };
 }
 
-export async function safeExecuteWithValibot<
-  Q,
-  InSchema extends ValibotSchema,
-  OutSchema extends ValibotSchema,
->(
+async function runQueryInternal<Q, InSchema extends ValibotSchema, OutSchema extends ValibotSchema>(
   runtime: JqxTypedRuntime<Q>,
-  options: ExecuteWithValibotOptions<Q, InSchema, OutSchema>,
-): Promise<JqxResult<v.InferOutput<OutSchema>[], ValibotAdapterError>> {
+  options: QueryOptions<Q, InSchema, OutSchema>,
+): Promise<JqxResult<v.InferOutput<OutSchema>[], AdapterError>> {
   const parsedIn = await validateWithValibot(options.inputSchema, options.input);
   if (!parsedIn.ok) {
     return fail({
@@ -301,19 +322,29 @@ export async function safeExecuteWithValibot<
   return parseAndValidateOutput(options.outputSchema, runtimeOut.value);
 }
 
-export function withValibot(runtime: JqxDynamicRuntime) {
-  return {
-    safeRunWithValibot<InSchema extends ValibotSchema, OutSchema extends ValibotSchema>(
-      options: RunWithValibotOptions<InSchema, OutSchema>,
-    ) {
-      return safeRunWithValibot(runtime, options);
+export function createAdapter<Q>(runtime: JqxDynamicRuntime & JqxTypedRuntime<Q>): TypedAdapter<Q>;
+export function createAdapter(runtime: JqxDynamicRuntime): DynamicAdapter;
+export function createAdapter<Q>(
+  runtime: JqxDynamicRuntime & Partial<JqxTypedRuntime<Q>>,
+): DynamicAdapter | TypedAdapter<Q> {
+  const dynamicAdapter: DynamicAdapter = {
+    filter(options) {
+      return runFilterInternal(runtime, options);
+    },
+    inferred(options) {
+      return runInferredInternal(runtime, options);
     },
   };
+
+  if (typeof runtime.runQuery === "function") {
+    const typedAdapter: TypedAdapter<Q> = {
+      ...dynamicAdapter,
+      query(options) {
+        return runQueryInternal(runtime as JqxTypedRuntime<Q>, options);
+      },
+    };
+    return typedAdapter;
+  }
+
+  return dynamicAdapter;
 }
-
-export const withV = withValibot;
-
-export const runWithValibot = safeRunWithValibot;
-export const executeWithValibot = safeExecuteWithValibot;
-export const runWithV = safeRunWithValibot;
-export const executeWithV = safeExecuteWithValibot;
