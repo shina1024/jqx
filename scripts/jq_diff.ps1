@@ -177,6 +177,12 @@ if ($cases -isnot [System.Array]) {
 }
 
 $repoRoot = Join-Path $PSScriptRoot ".."
+$hadPager = Test-Path Env:PAGER
+$savedPager = ""
+if ($hadPager) {
+  $savedPager = $env:PAGER
+}
+Remove-Item Env:PAGER -ErrorAction SilentlyContinue
 
 Push-Location $repoRoot
 try {
@@ -323,5 +329,10 @@ try {
     exit 1
   }
 } finally {
+  if ($hadPager) {
+    $env:PAGER = $savedPager
+  } else {
+    Remove-Item Env:PAGER -ErrorAction SilentlyContinue
+  }
   Pop-Location
 }

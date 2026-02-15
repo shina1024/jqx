@@ -68,6 +68,22 @@ MOON_BIN_RESOLVED="$(resolve_moon_bin)" || {
   exit 2
 }
 
+had_pager=0
+saved_pager=""
+if [[ -v PAGER ]]; then
+  had_pager=1
+  saved_pager="${PAGER}"
+fi
+restore_pager() {
+  if [[ ${had_pager} -eq 1 ]]; then
+    export PAGER="${saved_pager}"
+  else
+    unset PAGER || true
+  fi
+}
+trap restore_pager EXIT
+unset PAGER || true
+
 if [[ ! -f "${CASES_PATH}" ]]; then
   echo "cases file not found: ${CASES_PATH}" >&2
   exit 2
