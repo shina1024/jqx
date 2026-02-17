@@ -59,7 +59,7 @@ Implemented builtins/functions in `core/execute.mbt` + `core/builtin*.mbt` inclu
 | --- | --- | --- |
 | Number edge behavior | partial | parser/evaluator now avoid non-finite JSON output (`NaN -> null`, `±Infinity -> ±MAX_DOUBLE` in numeric ops), but full jq decnum parity is still out of scope |
 | Exact error text | partial | close to jq style but not byte-for-byte compatible |
-| CLI option coverage | partial | currently `-r`, `-R`, `-c`, `-n`, `-s`, `-e` (`-R` is line-based without full JSON-stream parity) |
+| CLI option coverage | partial | currently `-r`, `-R`, `-c`, `-n`, `-s`, `-e` (JSON stream parsing now handles whitespace-separated and adjacent structured values; remaining byte-for-byte parity differences are still possible) |
 
 ## JS/TS Library Track
 
@@ -113,7 +113,7 @@ Notes:
 - Differential runners now default `jqx_use_stdin=true` unless explicitly
   overridden per case.
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.
-- Smoke differential currently covers 225 cases (as of 2026-02-17).
+- Smoke differential currently covers 228 cases (as of 2026-02-17).
 - Full upstream differential baseline is currently:
   total 824 / passed 677 / failed 0 / skipped 147
   (see `scripts/jq_upstream_failures.snapshot.json` and `docs/upstream-failure-backlog.md`).

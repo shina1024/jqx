@@ -46,6 +46,56 @@ test "parse cli inputs json stream ndjson" {
 }
 
 ///|
+test "parse cli inputs json stream whitespace separated" {
+  let cfg = {
+    raw: false,
+    raw_input: false,
+    no_input: false,
+    exit_status: false,
+    slurp: false,
+    filter: ".",
+    input: None,
+  }
+  let parsed = parse_cli_inputs(cfg, "1 2")
+  assert_eq(parsed, [@lib.Json::number(1.0), @lib.Json::number(2.0)])
+}
+
+///|
+test "parse cli inputs json stream adjacent structured values" {
+  let cfg = {
+    raw: false,
+    raw_input: false,
+    no_input: false,
+    exit_status: false,
+    slurp: false,
+    filter: ".",
+    input: None,
+  }
+  let parsed = parse_cli_inputs(cfg, "{}[]\"x\"")
+  assert_eq(parsed, [
+    @lib.Json::object({}),
+    @lib.Json::array([]),
+    @lib.Json::string("x"),
+  ])
+}
+
+///|
+test "parse cli inputs json stream invalid scalar adjacency" {
+  let cfg = {
+    raw: false,
+    raw_input: false,
+    no_input: false,
+    exit_status: false,
+    slurp: false,
+    filter: ".",
+    input: None,
+  }
+  guard (try? parse_cli_inputs(cfg, "1-2")) is Err(_) else {
+    fail("expected parse error for invalid scalar adjacency")
+  }
+}
+
+///|
 test "parse cli inputs json empty stdin" {
   let cfg = {
     raw: false,
@@ -95,6 +145,23 @@ test "parse cli inputs json slurp ndjson" {
       @lib.Json::number(2.0),
       @lib.Json::number(3.0),
     ]),
+  ])
+}
+
+///|
+test "parse cli inputs json slurp whitespace separated" {
+  let cfg = {
+    raw: false,
+    raw_input: false,
+    no_input: false,
+    exit_status: false,
+    slurp: true,
+    filter: ".",
+    input: None,
+  }
+  let parsed = parse_cli_inputs(cfg, "1 2")
+  assert_eq(parsed, [
+    @lib.Json::array([@lib.Json::number(1.0), @lib.Json::number(2.0)]),
   ])
 }
 

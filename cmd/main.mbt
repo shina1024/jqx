@@ -155,58 +155,161 @@ fn parse_json_inputs(
 
 ///|
 fn parse_slurp_values(text : String) -> Array[@lib.Json] raise @lib.ParseError {
-  let trimmed = trim_ascii_ws(text)
-  if trimmed.length() == 0 {
-    return []
-  }
-  // Prefer parsing the full input as one JSON value first.
-  try [@lib.parse(trimmed)] catch {
-    // Fallback for newline-delimited JSON inputs.
-    _ => parse_ndjson_lines(trimmed)
-  } noraise {
-    values => values
-  }
+  parse_json_stream_values(text)
 }
 
 ///|
 fn parse_json_stream_values(
   text : String,
 ) -> Array[@lib.Json] raise @lib.ParseError {
-  let trimmed = trim_ascii_ws(text)
-  if trimmed.length() == 0 {
-    return []
-  }
-  // Prefer parsing the full input as one JSON value first.
-  try [@lib.parse(trimmed)] catch {
-    // Fallback for newline-delimited JSON inputs.
-    _ => parse_ndjson_lines(trimmed)
-  } noraise {
-    values => values
+  let values = []
+  let mut start = 0
+  let len = text.length()
+  for {
+    start = skip_ascii_ws_offset(text, start)
+    if start >= len {
+      return values
+    }
+    let end_ = parse_json_value_end(text, start)
+    values.push(parse_json_piece(text, start, end_))
+    start = end_
   }
 }
 
 ///|
-fn parse_ndjson_lines(text : String) -> Array[@lib.Json] raise @lib.ParseError {
-  let values = []
-  let mut start = 0
-  for i in 0..<text.length() {
-    if text.unsafe_get(i) == '\n' {
-      let line = text.view(start_offset=start, end_offset=i).to_string()
-      let piece = trim_ascii_ws(line)
-      if piece.length() > 0 {
-        values.push(@lib.parse(piece))
+fn skip_ascii_ws_offset(text : String, start : Int) -> Int {
+  let mut i = start
+  for {
+    if i < text.length() &&
+      is_ascii_ws(text.unsafe_get(i).to_int().unsafe_to_char()) {
+      i += 1
+    } else {
+      return i
+    }
+  }
+}
+
+///|
+fn is_scalar_boundary(ch : Char) -> Bool {
+  is_ascii_ws(ch) || ch == '{' || ch == '[' || ch == '"'
+}
+
+///|
+fn parse_json_value_end(
+  text : String,
+  start : Int,
+) -> Int raise @lib.ParseError {
+  let first = text.unsafe_get(start).to_int().unsafe_to_char()
+  match first {
+    '{' | '[' => parse_structured_value_end(text, start)
+    '"' => parse_string_value_end(text, start)
+    _ => parse_scalar_value_end(text, start)
+  }
+}
+
+///|
+fn parse_structured_value_end(
+  text : String,
+  start : Int,
+) -> Int raise @lib.ParseError {
+  let stack = []
+  let mut i = start
+  let mut in_string = false
+  let mut escaped = false
+  for {
+    if i >= text.length() {
+      return raise_parse_error_end_from_offset(text, start)
+    }
+    let ch = text.unsafe_get(i).to_int().unsafe_to_char()
+    if in_string {
+      if escaped {
+        escaped = false
+      } else if ch == '\\' {
+        escaped = true
+      } else if ch == '"' {
+        in_string = false
       }
-      start = i + 1
+      i += 1
+      continue
     }
-  }
-  if start <= text.length() {
-    let line = text.view(start_offset=start).to_string()
-    let piece = trim_ascii_ws(line)
-    if piece.length() > 0 {
-      values.push(@lib.parse(piece))
+    if ch == '"' {
+      in_string = true
+    } else if ch == '{' {
+      stack.push('}')
+    } else if ch == '[' {
+      stack.push(']')
+    } else if ch == '}' || ch == ']' {
+      if stack.length() == 0 || stack[stack.length() - 1] != ch {
+        return raise_parse_error_end_from_offset(text, start)
+      }
+      ignore(stack.pop())
+      if stack.length() == 0 {
+        return i + 1
+      }
     }
+    i += 1
   }
-  values
+}
+
+///|
+fn parse_string_value_end(
+  text : String,
+  start : Int,
+) -> Int raise @lib.ParseError {
+  let mut i = start + 1
+  let mut escaped = false
+  for {
+    if i >= text.length() {
+      return raise_parse_error_end_from_offset(text, start)
+    }
+    let ch = text.unsafe_get(i).to_int().unsafe_to_char()
+    if escaped {
+      escaped = false
+    } else if ch == '\\' {
+      escaped = true
+    } else if ch == '"' {
+      return i + 1
+    }
+    i += 1
+  }
+}
+
+///|
+fn parse_scalar_value_end(text : String, start : Int) -> Int {
+  let mut i = start
+  for {
+    if i >= text.length() {
+      return i
+    }
+    let ch = text.unsafe_get(i).to_int().unsafe_to_char()
+    if i > start && is_scalar_boundary(ch) {
+      return i
+    }
+    i += 1
+  }
+}
+
+///|
+fn parse_json_piece(
+  text : String,
+  start_offset : Int,
+  end_ : Int,
+) -> @lib.Json raise @lib.ParseError {
+  @lib.parse(text.view(start_offset~, end_offset=end_).to_string())
+}
+
+///|
+fn raise_parse_error_end_from_offset(
+  text : String,
+  start : Int,
+) -> Int raise @lib.ParseError {
+  let piece = text.view(start_offset=start).to_string()
+  try {
+    ignore(@lib.parse(piece))
+    return start
+  } catch {
+    err => raise err
+  }
 }
 
 ///|
@@ -242,26 +345,4 @@ fn trim_single_trailing_cr(s : String) -> String {
 ///|
 fn is_ascii_ws(ch : Char) -> Bool {
   ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n'
-}
-
-///|
-fn trim_ascii_ws(s : String) -> String {
-  let mut start = 0
-  let mut end = s.length()
-  for {
-    if start < end && is_ascii_ws(s.unsafe_get(start).to_int().unsafe_to_char()) {
-      start += 1
-    } else {
-      break
-    }
-  }
-  for {
-    if end > start &&
-      is_ascii_ws(s.unsafe_get(end - 1).to_int().unsafe_to_char()) {
-      end -= 1
-    } else {
-      break
-    }
-  }
-  s.view(start_offset=start, end_offset=end).to_string()
 }

@@ -1128,6 +1128,23 @@
     "jqx_args": ["-s"]
   },
   {
+    "name": "cli-stream-whitespace-separated",
+    "filter": ".",
+    "input": "1 2"
+  },
+  {
+    "name": "cli-stream-adjacent-structured",
+    "filter": ".",
+    "input": "{}[]\"x\""
+  },
+  {
+    "name": "cli-slurp-whitespace-separated",
+    "filter": ".",
+    "input": "1 2",
+    "jq_args": ["-s"],
+    "jqx_args": ["-s"]
+  },
+  {
     "name": "cli-raw-lines",
     "filter": ".",
     "input": "a\nb",
