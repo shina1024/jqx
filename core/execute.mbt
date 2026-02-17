@@ -907,6 +907,42 @@ fn regex_has_match(s : String, pattern : String, flags : String) -> Bool {
 }
 
 ///|
+fn regex_scan_strings(
+  s : String,
+  pattern : String,
+  flags : String,
+) -> Array[Json] {
+  let chars = string_to_chars(s)
+  let atoms = parse_split_regex_atoms(pattern)
+  let ignore_case = split_regex_flag_enabled(flags, 'i')
+  let skip_empty_match = split_regex_flag_enabled(flags, 'n')
+  let len = chars.length()
+  let out = []
+  let mut search_start = 0
+  for {
+    match
+      split_regex_find_next(
+        chars, search_start, atoms, ignore_case, skip_empty_match,
+      ) {
+      Some((match_start, match_end)) => {
+        out.push(
+          Json::string(chars_slice_to_string(chars, match_start, match_end)),
+        )
+        if match_end > search_start {
+          search_start = match_end
+        } else if match_start < len {
+          search_start = match_start + 1
+        } else {
+          return out
+        }
+        continue
+      }
+      None => return out
+    }
+  }
+}
+
+///|
 fn char_to_string(ch : Char) -> String {
   let buf = StringBuilder::new()
   buf.write_char(ch)

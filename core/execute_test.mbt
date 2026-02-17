@@ -994,6 +994,31 @@ test "execute test regex compatibility" {
 }
 
 ///|
+test "execute scan regex compatibility" {
+  assert_eq(
+    must_execute(parse_filter("[scan(\"a+\")]"), must_parse("\"baaaac\"")),
+    [Json::array([Json::string("aaaa")])],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("[scan(\"A+\"; \"i\")]"),
+      must_parse("\"baAaAc\""),
+    ),
+    [Json::array([Json::string("aAaA")])],
+  )
+  assert_eq(must_execute(parse_filter("[scan(\"\")]"), must_parse("\"ab\"")), [
+    Json::array([Json::string(""), Json::string(""), Json::string("")]),
+  ])
+  assert_eq(
+    must_execute(parse_filter("[scan(\"\"; \"n\")]"), must_parse("\"ab\"")),
+    [Json::array([])],
+  )
+  assert_eq(must_execute(parse_filter("[scan(empty)]"), must_parse("\"ab\"")), [
+    Json::array([]),
+  ])
+}
+
+///|
 test "execute split errors" {
   guard (try? execute(parse_filter("split(\",\")"), must_parse("1")))
     is Err(err) &&
@@ -1042,6 +1067,29 @@ test "execute test regex errors" {
     is Err(err) &&
     err.to_string() == "z is not a valid modifier string" else {
     fail("expected test invalid flags error")
+  }
+}
+
+///|
+test "execute scan regex errors" {
+  guard (try? execute(parse_filter("scan(\"a\")"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "number (1) cannot be matched, as it is not a string" else {
+    fail("expected scan input type error")
+  }
+  guard (try? execute(parse_filter("scan(1)"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "number not a string or array" else {
+    fail("expected scan pattern type error")
+  }
+  guard (try? execute(parse_filter("scan(\"a\"; 1)"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "scan flags must be a string or null" else {
+    fail("expected scan flags type error")
+  }
+  guard (try? execute(parse_filter("scan(\"a\"; \"z\")"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "z is not a valid modifier string" else {
+    fail("expected scan invalid flags error")
   }
 }
 

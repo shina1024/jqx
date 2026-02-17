@@ -536,11 +536,11 @@ fn builtin_list() -> Array[Json] {
     "fromjson/0", "group_by/1", "implode/0", "infinite/0", "inside/1", "isfinite/0",
     "isinfinite/0", "isempty/0", "isnan/0", "join/1", "keys/0", "last/0", "length/0",
     "log2/0", "ltrim/0", "map/1", "map_values/1", "max/0", "min/0", "modulemeta/0",
-    "nan/0", "paths/0", "pow/2", "reverse/0", "round/0", "rtrim/0", "sin/0", "sort/0",
-    "split/1", "split/2", "splits/1", "splits/2", "sqrt/0", "startswith/1", "test/1",
-    "test/2", "to_entries/0", "toboolean/0", "tojson/0", "tonumber/0", "tostream/0",
-    "tostring/0", "utf8bytelength/0", "transpose/0", "trim/0", "type/0", "unique/0",
-    "values/0",
+    "nan/0", "paths/0", "pow/2", "reverse/0", "round/0", "rtrim/0", "scan/1", "scan/2",
+    "sin/0", "sort/0", "split/1", "split/2", "splits/1", "splits/2", "sqrt/0", "startswith/1",
+    "test/1", "test/2", "to_entries/0", "toboolean/0", "tojson/0", "tonumber/0",
+    "tostream/0", "tostring/0", "utf8bytelength/0", "transpose/0", "trim/0", "type/0",
+    "unique/0", "values/0",
   ]
   let out = []
   for name in names {

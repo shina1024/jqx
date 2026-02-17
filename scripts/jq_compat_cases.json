@@ -125,6 +125,16 @@
     "input": "\"abc\""
   },
   {
+    "name": "scan-basic",
+    "filter": "[scan(\"a+\")]",
+    "input": "\"baaaac\""
+  },
+  {
+    "name": "scan-ignore-case",
+    "filter": "[scan(\"A+\"; \"i\")]",
+    "input": "\"baAaAc\""
+  },
+  {
     "name": "join",
     "filter": "join(\"-\")",
     "input": "[\"a\",\"b\",\"c\"]"

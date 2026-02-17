@@ -288,6 +288,42 @@ fn builtin_call_string(
       } else {
         raise UnknownFunction("test")
       }
+    "scan" =>
+      if args.length() == 1 || args.length() == 2 {
+        let patterns = execute_with_env(args[0], input, env)
+        let flag_values = if args.length() == 2 {
+          execute_with_env(args[1], input, env)
+        } else {
+          [Json::null()]
+        }
+        let out = []
+        for pattern_value in patterns {
+          match pattern_value {
+            String(pattern) =>
+              for flag_value in flag_values {
+                let flags = call_parse_regex_flags("scan", flag_value)
+                match input {
+                  String(s) =>
+                    for matched in regex_scan_strings(s, pattern, flags) {
+                      out.push(matched)
+                    }
+                  _ =>
+                    raise TypeError(
+                      json_type_with_value(input) +
+                      " cannot be matched, as it is not a string",
+                    )
+                }
+              }
+            _ =>
+              raise TypeError(
+                json_type_name(pattern_value) + " not a string or array",
+              )
+          }
+        }
+        Some(out)
+      } else {
+        raise UnknownFunction("scan")
+      }
     "index" =>
       if args.length() != 1 {
         raise UnknownFunction("index")
