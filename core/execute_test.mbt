@@ -1019,6 +1019,45 @@ test "execute scan regex compatibility" {
 }
 
 ///|
+test "execute match regex compatibility" {
+  assert_eq(
+    must_execute(parse_filter("match(\"a+\")"), must_parse("\"baaaac\"")),
+    [
+      must_parse(
+        "{\"offset\":1,\"length\":4,\"string\":\"aaaa\",\"captures\":[]}",
+      ),
+    ],
+  )
+  assert_eq(
+    must_execute(parse_filter("match(\"A+\"; \"i\")"), must_parse("\"baAaAc\"")),
+    [
+      must_parse(
+        "{\"offset\":1,\"length\":4,\"string\":\"aAaA\",\"captures\":[]}",
+      ),
+    ],
+  )
+  assert_eq(must_execute(parse_filter("match(\"\")"), must_parse("\"ab\"")), [
+    must_parse("{\"offset\":0,\"length\":0,\"string\":\"\",\"captures\":[]}"),
+  ])
+  assert_eq(
+    must_execute(parse_filter("match(\"\"; \"n\")"), must_parse("\"ab\"")),
+    [],
+  )
+  assert_eq(
+    must_execute(parse_filter("[match(\"a\"; \"g\")]"), must_parse("\"abac\"")),
+    [
+      must_parse(
+        "[{\"offset\":0,\"length\":1,\"string\":\"a\",\"captures\":[]},{\"offset\":2,\"length\":1,\"string\":\"a\",\"captures\":[]}]",
+      ),
+    ],
+  )
+  assert_eq(
+    must_execute(parse_filter("[match(empty)]"), must_parse("\"ab\"")),
+    [Json::array([])],
+  )
+}
+
+///|
 test "execute split errors" {
   guard (try? execute(parse_filter("split(\",\")"), must_parse("1")))
     is Err(err) &&
@@ -1090,6 +1129,33 @@ test "execute scan regex errors" {
     is Err(err) &&
     err.to_string() == "z is not a valid modifier string" else {
     fail("expected scan invalid flags error")
+  }
+}
+
+///|
+test "execute match regex errors" {
+  guard (try? execute(parse_filter("match(\"a\")"), must_parse("1")))
+    is Err(err) &&
+    err.to_string() == "number (1) cannot be matched, as it is not a string" else {
+    fail("expected match input type error")
+  }
+  guard (try? execute(parse_filter("match(1)"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "number not a string or array" else {
+    fail("expected match pattern type error")
+  }
+  guard (try? execute(parse_filter("match(\"a\"; 1)"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "match flags must be a string or null" else {
+    fail("expected match flags type error")
+  }
+  guard (try? execute(
+      parse_filter("match(\"a\"; \"z\")"),
+      must_parse("\"abc\""),
+    ))
+    is Err(err) &&
+    err.to_string() == "z is not a valid modifier string" else {
+    fail("expected match invalid flags error")
   }
 }
 

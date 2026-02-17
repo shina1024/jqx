@@ -135,6 +135,16 @@
     "input": "\"baAaAc\""
   },
   {
+    "name": "match-basic",
+    "filter": "match(\"a+\")",
+    "input": "\"baaaac\""
+  },
+  {
+    "name": "match-global",
+    "filter": "[match(\"a\"; \"g\")]",
+    "input": "\"abac\""
+  },
+  {
     "name": "join",
     "filter": "join(\"-\")",
     "input": "[\"a\",\"b\",\"c\"]"
