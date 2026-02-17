@@ -1800,6 +1800,11 @@ test "execute compare order and logical" {
   let j = must_parse("{\"a\":1,\"b\":2}")
   assert_eq(must_execute(parse_filter(".a < .b"), j), [Json::boolean(true)])
   assert_eq(must_execute(parse_filter(".a >= .b"), j), [Json::boolean(false)])
+  assert_eq(must_execute(parse_filter("null >= 0"), j), [Json::boolean(false)])
+  assert_eq(must_execute(parse_filter("null < false"), j), [Json::boolean(true)])
+  assert_eq(must_execute(parse_filter("true < 0"), j), [Json::boolean(true)])
+  assert_eq(must_execute(parse_filter("\"a\" > 0"), j), [Json::boolean(true)])
+  assert_eq(must_execute(parse_filter("select(. >= 0)"), must_parse("null")), [])
   assert_eq(must_execute(parse_filter(". > .00005"), must_parse("0.0001")), [
     Json::boolean(true),
   ])
@@ -2010,6 +2015,17 @@ test "execute update assignment compatibility" {
   assert_eq(
     must_execute(parse_filter(".a.b //= 9"), must_parse("{\"a\":{}}")),
     [Json::object({ "a": Json::object({ "b": Json::number(9.0) }) })],
+  )
+  assert_eq(
+    must_execute(parse_filter(".a |= select(. >= 0)"), must_parse("null")),
+    [Json::null()],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter(".a |= select(. >= 0)"),
+      must_parse("{\"a\":null}"),
+    ),
+    [Json::object({})],
   )
   assert_eq(must_execute(parse_filter(".[2] += 5"), must_parse("[]")), [
     Json::array([Json::null(), Json::null(), Json::number(5.0)]),

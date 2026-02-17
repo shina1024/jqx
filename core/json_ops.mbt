@@ -212,6 +212,16 @@ fn execute_to_bool(
 }
 
 ///|
+fn compare_ok(op : String, cmp : Int) -> Bool {
+  match op {
+    "<" => cmp < 0
+    "<=" => cmp <= 0
+    ">" => cmp > 0
+    _ => cmp >= 0
+  }
+}
+
+///|
 fn execute_compare(
   op : String,
   left : Filter,
@@ -236,23 +246,7 @@ fn execute_compare(
           }
           out.push(Json::boolean(ok))
         }
-        (String(x), String(y)) => {
-          let cmp = x.compare(y)
-          let ok = match op {
-            "<" => cmp < 0
-            "<=" => cmp <= 0
-            ">" => cmp > 0
-            _ => cmp >= 0
-          }
-          out.push(Json::boolean(ok))
-        }
-        _ =>
-          raise TypeError(
-            "Cannot compare " +
-            json_type_with_value(a) +
-            " and " +
-            json_type_with_value(b),
-          )
+        _ => out.push(Json::boolean(compare_ok(op, compare_json(a, b))))
       }
     }
   }

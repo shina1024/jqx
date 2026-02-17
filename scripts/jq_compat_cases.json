@@ -750,6 +750,11 @@
     "input": "{\"a\":3,\"b\":2}"
   },
   {
+    "name": "compare-cross-type-rank",
+    "filter": ".[] | . >= 0",
+    "input": "[null,1,false,true,0,\"a\"]"
+  },
+  {
     "name": "assign-update-field",
     "filter": ".a |= . + 1",
     "input": "{\"a\":1,\"b\":2}"
@@ -788,6 +793,16 @@
     "name": "assign-nested-fallback",
     "filter": ".a.b //= 9",
     "input": "{\"a\":{}}"
+  },
+  {
+    "name": "assign-update-select-null-input",
+    "filter": ".a |= select(. >= 0)",
+    "input": "null"
+  },
+  {
+    "name": "assign-update-select-null-field-delete",
+    "filter": ".a |= select(. >= 0)",
+    "input": "{\"a\":null}"
   },
   {
     "name": "assign-nested-add",
