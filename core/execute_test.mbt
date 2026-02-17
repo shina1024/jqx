@@ -971,6 +971,29 @@ test "execute split compatibility" {
 }
 
 ///|
+test "execute test regex compatibility" {
+  assert_eq(must_execute(parse_filter("test(\"a\")"), must_parse("\"abc\"")), [
+    Json::boolean(true),
+  ])
+  assert_eq(must_execute(parse_filter("test(\"A\")"), must_parse("\"abc\"")), [
+    Json::boolean(false),
+  ])
+  assert_eq(
+    must_execute(parse_filter("test(\"A\"; \"i\")"), must_parse("\"abc\"")),
+    [Json::boolean(true)],
+  )
+  assert_eq(
+    must_execute(parse_filter("test(\"a+\"; null)"), must_parse("\"aaab\"")),
+    [Json::boolean(true)],
+  )
+  assert_eq(must_execute(parse_filter("test(empty)"), must_parse("\"abc\"")), [])
+  assert_eq(
+    must_execute(parse_filter("test(\"\"; \"n\")"), must_parse("\"abc\"")),
+    [Json::boolean(false)],
+  )
+}
+
+///|
 test "execute split errors" {
   guard (try? execute(parse_filter("split(\",\")"), must_parse("1")))
     is Err(err) &&
@@ -991,6 +1014,34 @@ test "execute split errors" {
     is Err(err) &&
     err.to_string() == "splits input and separator must be strings" else {
     fail("expected splits separator type error")
+  }
+  guard (try? execute(parse_filter("split(\"a\"; \"z\")"), must_parse("\"a\"")))
+    is Err(err) &&
+    err.to_string() == "zg is not a valid modifier string" else {
+    fail("expected split invalid flags error")
+  }
+}
+
+///|
+test "execute test regex errors" {
+  guard (try? execute(parse_filter("test(\"a\")"), must_parse("1"))) is Err(err) &&
+    err.to_string() == "number (1) cannot be matched, as it is not a string" else {
+    fail("expected test input type error")
+  }
+  guard (try? execute(parse_filter("test(1)"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "number not a string or array" else {
+    fail("expected test pattern type error")
+  }
+  guard (try? execute(parse_filter("test(\"a\"; 1)"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "test flags must be a string or null" else {
+    fail("expected test flags type error")
+  }
+  guard (try? execute(parse_filter("test(\"a\"; \"z\")"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "z is not a valid modifier string" else {
+    fail("expected test invalid flags error")
   }
 }
 

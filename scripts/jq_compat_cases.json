@@ -110,6 +110,21 @@
     "input": "\"a,b,c\""
   },
   {
+    "name": "test-basic",
+    "filter": "test(\"a\")",
+    "input": "\"abc\""
+  },
+  {
+    "name": "test-flags-ignore-case",
+    "filter": "test(\"A\"; \"i\")",
+    "input": "\"abc\""
+  },
+  {
+    "name": "test-flags-ignore-empty-match",
+    "filter": "test(\"\"; \"n\")",
+    "input": "\"abc\""
+  },
+  {
     "name": "join",
     "filter": "join(\"-\")",
     "input": "[\"a\",\"b\",\"c\"]"

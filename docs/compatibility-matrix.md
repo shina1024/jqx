@@ -43,7 +43,7 @@ Implemented builtins/functions in `core/execute.mbt` + `core/builtin*.mbt` inclu
 - `to_entries`, `from_entries`, `with_entries`, `map`, `map_values`, `select`
 - `contains`, `inside`, `has`, `in`
 - `startswith`, `endswith`, `ltrimstr`, `rtrimstr`
-- `join`, `split`, `splits`
+- `join`, `split`, `splits`, `test`
 - `sort`, `sort_by`, `group_by`, `min`, `max`, `min_by`, `max_by`, `unique`, `unique_by`
 - `reverse`, `explode`, `implode`, `ascii_upcase`, `ascii_downcase`
 - `bsearch`

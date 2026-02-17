@@ -895,6 +895,18 @@ fn split_string_regex_tokens(
 }
 
 ///|
+fn regex_has_match(s : String, pattern : String, flags : String) -> Bool {
+  let chars = string_to_chars(s)
+  let atoms = parse_split_regex_atoms(pattern)
+  let ignore_case = split_regex_flag_enabled(flags, 'i')
+  let skip_empty_match = split_regex_flag_enabled(flags, 'n')
+  match split_regex_find_next(chars, 0, atoms, ignore_case, skip_empty_match) {
+    Some(_) => true
+    None => false
+  }
+}
+
+///|
 fn char_to_string(ch : Char) -> String {
   let buf = StringBuilder::new()
   buf.write_char(ch)

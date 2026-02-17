@@ -1,13 +1,45 @@
 ///|
+fn call_regex_flag_supported(flag : Char) -> Bool {
+  flag == 'g' ||
+  flag == 'i' ||
+  flag == 'l' ||
+  flag == 'm' ||
+  flag == 'n' ||
+  flag == 'p' ||
+  flag == 's' ||
+  flag == 'x'
+}
+
+///|
 fn call_parse_regex_flags(
   name : String,
   value : Json,
 ) -> String raise EvalError {
-  match value {
+  call_parse_regex_flags_with_options(name, value)
+}
+
+///|
+fn call_parse_regex_flags_with_options(
+  name : String,
+  value : Json,
+  append_global? : Bool = false,
+) -> String raise EvalError {
+  let base = match value {
     JNull => ""
     String(flags) => flags
     _ => raise TypeError(name + " flags must be a string or null")
   }
+  let flags = if append_global && !split_regex_flag_enabled(base, 'g') {
+    base + "g"
+  } else {
+    base
+  }
+  for flag in flags {
+    if !call_regex_flag_supported(flag) {
+      raise TypeError(flags + " is not a valid modifier string")
+    }
+  }
+  flags
 }
 
 ///|
@@ -165,7 +197,11 @@ fn builtin_call_string(
           match pattern_value {
             String(pattern) =>
               for flag_value in flag_values {
-                let flags = call_parse_regex_flags("split", flag_value)
+                let flags = call_parse_regex_flags_with_options(
+                  "split",
+                  flag_value,
+                  append_global=true,
+                )
                 match input {
                   String(s) =>
                     out.push(
@@ -195,7 +231,11 @@ fn builtin_call_string(
           match pattern_value {
             String(pattern) =>
               for flag_value in flag_values {
-                let flags = call_parse_regex_flags("splits", flag_value)
+                let flags = call_parse_regex_flags_with_options(
+                  "splits",
+                  flag_value,
+                  append_global=true,
+                )
                 match input {
                   String(s) =>
                     for part in split_string_regex_tokens(s, pattern, flags) {
@@ -213,6 +253,40 @@ fn builtin_call_string(
         Some(out)
       } else {
         raise UnknownFunction("splits")
+      }
+    "test" =>
+      if args.length() == 1 || args.length() == 2 {
+        let patterns = execute_with_env(args[0], input, env)
+        let flag_values = if args.length() == 2 {
+          execute_with_env(args[1], input, env)
+        } else {
+          [Json::null()]
+        }
+        let out = []
+        for pattern_value in patterns {
+          match pattern_value {
+            String(pattern) =>
+              for flag_value in flag_values {
+                let flags = call_parse_regex_flags("test", flag_value)
+                match input {
+                  String(s) =>
+                    out.push(Json::boolean(regex_has_match(s, pattern, flags)))
+                  _ =>
+                    raise TypeError(
+                      json_type_with_value(input) +
+                      " cannot be matched, as it is not a string",
+                    )
+                }
+              }
+            _ =>
+              raise TypeError(
+                json_type_name(pattern_value) + " not a string or array",
+              )
+          }
+        }
+        Some(out)
+      } else {
+        raise UnknownFunction("test")
       }
     "index" =>
       if args.length() != 1 {
