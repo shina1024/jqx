@@ -1955,6 +1955,21 @@ test "execute division by zero compatibility" {
 }
 
 ///|
+test "execute arithmetic type errors include full json values" {
+  let j = must_parse("null")
+  guard (try? execute(parse_filter("[1,2,3] + {\"a\":[1,2,3]}"), j)) is Err(err) &&
+    err.to_string() ==
+    "array ([1,2,3]) and object ({\"a\":[1,2,3]}) cannot be added" else {
+    fail("expected full-value add type error")
+  }
+  guard (try? execute(parse_filter("[1,2,3] / {\"a\":[1,2,3]}"), j)) is Err(err) &&
+    err.to_string() ==
+    "array ([1,2,3]) and object ({\"a\":[1,2,3]}) cannot be divided" else {
+    fail("expected full-value divide type error")
+  }
+}
+
+///|
 test "execute arithmetic stream cross product" {
   let j = must_parse("null")
   assert_eq(must_execute(parse_filter("(1,2) + (10,20)"), j), [

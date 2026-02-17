@@ -1032,6 +1032,18 @@
     "expect_error": true
   },
   {
+    "name": "err-arith-array-plus-object-full-value",
+    "filter": "[1,2,3] + {\"a\":[1,2,3]}",
+    "input": "null",
+    "expect_error": true
+  },
+  {
+    "name": "err-arith-array-div-object-full-value",
+    "filter": "[1,2,3] / {\"a\":[1,2,3]}",
+    "input": "null",
+    "expect_error": true
+  },
+  {
     "name": "err-division-by-zero",
     "filter": "1 / 0",
     "input": "null",

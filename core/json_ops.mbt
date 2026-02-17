@@ -16,20 +16,29 @@ fn json_type_with_value(j : Json) -> String {
 }
 
 ///|
+fn json_value_preview(s : String) -> String {
+  let max_preview = 13
+  if s.length() <= max_preview {
+    return s
+  }
+  let mut cut = max_preview
+  for i in 0..<max_preview {
+    match s.unsafe_get(i) {
+      '{' | '[' | ',' => cut = i + 1
+      _ => ()
+    }
+  }
+  if cut <= 0 {
+    cut = max_preview
+  }
+  s.view(start_offset=0, end_offset=cut).to_string() + "..."
+}
+
+///|
 fn json_type_with_value_preview(j : Json) -> String {
   match j {
-    Object(_) | Array(_) => {
-      let json = j.to_json_string()
-      let max_preview = 11
-      if json.length() <= max_preview {
-        json_type_name(j) + " (" + json + ")"
-      } else {
-        json_type_name(j) +
-        " (" +
-        json.view(start_offset=0, end_offset=max_preview).to_string() +
-        "...)"
-      }
-    }
+    Object(_) | Array(_) =>
+      json_type_name(j) + " (" + json_value_preview(j.to_json_string()) + ")"
     _ => json_type_with_value(j)
   }
 }
