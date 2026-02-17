@@ -127,8 +127,7 @@
     "source_file": "jq.test",
     "source_line": 86,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l90",
@@ -137,8 +136,7 @@
     "source_file": "jq.test",
     "source_line": 90,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l94",
@@ -147,8 +145,7 @@
     "source_file": "jq.test",
     "source_line": 94,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l98",
@@ -157,8 +154,7 @@
     "source_file": "jq.test",
     "source_line": 98,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l102",
@@ -4639,8 +4635,7 @@
     "source_file": "base64.test",
     "source_line": 4,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-base64-test-l8",
@@ -4649,8 +4644,7 @@
     "source_file": "base64.test",
     "source_line": 8,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-base64-test-l13",
@@ -4668,8 +4662,7 @@
     "source_file": "base64.test",
     "source_line": 18,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-base64-test-l22",
@@ -4678,8 +4671,7 @@
     "source_file": "base64.test",
     "source_line": 22,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-base64-test-l26",
@@ -4689,7 +4681,7 @@
     "source_line": 26,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "skip_reason": "unsupported:base64-padding-lax"
   },
   {
     "name": "upstream-base64-test-l30",
@@ -4698,8 +4690,7 @@
     "source_file": "base64.test",
     "source_line": 30,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-base64-test-l35",
@@ -4708,8 +4699,7 @@
     "source_file": "base64.test",
     "source_line": 35,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-base64-test-l40",
@@ -4736,8 +4726,7 @@
     "source_file": "uri.test",
     "source_line": 4,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-uri-test-l9",
@@ -4755,8 +4744,7 @@
     "source_file": "uri.test",
     "source_line": 14,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-uri-test-l18",
@@ -4765,8 +4753,7 @@
     "source_file": "uri.test",
     "source_line": 18,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-uri-test-l25",
@@ -7038,8 +7025,7 @@
     "source_file": "man.test",
     "source_line": 734,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-man-test-l738",
@@ -7048,8 +7034,7 @@
     "source_file": "man.test",
     "source_line": 738,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-man-test-l742",

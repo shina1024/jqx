@@ -12,7 +12,7 @@
   "include_compile_fail": false,
   "skip_program_patterns": [
     {
-      "pattern": "^@",
+      "pattern": "(^|[^A-Za-z0-9_])@(text|json|csv|tsv|html|sh)(\\b|$)",
       "reason": "unsupported:format-filter"
     },
     {
@@ -41,5 +41,9 @@
     "allowlist_path": "scripts/jq_upstream_stage1_allowlist.txt",
     "output_path": "scripts/jq_compat_cases.upstream.stage1.json"
   },
-  "overrides": {}
+  "overrides": {
+    "base64.test:26": {
+      "skip_reason": "unsupported:base64-padding-lax"
+    }
+  }
 }
