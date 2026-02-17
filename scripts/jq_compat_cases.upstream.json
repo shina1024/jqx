@@ -72,8 +72,7 @@
     "source_file": "jq.test",
     "source_line": 39,
     "source_kind": "runtime",
-    "source_expected_count": 3,
-    "skip_reason": "unsupported:number-literal-dash-dot"
+    "source_expected_count": 3
   },
   {
     "name": "upstream-jq-test-l48",
@@ -82,8 +81,7 @@
     "source_file": "jq.test",
     "source_line": 48,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:input-bom"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l54",
@@ -110,8 +108,7 @@
     "source_file": "jq.test",
     "source_line": 68,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:string-interpolation-literal"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l72",

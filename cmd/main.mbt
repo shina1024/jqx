@@ -180,12 +180,15 @@ fn parse_json_stream_values(
 fn skip_ascii_ws_offset(text : String, start : Int) -> Int {
   let mut i = start
   for {
-    if i < text.length() &&
-      is_ascii_ws(text.unsafe_get(i).to_int().unsafe_to_char()) {
-      i += 1
-    } else {
+    if i >= text.length() {
       return i
     }
+    let ch = text.unsafe_get(i).to_int().unsafe_to_char()
+    if is_ascii_ws(ch) || ch.to_int() == 0xFEFF {
+      i += 1
+      continue
+    }
+    return i
   }
 }
 

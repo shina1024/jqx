@@ -27,6 +27,21 @@ test "parse cli inputs json basic" {
 }
 
 ///|
+test "parse cli inputs json stream accepts leading bom" {
+  let cfg = {
+    raw: false,
+    raw_input: false,
+    no_input: false,
+    exit_status: false,
+    slurp: false,
+    filter: ".",
+    input: None,
+  }
+  let parsed = parse_cli_inputs(cfg, "\u{FEFF}\"byte order mark\"")
+  assert_eq(parsed, [@lib.Json::string("byte order mark")])
+}
+
+///|
 test "parse cli inputs json stream ndjson" {
   let cfg = {
     raw: false,
