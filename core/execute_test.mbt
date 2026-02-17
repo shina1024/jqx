@@ -1058,6 +1058,96 @@ test "execute match regex compatibility" {
 }
 
 ///|
+test "execute capture regex compatibility" {
+  assert_eq(
+    must_execute(parse_filter("capture(\"a+\")"), must_parse("\"baaaac\"")),
+    [Json::object(Map::new())],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("capture(\"A+\"; \"i\")"),
+      must_parse("\"baAaAc\""),
+    ),
+    [Json::object(Map::new())],
+  )
+  assert_eq(
+    must_execute(parse_filter("capture(\"a+\")"), must_parse("\"xyz\"")),
+    [],
+  )
+  assert_eq(must_execute(parse_filter("capture(\"\")"), must_parse("\"ab\"")), [
+    Json::object(Map::new()),
+  ])
+  assert_eq(
+    must_execute(parse_filter("capture(\"\"; \"n\")"), must_parse("\"ab\"")),
+    [],
+  )
+  assert_eq(
+    must_execute(parse_filter("[capture(empty)]"), must_parse("\"ab\"")),
+    [Json::array([])],
+  )
+}
+
+///|
+test "execute sub/gsub regex compatibility" {
+  assert_eq(
+    must_execute(parse_filter("sub(\"a\"; \"X\")"), must_parse("\"abac\"")),
+    [Json::string("Xbac")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("sub(\"a\"; \"X\"; \"g\")"),
+      must_parse("\"abac\""),
+    ),
+    [Json::string("XbXc")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("sub(\"A\"; \"X\"; \"i\")"),
+      must_parse("\"abAc\""),
+    ),
+    [Json::string("XbAc")],
+  )
+  assert_eq(
+    must_execute(parse_filter("sub(\"\"; \"X\")"), must_parse("\"ab\"")),
+    [Json::string("Xab")],
+  )
+  assert_eq(
+    must_execute(parse_filter("sub(\"z\"; \"X\")"), must_parse("\"ab\"")),
+    [Json::string("ab")],
+  )
+  assert_eq(
+    must_execute(parse_filter("gsub(\"a\"; \"X\")"), must_parse("\"abac\"")),
+    [Json::string("XbXc")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("gsub(\"a\"; \"X\"; null)"),
+      must_parse("\"abac\""),
+    ),
+    [Json::string("XbXc")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("gsub(\"A\"; \"X\"; \"i\")"),
+      must_parse("\"abAc\""),
+    ),
+    [Json::string("XbXc")],
+  )
+  assert_eq(
+    must_execute(parse_filter("gsub(\"\"; \"X\")"), must_parse("\"ab\"")),
+    [Json::string("XaXbX")],
+  )
+  assert_eq(
+    must_execute(parse_filter("gsub(\"\"; \"X\"; \"n\")"), must_parse("\"ab\"")),
+    [Json::string("ab")],
+  )
+  assert_eq(
+    must_execute(parse_filter("[gsub(empty; \"X\")]"), must_parse("\"ab\"")),
+    [Json::array([])],
+  )
+}
+
+///|
 test "execute split errors" {
   guard (try? execute(parse_filter("split(\",\")"), must_parse("1")))
     is Err(err) &&
@@ -1156,6 +1246,99 @@ test "execute match regex errors" {
     is Err(err) &&
     err.to_string() == "z is not a valid modifier string" else {
     fail("expected match invalid flags error")
+  }
+}
+
+///|
+test "execute capture regex errors" {
+  guard (try? execute(parse_filter("capture(\"a\")"), must_parse("1")))
+    is Err(err) &&
+    err.to_string() == "number (1) cannot be matched, as it is not a string" else {
+    fail("expected capture input type error")
+  }
+  guard (try? execute(parse_filter("capture(1)"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "number not a string or array" else {
+    fail("expected capture pattern type error")
+  }
+  guard (try? execute(parse_filter("capture(\"a\"; 1)"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "capture flags must be a string or null" else {
+    fail("expected capture flags type error")
+  }
+  guard (try? execute(
+      parse_filter("capture(\"a\"; \"z\")"),
+      must_parse("\"abc\""),
+    ))
+    is Err(err) &&
+    err.to_string() == "z is not a valid modifier string" else {
+    fail("expected capture invalid flags error")
+  }
+}
+
+///|
+test "execute sub/gsub regex errors" {
+  guard (try? execute(parse_filter("sub(\"a\"; \"x\")"), must_parse("1")))
+    is Err(err) &&
+    err.to_string() == "number (1) cannot be matched, as it is not a string" else {
+    fail("expected sub input type error")
+  }
+  guard (try? execute(parse_filter("sub(1; \"x\")"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "number not a string or array" else {
+    fail("expected sub pattern type error")
+  }
+  guard (try? execute(parse_filter("sub(\"a\"; 1)"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "sub replacement must be a string" else {
+    fail("expected sub replacement type error")
+  }
+  guard (try? execute(
+      parse_filter("sub(\"a\"; \"x\"; 1)"),
+      must_parse("\"abc\""),
+    ))
+    is Err(err) &&
+    err.to_string() == "sub flags must be a string or null" else {
+    fail("expected sub flags type error")
+  }
+  guard (try? execute(
+      parse_filter("sub(\"a\"; \"x\"; \"z\")"),
+      must_parse("\"abc\""),
+    ))
+    is Err(err) &&
+    err.to_string() == "z is not a valid modifier string" else {
+    fail("expected sub invalid flags error")
+  }
+  guard (try? execute(parse_filter("gsub(\"a\"; \"x\")"), must_parse("1")))
+    is Err(err) &&
+    err.to_string() == "number (1) cannot be matched, as it is not a string" else {
+    fail("expected gsub input type error")
+  }
+  guard (try? execute(parse_filter("gsub(1; \"x\")"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "number not a string or array" else {
+    fail("expected gsub pattern type error")
+  }
+  guard (try? execute(parse_filter("gsub(\"a\"; 1)"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "gsub replacement must be a string" else {
+    fail("expected gsub replacement type error")
+  }
+  guard (try? execute(
+      parse_filter("gsub(\"a\"; \"x\"; 1)"),
+      must_parse("\"abc\""),
+    ))
+    is Err(err) &&
+    err.to_string() == "gsub flags must be a string or null" else {
+    fail("expected gsub flags type error")
+  }
+  guard (try? execute(
+      parse_filter("gsub(\"a\"; \"x\"; \"z\")"),
+      must_parse("\"abc\""),
+    ))
+    is Err(err) &&
+    err.to_string() == "zg is not a valid modifier string" else {
+    fail("expected gsub invalid flags error")
   }
 }
 

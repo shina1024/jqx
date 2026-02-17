@@ -360,6 +360,152 @@ fn builtin_call_string(
       } else {
         raise UnknownFunction("match")
       }
+    "capture" =>
+      if args.length() == 1 || args.length() == 2 {
+        let patterns = execute_with_env(args[0], input, env)
+        let flag_values = if args.length() == 2 {
+          execute_with_env(args[1], input, env)
+        } else {
+          [Json::null()]
+        }
+        let out = []
+        for pattern_value in patterns {
+          match pattern_value {
+            String(pattern) =>
+              for flag_value in flag_values {
+                let flags = call_parse_regex_flags("capture", flag_value)
+                match input {
+                  String(s) =>
+                    if regex_has_match(s, pattern, flags) {
+                      out.push(Json::object(Map::new()))
+                    } else {
+                      ()
+                    }
+                  _ =>
+                    raise TypeError(
+                      json_type_with_value(input) +
+                      " cannot be matched, as it is not a string",
+                    )
+                }
+              }
+            _ =>
+              raise TypeError(
+                json_type_name(pattern_value) + " not a string or array",
+              )
+          }
+        }
+        Some(out)
+      } else {
+        raise UnknownFunction("capture")
+      }
+    "sub" =>
+      if args.length() == 2 || args.length() == 3 {
+        let patterns = execute_with_env(args[0], input, env)
+        let replacements = execute_with_env(args[1], input, env)
+        let flag_values = if args.length() == 3 {
+          execute_with_env(args[2], input, env)
+        } else {
+          [Json::null()]
+        }
+        let out = []
+        for pattern_value in patterns {
+          match pattern_value {
+            String(pattern) =>
+              for replacement_value in replacements {
+                match replacement_value {
+                  String(replacement) =>
+                    for flag_value in flag_values {
+                      let flags = call_parse_regex_flags("sub", flag_value)
+                      let global = split_regex_flag_enabled(flags, 'g')
+                      match input {
+                        String(s) =>
+                          out.push(
+                            Json::string(
+                              regex_substitute_string(
+                                s,
+                                pattern,
+                                replacement,
+                                flags,
+                                global~,
+                              ),
+                            ),
+                          )
+                        _ =>
+                          raise TypeError(
+                            json_type_with_value(input) +
+                            " cannot be matched, as it is not a string",
+                          )
+                      }
+                    }
+                  _ => raise TypeError("sub replacement must be a string")
+                }
+              }
+            _ =>
+              raise TypeError(
+                json_type_name(pattern_value) + " not a string or array",
+              )
+          }
+        }
+        Some(out)
+      } else {
+        raise UnknownFunction("sub")
+      }
+    "gsub" =>
+      if args.length() == 2 || args.length() == 3 {
+        let patterns = execute_with_env(args[0], input, env)
+        let replacements = execute_with_env(args[1], input, env)
+        let flag_values = if args.length() == 3 {
+          execute_with_env(args[2], input, env)
+        } else {
+          [Json::null()]
+        }
+        let out = []
+        for pattern_value in patterns {
+          match pattern_value {
+            String(pattern) =>
+              for replacement_value in replacements {
+                match replacement_value {
+                  String(replacement) =>
+                    for flag_value in flag_values {
+                      let flags = call_parse_regex_flags_with_options(
+                        "gsub",
+                        flag_value,
+                        append_global=true,
+                      )
+                      let global = split_regex_flag_enabled(flags, 'g')
+                      match input {
+                        String(s) =>
+                          out.push(
+                            Json::string(
+                              regex_substitute_string(
+                                s,
+                                pattern,
+                                replacement,
+                                flags,
+                                global~,
+                              ),
+                            ),
+                          )
+                        _ =>
+                          raise TypeError(
+                            json_type_with_value(input) +
+                            " cannot be matched, as it is not a string",
+                          )
+                      }
+                    }
+                  _ => raise TypeError("gsub replacement must be a string")
+                }
+              }
+            _ =>
+              raise TypeError(
+                json_type_name(pattern_value) + " not a string or array",
+              )
+          }
+        }
+        Some(out)
+      } else {
+        raise UnknownFunction("gsub")
+      }
     "index" =>
       if args.length() != 1 {
         raise UnknownFunction("index")

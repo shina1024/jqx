@@ -43,7 +43,7 @@ Implemented builtins/functions in `core/execute.mbt` + `core/builtin*.mbt` inclu
 - `to_entries`, `from_entries`, `with_entries`, `map`, `map_values`, `select`
 - `contains`, `inside`, `has`, `in`
 - `startswith`, `endswith`, `ltrimstr`, `rtrimstr`
-- `join`, `split`, `splits`, `test`, `scan`, `match`
+- `join`, `split`, `splits`, `test`, `scan`, `match`, `capture`, `sub`, `gsub`
 - `sort`, `sort_by`, `group_by`, `min`, `max`, `min_by`, `max_by`, `unique`, `unique_by`
 - `reverse`, `explode`, `implode`, `ascii_upcase`, `ascii_downcase`
 - `bsearch`
@@ -113,7 +113,7 @@ Notes:
 - Differential runners now default `jqx_use_stdin=true` unless explicitly
   overridden per case.
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.
-- Smoke differential currently covers 221 cases (as of 2026-02-17).
+- Smoke differential currently covers 225 cases (as of 2026-02-17).
 - Full upstream differential baseline is currently:
   total 824 / passed 677 / failed 0 / skipped 147
   (see `scripts/jq_upstream_failures.snapshot.json` and `docs/upstream-failure-backlog.md`).

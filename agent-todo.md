@@ -8,7 +8,7 @@ Updated: 2026-02-14
 - [x] `def` の対応範囲を拡張する（ネスト定義の配置対応・arity解決改善）
 - [ ] `def` の対応範囲をさらに拡張する（再帰、filter引数セマンティクス、import連携）
 - [ ] update assignment（`|=`, `+=` など）の対応範囲を拡張する（静的パス以外の実用ケース）
-- [ ] 正規表現ファミリ（`test`/`match`/`capture`/`scan`/`sub`/`gsub`）を最小互換で実装する
+- [x] 正規表現ファミリ（`test`/`match`/`capture`/`scan`/`sub`/`gsub`）を最小互換で実装する
 - [ ] CLI `-R`/`-s` の入力セマンティクス差分を縮小する（line/slurp境界のjq互換）
 
 ## P1: 互換性の精度と回帰検知を強化する

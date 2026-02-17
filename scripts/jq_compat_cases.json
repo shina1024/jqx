@@ -145,6 +145,26 @@
     "input": "\"abac\""
   },
   {
+    "name": "capture-basic",
+    "filter": "capture(\"a+\")",
+    "input": "\"baaaac\""
+  },
+  {
+    "name": "sub-basic",
+    "filter": "sub(\"a\"; \"X\")",
+    "input": "\"abac\""
+  },
+  {
+    "name": "gsub-basic",
+    "filter": "gsub(\"a\"; \"X\")",
+    "input": "\"abac\""
+  },
+  {
+    "name": "gsub-ignore-case",
+    "filter": "gsub(\"A\"; \"X\"; \"i\")",
+    "input": "\"abAc\""
+  },
+  {
     "name": "join",
     "filter": "join(\"-\")",
     "input": "[\"a\",\"b\",\"c\"]"
