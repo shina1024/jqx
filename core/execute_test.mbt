@@ -2048,6 +2048,10 @@ test "execute update assignment compatibility" {
     [Json::object({ "a": Json::number(0.0), "b": Json::number(0.0) })],
   )
   assert_eq(
+    must_execute(parse_filter("(.a,.a) |= . + 1"), must_parse("{\"a\":0}")),
+    [Json::object({ "a": Json::number(2.0) })],
+  )
+  assert_eq(
     must_execute(parse_filter("(.a,.b) += (1,2)"), must_parse("null")),
     [
       Json::object({ "a": Json::number(1.0), "b": Json::number(1.0) }),
@@ -2195,6 +2199,10 @@ test "execute update assignment compatibility" {
         "foo": Json::array([Json::number(0.0), Json::number(5.0)]),
       }),
     ],
+  )
+  assert_eq(
+    must_execute(parse_filter(".[1:2] |= empty"), must_parse("[1,2,3]")),
+    [Json::array([Json::number(1.0), Json::number(3.0)])],
   )
   assert_eq(
     must_execute(

@@ -318,7 +318,17 @@ fn FilterCursor::lower_update_assignment(
         base_value,
         Filter::call("_slice", [start_arg, end_arg]),
       )
-      let updated_slice = lower_update_assign_op(op, current_slice, right)
+      let updated_slice = match op {
+        Update => {
+          let rhs_values = Filter::pipe(current_slice, right)
+          Filter::if_else(
+            Filter::call("isempty", [rhs_values]),
+            Filter::literal(Json::array([])),
+            Filter::call("first", [Filter::pipe(current_slice, right)]),
+          )
+        }
+        _ => lower_update_assign_op(op, current_slice, right)
+      }
       let updated_base = Filter::pipe(
         base_value,
         Filter::call("_set_slice", [start_arg, end_arg, value_var]),
@@ -383,17 +393,19 @@ fn FilterCursor::lower_update_assignment(
         Update => {
           let paths_var = Filter::var_(paths_tmp)
           let updated_var = Filter::var_(updated_tmp)
+          let path_var = Filter::var_(path_tmp)
           let path_stream = Filter::pipe(paths_var, Filter::iter())
+          let current_value = Filter::call("getpath", [path_var])
           let original_value = Filter::pipe(
             input_var,
-            Filter::call("getpath", [Filter::var_(path_tmp)]),
+            Filter::call("getpath", [path_var]),
           )
           let update_step = Filter::if_else(
-            Filter::call("isempty", [Filter::pipe(original_value, right)]),
+            Filter::call("isempty", [Filter::pipe(current_value, right)]),
             Filter::identity(),
             Filter::call("setpath", [
-              Filter::var_(path_tmp),
-              Filter::call("first", [Filter::pipe(original_value, right)]),
+              path_var,
+              Filter::call("first", [Filter::pipe(current_value, right)]),
             ]),
           )
           let updated_root = Filter::reduce(
@@ -401,10 +413,7 @@ fn FilterCursor::lower_update_assignment(
           )
           let delete_step = Filter::if_else(
             Filter::call("isempty", [Filter::pipe(original_value, right)]),
-            Filter::add(
-              Filter::identity(),
-              Filter::Array([Filter::var_(path_tmp)]),
-            ),
+            Filter::add(Filter::identity(), Filter::Array([path_var])),
             Filter::identity(),
           )
           let delete_paths = Filter::reduce(
