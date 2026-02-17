@@ -41,15 +41,5 @@
     "allowlist_path": "scripts/jq_upstream_stage1_allowlist.txt",
     "output_path": "scripts/jq_compat_cases.upstream.stage1.json"
   },
-  "overrides": {
-    "jq.test:39": {
-      "skip_reason": "unsupported:number-literal-dash-dot"
-    },
-    "jq.test:48": {
-      "skip_reason": "unsupported:input-bom"
-    },
-    "jq.test:68": {
-      "skip_reason": "unsupported:string-interpolation-literal"
-    }
-  }
+  "overrides": {}
 }
