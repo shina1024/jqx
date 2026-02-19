@@ -1,6 +1,6 @@
 # Upstream Failure Backlog (jq Differential)
 
-Updated: 2026-02-15
+Updated: 2026-02-19
 
 This document tracks failing upstream differential cases so they do not stay
 "postponed forever". Snapshot source:
@@ -11,9 +11,9 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 677
+- passed: 732
 - failed: 0
-- skipped: 147
+- skipped: 92
 
 ## Failure Categories (Current)
 
@@ -37,10 +37,13 @@ From current snapshot (`unknown-function` subset):
   - string error preview truncation now matches jq byte-oriented behavior for Unicode text.
   - `tostring` / `tojson` number rendering was aligned for decnum-gated compatibility cases.
   - differential runner filter escaping now keeps `\uXXXX` as a single backslash sequence.
+- Importer skip overrides were tightened for already-stable cases:
+  - unskipped 24 regex cases and 13 core-language cases that now pass.
+  - full upstream skip count reduced from `129` to `92` while keeping `failed 0`.
 - Differential snapshot writing was fixed for empty-failure runs:
   - `scripts/jq_diff.ps1` now writes `[]` when no failures remain.
 - full upstream diff reached `failed 0`:
-  - total `824` / passed `677` / failed `0` / skipped `147`.
+  - total `824` / passed `732` / failed `0` / skipped `92`.
 
 - Unicode/string index compatibility and stream error parity were expanded:
   - `indices`/`index`/`rindex` string search now uses Unicode codepoint indexing

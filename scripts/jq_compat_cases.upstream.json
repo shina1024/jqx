@@ -1349,7 +1349,7 @@
     "source_line": 775,
     "source_kind": "runtime",
     "source_expected_count": 2,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l780",
@@ -1359,7 +1359,7 @@
     "source_line": 780,
     "source_kind": "runtime",
     "source_expected_count": 2,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l785",
@@ -1369,7 +1369,7 @@
     "source_line": 785,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l789",
@@ -1389,7 +1389,7 @@
     "source_line": 794,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l799",
@@ -1399,7 +1399,7 @@
     "source_line": 799,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l803",
@@ -1509,7 +1509,7 @@
     "source_line": 859,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l864",
@@ -1539,7 +1539,7 @@
     "source_line": 875,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l880",
@@ -2267,7 +2267,7 @@
     "source_line": 1281,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1285",
@@ -2277,7 +2277,7 @@
     "source_line": 1285,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1289",
@@ -3703,7 +3703,7 @@
     "source_line": 2008,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l2012",
@@ -4114,7 +4114,7 @@
     "source_line": 2247,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l2251",
@@ -4819,7 +4819,7 @@
     "source_line": 6,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l10",
@@ -4829,7 +4829,7 @@
     "source_line": 10,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l14",
@@ -4839,7 +4839,7 @@
     "source_line": 14,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l18",
@@ -4859,7 +4859,7 @@
     "source_line": 23,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l28",
@@ -4869,7 +4869,7 @@
     "source_line": 28,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l32",
@@ -4939,7 +4939,7 @@
     "source_line": 67,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l71",
@@ -4949,7 +4949,7 @@
     "source_line": 71,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l75",
@@ -4969,7 +4969,7 @@
     "source_line": 84,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l88",
@@ -4989,7 +4989,7 @@
     "source_line": 92,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l96",
@@ -5009,7 +5009,7 @@
     "source_line": 100,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l104",
@@ -5019,7 +5019,7 @@
     "source_line": 104,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l108",
@@ -5029,7 +5029,7 @@
     "source_line": 108,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l112",
@@ -5039,7 +5039,7 @@
     "source_line": 112,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l116",
@@ -5049,7 +5049,7 @@
     "source_line": 116,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l120",
@@ -5109,7 +5109,7 @@
     "source_line": 141,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l145",
@@ -5119,7 +5119,7 @@
     "source_line": 145,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l149",
@@ -5129,7 +5129,7 @@
     "source_line": 149,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l153",
@@ -5139,7 +5139,7 @@
     "source_line": 153,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l157",
@@ -5149,7 +5149,7 @@
     "source_line": 157,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l162",
@@ -5209,7 +5209,7 @@
     "source_line": 183,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l187",
@@ -5294,7 +5294,7 @@
     "source_line": 9,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-manonig-test-l13",
@@ -5324,7 +5324,7 @@
     "source_line": 23,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-manonig-test-l27",
@@ -5374,7 +5374,7 @@
     "source_line": 45,
     "source_kind": "runtime",
     "source_expected_count": 2,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-manonig-test-l50",
@@ -5451,7 +5451,7 @@
     "source_line": 86,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-man-test-l1",
@@ -7307,7 +7307,7 @@
     "source_line": 871,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-man-test-l875",
@@ -7317,7 +7317,7 @@
     "source_line": 875,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-man-test-l879",

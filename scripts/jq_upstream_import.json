@@ -44,6 +44,117 @@
   "overrides": {
     "base64.test:26": {
       "skip_reason": "unsupported:base64-padding-lax"
+    },
+    "manonig.test:9": {
+      "skip_reason": ""
+    },
+    "manonig.test:23": {
+      "skip_reason": ""
+    },
+    "manonig.test:45": {
+      "skip_reason": ""
+    },
+    "manonig.test:86": {
+      "skip_reason": ""
+    },
+    "onig.test:6": {
+      "skip_reason": ""
+    },
+    "onig.test:10": {
+      "skip_reason": ""
+    },
+    "onig.test:14": {
+      "skip_reason": ""
+    },
+    "onig.test:23": {
+      "skip_reason": ""
+    },
+    "onig.test:28": {
+      "skip_reason": ""
+    },
+    "onig.test:67": {
+      "skip_reason": ""
+    },
+    "onig.test:71": {
+      "skip_reason": ""
+    },
+    "onig.test:84": {
+      "skip_reason": ""
+    },
+    "onig.test:92": {
+      "skip_reason": ""
+    },
+    "onig.test:100": {
+      "skip_reason": ""
+    },
+    "onig.test:104": {
+      "skip_reason": ""
+    },
+    "onig.test:108": {
+      "skip_reason": ""
+    },
+    "onig.test:112": {
+      "skip_reason": ""
+    },
+    "onig.test:116": {
+      "skip_reason": ""
+    },
+    "onig.test:141": {
+      "skip_reason": ""
+    },
+    "onig.test:145": {
+      "skip_reason": ""
+    },
+    "onig.test:149": {
+      "skip_reason": ""
+    },
+    "onig.test:153": {
+      "skip_reason": ""
+    },
+    "onig.test:157": {
+      "skip_reason": ""
+    },
+    "onig.test:183": {
+      "skip_reason": ""
+    },
+    "jq.test:775": {
+      "skip_reason": ""
+    },
+    "jq.test:780": {
+      "skip_reason": ""
+    },
+    "jq.test:785": {
+      "skip_reason": ""
+    },
+    "jq.test:794": {
+      "skip_reason": ""
+    },
+    "jq.test:799": {
+      "skip_reason": ""
+    },
+    "jq.test:859": {
+      "skip_reason": ""
+    },
+    "jq.test:875": {
+      "skip_reason": ""
+    },
+    "jq.test:1281": {
+      "skip_reason": ""
+    },
+    "jq.test:1285": {
+      "skip_reason": ""
+    },
+    "jq.test:2008": {
+      "skip_reason": ""
+    },
+    "jq.test:2247": {
+      "skip_reason": ""
+    },
+    "man.test:871": {
+      "skip_reason": ""
+    },
+    "man.test:875": {
+      "skip_reason": ""
     }
   }
 }

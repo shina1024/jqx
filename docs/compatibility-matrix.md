@@ -1,6 +1,6 @@
 # jqx Compatibility Matrix (Baseline)
 
-Updated: 2026-02-17
+Updated: 2026-02-19
 
 Scope:
 - Target compatibility: jq 1.7 behavior
@@ -113,9 +113,11 @@ Notes:
 - Differential runners now default `jqx_use_stdin=true` unless explicitly
   overridden per case.
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.
-- Smoke differential currently covers 228 cases (as of 2026-02-17).
+- Importer overrides currently unskip 24 regex cases and 13 core-language
+  cases that now pass differential checks.
+- Smoke differential currently covers 233 cases (as of 2026-02-19).
 - Full upstream differential baseline is currently:
-  total 824 / passed 677 / failed 0 / skipped 147
+  total 824 / passed 732 / failed 0 / skipped 92
   (see `scripts/jq_upstream_failures.snapshot.json` and `docs/upstream-failure-backlog.md`).
 - `expect_error: true` in smoke differential cases compares normalized jq/jqx
   error messages and accepts jqx `moon run` wrapper status behavior.
@@ -124,6 +126,6 @@ Notes:
 ## Next Execution Order
 
 1. Expand differential cases from smoke to feature coverage (builtins/operators/options).
-2. Expand high-priority jq features (broaden update-assignment coverage and add regex family).
+2. Expand high-priority jq features (broaden update-assignment coverage and close remaining regex parity gaps).
 3. Expand Typed lane from scaffold to richer combinators and compile-time TS tests.
 4. Finalize npm-facing JS/TS runtime binding (including Zod adapter import path design).
