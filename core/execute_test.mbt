@@ -739,6 +739,17 @@ test "execute format filter compatibility" {
     err.to_string() == "string (\"QUJDa\") trailing base64 byte found" else {
     fail("expected @base64d trailing byte error")
   }
+  assert_eq(must_execute(parse_filter("@base64d"), must_parse("\"=\"")), [
+    Json::string(""),
+  ])
+  assert_eq(must_execute(parse_filter("@base64d"), must_parse("\"====\"")), [
+    Json::string(""),
+  ])
+  guard (try? execute(parse_filter("@base64d"), must_parse("\"A==\"")))
+    is Err(err) &&
+    err.to_string() == "string (\"A==\") trailing base64 byte found" else {
+    fail("expected @base64d trailing byte error for lax padding")
+  }
   guard (try? execute(parse_filter("@urid"), must_parse("\"%FX%9F%98%8E\"")))
     is Err(err) &&
     err.to_string() == "string (\"%FX%9F%98%8E\") is not a valid uri encoding" else {

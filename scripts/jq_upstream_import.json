@@ -43,7 +43,10 @@
   },
   "overrides": {
     "base64.test:26": {
-      "skip_reason": "unsupported:base64-padding-lax"
+      "skip_reason": ""
+    },
+    "man.test:710": {
+      "skip_reason": ""
     },
     "manonig.test:9": {
       "skip_reason": ""

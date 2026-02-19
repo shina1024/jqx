@@ -450,7 +450,15 @@ fn format_base64_decode(
     chars.push(ch)
   }
   let out = []
-  let len = chars.length()
+  let mut len = chars.length()
+  // jq accepts lax trailing '=' padding, including the degenerate "=" case.
+  for {
+    if len > 0 && chars[len - 1] == '=' {
+      len -= 1
+    } else {
+      break
+    }
+  }
   let full_groups = len / 4
   for g in 0..<full_groups {
     let i = g * 4

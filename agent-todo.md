@@ -38,6 +38,7 @@ Updated: 2026-02-14
 - [x] upstream unknown-variableクラスタを解消する（8→0、`as`スコープ修正+`?//`変数初期化+`$ENV`/`$__loc__`最小互換）
 - [x] upstream runtime-error-vs-jq-success クラスタを解消する（10→0、string `/` 互換・`abs` 互換・`path` 変数束縛追跡）
 - [x] Objectキー順の扱いを安定化する方針を決めて実装する（辞書順正規化で安定化）
+- [x] upstream skip件数を追加で縮小する（92→90、`@base64d` lax padding対応 + `io-control` 誤検知1件をunskip）
 - [ ] エラーメッセージ差分を縮小する（`expect_error` ケース追加は進捗あり、正規化改善を継続）
 - [x] differentialケースを拡張する（`reduce`/`foreach`/`try-catch`/演算の境界系を11件追加、smoke 169→180）
 - [x] differentialケースをさらに拡張する（upstream pass群から `def` 系3件を取り込み、smoke 180→185）
