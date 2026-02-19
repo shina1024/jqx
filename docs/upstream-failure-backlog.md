@@ -11,9 +11,9 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 734
+- passed: 736
 - failed: 0
-- skipped: 90
+- skipped: 88
 
 ## Failure Categories (Current)
 
@@ -33,6 +33,10 @@ From current snapshot (`unknown-function` subset):
 
 ## Latest Progress
 
+- Skip elimination was advanced again while preserving `failed 0`:
+  - added minimal `input` / `debug` compatibility for upstream differential coverage.
+  - unskipped `jq.test:2303` and `jq.test:2307`.
+  - full upstream skip count reduced from `90` to `88`.
 - Skip elimination was advanced while preserving `failed 0`:
   - `@base64d` now accepts lax trailing `=` padding (including `"="`) for jq compatibility.
   - unskipped `base64.test:26` and `man.test:710` (false-positive io-control pattern match).
@@ -47,7 +51,7 @@ From current snapshot (`unknown-function` subset):
 - Differential snapshot writing was fixed for empty-failure runs:
   - `scripts/jq_diff.ps1` now writes `[]` when no failures remain.
 - full upstream diff reached `failed 0`:
-  - total `824` / passed `734` / failed `0` / skipped `90`.
+  - total `824` / passed `736` / failed `0` / skipped `88`.
 
 - Unicode/string index compatibility and stream error parity were expanded:
   - `indices`/`index`/`rindex` string search now uses Unicode codepoint indexing

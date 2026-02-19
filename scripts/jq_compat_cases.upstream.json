@@ -4206,7 +4206,7 @@
     "source_line": 2303,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:io-control"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l2307",
@@ -4216,7 +4216,7 @@
     "source_line": 2307,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:io-control"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l2312",

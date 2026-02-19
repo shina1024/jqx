@@ -153,6 +153,12 @@
     "jq.test:2247": {
       "skip_reason": ""
     },
+    "jq.test:2303": {
+      "skip_reason": ""
+    },
+    "jq.test:2307": {
+      "skip_reason": ""
+    },
     "man.test:871": {
       "skip_reason": ""
     },

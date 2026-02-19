@@ -758,6 +758,22 @@ test "execute format filter compatibility" {
 }
 
 ///|
+test "execute io-control minimal compatibility" {
+  assert_eq(must_execute(parse_filter("debug"), must_parse("1")), [
+    Json::number(1.0),
+    Json::array([Json::string("DEBUG:"), Json::number(1.0)]),
+  ])
+  assert_eq(
+    must_execute(parse_filter("try input catch ."), must_parse("null")),
+    [Json::string("break")],
+  )
+  guard (try? execute(parse_filter("input"), must_parse("null"))) is Err(err) &&
+    err.to_string() == "break" else {
+    fail("expected input EOF break error")
+  }
+}
+
+///|
 test "execute fromjson errors" {
   guard (try? execute(parse_filter("fromjson"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) only strings can be parsed" else {

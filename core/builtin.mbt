@@ -539,17 +539,17 @@ fn format_base64_decode(
 fn builtin_list() -> Array[Json] {
   let names = [
     "abs/0", "add/0", "all/0", "any/0", "ascii_downcase/0", "ascii_upcase/0", "atan/0",
-    "builtins/0", "capture/1", "capture/2", "combinations/0", "cos/0", "endswith/1",
-    "env/0", "error/0", "error/1", "explode/0", "fabs/0", "first/0", "flatten/0",
-    "floor/0", "from_entries/0", "fromdate/0", "fromjson/0", "group_by/1", "gsub/2",
-    "gsub/3", "implode/0", "infinite/0", "inside/1", "isfinite/0", "isinfinite/0",
-    "isempty/0", "isnan/0", "join/1", "keys/0", "last/0", "length/0", "log2/0", "ltrim/0",
-    "map/1", "map_values/1", "match/1", "match/2", "max/0", "min/0", "modulemeta/0",
-    "nan/0", "paths/0", "pow/2", "reverse/0", "round/0", "rtrim/0", "scan/1", "scan/2",
-    "sin/0", "sort/0", "split/1", "split/2", "splits/1", "splits/2", "sqrt/0", "startswith/1",
-    "sub/2", "sub/3", "test/1", "test/2", "to_entries/0", "toboolean/0", "tojson/0",
-    "tonumber/0", "tostream/0", "tostring/0", "utf8bytelength/0", "transpose/0",
-    "trim/0", "type/0", "unique/0", "values/0",
+    "builtins/0", "capture/1", "capture/2", "combinations/0", "cos/0", "debug/0",
+    "endswith/1", "env/0", "error/0", "error/1", "explode/0", "fabs/0", "first/0",
+    "flatten/0", "floor/0", "from_entries/0", "fromdate/0", "fromjson/0", "group_by/1",
+    "gsub/2", "gsub/3", "implode/0", "infinite/0", "input/0", "inside/1", "isfinite/0",
+    "isinfinite/0", "isempty/0", "isnan/0", "join/1", "keys/0", "last/0", "length/0",
+    "log2/0", "ltrim/0", "map/1", "map_values/1", "match/1", "match/2", "max/0",
+    "min/0", "modulemeta/0", "nan/0", "paths/0", "pow/2", "reverse/0", "round/0",
+    "rtrim/0", "scan/1", "scan/2", "sin/0", "sort/0", "split/1", "split/2", "splits/1",
+    "splits/2", "sqrt/0", "startswith/1", "sub/2", "sub/3", "test/1", "test/2", "to_entries/0",
+    "toboolean/0", "tojson/0", "tonumber/0", "tostream/0", "tostring/0", "utf8bytelength/0",
+    "transpose/0", "trim/0", "type/0", "unique/0", "values/0",
   ]
   let out = []
   for name in names {
@@ -705,6 +705,8 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
         String(s) => [Json::string(builtin_trim_ascii_ws(s))]
         _ => raise TypeError("trim input must be a string")
       }
+    "debug" => [input, Json::array([Json::string("DEBUG:"), input])]
+    "input" => raise TypeError("break")
     "ltrim" =>
       match input {
         String(s) => [Json::string(builtin_ltrim_ascii_ws(s))]
