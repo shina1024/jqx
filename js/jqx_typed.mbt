@@ -99,11 +99,61 @@ pub fn eq(
 }
 
 ///|
+pub fn lt(
+  left : Query[@core.Json, @core.Json],
+  right : Query[@core.Json, @core.Json],
+) -> Query[@core.Json, @core.Json] {
+  query_of_filter(@core.Filter::lt(left.filter, right.filter))
+}
+
+///|
+pub fn gt(
+  left : Query[@core.Json, @core.Json],
+  right : Query[@core.Json, @core.Json],
+) -> Query[@core.Json, @core.Json] {
+  query_of_filter(@core.Filter::gt(left.filter, right.filter))
+}
+
+///|
+pub fn and_(
+  left : Query[@core.Json, @core.Json],
+  right : Query[@core.Json, @core.Json],
+) -> Query[@core.Json, @core.Json] {
+  query_of_filter(@core.Filter::and_(left.filter, right.filter))
+}
+
+///|
+pub fn or_(
+  left : Query[@core.Json, @core.Json],
+  right : Query[@core.Json, @core.Json],
+) -> Query[@core.Json, @core.Json] {
+  query_of_filter(@core.Filter::or_(left.filter, right.filter))
+}
+
+///|
+pub fn not_(
+  value : Query[@core.Json, @core.Json],
+) -> Query[@core.Json, @core.Json] {
+  query_of_filter(@core.Filter::not(value.filter))
+}
+
+///|
 pub fn add(
   left : Query[@core.Json, @core.Json],
   right : Query[@core.Json, @core.Json],
 ) -> Query[@core.Json, @core.Json] {
   query_of_filter(@core.Filter::add(left.filter, right.filter))
+}
+
+///|
+pub fn if_else(
+  cond : Query[@core.Json, @core.Json],
+  then_ : Query[@core.Json, @core.Json],
+  else_ : Query[@core.Json, @core.Json],
+) -> Query[@core.Json, @core.Json] {
+  query_of_filter(
+    @core.Filter::if_else(cond.filter, then_.filter, else_.filter),
+  )
 }
 
 ///|

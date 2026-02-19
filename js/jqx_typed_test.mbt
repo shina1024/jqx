@@ -88,3 +88,40 @@ test "typed generic call query" {
   guard out is Ok(values) else { fail("expected Ok") }
   assert_eq(values, ["true"])
 }
+
+///|
+test "typed comparison + select query" {
+  let q = pipe(iter(), select(gt(field("v"), literal(@core.Json::number(1.0)))))
+  let out = runQuery(q, "[{\"v\":1},{\"v\":2},{\"v\":3}]")
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values, ["{\"v\":2}", "{\"v\":3}"])
+}
+
+///|
+test "typed boolean combinator query" {
+  let cond = and_(
+    gt(field("v"), literal(@core.Json::number(1.0))),
+    not_(eq(field("kind"), literal(@core.Json::string("skip")))),
+  )
+  let q = pipe(iter(), pipe(select(cond), field("v")))
+  let out = runQuery(
+    q, "[{\"kind\":\"ok\",\"v\":1},{\"kind\":\"ok\",\"v\":2},{\"kind\":\"skip\",\"v\":3}]",
+  )
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values, ["2"])
+}
+
+///|
+test "typed if_else query" {
+  let q = pipe(
+    iter(),
+    if_else(
+      lt(field("v"), literal(@core.Json::number(2.0))),
+      literal(@core.Json::string("small")),
+      literal(@core.Json::string("large")),
+    ),
+  )
+  let out = runQuery(q, "[{\"v\":1},{\"v\":3}]")
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values, ["\"small\"", "\"large\""])
+}

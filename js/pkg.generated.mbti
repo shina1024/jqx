@@ -8,6 +8,8 @@ import {
 // Values
 pub fn add(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
 
+pub fn and_(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+
 pub fn call(String, Array[Query[@core.Json, @core.Json]]) -> Query[@core.Json, @core.Json]
 
 pub fn comma(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
@@ -26,7 +28,11 @@ pub fn fallback(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) ->
 
 pub fn field(String) -> Query[@core.Json, @core.Json]
 
+pub fn gt(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+
 pub fn identity() -> Query[@core.Json, @core.Json]
+
+pub fn if_else(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
 
 pub fn index(Int) -> Query[@core.Json, @core.Json]
 
@@ -34,7 +40,13 @@ pub fn iter() -> Query[@core.Json, @core.Json]
 
 pub fn literal(@core.Json) -> Query[@core.Json, @core.Json]
 
+pub fn lt(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+
 pub fn map(Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+
+pub fn not_(Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+
+pub fn or_(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
 
 pub fn parseFilter(String) -> @core.Filter raise @core.FilterError
 
