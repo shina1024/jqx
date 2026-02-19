@@ -549,7 +549,8 @@ fn builtin_list() -> Array[Json] {
     "rtrim/0", "scan/1", "scan/2", "sin/0", "sort/0", "split/1", "split/2", "splits/1",
     "splits/2", "sqrt/0", "startswith/1", "sub/2", "sub/3", "test/1", "test/2", "to_entries/0",
     "toboolean/0", "tojson/0", "tonumber/0", "tostream/0", "tostring/0", "utf8bytelength/0",
-    "transpose/0", "trim/0", "type/0", "unique/0", "values/0",
+    "transpose/0", "trim/0", "type/0", "unique/0", "until/2", "values/0", "walk/1",
+    "while/2", "recurse/0", "recurse/1", "recurse/2",
   ]
   let out = []
   for name in names {
@@ -705,7 +706,7 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
         String(s) => [Json::string(builtin_trim_ascii_ws(s))]
         _ => raise TypeError("trim input must be a string")
       }
-    "debug" => [input, Json::array([Json::string("DEBUG:"), input])]
+    "debug" => [Json::array([Json::string("DEBUG:"), input]), input]
     "input" => raise TypeError("break")
     "ltrim" =>
       match input {
@@ -1068,6 +1069,11 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
         JTrue | JFalse =>
           raise TypeError(json_type_with_value(input) + " has no length")
       }
+    "recurse" => {
+      let out = []
+      append_recurse_values(input, out)
+      out
+    }
     _ => raise UnknownFunction(name)
   }
 }

@@ -760,8 +760,8 @@ test "execute format filter compatibility" {
 ///|
 test "execute io-control minimal compatibility" {
   assert_eq(must_execute(parse_filter("debug"), must_parse("1")), [
-    Json::number(1.0),
     Json::array([Json::string("DEBUG:"), Json::number(1.0)]),
+    Json::number(1.0),
   ])
   assert_eq(
     must_execute(parse_filter("try input catch ."), must_parse("null")),
@@ -771,6 +771,73 @@ test "execute io-control minimal compatibility" {
     err.to_string() == "break" else {
     fail("expected input EOF break error")
   }
+}
+
+///|
+test "execute recursion builtins minimal compatibility" {
+  assert_eq(
+    must_execute(parse_filter("[while(.<100; .*2)]"), must_parse("1")),
+    [
+      Json::array([
+        Json::number(1.0),
+        Json::number(2.0),
+        Json::number(4.0),
+        Json::number(8.0),
+        Json::number(16.0),
+        Json::number(32.0),
+        Json::number(64.0),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("[.,1]|until(.[0] < 1; [.[0] - 1, .[1] * .[0]])|.[1]"),
+      must_parse("4"),
+    ),
+    [Json::number(24.0)],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("recurse(.foo[])"),
+      must_parse("{\"foo\":[{\"foo\": []}, {\"foo\":[{\"foo\":[]}]}]}"),
+    ),
+    [
+      must_parse("{\"foo\":[{\"foo\":[]},{\"foo\":[{\"foo\":[]}]}]}"),
+      must_parse("{\"foo\":[]}"),
+      must_parse("{\"foo\":[{\"foo\":[]}]}"),
+      must_parse("{\"foo\":[]}"),
+    ],
+  )
+  assert_eq(
+    must_execute(parse_filter("recurse"), must_parse("{\"a\":0,\"b\":[1]}")),
+    [
+      must_parse("{\"a\":0,\"b\":[1]}"),
+      Json::number(0.0),
+      Json::array([Json::number(1.0)]),
+      Json::number(1.0),
+    ],
+  )
+  assert_eq(
+    must_execute(parse_filter("recurse(. * .; . < 20)"), must_parse("2")),
+    [Json::number(2.0), Json::number(4.0), Json::number(16.0)],
+  )
+  assert_eq(must_execute(parse_filter("walk(.)"), must_parse("{\"x\":0}")), [
+    must_parse("{\"x\":0}"),
+  ])
+  assert_eq(must_execute(parse_filter("walk(1)"), must_parse("{\"x\":0}")), [
+    Json::number(1.0),
+  ])
+  assert_eq(
+    must_execute(parse_filter("[walk(.,1)]"), must_parse("{\"x\":0}")),
+    [Json::array([must_parse("{\"x\":0}"), Json::number(1.0)])],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("walk(select(IN({}, []) | not))"),
+      must_parse("{\"a\":1,\"b\":[]}"),
+    ),
+    [must_parse("{\"a\":1}")],
+  )
 }
 
 ///|
@@ -1140,6 +1207,14 @@ test "execute sub/gsub regex compatibility" {
   )
   assert_eq(
     must_execute(parse_filter("sub(\"z\"; \"X\")"), must_parse("\"ab\"")),
+    [Json::string("ab")],
+  )
+  assert_eq(
+    must_execute(parse_filter("sub(\"^_+\"; \"\")"), must_parse("\"_ab\"")),
+    [Json::string("ab")],
+  )
+  assert_eq(
+    must_execute(parse_filter("sub(\"_+$\"; \"\")"), must_parse("\"ab__\"")),
     [Json::string("ab")],
   )
   assert_eq(

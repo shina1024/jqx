@@ -159,6 +159,45 @@
     "jq.test:2307": {
       "skip_reason": ""
     },
+    "jq.test:311": {
+      "skip_reason": ""
+    },
+    "jq.test:329": {
+      "skip_reason": ""
+    },
+    "jq.test:2382": {
+      "skip_reason": ""
+    },
+    "jq.test:2386": {
+      "skip_reason": ""
+    },
+    "jq.test:2391": {
+      "skip_reason": ""
+    },
+    "jq.test:2396": {
+      "skip_reason": ""
+    },
+    "manonig.test:5": {
+      "skip_reason": ""
+    },
+    "man.test:650": {
+      "skip_reason": ""
+    },
+    "man.test:658": {
+      "skip_reason": ""
+    },
+    "man.test:662": {
+      "skip_reason": ""
+    },
+    "man.test:669": {
+      "skip_reason": ""
+    },
+    "man.test:676": {
+      "skip_reason": ""
+    },
+    "man.test:682": {
+      "skip_reason": ""
+    },
     "man.test:871": {
       "skip_reason": ""
     },

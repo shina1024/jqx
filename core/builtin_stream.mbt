@@ -189,6 +189,113 @@ fn all_with_short_circuit(
 }
 
 ///|
+fn filter_has_truthy_output(
+  filter : Filter,
+  input : Json,
+  env : Map[String, Json],
+) -> Bool raise EvalError {
+  for value in execute_with_env(filter, input, env) {
+    if is_truthy(value) {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn append_while_outputs(
+  value : Json,
+  cond : Filter,
+  update : Filter,
+  env : Map[String, Json],
+  out : Array[Json],
+) -> Unit raise EvalError {
+  for cond_out in execute_with_env(cond, value, env) {
+    if is_truthy(cond_out) {
+      out.push(value)
+      for next in execute_with_env(update, value, env) {
+        append_while_outputs(next, cond, update, env, out)
+      }
+    }
+  }
+}
+
+///|
+fn append_until_outputs(
+  value : Json,
+  cond : Filter,
+  update : Filter,
+  env : Map[String, Json],
+  out : Array[Json],
+) -> Unit raise EvalError {
+  for cond_out in execute_with_env(cond, value, env) {
+    if is_truthy(cond_out) {
+      out.push(value)
+    } else {
+      for next in execute_with_env(update, value, env) {
+        append_until_outputs(next, cond, update, env, out)
+      }
+    }
+  }
+}
+
+///|
+fn append_recurse_outputs(
+  value : Json,
+  next_filter : Filter,
+  cond_filter : Filter?,
+  env : Map[String, Json],
+  out : Array[Json],
+) -> Unit raise EvalError {
+  out.push(value)
+  for next in execute_with_env(next_filter, value, env) {
+    let should_descend = match cond_filter {
+      None => true
+      Some(cond) => filter_has_truthy_output(cond, next, env)
+    }
+    if should_descend {
+      append_recurse_outputs(next, next_filter, cond_filter, env, out)
+    }
+  }
+}
+
+///|
+fn walk_transform(
+  value : Json,
+  transform : Filter,
+  env : Map[String, Json],
+) -> Array[Json] raise EvalError {
+  let descended = match value {
+    Array(items) => {
+      let out = []
+      for item in items {
+        let mapped = walk_transform(item, transform, env)
+        // Keep current evaluator simplification: update-style child transforms
+        // use only the first produced output, and drop empty outputs.
+        if mapped.length() > 0 {
+          out.push(mapped[0])
+        }
+      }
+      Json::array(out)
+    }
+    Object(obj) => {
+      let out = Map::new()
+      let out_order = []
+      for kv in object_entries_sorted(obj) {
+        let mapped = walk_transform(kv.1, transform, env)
+        if mapped.length() > 0 {
+          out_order.push(kv.0)
+          out[kv.0] = mapped[0]
+        }
+      }
+      Json::object_with_order(out, out_order)
+    }
+    _ => value
+  }
+  execute_with_env(transform, descended, env)
+}
+
+///|
 fn builtin_call_stream(
   name : String,
   args : Array[Filter],
@@ -416,6 +523,42 @@ fn builtin_call_stream(
           frontier = next
         }
         Some(out)
+      }
+    "while" =>
+      if args.length() != 2 {
+        raise UnknownFunction("while")
+      } else {
+        let out = []
+        append_while_outputs(input, args[0], args[1], env, out)
+        Some(out)
+      }
+    "until" =>
+      if args.length() != 2 {
+        raise UnknownFunction("until")
+      } else {
+        let out = []
+        append_until_outputs(input, args[0], args[1], env, out)
+        Some(out)
+      }
+    "recurse" =>
+      if args.length() > 2 {
+        raise UnknownFunction("recurse")
+      } else {
+        let next_filter = if args.length() >= 1 {
+          args[0]
+        } else {
+          Filter::iter_opt()
+        }
+        let cond_filter = if args.length() == 2 { Some(args[1]) } else { None }
+        let out = []
+        append_recurse_outputs(input, next_filter, cond_filter, env, out)
+        Some(out)
+      }
+    "walk" =>
+      if args.length() != 1 {
+        raise UnknownFunction("walk")
+      } else {
+        Some(walk_transform(input, args[0], env))
       }
     "any" =>
       if args.length() == 1 {

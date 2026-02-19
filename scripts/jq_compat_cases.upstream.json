@@ -534,7 +534,7 @@
     "source_line": 311,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:recursion"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l315",
@@ -564,7 +564,7 @@
     "source_line": 329,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:recursion"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l333",
@@ -4361,7 +4361,7 @@
     "source_line": 2382,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:recursion"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l2386",
@@ -4371,7 +4371,7 @@
     "source_line": 2386,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:recursion"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l2391",
@@ -4381,7 +4381,7 @@
     "source_line": 2391,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:recursion"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l2396",
@@ -4391,7 +4391,7 @@
     "source_line": 2396,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:recursion"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l2401",
@@ -5284,7 +5284,7 @@
     "source_line": 5,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:recursion"
+    "skip_reason": ""
   },
   {
     "name": "upstream-manonig-test-l9",
@@ -6846,7 +6846,7 @@
     "source_line": 650,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:recursion"
+    "skip_reason": ""
   },
   {
     "name": "upstream-man-test-l654",
@@ -6865,7 +6865,7 @@
     "source_line": 658,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:recursion"
+    "skip_reason": ""
   },
   {
     "name": "upstream-man-test-l662",
@@ -6875,7 +6875,7 @@
     "source_line": 662,
     "source_kind": "runtime",
     "source_expected_count": 4,
-    "skip_reason": "unsupported:recursion"
+    "skip_reason": ""
   },
   {
     "name": "upstream-man-test-l669",
@@ -6885,7 +6885,7 @@
     "source_line": 669,
     "source_kind": "runtime",
     "source_expected_count": 4,
-    "skip_reason": "unsupported:recursion"
+    "skip_reason": ""
   },
   {
     "name": "upstream-man-test-l676",
@@ -6895,7 +6895,7 @@
     "source_line": 676,
     "source_kind": "runtime",
     "source_expected_count": 3,
-    "skip_reason": "unsupported:recursion"
+    "skip_reason": ""
   },
   {
     "name": "upstream-man-test-l682",
@@ -6905,7 +6905,7 @@
     "source_line": 682,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:recursion"
+    "skip_reason": ""
   },
   {
     "name": "upstream-man-test-l686",
