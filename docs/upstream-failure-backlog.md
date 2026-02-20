@@ -15,9 +15,9 @@ Compatibility policy:
 ## Snapshot Summary
 
 - total: 824
-- passed: 814
+- passed: 817
 - failed: 0
-- skipped: 10
+- skipped: 7
 
 ## Failure Categories (Current)
 
@@ -37,6 +37,9 @@ From current snapshot (`unknown-function` subset):
 
 ## Latest Progress
 
+- Extended `def` parameter compatibility (filter-arg substitution + `$param` value binding)
+  and unskipped `jq.test:851`, `jq.test:869`, `jq.test:1236`
+  while preserving `failed 0` (`skip 10 -> 7`).
 - Added minimal `import` / `include` compatibility for missing-module error paths
   and unskipped `jq.test:1870`, `jq.test:1874`, `jq.test:1878`,
   `jq.test:1882`, `jq.test:1887`, `jq.test:1891`, `jq.test:1895`,

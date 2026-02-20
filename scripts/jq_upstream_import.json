@@ -293,7 +293,13 @@
     "jq.test:799": {
       "skip_reason": ""
     },
+    "jq.test:851": {
+      "skip_reason": ""
+    },
     "jq.test:859": {
+      "skip_reason": ""
+    },
+    "jq.test:869": {
       "skip_reason": ""
     },
     "jq.test:875": {
@@ -303,6 +309,9 @@
       "skip_reason": ""
     },
     "jq.test:1285": {
+      "skip_reason": ""
+    },
+    "jq.test:1236": {
       "skip_reason": ""
     },
     "jq.test:2008": {

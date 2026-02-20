@@ -1497,7 +1497,7 @@
     "source_line": 851,
     "source_kind": "runtime",
     "source_expected_count": 4,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l859",
@@ -1527,7 +1527,7 @@
     "source_line": 869,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l875",
@@ -2183,7 +2183,7 @@
     "source_line": 1236,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1241",

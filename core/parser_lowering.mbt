@@ -667,145 +667,178 @@ fn lower_filter_with_defs(
 }
 
 ///|
-fn lower_filter_param_refs(filter : Filter, params : Array[String]) -> Filter {
+fn def_param_is_value(param : String) -> Bool {
+  param.length() > 0 && param.unsafe_get(0).to_int().unsafe_to_char() == '$'
+}
+
+///|
+fn def_param_name(param : String) -> String {
+  if def_param_is_value(param) {
+    param.view(start_offset=1).to_string()
+  } else {
+    param
+  }
+}
+
+///|
+fn find_filter_param_arg(
+  params : Array[String],
+  args : Array[Filter],
+  name : String,
+) -> Filter? {
+  for i in 0..<params.length() {
+    if !def_param_is_value(params[i]) && def_param_name(params[i]) == name {
+      return Some(args[i])
+    }
+  }
+  None
+}
+
+///|
+fn lower_filter_param_refs(
+  filter : Filter,
+  params : Array[String],
+  args : Array[Filter],
+) -> Filter {
   match filter {
     Builtin(name) =>
-      if params.contains(name) {
-        Filter::var_(name)
-      } else {
-        filter
+      match find_filter_param_arg(params, args, name) {
+        Some(arg) => arg
+        None => filter
       }
-    Call(name, args) =>
-      if params.contains(name) && args.length() == 0 {
-        Filter::var_(name)
-      } else {
-        Filter::call(
-          name,
-          args.map(arg => lower_filter_param_refs(arg, params)),
-        )
+    Call(name, call_args) => {
+      let lowered_args = call_args.map(arg => {
+        lower_filter_param_refs(arg, params, args)
+      })
+      match find_filter_param_arg(params, args, name) {
+        Some(arg) if call_args.length() == 0 => arg
+        _ => Filter::call(name, lowered_args)
       }
+    }
     Pipe(left, right) =>
       Filter::pipe(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     Comma(left, right) =>
       Filter::comma(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     Array(items) =>
-      Filter::Array(items.map(item => lower_filter_param_refs(item, params)))
+      Filter::Array(
+        items.map(item => lower_filter_param_refs(item, params, args)),
+      )
     Object(items) =>
       Filter::Object(
-        items.map(kv => (kv.0, lower_filter_param_refs(kv.1, params))),
+        items.map(kv => (kv.0, lower_filter_param_refs(kv.1, params, args))),
       )
     As(value, name, body) =>
       Filter::as_(
-        lower_filter_param_refs(value, params),
+        lower_filter_param_refs(value, params, args),
         name,
-        lower_filter_param_refs(body, params),
+        lower_filter_param_refs(body, params, args),
       )
     Label(name, body) =>
-      Filter::label(name, lower_filter_param_refs(body, params))
+      Filter::label(name, lower_filter_param_refs(body, params, args))
     Break(_) => filter
-    Try(inner) => Filter::try_(lower_filter_param_refs(inner, params))
+    Try(inner) => Filter::try_(lower_filter_param_refs(inner, params, args))
     TryCatch(inner, handler) =>
       Filter::try_catch(
-        lower_filter_param_refs(inner, params),
-        lower_filter_param_refs(handler, params),
+        lower_filter_param_refs(inner, params, args),
+        lower_filter_param_refs(handler, params, args),
       )
     Reduce(source, name, init, update) =>
       Filter::reduce(
-        lower_filter_param_refs(source, params),
+        lower_filter_param_refs(source, params, args),
         name,
-        lower_filter_param_refs(init, params),
-        lower_filter_param_refs(update, params),
+        lower_filter_param_refs(init, params, args),
+        lower_filter_param_refs(update, params, args),
       )
     Foreach(source, name, init, update, extract) =>
       Filter::foreach(
-        lower_filter_param_refs(source, params),
+        lower_filter_param_refs(source, params, args),
         name,
-        lower_filter_param_refs(init, params),
-        lower_filter_param_refs(update, params),
-        lower_filter_param_refs(extract, params),
+        lower_filter_param_refs(init, params, args),
+        lower_filter_param_refs(update, params, args),
+        lower_filter_param_refs(extract, params, args),
       )
     Eq(left, right) =>
       Filter::eq(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     Neq(left, right) =>
       Filter::neq(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     Lt(left, right) =>
       Filter::lt(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     Lte(left, right) =>
       Filter::lte(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     Gt(left, right) =>
       Filter::gt(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     Gte(left, right) =>
       Filter::gte(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     And(left, right) =>
       Filter::and_(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     Or(left, right) =>
       Filter::or_(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
-    Not(inner) => Filter::not(lower_filter_param_refs(inner, params))
+    Not(inner) => Filter::not(lower_filter_param_refs(inner, params, args))
     Add(left, right) =>
       Filter::add(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     Sub(left, right) =>
       Filter::sub(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     Mul(left, right) =>
       Filter::mul(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     Div(left, right) =>
       Filter::div(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     Mod(left, right) =>
       Filter::mod_(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     IfElse(cond, then_branch, else_branch) =>
       Filter::if_else(
-        lower_filter_param_refs(cond, params),
-        lower_filter_param_refs(then_branch, params),
-        lower_filter_param_refs(else_branch, params),
+        lower_filter_param_refs(cond, params, args),
+        lower_filter_param_refs(then_branch, params, args),
+        lower_filter_param_refs(else_branch, params, args),
       )
     Fallback(left, right) =>
       Filter::fallback(
-        lower_filter_param_refs(left, params),
-        lower_filter_param_refs(right, params),
+        lower_filter_param_refs(left, params, args),
+        lower_filter_param_refs(right, params, args),
       )
     _ => filter
   }
@@ -817,10 +850,13 @@ fn lower_filter_def_call(
   params : Array[String],
   args : Array[Filter],
 ) -> Filter {
-  let mut out = lower_filter_param_refs(body, params)
+  let mut out = lower_filter_param_refs(body, params, args)
   for i in 0..<params.length() {
     let idx = params.length() - 1 - i
-    out = Filter::as_(args[idx], params[idx], out)
+    let param = params[idx]
+    if def_param_is_value(param) {
+      out = Filter::as_(args[idx], def_param_name(param), out)
+    }
   }
   out
 }
@@ -953,13 +989,17 @@ fn FilterCursor::parse_definition_prefix(
       let params = []
       for {
         ctx.skip_ws()
-        let name = if ctx.peek_char() is Some('$') {
+        let (name, is_value_param) = if ctx.peek_char() is Some('$') {
           ctx.read_char() |> ignore
-          ctx.parse_identifier()
+          (ctx.parse_identifier(), true)
         } else {
-          ctx.parse_identifier()
+          (ctx.parse_identifier(), false)
         }
-        params.push(name)
+        if is_value_param {
+          params.push("$" + name)
+        } else {
+          params.push(name)
+        }
         ctx.skip_ws()
         match ctx.peek_char() {
           Some(';') => {
