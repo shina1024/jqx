@@ -201,6 +201,12 @@ test "parse literals" {
   guard (try? parse_filter("(@uri|@urid)")) is Ok(_) else {
     fail("expected format filter parse")
   }
+  guard (try? parse_filter("@html \"<b>\\(.)</b>\"")) is Ok(_) else {
+    fail("expected @html format string parse")
+  }
+  guard (try? parse_filter("@sh \"echo \\(.)\"")) is Ok(_) else {
+    fail("expected @sh format string parse")
+  }
   guard (try? parse_filter(".00005")) is Ok(_) else {
     fail("expected leading-dot number literal parse")
   }

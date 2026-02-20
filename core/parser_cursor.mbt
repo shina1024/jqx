@@ -372,6 +372,86 @@ fn FilterCursor::parse_string_expr(
 }
 
 ///|
+/// Parse jq format-string expression used by `@name "..."`.
+/// Literal segments are kept raw; only interpolated `\(... )` segments
+/// are piped through the selected format filter.
+fn FilterCursor::parse_format_string_expr(
+  ctx : FilterCursor,
+  format_filter_name : String,
+) -> Filter raise FilterError {
+  ctx.skip_ws()
+  match ctx.read_char() {
+    Some('\"') => ()
+    Some(_) => ctx.invalid_char(shift=-1)
+    None => raise InvalidEof
+  }
+
+  let mut text = StringBuilder::new()
+  let parts = []
+  fn flush_text() {
+    let s = text.to_string()
+    if s.length() > 0 {
+      parts.push(Filter::literal(Json::string(s)))
+      text = StringBuilder::new()
+    }
+  }
+
+  for {
+    match ctx.read_char() {
+      Some('\"') => {
+        flush_text()
+        break
+      }
+      Some('\n' | '\r') => ctx.invalid_char(shift=-1)
+      Some('\\') =>
+        match ctx.read_char() {
+          Some('(') => {
+            flush_text()
+            let inner = ctx.parse_comma()
+            ctx.skip_ws()
+            match ctx.read_char() {
+              Some(')') => ()
+              Some(_) => ctx.invalid_char(shift=-1)
+              None => raise InvalidEof
+            }
+            parts.push(Filter::pipe(inner, Filter::builtin(format_filter_name)))
+          }
+          Some('b') => text.write_char('\b')
+          Some('f') => text.write_char('\u{0C}')
+          Some('n') => text.write_char('\n')
+          Some('r') => text.write_char('\r')
+          Some('t') => text.write_char('\t')
+          Some('\"') => text.write_char('\"')
+          Some('\\') => text.write_char('\\')
+          Some('/') => text.write_char('/')
+          Some('u') => {
+            let c = ctx.parse_hex_digits(4)
+            text.write_char(c.unsafe_to_char())
+          }
+          Some(_) => ctx.invalid_char(shift=-1)
+          None => raise InvalidEof
+        }
+      Some(ch) =>
+        if ch.to_int() < 32 {
+          ctx.invalid_char(shift=-1)
+        } else {
+          text.write_char(ch)
+        }
+      None => raise InvalidEof
+    }
+  }
+
+  if parts.length() == 0 {
+    return Filter::literal(Json::string(""))
+  }
+  let mut out = parts[0]
+  for i in 1..<parts.length() {
+    out = Filter::add(out, parts[i])
+  }
+  out
+}
+
+///|
 fn filter_string_literal_value(filter : Filter) -> String? {
   match filter {
     Literal(String(s)) => Some(s)

@@ -1,11 +1,16 @@
 # jqx Compatibility Matrix (Baseline)
 
-Updated: 2026-02-19
+Updated: 2026-02-20
 
 Scope:
 - Target compatibility: jq 1.7 behavior
 - Differential baseline used in this repo: jq 1.8.1 (local)
 - Source of truth for behavior: `core/parser.mbt`, `core/execute.mbt`, `core/builtin*.mbt`
+
+Policy:
+- Aim for full jq compatibility (eventual zero-skip upstream differential).
+- Do not relax compatibility checks by default (no ad-hoc skip widening or permissive error matching).
+- When a temporary exception is unavoidable, document scope and removal condition explicitly.
 
 Legend:
 - `supported`: implemented and covered by tests

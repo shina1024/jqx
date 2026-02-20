@@ -716,6 +716,26 @@ test "execute tojson/fromjson compatibility" {
 ///|
 test "execute format filter compatibility" {
   assert_eq(
+    must_execute(
+      parse_filter(
+        "@text,@json,([1,.]|@csv,@tsv),@html,(@uri|.,@urid),@sh,(@base64|.,@base64d)",
+      ),
+      must_parse("\"!()<>&'\\\"\\t\""),
+    ),
+    [
+      Json::string("!()<>&'\"\t"),
+      Json::string("\"!()<>&'\\\"\\t\""),
+      Json::string("1,\"!()<>&'\"\"\t\""),
+      Json::string("1\t!()<>&'\"\\t"),
+      Json::string("!()&lt;&gt;&amp;&apos;&quot;\t"),
+      Json::string("%21%28%29%3C%3E%26%27%22%09"),
+      Json::string("!()<>&'\"\t"),
+      Json::string("'!()<>&'\\''\"\t'"),
+      Json::string("ISgpPD4mJyIJ"),
+      Json::string("!()<>&'\"\t"),
+    ],
+  )
+  assert_eq(
     must_execute(parse_filter("(@uri|@urid)"), must_parse("\"<>&'\\\"\\t\"")),
     [Json::string("<>&'\"\t")],
   )
@@ -725,6 +745,20 @@ test "execute format filter compatibility" {
       must_parse("\"<>&'\\\"\\t\""),
     ),
     [Json::string("<>&'\"\t")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("@html \"<b>\\(.)</b>\""),
+      must_parse("\"<script>hax</script>\""),
+    ),
+    [Json::string("<b>&lt;script&gt;hax&lt;/script&gt;</b>")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("@sh \"echo \\(.)\""),
+      must_parse("\"O'Hara's Ale\""),
+    ),
+    [Json::string("echo 'O'\\''Hara'\\''s Ale'")],
   )
   guard (try? execute(
       parse_filter("@base64d"),
@@ -760,8 +794,8 @@ test "execute format filter compatibility" {
 ///|
 test "execute io-control minimal compatibility" {
   assert_eq(must_execute(parse_filter("debug"), must_parse("1")), [
-    Json::array([Json::string("DEBUG:"), Json::number(1.0)]),
     Json::number(1.0),
+    Json::array([Json::string("DEBUG:"), Json::number(1.0)]),
   ])
   assert_eq(
     must_execute(parse_filter("try input catch ."), must_parse("null")),

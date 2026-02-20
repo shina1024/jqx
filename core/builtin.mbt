@@ -177,6 +177,136 @@ fn format_filter_string_type_with_preview(s : String) -> String {
 }
 
 ///|
+fn format_html_escape(input : String) -> String {
+  let buf = StringBuilder::new()
+  for ch in input {
+    if ch == '<' {
+      buf.write_string("&lt;")
+    } else if ch == '>' {
+      buf.write_string("&gt;")
+    } else if ch == '&' {
+      buf.write_string("&amp;")
+    } else if ch.to_int() == 39 {
+      buf.write_string("&apos;")
+    } else if ch == '\"' {
+      buf.write_string("&quot;")
+    } else {
+      buf.write_char(ch)
+    }
+  }
+  buf.to_string()
+}
+
+///|
+fn format_sh_quote(input : String) -> String {
+  let squote = (39).unsafe_to_char()
+  let buf = StringBuilder::new()
+  buf.write_char(squote)
+  for ch in input {
+    if ch.to_int() == 39 {
+      buf.write_char(squote)
+      buf.write_char('\\')
+      buf.write_char(squote)
+      buf.write_char(squote)
+    } else {
+      buf.write_char(ch)
+    }
+  }
+  buf.write_char(squote)
+  buf.to_string()
+}
+
+///|
+fn format_csv_field_string(input : String) -> String {
+  let buf = StringBuilder::new()
+  buf.write_char('\"')
+  for ch in input {
+    if ch == '\"' {
+      buf.write_string("\"\"")
+    } else {
+      buf.write_char(ch)
+    }
+  }
+  buf.write_char('\"')
+  buf.to_string()
+}
+
+///|
+fn format_csv_scalar(value : Json) -> String raise EvalError {
+  match value {
+    JNull => ""
+    String(s) => format_csv_field_string(s)
+    Number(_, _) | JTrue | JFalse => value.to_json_string()
+    _ =>
+      raise TypeError("@csv only supports null, booleans, numbers, and strings")
+  }
+}
+
+///|
+fn format_tsv_escape(input : String) -> String {
+  let buf = StringBuilder::new()
+  for ch in input {
+    if ch == '\\' {
+      buf.write_string("\\\\")
+    } else if ch == '\t' {
+      buf.write_string("\\t")
+    } else if ch == '\r' {
+      buf.write_string("\\r")
+    } else if ch == '\n' {
+      buf.write_string("\\n")
+    } else {
+      buf.write_char(ch)
+    }
+  }
+  buf.to_string()
+}
+
+///|
+fn format_tsv_scalar(value : Json) -> String raise EvalError {
+  match value {
+    JNull => ""
+    String(s) => format_tsv_escape(s)
+    Number(_, _) | JTrue | JFalse => value.to_json_string()
+    _ =>
+      raise TypeError("@tsv only supports null, booleans, numbers, and strings")
+  }
+}
+
+///|
+fn format_csv_row(input : Json) -> String raise EvalError {
+  match input {
+    Array(items) => {
+      let buf = StringBuilder::new()
+      for i in 0..<items.length() {
+        if i > 0 {
+          buf.write_char(',')
+        }
+        buf.write_string(format_csv_scalar(items[i]))
+      }
+      buf.to_string()
+    }
+    _ => raise TypeError("@csv input must be an array")
+  }
+}
+
+///|
+fn format_tsv_row(input : Json) -> String raise EvalError {
+  match input {
+    Array(items) => {
+      let buf = StringBuilder::new()
+      for i in 0..<items.length() {
+        if i > 0 {
+          buf.write_char('\t')
+        }
+        buf.write_string(format_tsv_scalar(items[i]))
+      }
+      buf.to_string()
+    }
+    _ => raise TypeError("@tsv input must be an array")
+  }
+}
+
+///|
 fn hex_upper_digit(d : Int) -> Char {
   if d < 10 {
     (d + '0'.to_int()).unsafe_to_char()
@@ -538,19 +668,20 @@ fn format_base64_decode(
 ///|
 fn builtin_list() -> Array[Json] {
   let names = [
-    "abs/0", "add/0", "all/0", "any/0", "ascii_downcase/0", "ascii_upcase/0", "atan/0",
-    "builtins/0", "capture/1", "capture/2", "combinations/0", "cos/0", "debug/0",
-    "endswith/1", "env/0", "error/0", "error/1", "explode/0", "fabs/0", "first/0",
-    "flatten/0", "floor/0", "from_entries/0", "fromdate/0", "fromjson/0", "group_by/1",
-    "gsub/2", "gsub/3", "implode/0", "infinite/0", "input/0", "inside/1", "isfinite/0",
-    "isinfinite/0", "isempty/0", "isnan/0", "join/1", "keys/0", "last/0", "length/0",
-    "log2/0", "ltrim/0", "map/1", "map_values/1", "match/1", "match/2", "max/0",
-    "min/0", "modulemeta/0", "nan/0", "paths/0", "pow/2", "reverse/0", "round/0",
-    "rtrim/0", "scan/1", "scan/2", "sin/0", "sort/0", "split/1", "split/2", "splits/1",
-    "splits/2", "sqrt/0", "startswith/1", "sub/2", "sub/3", "test/1", "test/2", "to_entries/0",
-    "toboolean/0", "tojson/0", "tonumber/0", "tostream/0", "tostring/0", "utf8bytelength/0",
-    "transpose/0", "trim/0", "type/0", "unique/0", "until/2", "values/0", "walk/1",
-    "while/2", "recurse/0", "recurse/1", "recurse/2",
+    "@base64/0", "@base64d/0", "@csv/0", "@html/0", "@json/0", "@sh/0", "@text/0",
+    "@tsv/0", "@uri/0", "@urid/0", "abs/0", "add/0", "all/0", "any/0", "ascii_downcase/0",
+    "ascii_upcase/0", "atan/0", "builtins/0", "capture/1", "capture/2", "combinations/0",
+    "cos/0", "debug/0", "endswith/1", "env/0", "error/0", "error/1", "explode/0",
+    "fabs/0", "first/0", "flatten/0", "floor/0", "from_entries/0", "fromdate/0",
+    "fromjson/0", "group_by/1", "gsub/2", "gsub/3", "implode/0", "infinite/0", "input/0",
+    "inside/1", "isfinite/0", "isinfinite/0", "isempty/0", "isnan/0", "join/1", "keys/0",
+    "last/0", "length/0", "log2/0", "ltrim/0", "map/1", "map_values/1", "match/1",
+    "match/2", "max/0", "min/0", "modulemeta/0", "nan/0", "paths/0", "pow/2", "reverse/0",
+    "round/0", "rtrim/0", "scan/1", "scan/2", "sin/0", "sort/0", "split/1", "split/2",
+    "splits/1", "splits/2", "sqrt/0", "startswith/1", "sub/2", "sub/3", "test/1",
+    "test/2", "to_entries/0", "toboolean/0", "tojson/0", "tonumber/0", "tostream/0",
+    "tostring/0", "utf8bytelength/0", "transpose/0", "trim/0", "type/0", "unique/0",
+    "until/2", "values/0", "walk/1", "while/2", "recurse/0", "recurse/1", "recurse/2",
   ]
   let out = []
   for name in names {
@@ -706,7 +837,7 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
         String(s) => [Json::string(builtin_trim_ascii_ws(s))]
         _ => raise TypeError("trim input must be a string")
       }
-    "debug" => [Json::array([Json::string("DEBUG:"), input]), input]
+    "debug" => [input, Json::array([Json::string("DEBUG:"), input])]
     "input" => raise TypeError("break")
     "ltrim" =>
       match input {
@@ -841,6 +972,13 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
         Number(n, _) => [Json::string(Json::number(n).to_json_string())]
         _ => [Json::string(input.to_json_string())]
       }
+    "@text" => [Json::string(format_filter_input_string(input))]
+    "@json" => [Json::string(input.to_json_string())]
+    "@csv" => [Json::string(format_csv_row(input))]
+    "@tsv" => [Json::string(format_tsv_row(input))]
+    "@html" =>
+      [Json::string(format_html_escape(format_filter_input_string(input)))]
+    "@sh" => [Json::string(format_sh_quote(format_filter_input_string(input)))]
     "@uri" =>
       [Json::string(format_uri_encode(format_filter_input_string(input)))]
     "@urid" => {

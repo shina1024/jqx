@@ -117,8 +117,7 @@
     "source_file": "jq.test",
     "source_line": 72,
     "source_kind": "runtime",
-    "source_expected_count": 10,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 10
   },
   {
     "name": "upstream-jq-test-l86",
@@ -163,8 +162,7 @@
     "source_file": "jq.test",
     "source_line": 102,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l106",
@@ -7005,8 +7003,7 @@
     "source_file": "man.test",
     "source_line": 726,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-man-test-l730",
@@ -7015,8 +7012,7 @@
     "source_file": "man.test",
     "source_line": 730,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": "unsupported:format-filter"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-man-test-l734",

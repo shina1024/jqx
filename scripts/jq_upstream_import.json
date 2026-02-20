@@ -12,10 +12,6 @@
   "include_compile_fail": false,
   "skip_program_patterns": [
     {
-      "pattern": "(^|[^A-Za-z0-9_])@(text|json|csv|tsv|html|sh)(\\b|$)",
-      "reason": "unsupported:format-filter"
-    },
-    {
       "pattern": "\\b(def|label|break|module|import|include)\\b",
       "reason": "unsupported:core-language"
     },

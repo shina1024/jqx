@@ -95,6 +95,75 @@ function Normalize-ErrorMessage {
   return $normalized
 }
 
+function Split-OutputLines {
+  param([string]$Text)
+
+  if ([string]::IsNullOrEmpty($Text)) {
+    return @()
+  }
+  return @($Text -split "`r?`n")
+}
+
+function Normalize-ErrorLines {
+  param([string[]]$Lines)
+
+  if ($null -eq $Lines -or $Lines.Count -eq 0) {
+    return ""
+  }
+  $normalized = @()
+  foreach ($line in $Lines) {
+    $normalized += (Normalize-ErrorMessage $line)
+  }
+  return ($normalized -join "`n").Trim()
+}
+
+function Classify-RunOutput {
+  param(
+    [string]$StdoutText,
+    [string]$StderrText
+  )
+
+  $valueLines = @()
+  $debugLines = @()
+  $errorLines = @()
+  $stderrOtherLines = @()
+
+  foreach ($line in (Split-OutputLines $StdoutText)) {
+    if ($line -match '^\["DEBUG:",') {
+      $debugLines += $line
+      continue
+    }
+    if ($line -match '^jqx?: error') {
+      $errorLines += $line
+      continue
+    }
+    $valueLines += $line
+  }
+
+  foreach ($line in (Split-OutputLines $StderrText)) {
+    if ($line -match '^\["DEBUG:",') {
+      $debugLines += $line
+      continue
+    }
+    if ($line -match '^jqx?: error') {
+      $errorLines += $line
+      continue
+    }
+    if ($line -ne "") {
+      $stderrOtherLines += $line
+    }
+  }
+
+  return [PSCustomObject]@{
+    ValueText = ($valueLines -join "`n")
+    DebugText = ($debugLines -join "`n")
+    ErrorText = (Normalize-ErrorLines $errorLines)
+    HasErrorLine = ($errorLines.Count -gt 0)
+    StderrOtherText = ($stderrOtherLines -join "`n")
+    MergedText = @($valueLines + $debugLines + $errorLines + $stderrOtherLines) -join "`n"
+  }
+}
+
 function Convert-FilterForJqx {
   param([string]$Filter)
 
@@ -162,15 +231,21 @@ function Invoke-NativeCapture {
     $PSNativeCommandUseErrorActionPreference = $false
   }
   $ErrorActionPreference = "Continue"
+  $stderrPath = [System.IO.Path]::GetTempFileName()
   try {
     if ($UseStdin) {
-      $raw = $Stdin | & $Exe @CmdArgs 2>&1
+      $stdout = $Stdin | & $Exe @CmdArgs 2> $stderrPath
     } else {
-      $raw = & $Exe @CmdArgs 2>&1
+      $stdout = & $Exe @CmdArgs 2> $stderrPath
+    }
+    $stderr = ""
+    if (Test-Path $stderrPath) {
+      $stderr = Get-Content -Raw -Path $stderrPath
     }
     $status = $LASTEXITCODE
     return [PSCustomObject]@{
-      Raw = $raw
+      Stdout = $stdout
+      Stderr = $stderr
       Status = $status
     }
   } finally {
@@ -178,6 +253,7 @@ function Invoke-NativeCapture {
     if ($hasNativeErrorPreference) {
       $PSNativeCommandUseErrorActionPreference = $prevNativeErrorPreference
     }
+    Remove-Item -Path $stderrPath -ErrorAction SilentlyContinue
   }
 }
 
@@ -215,7 +291,9 @@ try {
     -Exe $resolvedMoon `
     -CmdArgs @("run", "--target", "native", "cmd", "--", ".", "null")
   if ($warmup.Status -ne 0) {
-    throw "failed to warm up jqx command via moon run: $(Normalize-Output $warmup.Raw)"
+    $warmupStdout = Normalize-Output $warmup.Stdout
+    $warmupStderr = Normalize-Output $warmup.Stderr
+    throw "failed to warm up jqx command via moon run: stdout=[$warmupStdout] stderr=[$warmupStderr]"
   }
 
   $total = 0
@@ -271,7 +349,9 @@ try {
       -Stdin $input `
       -UseStdin
     $jqStatus = $jqRun.Status
-    $jqOut = Normalize-Output $jqRun.Raw
+    $jqStdout = Normalize-Output $jqRun.Stdout
+    $jqStderr = Normalize-Output $jqRun.Stderr
+    $jqClass = Classify-RunOutput -StdoutText $jqStdout -StderrText $jqStderr
 
     $jqxFilter = Convert-FilterForJqx -Filter $filter
     $jqxCmd = @("run", "--target", "native", "cmd", "--") + $jqxArgs + @($jqxFilter)
@@ -287,33 +367,63 @@ try {
         -CmdArgs ($jqxCmd + @($input))
     }
     $jqxStatus = $jqxRun.Status
-    $jqxOut = Normalize-Output $jqxRun.Raw
+    $jqxStdout = Normalize-Output $jqxRun.Stdout
+    $jqxStderr = Normalize-Output $jqxRun.Stderr
+    $jqxClass = Classify-RunOutput -StdoutText $jqxStdout -StderrText $jqxStderr
 
     $ok = $false
     if ($expectError) {
-      $jqMessage = Normalize-ErrorMessage $jqOut
-      $jqxMessage = Normalize-ErrorMessage $jqxOut
-      $jqHasError = $jqStatus -ne 0 -or $jqOut.StartsWith("jq: error")
-      $jqxHasError = $jqxStatus -ne 0 -or $jqxOut.StartsWith("jqx: error")
+      $jqMessage = $jqClass.ErrorText
+      $jqxMessage = $jqxClass.ErrorText
+      $jqHasError = $jqStatus -ne 0 -or $jqClass.HasErrorLine
+      $jqxHasError = $jqxStatus -ne 0 -or $jqxClass.HasErrorLine
       if ($expectErrorMode -eq "any" -or $expectErrorMode -eq "ignore_msg") {
-        if ($jqHasError -and $jqxHasError) {
+        if (
+          $jqHasError -and $jqxHasError -and
+          $jqClass.ValueText -eq $jqxClass.ValueText -and
+          $jqClass.DebugText -eq $jqxClass.DebugText -and
+          $jqClass.StderrOtherText -eq $jqxClass.StderrOtherText
+        ) {
           $ok = $true
         }
-      } elseif ($jqHasError -and $jqxHasError -and $jqMessage -eq $jqxMessage) {
+      } elseif (
+        $jqHasError -and $jqxHasError -and
+        $jqMessage -eq $jqxMessage -and
+        $jqClass.ValueText -eq $jqxClass.ValueText -and
+        $jqClass.DebugText -eq $jqxClass.DebugText -and
+        $jqClass.StderrOtherText -eq $jqxClass.StderrOtherText
+      ) {
         $ok = $true
       }
     } elseif ($null -ne $expectStatus) {
-      if ($jqStatus -eq $expectStatus -and $jqxStatus -eq $expectStatus -and $jqOut -eq $jqxOut) {
+      if (
+        $jqStatus -eq $expectStatus -and $jqxStatus -eq $expectStatus -and
+        $jqClass.ValueText -eq $jqxClass.ValueText -and
+        $jqClass.DebugText -eq $jqxClass.DebugText -and
+        $jqClass.ErrorText -eq $jqxClass.ErrorText -and
+        $jqClass.StderrOtherText -eq $jqxClass.StderrOtherText
+      ) {
         $ok = $true
       }
     } else {
-      if ($jqStatus -eq 0 -and $jqxStatus -eq 0 -and $jqOut -eq $jqxOut) {
+      if (
+        $jqStatus -eq 0 -and $jqxStatus -eq 0 -and
+        $jqClass.ValueText -eq $jqxClass.ValueText -and
+        $jqClass.DebugText -eq $jqxClass.DebugText -and
+        $jqClass.ErrorText -eq $jqxClass.ErrorText -and
+        $jqClass.StderrOtherText -eq $jqxClass.StderrOtherText
+      ) {
         $ok = $true
       } elseif ($jqStatus -ne 0) {
-        $jqMessage = Normalize-ErrorMessage $jqOut
-        $jqxMessage = Normalize-ErrorMessage $jqxOut
-        $jqxHasError = $jqxStatus -ne 0 -or $jqxOut.StartsWith("jqx: error")
-        if ($jqxHasError -and $jqMessage -eq $jqxMessage) {
+        $jqMessage = $jqClass.ErrorText
+        $jqxMessage = $jqxClass.ErrorText
+        $jqxHasError = $jqxStatus -ne 0 -or $jqxClass.HasErrorLine
+        if (
+          $jqxHasError -and $jqMessage -eq $jqxMessage -and
+          $jqClass.ValueText -eq $jqxClass.ValueText -and
+          $jqClass.DebugText -eq $jqxClass.DebugText -and
+          $jqClass.StderrOtherText -eq $jqxClass.StderrOtherText
+        ) {
           $ok = $true
         }
       }
@@ -324,13 +434,19 @@ try {
       Write-Host "[PASS] $name"
     } else {
       $failed += 1
+      $jqMergedOut = $jqClass.MergedText
+      $jqxMergedOut = $jqxClass.MergedText
       $failureRecords += [PSCustomObject]@{
         name = $name
-        category = Classify-Failure -JqStatus $jqStatus -JqxStatus $jqxStatus -JqOut $jqOut -JqxOut $jqxOut
+        category = Classify-Failure -JqStatus $jqStatus -JqxStatus $jqxStatus -JqOut $jqMergedOut -JqxOut $jqxMergedOut
         jq_status = [string]$jqStatus
         jqx_status = [string]$jqxStatus
-        jq_out = $jqOut
-        jqx_out = $jqxOut
+        jq_out = $jqMergedOut
+        jqx_out = $jqxMergedOut
+        jq_stdout = $jqStdout
+        jq_stderr = $jqStderr
+        jqx_stdout = $jqxStdout
+        jqx_stderr = $jqxStderr
       }
       Write-Host "[FAIL] $name"
       Write-Host "  filter: $filter"
@@ -338,8 +454,8 @@ try {
       if ($expectError) {
         Write-Host "  expect_error_mode=$expectErrorMode"
       }
-      Write-Host "  jq status=$jqStatus output=$jqOut"
-      Write-Host "  jqx status=$jqxStatus output=$jqxOut"
+      Write-Host "  jq status=$jqStatus stdout=$jqStdout stderr=$jqStderr"
+      Write-Host "  jqx status=$jqxStatus stdout=$jqxStdout stderr=$jqxStderr"
     }
   }
 
