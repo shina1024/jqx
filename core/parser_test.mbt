@@ -224,10 +224,9 @@ test "parse builtin" {
 
 ///|
 test "parse def no-arg minimal" {
-  inspect(
-    parse_filter("def inc: . + 1; . | inc"),
-    content="Pipe(Identity, Add(Identity, Literal(Number(1))))",
-  )
+  guard (try? parse_filter("def inc: . + 1; . | inc")) is Ok(_) else {
+    fail("expected simple no-arg def parse")
+  }
   guard (try? parse_filter("def inc: . + 1; def twice: inc | inc; . | twice"))
     is Ok(_) else {
     fail("expected chained no-arg def parse")

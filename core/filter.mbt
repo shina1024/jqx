@@ -15,6 +15,7 @@
 ///|
 pub enum Filter {
   Identity
+  Scope(Array[(String, Array[String], Filter)], Filter)
   Pipe(Filter, Filter)
   Comma(Filter, Filter)
   Field(String)
@@ -61,6 +62,14 @@ pub enum Filter {
 ///|
 pub fn Filter::identity() -> Filter {
   Identity
+}
+
+///|
+pub fn Filter::scope(
+  defs : Array[(String, Array[String], Filter)],
+  body : Filter,
+) -> Filter {
+  Scope(defs, body)
 }
 
 ///|

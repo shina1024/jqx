@@ -186,9 +186,447 @@ fn parse_fromjson_string(s : String) -> Json raise EvalError {
 }
 
 ///|
+priv struct RuntimeDef {
+  name : String
+  params : Array[String]
+  body : Filter
+  parent : RuntimeDef?
+}
+
+///|
+priv struct RuntimeDefState {
+  mut current : RuntimeDef?
+}
+
+///|
+let runtime_def_state : RuntimeDefState = { current: None }
+
+///|
+priv struct RuntimeFilterClosure {
+  name : String
+  arg : Filter
+  env : Map[String, Json]
+  defs : RuntimeDef?
+  closures : RuntimeFilterClosure?
+  parent : RuntimeFilterClosure?
+}
+
+///|
+priv struct RuntimeFilterClosureState {
+  mut current : RuntimeFilterClosure?
+  mut next_id : Int
+}
+
+///|
+let runtime_filter_closure_state : RuntimeFilterClosureState = {
+  current: None,
+  next_id: 0,
+}
+
+///|
+fn append_runtime_defs(
+  parent : RuntimeDef?,
+  defs : Array[(String, Array[String], Filter)],
+) -> RuntimeDef? {
+  let mut out = parent
+  for def_ in defs {
+    out = Some({ name: def_.0, params: def_.1, body: def_.2, parent: out })
+  }
+  out
+}
+
+///|
+fn find_runtime_def(
+  scope : RuntimeDef?,
+  name : String,
+  arity : Int,
+) -> RuntimeDef? {
+  let mut current = scope
+  for {
+    match current {
+      Some(def_) =>
+        if def_.name == name && def_.params.length() == arity {
+          return Some(def_)
+        } else {
+          current = def_.parent
+          continue
+        }
+      None => break
+    }
+  }
+  None
+}
+
+///|
+fn collect_runtime_defs(
+  scope : RuntimeDef?,
+) -> Array[(String, Array[String], Filter)] {
+  let rev_defs = []
+  let mut current = scope
+  for {
+    match current {
+      Some(def_) => {
+        rev_defs.push((def_.name, def_.params, def_.body))
+        current = def_.parent
+      }
+      None => break
+    }
+  }
+  let out = []
+  for i in 0..<rev_defs.length() {
+    let idx = rev_defs.length() - 1 - i
+    out.push(rev_defs[idx])
+  }
+  out
+}
+
+///|
+fn lower_scope_defs_with_runtime_context(
+  defs : Array[(String, Array[String], Filter)],
+) -> Array[(String, Array[String], Filter)] {
+  let available = collect_runtime_defs(runtime_def_state.current)
+  let lowered = []
+  for def_ in defs {
+    let lowered_body = lower_filter_with_defs(def_.2, available)
+    let lowered_def = (def_.0, def_.1, lowered_body)
+    lowered.push(lowered_def)
+    available.push(lowered_def)
+  }
+  lowered
+}
+
+///|
+fn filter_references_name(filter : Filter, name : String) -> Bool {
+  match filter {
+    Builtin(n) => n == name
+    Call(n, args) =>
+      if n == name && args.length() == 0 {
+        true
+      } else {
+        for arg in args {
+          if filter_references_name(arg, name) {
+            return true
+          }
+        }
+        false
+      }
+    Pipe(left, right)
+    | Comma(left, right)
+    | Eq(left, right)
+    | Neq(left, right)
+    | Lt(left, right)
+    | Lte(left, right)
+    | Gt(left, right)
+    | Gte(left, right)
+    | And(left, right)
+    | Or(left, right)
+    | Add(left, right)
+    | Sub(left, right)
+    | Mul(left, right)
+    | Div(left, right)
+    | Mod(left, right)
+    | Fallback(left, right) =>
+      filter_references_name(left, name) || filter_references_name(right, name)
+    Not(inner) | Try(inner) => filter_references_name(inner, name)
+    TryCatch(inner, handler) =>
+      filter_references_name(inner, name) ||
+      filter_references_name(handler, name)
+    As(value, _, body) =>
+      filter_references_name(value, name) || filter_references_name(body, name)
+    Label(_, body) => filter_references_name(body, name)
+    Reduce(source, _, init, update) =>
+      filter_references_name(source, name) ||
+      filter_references_name(init, name) ||
+      filter_references_name(update, name)
+    Foreach(source, _, init, update, extract) =>
+      filter_references_name(source, name) ||
+      filter_references_name(init, name) ||
+      filter_references_name(update, name) ||
+      filter_references_name(extract, name)
+    Array(items) => {
+      for item in items {
+        if filter_references_name(item, name) {
+          return true
+        }
+      }
+      false
+    }
+    Object(items) => {
+      for item in items {
+        if filter_references_name(item.1, name) {
+          return true
+        }
+      }
+      false
+    }
+    IfElse(cond, then_branch, else_branch) =>
+      filter_references_name(cond, name) ||
+      filter_references_name(then_branch, name) ||
+      filter_references_name(else_branch, name)
+    Scope(local_defs, body) => {
+      for def_ in local_defs {
+        if def_.0 == name {
+          return false
+        }
+      }
+      for def_ in local_defs {
+        if filter_references_name(def_.2, name) {
+          return true
+        }
+      }
+      filter_references_name(body, name)
+    }
+    _ => false
+  }
+}
+
+///|
+fn filter_param_needs_direct_inline(filter : Filter, name : String) -> Bool {
+  match filter {
+    Call("path", args) =>
+      if args.length() == 1 {
+        match args[0] {
+          Builtin(n) if n == name => true
+          Call(n, call_args) if n == name && call_args.length() == 0 => true
+          _ => filter_param_needs_direct_inline(args[0], name)
+        }
+      } else {
+        false
+      }
+    Pipe(left, right)
+    | Comma(left, right)
+    | Eq(left, right)
+    | Neq(left, right)
+    | Lt(left, right)
+    | Lte(left, right)
+    | Gt(left, right)
+    | Gte(left, right)
+    | And(left, right)
+    | Or(left, right)
+    | Add(left, right)
+    | Sub(left, right)
+    | Mul(left, right)
+    | Div(left, right)
+    | Mod(left, right)
+    | Fallback(left, right) =>
+      filter_param_needs_direct_inline(left, name) ||
+      filter_param_needs_direct_inline(right, name)
+    Not(inner) | Try(inner) => filter_param_needs_direct_inline(inner, name)
+    TryCatch(inner, handler) =>
+      filter_param_needs_direct_inline(inner, name) ||
+      filter_param_needs_direct_inline(handler, name)
+    As(value, _, body) =>
+      filter_param_needs_direct_inline(value, name) ||
+      filter_param_needs_direct_inline(body, name)
+    Label(_, body) => filter_param_needs_direct_inline(body, name)
+    Reduce(source, _, init, update) =>
+      filter_param_needs_direct_inline(source, name) ||
+      filter_param_needs_direct_inline(init, name) ||
+      filter_param_needs_direct_inline(update, name)
+    Foreach(source, _, init, update, extract) =>
+      filter_param_needs_direct_inline(source, name) ||
+      filter_param_needs_direct_inline(init, name) ||
+      filter_param_needs_direct_inline(update, name) ||
+      filter_param_needs_direct_inline(extract, name)
+    Array(items) => {
+      for item in items {
+        if filter_param_needs_direct_inline(item, name) {
+          return true
+        }
+      }
+      false
+    }
+    Object(items) => {
+      for item in items {
+        if filter_param_needs_direct_inline(item.1, name) {
+          return true
+        }
+      }
+      false
+    }
+    IfElse(cond, then_branch, else_branch) =>
+      filter_param_needs_direct_inline(cond, name) ||
+      filter_param_needs_direct_inline(then_branch, name) ||
+      filter_param_needs_direct_inline(else_branch, name)
+    Scope(local_defs, body) => {
+      for def_ in local_defs {
+        if filter_param_needs_direct_inline(def_.2, name) {
+          return true
+        }
+      }
+      filter_param_needs_direct_inline(body, name)
+    }
+    Call(_, args) => {
+      for arg in args {
+        if filter_param_needs_direct_inline(arg, name) {
+          return true
+        }
+      }
+      false
+    }
+    _ => false
+  }
+}
+
+///|
+fn clone_runtime_env(env : Map[String, Json]) -> Map[String, Json] {
+  let out = Map::new()
+  for kv in env {
+    out[kv.0] = kv.1
+  }
+  out
+}
+
+///|
+fn fresh_runtime_filter_closure_name() -> String {
+  let id = runtime_filter_closure_state.next_id
+  runtime_filter_closure_state.next_id += 1
+  "__jqx_filter_param_" + id.to_string()
+}
+
+///|
+priv struct RuntimeFilterClosureSeed {
+  name : String
+  arg : Filter
+  env : Map[String, Json]
+  defs : RuntimeDef?
+  closures : RuntimeFilterClosure?
+}
+
+///|
+fn append_runtime_filter_closures(
+  parent : RuntimeFilterClosure?,
+  seeds : Array[RuntimeFilterClosureSeed],
+) -> RuntimeFilterClosure? {
+  let mut out = parent
+  for seed in seeds {
+    out = Some({
+      name: seed.name,
+      arg: seed.arg,
+      env: seed.env,
+      defs: seed.defs,
+      closures: seed.closures,
+      parent: out,
+    })
+  }
+  out
+}
+
+///|
+fn find_runtime_filter_closure(
+  scope : RuntimeFilterClosure?,
+  name : String,
+) -> RuntimeFilterClosure? {
+  let mut current = scope
+  for {
+    match current {
+      Some(closure) =>
+        if closure.name == name {
+          return Some(closure)
+        } else {
+          current = closure.parent
+          continue
+        }
+      None => break
+    }
+  }
+  None
+}
+
+///|
+fn execute_runtime_filter_closure(
+  closure : RuntimeFilterClosure,
+  input : Json,
+) -> Array[Json] raise EvalError {
+  let prev_defs = runtime_def_state.current
+  let prev_closures = runtime_filter_closure_state.current
+  runtime_def_state.current = closure.defs
+  runtime_filter_closure_state.current = closure.closures
+  try
+    execute_with_env(closure.arg, input, clone_runtime_env(closure.env))
+  catch {
+    err => {
+      runtime_def_state.current = prev_defs
+      runtime_filter_closure_state.current = prev_closures
+      raise err
+    }
+  } noraise {
+    values => {
+      runtime_def_state.current = prev_defs
+      runtime_filter_closure_state.current = prev_closures
+      values
+    }
+  }
+}
+
+///|
+fn execute_runtime_def_call(
+  def_ : RuntimeDef,
+  args : Array[Filter],
+  input : Json,
+  env : Map[String, Json],
+) -> Array[Json] raise EvalError {
+  let closure_args = []
+  let closure_seeds = []
+  for i in 0..<def_.params.length() {
+    let param = def_.params[i]
+    if def_param_is_value(param) {
+      closure_args.push(args[i])
+    } else if filter_param_needs_direct_inline(def_.body, def_param_name(param)) {
+      closure_args.push(args[i])
+    } else {
+      let closure_name = fresh_runtime_filter_closure_name()
+      closure_args.push(Filter::builtin(closure_name))
+      closure_seeds.push({
+        name: closure_name,
+        arg: args[i],
+        env: clone_runtime_env(env),
+        defs: runtime_def_state.current,
+        closures: runtime_filter_closure_state.current,
+      })
+    }
+  }
+
+  let expanded = lower_filter_def_call(def_.body, def_.params, closure_args)
+
+  let prev_closures = runtime_filter_closure_state.current
+  runtime_filter_closure_state.current = append_runtime_filter_closures(
+    runtime_filter_closure_state.current,
+    closure_seeds,
+  )
+  try execute_with_env(expanded, input, env) catch {
+    err => {
+      runtime_filter_closure_state.current = prev_closures
+      raise err
+    }
+  } noraise {
+    values => {
+      runtime_filter_closure_state.current = prev_closures
+      values
+    }
+  }
+}
+
+///|
 pub fn execute(filter : Filter, input : Json) -> Array[Json] raise EvalError {
   let env = Map::new()
-  execute_with_env(filter, input, env)
+  let prev_defs = runtime_def_state.current
+  let prev_closures = runtime_filter_closure_state.current
+  runtime_def_state.current = None
+  runtime_filter_closure_state.current = None
+  try execute_with_env(filter, input, env) catch {
+    err => {
+      runtime_def_state.current = prev_defs
+      runtime_filter_closure_state.current = prev_closures
+      raise err
+    }
+  } noraise {
+    values => {
+      runtime_def_state.current = prev_defs
+      runtime_filter_closure_state.current = prev_closures
+      values
+    }
+  }
 }
 
 ///|
@@ -208,6 +646,36 @@ fn execute_with_env(
 ) -> Array[Json] raise EvalError {
   match filter {
     Identity => [input]
+    Scope(defs, body) => {
+      let prev_defs = runtime_def_state.current
+      let lowered_defs = lower_scope_defs_with_runtime_context(defs)
+      let non_recursive_defs = []
+      for def_ in lowered_defs {
+        if !filter_references_name(def_.2, def_.0) {
+          non_recursive_defs.push(def_)
+        }
+      }
+      let lowered_body = if non_recursive_defs.length() == 0 {
+        body
+      } else {
+        lower_filter_with_defs(body, non_recursive_defs)
+      }
+      runtime_def_state.current = append_runtime_defs(
+        runtime_def_state.current,
+        lowered_defs,
+      )
+      try execute_with_env(lowered_body, input, env) catch {
+        err => {
+          runtime_def_state.current = prev_defs
+          raise err
+        }
+      } noraise {
+        values => {
+          runtime_def_state.current = prev_defs
+          values
+        }
+      }
+    }
     Literal(v) => [v]
     Field(name) =>
       match input {
@@ -510,8 +978,28 @@ fn execute_with_env(
       }
       out
     }
-    Builtin(name) => builtin_call0(name, input)
-    Call(name, args) => builtin_call(name, args, input, env)
+    Builtin(name) =>
+      match
+        find_runtime_filter_closure(runtime_filter_closure_state.current, name) {
+        Some(closure) => execute_runtime_filter_closure(closure, input)
+        None =>
+          match find_runtime_def(runtime_def_state.current, name, 0) {
+            Some(def_) => execute_runtime_def_call(def_, [], input, env)
+            None => builtin_call0(name, input)
+          }
+      }
+    Call(name, args) =>
+      match
+        find_runtime_filter_closure(runtime_filter_closure_state.current, name) {
+        Some(closure) if args.length() == 0 =>
+          execute_runtime_filter_closure(closure, input)
+        _ =>
+          match
+            find_runtime_def(runtime_def_state.current, name, args.length()) {
+            Some(def_) => execute_runtime_def_call(def_, args, input, env)
+            None => builtin_call(name, args, input, env)
+          }
+      }
     Eq(left, right) => {
       let l = execute_with_env(left, input, env)
       let r = execute_with_env(right, input, env)

@@ -287,6 +287,9 @@
     "jq.test:785": {
       "skip_reason": ""
     },
+    "jq.test:789": {
+      "skip_reason": ""
+    },
     "jq.test:794": {
       "skip_reason": ""
     },
@@ -299,10 +302,16 @@
     "jq.test:859": {
       "skip_reason": ""
     },
+    "jq.test:864": {
+      "skip_reason": ""
+    },
     "jq.test:869": {
       "skip_reason": ""
     },
     "jq.test:875": {
+      "skip_reason": ""
+    },
+    "jq.test:880": {
       "skip_reason": ""
     },
     "jq.test:1281": {
@@ -390,6 +399,12 @@
       "skip_reason": ""
     },
     "man.test:875": {
+      "skip_reason": ""
+    },
+    "man.test:945": {
+      "skip_reason": ""
+    },
+    "man.test:952": {
       "skip_reason": ""
     }
   }

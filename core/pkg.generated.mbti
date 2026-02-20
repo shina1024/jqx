@@ -53,6 +53,7 @@ pub impl Show for ParseError
 // Types and methods
 pub enum Filter {
   Identity
+  Scope(Array[(String, Array[String], Filter)], Filter)
   Pipe(Filter, Filter)
   Comma(Filter, Filter)
   Field(String)
@@ -129,6 +130,7 @@ pub fn Filter::or_(Self, Self) -> Self
 pub fn Filter::pipe(Self, Self) -> Self
 pub fn Filter::recurse() -> Self
 pub fn Filter::reduce(Self, String, Self, Self) -> Self
+pub fn Filter::scope(Array[(String, Array[String], Self)], Self) -> Self
 pub fn Filter::slice(Int?, Int?) -> Self
 pub fn Filter::slice_opt(Int?, Int?) -> Self
 pub fn Filter::sub(Self, Self) -> Self

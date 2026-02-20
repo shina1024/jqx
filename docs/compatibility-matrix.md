@@ -30,7 +30,7 @@ Legend:
 | Control flow | supported | `if ... then ... else ... end`, `empty`, `//` |
 | Reduce / foreach | supported | minimal stream semantics |
 | Arithmetic / compare / logic | supported | `+ - * / %`, `== != < <= > >=`, `and or not` |
-| User-defined functions (`def`) | partial | parser now supports local/nested `def` placement and arity-aware resolution; filter引数（`def f(x): ...`）の置換セマンティクスを拡張し一部 upstream 互換を解消。再帰・完全なクロージャ互換は継続課題 |
+| User-defined functions (`def`) | partial | local/nested `def` + arity-aware runtime resolution; recursion and filter-arg closure capture are implemented for upstream-covered cases (including `jq.test:789/864/880`, `man.test:945/952`). Remaining edge semantics outside current differential coverage are tracked incrementally |
 | Labels / break | partial | `label $name | ...` と `break $name` の最小互換を実装（upstream `jq.test:315/319/333/2251` を通過）。追加の網羅ケースは継続 |
 | Module system (`import`/`include`) | partial | 実モジュール読み込みは未実装だが、`import`/`include` prefix を解釈して `module not found: <name>` の最小互換エラーを返す |
 | Update assignment (`=`, `|=`, `+=`, `-=`, `*=`, `/=`, `%=`, `//=`) | partial | minimal lowering via `setpath(getpath(...))` for static path LHS (`.foo`, `.[n]`, `.a.b`, `.a.[1]`) |
@@ -119,12 +119,12 @@ Notes:
 - Differential runners now default `jqx_use_stdin=true` unless explicitly
   overridden per case.
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.
-- Importer overrides currently unskip 29 regex cases, 30 core-language cases,
+- Importer overrides currently unskip 29 regex cases, 35 core-language cases,
   14 time-builtin cases, 3 io-control cases (1 false positive + 2 minimal-compat
   cases), and 1 base64-padding case.
 - Smoke differential currently covers 233 cases (as of 2026-02-19).
 - Full upstream differential baseline is currently:
-  total 824 / passed 817 / failed 0 / skipped 7
+  total 824 / passed 822 / failed 0 / skipped 2
   (see `scripts/jq_upstream_failures.snapshot.json` and `docs/upstream-failure-backlog.md`).
 - `expect_error: true` in smoke differential cases compares normalized jq/jqx
   error messages and accepts jqx `moon run` wrapper status behavior.

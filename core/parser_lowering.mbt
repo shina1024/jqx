@@ -516,6 +516,17 @@ fn lower_filter_with_defs(
     | IndexOpt(_)
     | Slice(_, _)
     | SliceOpt(_, _) => filter
+    Scope(local_defs, body) => {
+      let lowered_locals = []
+      let available = defs.copy()
+      for def_ in local_defs {
+        let lowered_body = lower_filter_with_defs(def_.2, available)
+        let lowered_def = (def_.0, def_.1, lowered_body)
+        lowered_locals.push(lowered_def)
+        available.push(lowered_def)
+      }
+      Filter::scope(lowered_locals, body)
+    }
     Pipe(left, right) =>
       Filter::pipe(
         lower_filter_with_defs(left, defs),
@@ -544,17 +555,18 @@ fn lower_filter_with_defs(
       }
     Call(name, args) => {
       let lowered_args = args.map(f => lower_filter_with_defs(f, defs))
-      match find_filter_definition_arity(defs, name, lowered_args.length()) {
-        Some((params, replaced)) =>
-          if params.length() == lowered_args.length() {
-            lower_filter_with_defs(
-              lower_filter_def_call(replaced, params, lowered_args),
-              defs,
-            )
-          } else {
-            Filter::call(name, lowered_args)
-          }
-        None => Filter::call(name, lowered_args)
+      if lowered_args.length() == 0 {
+        match find_filter_definition_arity(defs, name, 0) {
+          Some((params, replaced)) =>
+            if params.length() == 0 {
+              lower_filter_with_defs(replaced, defs)
+            } else {
+              Filter::call(name, lowered_args)
+            }
+          None => Filter::call(name, lowered_args)
+        }
+      } else {
+        Filter::call(name, lowered_args)
       }
     }
     As(value, name, body) =>
@@ -701,6 +713,13 @@ fn lower_filter_param_refs(
   args : Array[Filter],
 ) -> Filter {
   match filter {
+    Scope(local_defs, body) =>
+      Filter::scope(
+        local_defs.map(def_ => {
+          (def_.0, def_.1, lower_filter_param_refs(def_.2, params, args))
+        }),
+        lower_filter_param_refs(body, params, args),
+      )
     Builtin(name) =>
       match find_filter_param_arg(params, args, name) {
         Some(arg) => arg
@@ -1092,6 +1111,6 @@ fn FilterCursor::parse_scoped(
     raw_filter
   } else {
     let lowered_defs = lower_definition_sequence(defs)
-    lower_filter_with_defs(raw_filter, lowered_defs)
+    Filter::scope(lowered_defs, raw_filter)
   }
 }

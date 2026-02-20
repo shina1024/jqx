@@ -15,9 +15,14 @@ Compatibility policy:
 ## Snapshot Summary
 
 - total: 824
-- passed: 817
+- passed: 822
 - failed: 0
-- skipped: 7
+- skipped: 2
+
+Remaining skips:
+- `upstream-jq-test-l1821` (`strftime("%A, %B %d, %Y")`)
+- `upstream-optional-test-l9` (`strftime("%A, %B %e, %Y")`)
+- reason: locale-dependent `%A` / `%B` rendering parity on native targets
 
 ## Failure Categories (Current)
 
@@ -37,6 +42,9 @@ From current snapshot (`unknown-function` subset):
 
 ## Latest Progress
 
+- Extended `def` compatibility with runtime-scoped resolution and filter-arg closure capture,
+  and unskipped `jq.test:789`, `jq.test:864`, `jq.test:880`,
+  `man.test:945`, `man.test:952` while preserving `failed 0` (`skip 7 -> 2`).
 - Extended `def` parameter compatibility (filter-arg substitution + `$param` value binding)
   and unskipped `jq.test:851`, `jq.test:869`, `jq.test:1236`
   while preserving `failed 0` (`skip 10 -> 7`).

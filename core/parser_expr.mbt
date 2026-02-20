@@ -379,7 +379,7 @@ fn FilterCursor::parse_pipe_scoped(
     raw_filter
   } else {
     let lowered_defs = lower_definition_sequence(defs)
-    lower_filter_with_defs(raw_filter, lowered_defs)
+    Filter::scope(lowered_defs, raw_filter)
   }
 }
 
