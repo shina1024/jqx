@@ -2037,6 +2037,19 @@ test "execute range/limit/skip/IN compatibility" {
       }),
     ],
   )
+  assert_eq(
+    must_execute(
+      parse_filter(
+        "JOIN({\"0\":[0,\"abc\"],\"1\":[1,\"bcd\"],\"2\":[2,\"def\"],\"3\":[3,\"efg\"],\"4\":[4,\"fgh\"]}; .[0]|tostring)",
+      ),
+      must_parse("[[5,\"foo\"],[3,\"bar\"],[1,\"foobar\"]]"),
+    ),
+    [
+      must_parse(
+        "[[[5,\"foo\"],null],[[3,\"bar\"],[3,\"efg\"]],[[1,\"foobar\"],[1,\"bcd\"]]]",
+      ),
+    ],
+  )
 }
 
 ///|

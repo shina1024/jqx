@@ -281,6 +281,9 @@
     "jq.test:2008": {
       "skip_reason": ""
     },
+    "jq.test:2059": {
+      "skip_reason": ""
+    },
     "jq.test:2247": {
       "skip_reason": ""
     },

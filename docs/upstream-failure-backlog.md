@@ -11,9 +11,9 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 800
+- passed: 801
 - failed: 0
-- skipped: 24
+- skipped: 23
 
 ## Failure Categories (Current)
 
@@ -33,6 +33,8 @@ From current snapshot (`unknown-function` subset):
 
 ## Latest Progress
 
+- Added minimal `JOIN/2` compatibility and unskipped `jq.test:2059`
+  while preserving `failed 0` (`skip 24 -> 23`).
 - Regex compatibility was expanded without relaxing diff strictness:
   - fixed combining-mark word-boundary handling and top-level positive lookahead
     for upstream regex behavior.

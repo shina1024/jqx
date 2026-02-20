@@ -116,6 +116,39 @@ fn builtin_call_collection(
         }
         Some([Json::object_with_order(out, out_order)])
       }
+    "JOIN" =>
+      if args.length() != 2 {
+        raise UnknownFunction("JOIN")
+      } else {
+        let indices = execute_with_env(args[0], input, env)
+        let rows = match input {
+          Array(items) => items
+          _ => [input]
+        }
+        let key_filter = args[1]
+        let out = []
+        for index_value in indices {
+          match index_value {
+            Object(index_obj) => {
+              let joined = []
+              for row in rows {
+                let keys = execute_with_env(key_filter, row, env)
+                for key in keys {
+                  let object_key = index_object_key(key)
+                  let value = match index_obj.get(object_key) {
+                    Some(v) => v
+                    None => Json::null()
+                  }
+                  joined.push(Json::array([row, value]))
+                }
+              }
+              out.push(Json::array(joined))
+            }
+            _ => raise TypeError("JOIN/2 index must be an object")
+          }
+        }
+        Some(out)
+      }
     "sort_by" =>
       if args.length() != 1 {
         raise UnknownFunction("sort_by")

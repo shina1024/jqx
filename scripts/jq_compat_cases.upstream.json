@@ -3790,7 +3790,7 @@
     "source_line": 2059,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l2063",
