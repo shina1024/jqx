@@ -117,6 +117,15 @@ function Normalize-ErrorLines {
   return ($normalized -join "`n").Trim()
 }
 
+function Is-CompilerSummaryLine {
+  param([string]$Line)
+
+  if ($null -eq $Line) {
+    return $false
+  }
+  return $Line -match '^jqx?:\s*[0-9]+\s+compile error(s)?$'
+}
+
 function Classify-RunOutput {
   param(
     [string]$StdoutText,
@@ -129,6 +138,9 @@ function Classify-RunOutput {
   $stderrOtherLines = @()
 
   foreach ($line in (Split-OutputLines $StdoutText)) {
+    if (Is-CompilerSummaryLine $line) {
+      continue
+    }
     if ($line -match '^\["DEBUG:",') {
       $debugLines += $line
       continue
@@ -141,6 +153,9 @@ function Classify-RunOutput {
   }
 
   foreach ($line in (Split-OutputLines $StderrText)) {
+    if (Is-CompilerSummaryLine $line) {
+      continue
+    }
     if ($line -match '^\["DEBUG:",') {
       $debugLines += $line
       continue

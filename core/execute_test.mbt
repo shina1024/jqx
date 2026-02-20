@@ -273,6 +273,26 @@ test "execute def no-arg minimal" {
 }
 
 ///|
+test "execute import/include missing module compatibility" {
+  guard (try? execute(
+      parse_filter("import \"a\" as foo; foo::a"),
+      must_parse("null"),
+    ))
+    is Err(err) &&
+    err.to_string() == "module not found: a" else {
+    fail("expected missing module error for import")
+  }
+  guard (try? execute(
+      parse_filter("include \"shadow1\"; include \"shadow2\"; e"),
+      must_parse("null"),
+    ))
+    is Err(err) &&
+    err.to_string() == "module not found: shadow2" else {
+    fail("expected missing module error for include")
+  }
+}
+
+///|
 test "execute first/last/nth compatibility" {
   let arr = must_parse("[1,2,3]")
   assert_eq(must_execute(parse_filter("first"), arr), [Json::number(1.0)])

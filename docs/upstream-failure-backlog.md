@@ -15,9 +15,9 @@ Compatibility policy:
 ## Snapshot Summary
 
 - total: 824
-- passed: 805
+- passed: 814
 - failed: 0
-- skipped: 19
+- skipped: 10
 
 ## Failure Categories (Current)
 
@@ -37,6 +37,11 @@ From current snapshot (`unknown-function` subset):
 
 ## Latest Progress
 
+- Added minimal `import` / `include` compatibility for missing-module error paths
+  and unskipped `jq.test:1870`, `jq.test:1874`, `jq.test:1878`,
+  `jq.test:1882`, `jq.test:1887`, `jq.test:1891`, `jq.test:1895`,
+  `jq.test:1899`, `jq.test:1963` while preserving `failed 0`
+  (`skip 19 -> 10`).
 - Added minimal `label` / `break` compatibility and unskipped
   `jq.test:315`, `jq.test:319`, `jq.test:333`, `jq.test:2251`
   while preserving `failed 0` (`skip 23 -> 19`).

@@ -54,6 +54,7 @@ resolve_moon_bin() {
 normalize_error_message() {
   local text="$1"
   printf '%s' "${text}" | sed -E \
+    -e '/^jqx?:[[:space:]]*[0-9]+[[:space:]]+compile error(s)?$/d' \
     -e 's/^jq: error( \(at <stdin>:[0-9:]+\))?:[[:space:]]*//' \
     -e 's/^jqx: error( \(at <stdin>:[0-9:]+\))?:[[:space:]]*//'
 }

@@ -996,10 +996,56 @@ fn FilterCursor::parse_definition_prefix(
 }
 
 ///|
+fn FilterCursor::parse_module_prefix(
+  ctx : FilterCursor,
+) -> String? raise FilterError {
+  let mut missing_module : String? = None
+  for {
+    ctx.skip_ws()
+    if ctx.try_keyword("import") {
+      ctx.skip_ws()
+      let module_name = ctx.parse_string_literal()
+      missing_module = Some(module_name)
+      ctx.skip_ws()
+      if !ctx.try_keyword("as") {
+        ctx.invalid_char()
+      }
+      ctx.skip_ws()
+      if ctx.peek_char() is Some('$') {
+        ctx.read_char() |> ignore
+      }
+      ctx.parse_identifier() |> ignore
+      ctx.skip_ws()
+      ctx.expect_char(';')
+      continue
+    }
+    if ctx.try_keyword("include") {
+      ctx.skip_ws()
+      let module_name = ctx.parse_string_literal()
+      missing_module = Some(module_name)
+      ctx.skip_ws()
+      ctx.expect_char(';')
+      continue
+    }
+    break
+  }
+  missing_module
+}
+
+///|
 fn FilterCursor::parse_scoped(
   ctx : FilterCursor,
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
+  match ctx.parse_module_prefix() {
+    Some(module_name) => {
+      ctx.offset = ctx.end_offset
+      return Filter::call("error", [
+        Filter::literal(Json::string("module not found: " + module_name)),
+      ])
+    }
+    None => ()
+  }
   let defs = ctx.parse_definition_prefix()
   let raw_filter = ctx.parse_comma(allow_as~)
   if defs.length() == 0 {

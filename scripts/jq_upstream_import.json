@@ -251,6 +251,33 @@
     "jq.test:1865": {
       "skip_reason": ""
     },
+    "jq.test:1870": {
+      "skip_reason": ""
+    },
+    "jq.test:1874": {
+      "skip_reason": ""
+    },
+    "jq.test:1878": {
+      "skip_reason": ""
+    },
+    "jq.test:1882": {
+      "skip_reason": ""
+    },
+    "jq.test:1887": {
+      "skip_reason": ""
+    },
+    "jq.test:1891": {
+      "skip_reason": ""
+    },
+    "jq.test:1895": {
+      "skip_reason": ""
+    },
+    "jq.test:1899": {
+      "skip_reason": ""
+    },
+    "jq.test:1963": {
+      "skip_reason": ""
+    },
     "jq.test:2514": {
       "skip_reason": ""
     },
