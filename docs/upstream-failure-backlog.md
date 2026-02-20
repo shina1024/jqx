@@ -15,14 +15,9 @@ Compatibility policy:
 ## Snapshot Summary
 
 - total: 824
-- passed: 822
+- passed: 824
 - failed: 0
-- skipped: 2
-
-Remaining skips:
-- `upstream-jq-test-l1821` (`strftime("%A, %B %d, %Y")`)
-- `upstream-optional-test-l9` (`strftime("%A, %B %e, %Y")`)
-- reason: locale-dependent `%A` / `%B` rendering parity on native targets
+- skipped: 0
 
 ## Failure Categories (Current)
 
@@ -42,6 +37,9 @@ From current snapshot (`unknown-function` subset):
 
 ## Latest Progress
 
+- Added native `strftime` locale bridge for `%A`/`%B` patterns with jq-aligned
+  lossy UTF-8 decoding behavior on native targets, and unskipped
+  `jq.test:1821` / `optional.test:9` (`skip 2 -> 0`, `failed 0` preserved).
 - Extended `def` compatibility with runtime-scoped resolution and filter-arg closure capture,
   and unskipped `jq.test:789`, `jq.test:864`, `jq.test:880`,
   `man.test:945`, `man.test:952` while preserving `failed 0` (`skip 7 -> 2`).

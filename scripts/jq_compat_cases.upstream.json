@@ -3402,7 +3402,7 @@
     "source_line": 1821,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1825",
@@ -4797,7 +4797,7 @@
     "source_line": 9,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l2",

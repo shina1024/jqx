@@ -421,6 +421,34 @@ fn format_two_digits_space(n : Int) -> String {
 }
 
 ///|
+fn pattern_uses_locale_day_or_month_name(pattern : String) -> Bool {
+  let mut i = 0
+  for {
+    if i >= pattern.length() {
+      break
+    }
+    let ch = pattern.unsafe_get(i).to_int().unsafe_to_char()
+    if ch != '%' {
+      i += 1
+      continue
+    }
+    if i + 1 >= pattern.length() {
+      break
+    }
+    let token = pattern.unsafe_get(i + 1).to_int().unsafe_to_char()
+    if token == '%' {
+      i += 2
+      continue
+    }
+    if token == 'A' || token == 'B' {
+      return true
+    }
+    i += 2
+  }
+  false
+}
+
+///|
 fn format_datetime_with_strftime_pattern(
   pattern : String,
   year : Int,
@@ -566,14 +594,25 @@ fn builtin_call_numeric(
         let out = []
         for format_value in formats {
           match format_value {
-            String(pattern) =>
-              out.push(
-                Json::string(
-                  format_datetime_with_strftime_pattern(
-                    pattern, year, month, day, hour, minute, second, day_of_week,
-                  ),
-                ),
-              )
+            String(pattern) => {
+              let formatted = if pattern_uses_locale_day_or_month_name(pattern) {
+                match
+                  format_datetime_with_c_strftime(
+                    pattern, year, month, day, hour, minute, second, false,
+                  ) {
+                  Some(s) => s
+                  None =>
+                    format_datetime_with_strftime_pattern(
+                      pattern, year, month, day, hour, minute, second, day_of_week,
+                    )
+                }
+              } else {
+                format_datetime_with_strftime_pattern(
+                  pattern, year, month, day, hour, minute, second, day_of_week,
+                )
+              }
+              out.push(Json::string(formatted))
+            }
             _ => raise TypeError("strftime/1 requires a string format")
           }
         }
@@ -590,14 +629,25 @@ fn builtin_call_numeric(
         let out = []
         for format_value in formats {
           match format_value {
-            String(pattern) =>
-              out.push(
-                Json::string(
-                  format_datetime_with_strftime_pattern(
-                    pattern, year, month, day, hour, minute, second, day_of_week,
-                  ),
-                ),
-              )
+            String(pattern) => {
+              let formatted = if pattern_uses_locale_day_or_month_name(pattern) {
+                match
+                  format_datetime_with_c_strftime(
+                    pattern, year, month, day, hour, minute, second, true,
+                  ) {
+                  Some(s) => s
+                  None =>
+                    format_datetime_with_strftime_pattern(
+                      pattern, year, month, day, hour, minute, second, day_of_week,
+                    )
+                }
+              } else {
+                format_datetime_with_strftime_pattern(
+                  pattern, year, month, day, hour, minute, second, day_of_week,
+                )
+              }
+              out.push(Json::string(formatted))
+            }
             _ => raise TypeError("strflocaltime/1 requires a string format")
           }
         }

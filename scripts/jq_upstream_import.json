@@ -221,6 +221,9 @@
     "jq.test:1817": {
       "skip_reason": ""
     },
+    "jq.test:1821": {
+      "skip_reason": ""
+    },
     "jq.test:1825": {
       "skip_reason": ""
     },
@@ -405,6 +408,9 @@
       "skip_reason": ""
     },
     "man.test:952": {
+      "skip_reason": ""
+    },
+    "optional.test:9": {
       "skip_reason": ""
     }
   }

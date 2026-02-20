@@ -7,3 +7,11 @@ import {
   "shina1024/jqx/core/internal/regex_engine",
   "shina1024/jqx/core/internal/regex_parser",
 }
+
+options(
+  "native-stub": [ "strftime_locale_stub.c" ],
+  targets: {
+    "builtin_numeric_locale_native.mbt": [ "native", "llvm" ],
+    "builtin_numeric_locale_stub.mbt": [ "not", "native" ],
+  },
+)
