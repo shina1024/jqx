@@ -4877,7 +4877,7 @@
     "source_line": 32,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l36",
@@ -4927,7 +4927,7 @@
     "source_line": 60,
     "source_kind": "runtime",
     "source_expected_count": 3,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l67",
@@ -5057,7 +5057,7 @@
     "source_line": 120,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l124",
@@ -5077,7 +5077,7 @@
     "source_line": 128,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l132",

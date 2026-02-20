@@ -62,6 +62,9 @@
     "onig.test:54": {
       "skip_reason": ""
     },
+    "onig.test:60": {
+      "skip_reason": ""
+    },
     "onig.test:75": {
       "skip_reason": ""
     },
@@ -155,6 +158,9 @@
     "onig.test:28": {
       "skip_reason": ""
     },
+    "onig.test:32": {
+      "skip_reason": ""
+    },
     "onig.test:67": {
       "skip_reason": ""
     },
@@ -182,7 +188,13 @@
     "onig.test:116": {
       "skip_reason": ""
     },
+    "onig.test:120": {
+      "skip_reason": ""
+    },
     "onig.test:124": {
+      "skip_reason": ""
+    },
+    "onig.test:128": {
       "skip_reason": ""
     },
     "onig.test:141": {

@@ -1164,6 +1164,17 @@ test "execute match regex compatibility" {
       ),
     ],
   )
+  assert_eq(
+    must_execute(
+      parse_filter("match(\".+?\\\\b\")"),
+      must_parse("\"a\\u0304 two-codepoint grapheme\""),
+    ),
+    [
+      must_parse(
+        "{\"offset\":0,\"length\":2,\"string\":\"a\\u0304\",\"captures\":[]}",
+      ),
+    ],
+  )
   assert_eq(must_execute(parse_filter("match(\"\")"), must_parse("\"ab\"")), [
     must_parse("{\"offset\":0,\"length\":0,\"string\":\"\",\"captures\":[]}"),
   ])
@@ -1272,6 +1283,14 @@ test "execute sub/gsub regex compatibility" {
   assert_eq(
     must_execute(parse_filter("gsub(\"\"; \"X\")"), must_parse("\"ab\"")),
     [Json::string("XaXbX")],
+  )
+  assert_eq(
+    must_execute(parse_filter("gsub(\"$\"; \"a\"; \"g\")"), must_parse("\"a\"")),
+    [Json::string("aa")],
+  )
+  assert_eq(
+    must_execute(parse_filter("gsub(\"(?=u)\"; \"u\")"), must_parse("\"qux\"")),
+    [Json::string("quux")],
   )
   assert_eq(
     must_execute(parse_filter("gsub(\"\"; \"X\"; \"n\")"), must_parse("\"ab\"")),

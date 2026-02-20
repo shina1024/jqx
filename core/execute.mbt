@@ -956,24 +956,50 @@ fn split_string_regex_tokens(
 }
 
 ///|
+let regex_combining_mark_lo = 0x0300
+
+///|
+let regex_combining_mark_hi = 0x036F
+
+///|
+fn regex_is_word_char(ch : Char) -> Bool {
+  match ch {
+    'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '\u{0300}'..='\u{036F}' => true
+    _ => false
+  }
+}
+
+///|
 let regex_unicode_profile : @regex_engine.Profile = @regex_engine.Profile::new(
   valid=@regex_engine.RecharSet::char_range(0, 0x10FFFF),
   word=@regex_engine.RecharSet::char_range('a', 'z') +
     @regex_engine.RecharSet::char_range('A', 'Z') +
     @regex_engine.RecharSet::char_range('0', '9') +
-    @regex_engine.RecharSet::char('_'),
+    @regex_engine.RecharSet::char('_') +
+    @regex_engine.RecharSet::char_range(
+      regex_combining_mark_lo, regex_combining_mark_hi,
+    ),
   category=c => {
-    match c {
-      'a'..='z' | 'A'..='Z' | '0'..='9' | '_' => @regex_engine.Category::word()
-      '\n' => @regex_engine.Category::newline()
-      _ => @regex_engine.Category::not_word()
+    let ch = c.unsafe_to_char()
+    if regex_is_word_char(ch) {
+      @regex_engine.Category::word()
+    } else if ch == '\n' {
+      @regex_engine.Category::newline()
+    } else {
+      @regex_engine.Category::not_word()
     }
   },
 )
 
 ///|
+priv enum CompiledRegexMatcher {
+  Native(@regex_engine.Regex)
+  TopLevelPositiveLookahead(@regex_engine.Regex)
+}
+
+///|
 priv struct CompiledRegexPattern {
-  regex : @regex_engine.Regex
+  matcher : CompiledRegexMatcher
   group_names : ReadOnlyArray[String?]
   skip_empty_match : Bool
 }
@@ -1107,6 +1133,100 @@ fn regex_rewrite_multiline(
 }
 
 ///|
+fn regex_extract_top_level_positive_lookahead(pattern : String) -> String? {
+  let chars = string_to_chars(pattern)
+  let len = chars.length()
+  if len < 4 {
+    return None
+  }
+  if chars[0] != '(' ||
+    chars[1] != '?' ||
+    chars[2] != '=' ||
+    chars[len - 1] != ')' {
+    return None
+  }
+  let mut escaped = false
+  let mut in_char_class = false
+  let mut depth = 0
+  for i in 0..<len {
+    let ch = chars[i]
+    if escaped {
+      escaped = false
+      continue
+    }
+    if ch == '\\' {
+      escaped = true
+      continue
+    }
+    if in_char_class {
+      if ch == ']' {
+        in_char_class = false
+      }
+      continue
+    }
+    if ch == '[' {
+      in_char_class = true
+      continue
+    }
+    if ch == '(' {
+      depth += 1
+      continue
+    }
+    if ch == ')' {
+      depth -= 1
+      if depth < 0 {
+        return None
+      }
+      if depth == 0 && i != len - 1 {
+        return None
+      }
+      continue
+    }
+  }
+  if escaped || in_char_class || depth != 0 {
+    return None
+  }
+  Some(chars_slice_to_string(chars, 3, len - 1))
+}
+
+///|
+fn regex_parse_pattern(
+  pattern : String,
+  flags : String,
+) -> @regex_engine.Pattern raise EvalError {
+  let mut source = pattern
+  if split_regex_flag_enabled(flags, 'i') {
+    source = "(?i:" + source + ")"
+  }
+  let parsed = try
+    @regex_parser.parse(
+      profile=regex_unicode_profile,
+      mode=@regex_parser.Mode::String,
+      source[:],
+    )
+  catch {
+    err => raise TypeError("Regex failure: " + err.to_string())
+  } noraise {
+    value => value
+  }
+  if split_regex_flag_enabled(flags, 'm') ||
+    split_regex_flag_enabled(flags, 'p') {
+    regex_rewrite_multiline(parsed)
+  } else {
+    parsed
+  }
+}
+
+///|
+fn regex_compile_engine_pattern(
+  pattern : String,
+  flags : String,
+) -> @regex_engine.Regex raise EvalError {
+  let parsed = regex_parse_pattern(pattern, flags)
+  @regex_engine.compile(profile=regex_unicode_profile, parsed)
+}
+
+///|
 fn regex_compile_pattern(
   pattern : String,
   flags : String,
@@ -1115,37 +1235,82 @@ fn regex_compile_pattern(
   if split_regex_flag_enabled(flags, 'x') {
     normalized = regex_apply_extended_mode(normalized)
   }
-  if split_regex_flag_enabled(flags, 'i') {
-    normalized = "(?i:" + normalized + ")"
-  }
-  let parsed = try
-    @regex_parser.parse(
-      profile=regex_unicode_profile,
-      mode=@regex_parser.Mode::String,
-      normalized[:],
-    )
-  catch {
-    err => raise TypeError("Regex failure: " + err.to_string())
-  } noraise {
-    value => value
-  }
-  let parsed = if split_regex_flag_enabled(flags, 'm') ||
-    split_regex_flag_enabled(flags, 'p') {
-    regex_rewrite_multiline(parsed)
+  let skip_empty_match = split_regex_flag_enabled(flags, 'n')
+  if regex_extract_top_level_positive_lookahead(normalized)
+    is Some(lookahead_inner) {
+    let lookahead_regex = regex_compile_engine_pattern(lookahead_inner, flags)
+    CompiledRegexPattern::{
+      matcher: TopLevelPositiveLookahead(lookahead_regex),
+      group_names: lookahead_regex.group_names(),
+      skip_empty_match,
+    }
   } else {
-    parsed
-  }
-  let regex = @regex_engine.compile(profile=regex_unicode_profile, parsed)
-  CompiledRegexPattern::{
-    regex,
-    group_names: regex.group_names(),
-    skip_empty_match: split_regex_flag_enabled(flags, 'n'),
+    let regex = regex_compile_engine_pattern(normalized, flags)
+    CompiledRegexPattern::{
+      matcher: Native(regex),
+      group_names: regex.group_names(),
+      skip_empty_match,
+    }
   }
 }
 
 ///|
 fn regex_slice_string(s : String, start : Int, end_ : Int) -> String {
   s.view(start_offset=start, end_offset=end_).to_string()
+}
+
+///|
+fn regex_find_native_next_match(
+  regex : @regex_engine.Regex,
+  input : String,
+  search_start : Int,
+) -> RegexMatchData? {
+  match regex.execute(input[:], search_start) {
+    None => None
+    Some(result) =>
+      match result.group(0) {
+        None => None
+        Some((start, end_)) => Some(RegexMatchData::{ start, end_, result })
+      }
+  }
+}
+
+///|
+fn regex_find_top_level_lookahead_match(
+  regex : @regex_engine.Regex,
+  input : String,
+  search_start : Int,
+) -> RegexMatchData? {
+  let len = input.length()
+  let mut current_start = search_start
+  for {
+    if current_start > len {
+      return None
+    }
+    match regex.execute(input[:], current_start) {
+      None => return None
+      Some(result) =>
+        match result.group(0) {
+          None => return None
+          Some((inner_start, _)) =>
+            if inner_start == current_start {
+              return Some(RegexMatchData::{
+                start: current_start,
+                end_: current_start,
+                result,
+              })
+            } else if inner_start > current_start {
+              current_start = inner_start
+              continue
+            } else if current_start < len {
+              current_start += 1
+              continue
+            } else {
+              return None
+            }
+        }
+    }
+  }
 }
 
 ///|
@@ -1160,22 +1325,23 @@ fn regex_find_next_match(
     if current_start > len {
       return None
     }
-    match compiled.regex.execute(input[:], current_start) {
+    let found = match compiled.matcher {
+      Native(regex) => regex_find_native_next_match(regex, input, current_start)
+      TopLevelPositiveLookahead(regex) =>
+        regex_find_top_level_lookahead_match(regex, input, current_start)
+    }
+    match found {
       None => return None
       Some(result) =>
-        match result.group(0) {
-          None => return None
-          Some((start, end_)) =>
-            if compiled.skip_empty_match && start == end_ {
-              if start < len {
-                current_start = start + 1
-                continue
-              } else {
-                return None
-              }
-            } else {
-              return Some(RegexMatchData::{ start, end_, result })
-            }
+        if compiled.skip_empty_match && result.start == result.end_ {
+          if result.start < len {
+            current_start = result.start + 1
+            continue
+          } else {
+            return None
+          }
+        } else {
+          return Some(result)
         }
     }
   }
@@ -1206,12 +1372,21 @@ fn regex_capture_entry(
   }
   match result.group(index) {
     Some((start, end_)) =>
-      Json::object_from_entries([
-        ("offset", Json::number(start.to_double())),
-        ("length", Json::number((end_ - start).to_double())),
-        ("string", Json::string(regex_slice_string(s, start, end_))),
-        ("name", name_json),
-      ])
+      if start == end_ {
+        Json::object_from_entries([
+          ("offset", Json::number(start.to_double())),
+          ("string", Json::string("")),
+          ("length", Json::number(0.0)),
+          ("name", name_json),
+        ])
+      } else {
+        Json::object_from_entries([
+          ("offset", Json::number(start.to_double())),
+          ("length", Json::number((end_ - start).to_double())),
+          ("string", Json::string(regex_slice_string(s, start, end_))),
+          ("name", name_json),
+        ])
+      }
     None =>
       Json::object_from_entries([
         ("offset", Json::number(-1.0)),
@@ -1245,7 +1420,13 @@ fn regex_next_search_start(
   match_end : Int,
   input_len : Int,
 ) -> Int? {
-  if match_end > current_start {
+  if match_start == match_end {
+    if match_start < input_len {
+      Some(match_start + 1)
+    } else {
+      None
+    }
+  } else if match_end > current_start {
     Some(match_end)
   } else if match_start < input_len {
     Some(match_start + 1)

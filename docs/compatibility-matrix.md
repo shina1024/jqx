@@ -119,12 +119,12 @@ Notes:
 - Differential runners now default `jqx_use_stdin=true` unless explicitly
   overridden per case.
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.
-- Importer overrides currently unskip 25 regex cases, 13 core-language cases,
+- Importer overrides currently unskip 29 regex cases, 13 core-language cases,
   14 time-builtin cases, 3 io-control cases (1 false positive + 2 minimal-compat
   cases), and 1 base64-padding case.
 - Smoke differential currently covers 233 cases (as of 2026-02-19).
 - Full upstream differential baseline is currently:
-  total 824 / passed 768 / failed 0 / skipped 56
+  total 824 / passed 800 / failed 0 / skipped 24
   (see `scripts/jq_upstream_failures.snapshot.json` and `docs/upstream-failure-backlog.md`).
 - `expect_error: true` in smoke differential cases compares normalized jq/jqx
   error messages and accepts jqx `moon run` wrapper status behavior.

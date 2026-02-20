@@ -1,6 +1,6 @@
 # Upstream Failure Backlog (jq Differential)
 
-Updated: 2026-02-19
+Updated: 2026-02-20
 
 This document tracks failing upstream differential cases so they do not stay
 "postponed forever". Snapshot source:
@@ -11,9 +11,9 @@ This document tracks failing upstream differential cases so they do not stay
 ## Snapshot Summary
 
 - total: 824
-- passed: 736
+- passed: 800
 - failed: 0
-- skipped: 88
+- skipped: 24
 
 ## Failure Categories (Current)
 
@@ -33,6 +33,11 @@ From current snapshot (`unknown-function` subset):
 
 ## Latest Progress
 
+- Regex compatibility was expanded without relaxing diff strictness:
+  - fixed combining-mark word-boundary handling and top-level positive lookahead
+    for upstream regex behavior.
+  - unskipped `onig.test:32`, `onig.test:60`, `onig.test:120`, `onig.test:128`.
+  - full upstream skip count reduced from `28` to `24` while keeping `failed 0`.
 - Skip elimination was advanced again while preserving `failed 0`:
   - added minimal `input` / `debug` compatibility for upstream differential coverage.
   - unskipped `jq.test:2303` and `jq.test:2307`.
