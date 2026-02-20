@@ -1,6 +1,7 @@
 import {
   "moonbitlang/core/buffer",
   "moonbitlang/core/double",
+  "moonbitlang/core/env",
   "moonbitlang/core/math",
   "moonbitlang/core/strconv",
 }

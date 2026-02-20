@@ -3392,7 +3392,7 @@
     "source_line": 1817,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1821",
@@ -3412,7 +3412,7 @@
     "source_line": 1825,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1829",
@@ -3422,7 +3422,7 @@
     "source_line": 1829,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1833",
@@ -3432,7 +3432,7 @@
     "source_line": 1833,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1838",
@@ -3442,7 +3442,7 @@
     "source_line": 1838,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1842",
@@ -3452,7 +3452,7 @@
     "source_line": 1842,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1846",
@@ -3462,7 +3462,7 @@
     "source_line": 1846,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1851",
@@ -3472,7 +3472,7 @@
     "source_line": 1851,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1855",
@@ -3482,7 +3482,7 @@
     "source_line": 1855,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1859",
@@ -3492,7 +3492,7 @@
     "source_line": 1859,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1865",
@@ -3502,7 +3502,7 @@
     "source_line": 1865,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l1870",
@@ -4597,7 +4597,7 @@
     "source_line": 2514,
     "source_kind": "runtime",
     "source_expected_count": 2,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l2524",
@@ -7049,7 +7049,7 @@
     "source_line": 746,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-man-test-l750",
@@ -7059,7 +7059,7 @@
     "source_line": 750,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:time-builtin"
+    "skip_reason": ""
   },
   {
     "name": "upstream-man-test-l754",

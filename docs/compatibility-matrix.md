@@ -63,6 +63,7 @@ Implemented builtins/functions in `core/execute.mbt` + `core/builtin*.mbt` inclu
 | Topic | Status | Notes |
 | --- | --- | --- |
 | Number edge behavior | partial | parser/evaluator now avoid non-finite JSON output (`NaN -> null`, `±Infinity -> ±MAX_DOUBLE` in numeric ops), but full jq decnum parity is still out of scope |
+| Time builtins | partial | `strftime`/`strflocaltime`/`strptime`/`mktime`/`gmtime` are implemented for upstream-covered flows; locale-dependent `%A`/`%B` name rendering parity is still pending |
 | Exact error text | partial | close to jq style but not byte-for-byte compatible |
 | CLI option coverage | partial | currently `-r`, `-R`, `-c`, `-n`, `-s`, `-e` (JSON stream parsing now handles whitespace-separated and adjacent structured values; remaining byte-for-byte parity differences are still possible) |
 
@@ -119,11 +120,11 @@ Notes:
   overridden per case.
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.
 - Importer overrides currently unskip 24 regex cases, 13 core-language cases,
-  3 io-control cases (1 false positive + 2 minimal-compat cases), and
-  1 base64-padding case.
+  14 time-builtin cases, 3 io-control cases (1 false positive + 2 minimal-compat
+  cases), and 1 base64-padding case.
 - Smoke differential currently covers 233 cases (as of 2026-02-19).
 - Full upstream differential baseline is currently:
-  total 824 / passed 736 / failed 0 / skipped 88
+  total 824 / passed 767 / failed 0 / skipped 57
   (see `scripts/jq_upstream_failures.snapshot.json` and `docs/upstream-failure-backlog.md`).
 - `expect_error: true` in smoke differential cases compares normalized jq/jqx
   error messages and accepts jqx `moon run` wrapper status behavior.

@@ -119,6 +119,42 @@
     "jq.test:775": {
       "skip_reason": ""
     },
+    "jq.test:1817": {
+      "skip_reason": ""
+    },
+    "jq.test:1825": {
+      "skip_reason": ""
+    },
+    "jq.test:1829": {
+      "skip_reason": ""
+    },
+    "jq.test:1833": {
+      "skip_reason": ""
+    },
+    "jq.test:1838": {
+      "skip_reason": ""
+    },
+    "jq.test:1842": {
+      "skip_reason": ""
+    },
+    "jq.test:1846": {
+      "skip_reason": ""
+    },
+    "jq.test:1851": {
+      "skip_reason": ""
+    },
+    "jq.test:1855": {
+      "skip_reason": ""
+    },
+    "jq.test:1859": {
+      "skip_reason": ""
+    },
+    "jq.test:1865": {
+      "skip_reason": ""
+    },
+    "jq.test:2514": {
+      "skip_reason": ""
+    },
     "jq.test:780": {
       "skip_reason": ""
     },
@@ -192,6 +228,12 @@
       "skip_reason": ""
     },
     "man.test:682": {
+      "skip_reason": ""
+    },
+    "man.test:746": {
+      "skip_reason": ""
+    },
+    "man.test:750": {
       "skip_reason": ""
     },
     "man.test:871": {

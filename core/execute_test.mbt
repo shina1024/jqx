@@ -1537,6 +1537,106 @@ test "execute combinations/date/env/stream compatibility" {
 }
 
 ///|
+test "execute time builtins minimal compatibility" {
+  assert_eq(must_execute(parse_filter("gmtime"), must_parse("1425599507")), [
+    Json::array([
+      Json::number(2015.0),
+      Json::number(2.0),
+      Json::number(5.0),
+      Json::number(23.0),
+      Json::number(51.0),
+      Json::number(47.0),
+      Json::number(4.0),
+      Json::number(63.0),
+    ]),
+  ])
+  assert_eq(must_execute(parse_filter("mktime"), must_parse("[2024,8,21]")), [
+    Json::number(1726876800.0),
+  ])
+  assert_eq(
+    must_execute(
+      parse_filter("strftime(\"%Y-%m-%dT%H:%M:%SZ\")"),
+      must_parse("[2024,2,15]"),
+    ),
+    [Json::string("2024-03-15T00:00:00Z")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("strptime(\"%Y-%m-%dT%H:%M:%SZ\")"),
+      must_parse("\"2015-03-05T23:51:47Z\""),
+    ),
+    [
+      Json::array([
+        Json::number(2015.0),
+        Json::number(2.0),
+        Json::number(5.0),
+        Json::number(23.0),
+        Json::number(51.0),
+        Json::number(47.0),
+        Json::number(4.0),
+        Json::number(63.0),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("strptime(\"%Y-%m-%dT%H:%M:%SZ\")|mktime"),
+      must_parse("\"2015-03-05T23:51:47Z\""),
+    ),
+    [Json::number(1425599507.0)],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("try strftime(\"%Y-%m-%dT%H:%M:%SZ\") catch ."),
+      must_parse("[\"a\",1,2,3,4,5,6,7]"),
+    ),
+    [Json::string("strftime/1 requires parsed datetime inputs")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("try strflocaltime(\"%Y-%m-%dT%H:%M:%SZ\") catch ."),
+      must_parse("[\"a\",1,2,3,4,5,6,7]"),
+    ),
+    [Json::string("strflocaltime/1 requires parsed datetime inputs")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("try mktime catch ."),
+      must_parse("[\"a\",1,2,3,4,5,6,7]"),
+    ),
+    [Json::string("mktime requires parsed datetime inputs")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("try [\"OK\", strftime([])] catch [\"KO\", .]"),
+      must_parse("0"),
+    ),
+    [
+      Json::array([
+        Json::string("KO"),
+        Json::string("strftime/1 requires a string format"),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("try [\"OK\", strflocaltime({})] catch [\"KO\", .]"),
+      must_parse("0"),
+    ),
+    [
+      Json::array([
+        Json::string("KO"),
+        Json::string("strflocaltime/1 requires a string format"),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_execute(parse_filter("strflocaltime(\"\" | ., @uri)"), must_parse("0")),
+    [Json::string(""), Json::string("")],
+  )
+}
+
+///|
 test "execute explode/implode compatibility" {
   assert_eq(must_execute(parse_filter("explode"), must_parse("\"abc\"")), [
     Json::array([Json::number(97.0), Json::number(98.0), Json::number(99.0)]),
