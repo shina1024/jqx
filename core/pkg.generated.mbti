@@ -24,6 +24,7 @@ pub suberror EvalError {
   Thrown(Json)
   UnknownFunction(String)
   UnknownVariable(String)
+  BreakSignal(String, Array[Json])
   Partial(Array[Json], Json, String)
 }
 pub impl Eq for EvalError
@@ -70,6 +71,8 @@ pub enum Filter {
   Call(String, Array[Filter])
   Var(String)
   As(Filter, String, Filter)
+  Label(String, Filter)
+  Break(String)
   Try(Filter)
   TryCatch(Filter, Filter)
   Reduce(Filter, String, Filter, Filter)
@@ -95,6 +98,7 @@ pub enum Filter {
 pub fn Filter::add(Self, Self) -> Self
 pub fn Filter::and_(Self, Self) -> Self
 pub fn Filter::as_(Self, String, Self) -> Self
+pub fn Filter::break_(String) -> Self
 pub fn Filter::builtin(String) -> Self
 pub fn Filter::call(String, Array[Self]) -> Self
 pub fn Filter::comma(Self, Self) -> Self
@@ -113,6 +117,7 @@ pub fn Filter::index(Int) -> Self
 pub fn Filter::index_opt(Int) -> Self
 pub fn Filter::iter() -> Self
 pub fn Filter::iter_opt() -> Self
+pub fn Filter::label(String, Self) -> Self
 pub fn Filter::literal(Json) -> Self
 pub fn Filter::lt(Self, Self) -> Self
 pub fn Filter::lte(Self, Self) -> Self

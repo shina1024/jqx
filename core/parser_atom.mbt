@@ -521,6 +521,22 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
     }
   }
 
+  fn parse_label_expr() -> Filter raise FilterError {
+    ctx.skip_ws()
+    ctx.expect_char('$')
+    let name = ctx.parse_identifier()
+    ctx.skip_ws()
+    ctx.expect_char('|')
+    let body = ctx.parse_comma()
+    Filter::label(name, body)
+  }
+
+  fn parse_break_expr() -> Filter raise FilterError {
+    ctx.skip_ws()
+    ctx.expect_char('$')
+    Filter::break_(ctx.parse_identifier())
+  }
+
   let base = match ctx.peek_char() {
     Some('.') => {
       let saved = ctx.offset
@@ -592,6 +608,18 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
     Some('r') =>
       if ctx.try_keyword("reduce") {
         parse_reduce_like(false)
+      } else {
+        ctx.parse_identifier_or_call()
+      }
+    Some('l') =>
+      if ctx.try_keyword("label") {
+        parse_label_expr()
+      } else {
+        ctx.parse_identifier_or_call()
+      }
+    Some('b') =>
+      if ctx.try_keyword("break") {
+        parse_break_expr()
       } else {
         ctx.parse_identifier_or_call()
       }

@@ -137,6 +137,7 @@ fn eval_error_to_jqx_error(err : @core.EvalError) -> JqxError {
       jqx_error("eval_unknown_function", err.to_string())
     @core.UnknownVariable(_) =>
       jqx_error("eval_unknown_variable", err.to_string())
+    @core.BreakSignal(_, _) => jqx_error("eval_break", err.to_string())
     @core.Partial(_, _, _) => jqx_error("eval_partial", err.to_string())
   }
 }

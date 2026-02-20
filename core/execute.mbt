@@ -16,6 +16,7 @@ pub suberror EvalError {
   Thrown(Json)
   UnknownFunction(String)
   UnknownVariable(String)
+  BreakSignal(String, Array[Json])
   Partial(Array[Json], Json, String)
 } derive(Eq)
 
@@ -30,6 +31,7 @@ pub impl Show for EvalError with output(self, logger) {
       }
     UnknownFunction(name) => logger.write_string("Unknown function: " + name)
     UnknownVariable(name) => logger.write_string("Unknown variable: $" + name)
+    BreakSignal(name, _) => logger.write_string("break $" + name)
     Partial(_, _, message) => logger.write_string(message)
   }
 }
@@ -37,6 +39,7 @@ pub impl Show for EvalError with output(self, logger) {
 ///|
 fn eval_error_to_message(err : EvalError) -> String {
   match err {
+    BreakSignal(name, _) => "break $" + name
     Partial(_, _, message) => message
     _ => err.to_string()
   }
@@ -45,6 +48,7 @@ fn eval_error_to_message(err : EvalError) -> String {
 ///|
 fn eval_error_prefix(err : EvalError) -> Array[Json] {
   match err {
+    BreakSignal(_, values) => values.copy()
     Partial(values, _, _) => values.copy()
     _ => []
   }
@@ -53,6 +57,7 @@ fn eval_error_prefix(err : EvalError) -> Array[Json] {
 ///|
 fn eval_error_to_catch_input(err : EvalError) -> Json {
   match err {
+    BreakSignal(name, _) => Json::string("break $" + name)
     Partial(_, catch_input, _) => catch_input
     Thrown(value) => value
     _ => Json::string(eval_error_to_message(err))
@@ -81,6 +86,14 @@ fn[T] raise_with_prefix(
   prefix : Array[Json],
   err : EvalError,
 ) -> T raise EvalError {
+  match err {
+    BreakSignal(name, values) => {
+      let merged = prefix.copy()
+      append_json_values(merged, values)
+      raise BreakSignal(name, merged)
+    }
+    _ => ()
+  }
   if prefix.length() == 0 {
     raise err
   }
@@ -96,6 +109,7 @@ fn[T] raise_with_prefix(
 ///|
 fn eval_error_without_prefix(err : EvalError) -> EvalError {
   match err {
+    BreakSignal(name, _) => BreakSignal(name, [])
     Partial(_, catch_input, message) => Partial([], catch_input, message)
     _ => err
   }
@@ -312,10 +326,27 @@ fn execute_with_env(
       }
       out
     }
+    Label(name, body) =>
+      try execute_with_env(body, input, env) catch {
+        err =>
+          match err {
+            BreakSignal(target, values) =>
+              if target == name {
+                values
+              } else {
+                raise err
+              }
+            _ => raise err
+          }
+      } noraise {
+        values => values
+      }
+    Break(name) => raise BreakSignal(name, [])
     Try(inner) =>
       try execute_with_env(inner, input, env) catch {
         err =>
           match err {
+            BreakSignal(_, _) => raise err
             Partial(values, _, _) => values
             _ => []
           }
@@ -324,18 +355,22 @@ fn execute_with_env(
       }
     TryCatch(inner, handler) =>
       try execute_with_env(inner, input, env) catch {
-        err => {
-          let prefix = eval_error_prefix(err)
-          let handled = try
-            execute_with_env(handler, eval_error_to_catch_input(err), env)
-          catch {
-            err2 => raise_with_prefix(prefix, err2)
-          } noraise {
-            values => values
+        err =>
+          match err {
+            BreakSignal(_, _) => raise err
+            _ => {
+              let prefix = eval_error_prefix(err)
+              let handled = try
+                execute_with_env(handler, eval_error_to_catch_input(err), env)
+              catch {
+                err2 => raise_with_prefix(prefix, err2)
+              } noraise {
+                values => values
+              }
+              append_json_values(prefix, handled)
+              prefix
+            }
           }
-          append_json_values(prefix, handled)
-          prefix
-        }
       } noraise {
         values => values
       }
@@ -366,14 +401,26 @@ fn execute_with_env(
           next_env[name] = item
           let next_states = []
           for acc in states {
-            for v in execute_with_env(update, acc, next_env) {
+            let update_values = try
+              execute_with_env(update, acc, next_env)
+            catch {
+              err => raise_with_prefix(out, err)
+            } noraise {
+              values => values
+            }
+            for v in update_values {
               next_states.push(v)
             }
           }
           for acc in next_states {
-            for v in execute_with_env(extract, acc, next_env) {
-              out.push(v)
+            let extract_values = try
+              execute_with_env(extract, acc, next_env)
+            catch {
+              err => raise_with_prefix(out, err)
+            } noraise {
+              values => values
             }
+            append_json_values(out, extract_values)
           }
           states = next_states
         }

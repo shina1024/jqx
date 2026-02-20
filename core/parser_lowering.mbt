@@ -563,6 +563,8 @@ fn lower_filter_with_defs(
         name,
         lower_filter_with_defs(body, defs),
       )
+    Label(name, body) => Filter::label(name, lower_filter_with_defs(body, defs))
+    Break(_) => filter
     Try(inner) => Filter::try_(lower_filter_with_defs(inner, defs))
     TryCatch(inner, handler) =>
       Filter::try_catch(
@@ -704,6 +706,9 @@ fn lower_filter_param_refs(filter : Filter, params : Array[String]) -> Filter {
         name,
         lower_filter_param_refs(body, params),
       )
+    Label(name, body) =>
+      Filter::label(name, lower_filter_param_refs(body, params))
+    Break(_) => filter
     Try(inner) => Filter::try_(lower_filter_param_refs(inner, params))
     TryCatch(inner, handler) =>
       Filter::try_catch(

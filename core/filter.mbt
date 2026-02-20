@@ -33,6 +33,8 @@ pub enum Filter {
   Call(String, Array[Filter])
   Var(String)
   As(Filter, String, Filter)
+  Label(String, Filter)
+  Break(String)
   Try(Filter)
   TryCatch(Filter, Filter)
   Reduce(Filter, String, Filter, Filter)
@@ -139,6 +141,16 @@ pub fn Filter::var_(name : String) -> Filter {
 ///|
 pub fn Filter::as_(value : Filter, name : String, body : Filter) -> Filter {
   As(value, name, body)
+}
+
+///|
+pub fn Filter::label(name : String, body : Filter) -> Filter {
+  Label(name, body)
+}
+
+///|
+pub fn Filter::break_(name : String) -> Filter {
+  Break(name)
 }
 
 ///|

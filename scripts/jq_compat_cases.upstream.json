@@ -542,7 +542,7 @@
     "source_line": 315,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l319",
@@ -552,7 +552,7 @@
     "source_line": 319,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l329",
@@ -572,7 +572,7 @@
     "source_line": 333,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l337",
@@ -4122,7 +4122,7 @@
     "source_line": 2251,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:core-language"
+    "skip_reason": ""
   },
   {
     "name": "upstream-jq-test-l2255",

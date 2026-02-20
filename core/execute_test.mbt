@@ -2053,6 +2053,46 @@ test "execute range/limit/skip/IN compatibility" {
 }
 
 ///|
+test "execute label/break compatibility" {
+  assert_eq(
+    must_execute(
+      parse_filter(
+        "[(label $here | .[] | if .>1 then break $here else . end), \"hi!\"]",
+      ),
+      must_parse("[0,1,2]"),
+    ),
+    [must_parse("[0,1,\"hi!\"]")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter(
+        "[(label $here | .[] | if .>1 then break $here else . end), \"hi!\"]",
+      ),
+      must_parse("[0,2,1]"),
+    ),
+    [must_parse("[0,\"hi!\"]")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter(
+        "[label $out | foreach .[] as $item ([3, null]; if .[0] < 1 then break $out else [.[0] -1, $item] end; .[1])]",
+      ),
+      must_parse("[11,22,33,44,55,66,77,88,99]"),
+    ),
+    [must_parse("[11,22,33]")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter(
+        "[ label $if | range(10) | ., (select(. == 5) | break $if) ]",
+      ),
+      must_parse("null"),
+    ),
+    [must_parse("[0,1,2,3,4,5]")],
+  )
+}
+
+///|
 test "execute range/limit/skip/nth stream errors" {
   let null_json = must_parse("null")
   guard (try? execute(parse_filter("limit(-1; .[])"), must_parse("[1,2,3]")))

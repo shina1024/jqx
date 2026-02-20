@@ -8,12 +8,16 @@ This document tracks failing upstream differential cases so they do not stay
 - `scripts/jq_upstream_failures.snapshot.json`
 - generated from: `./scripts/jq_diff.ps1 -CasesPath scripts/jq_compat_cases.upstream.json`
 
+Compatibility policy:
+- Aim for full jq compatibility (eventual zero-skip upstream differential).
+- Do not widen skips or relax diff strictness as a shortcut.
+
 ## Snapshot Summary
 
 - total: 824
-- passed: 801
+- passed: 805
 - failed: 0
-- skipped: 23
+- skipped: 19
 
 ## Failure Categories (Current)
 
@@ -33,6 +37,9 @@ From current snapshot (`unknown-function` subset):
 
 ## Latest Progress
 
+- Added minimal `label` / `break` compatibility and unskipped
+  `jq.test:315`, `jq.test:319`, `jq.test:333`, `jq.test:2251`
+  while preserving `failed 0` (`skip 23 -> 19`).
 - Added minimal `JOIN/2` compatibility and unskipped `jq.test:2059`
   while preserving `failed 0` (`skip 24 -> 23`).
 - Regex compatibility was expanded without relaxing diff strictness:
