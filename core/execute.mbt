@@ -956,57 +956,345 @@ fn split_string_regex_tokens(
 }
 
 ///|
-fn regex_has_match(s : String, pattern : String, flags : String) -> Bool {
-  let chars = string_to_chars(s)
-  let parsed = parse_split_regex_pattern(pattern)
-  let atoms = parsed.atoms
-  let anchor_start = parsed.anchor_start
-  let anchor_end = parsed.anchor_end
-  let ignore_case = split_regex_flag_enabled(flags, 'i')
-  let skip_empty_match = split_regex_flag_enabled(flags, 'n')
-  match
-    split_regex_find_next(
-      chars, 0, atoms, ignore_case, skip_empty_match, anchor_start, anchor_end,
-    ) {
-    Some(_) => true
-    None => false
+let regex_unicode_profile : @regex_engine.Profile = @regex_engine.Profile::new(
+  valid=@regex_engine.RecharSet::char_range(0, 0x10FFFF),
+  word=@regex_engine.RecharSet::char_range('a', 'z') +
+    @regex_engine.RecharSet::char_range('A', 'Z') +
+    @regex_engine.RecharSet::char_range('0', '9') +
+    @regex_engine.RecharSet::char('_'),
+  category=c => {
+    match c {
+      'a'..='z' | 'A'..='Z' | '0'..='9' | '_' => @regex_engine.Category::word()
+      '\n' => @regex_engine.Category::newline()
+      _ => @regex_engine.Category::not_word()
+    }
+  },
+)
+
+///|
+priv struct CompiledRegexPattern {
+  regex : @regex_engine.Regex
+  group_names : ReadOnlyArray[String?]
+  skip_empty_match : Bool
+}
+
+///|
+priv struct RegexMatchData {
+  start : Int
+  end_ : Int
+  result : @regex_engine.MatchResult
+}
+
+///|
+fn regex_is_extended_ws(ch : Char) -> Bool {
+  is_ascii_ws(ch) || ch == '\f' || ch == '\u{0b}'
+}
+
+///|
+fn regex_expand_shorthand_classes(pattern : String) -> String {
+  let chars = string_to_chars(pattern)
+  let len = chars.length()
+  let buf = StringBuilder::new()
+  let mut i = 0
+  for {
+    if i >= len {
+      return buf.to_string()
+    }
+    let ch = chars[i]
+    if ch == '\\' && i + 1 < len {
+      match chars[i + 1] {
+        'd' => buf.write_string("[[:digit:]]")
+        'D' => buf.write_string("[^[:digit:]]")
+        's' => buf.write_string("[[:space:]]")
+        'S' => buf.write_string("[^[:space:]]")
+        'w' => buf.write_string("[[:word:]]")
+        'W' => buf.write_string("[^[:word:]]")
+        c => {
+          buf.write_char('\\')
+          buf.write_char(c)
+        }
+      }
+      i += 2
+      continue
+    }
+    buf.write_char(ch)
+    i += 1
+    continue
   }
 }
 
 ///|
-fn regex_scan_strings(
+fn regex_apply_extended_mode(pattern : String) -> String {
+  let chars = string_to_chars(pattern)
+  let len = chars.length()
+  let buf = StringBuilder::new()
+  let mut in_char_class = false
+  let mut i = 0
+  for {
+    if i >= len {
+      return buf.to_string()
+    }
+    let ch = chars[i]
+    if ch == '\\' {
+      buf.write_char(ch)
+      if i + 1 < len {
+        i += 1
+        buf.write_char(chars[i])
+      }
+      i += 1
+      continue
+    }
+    if !in_char_class && ch == '[' {
+      in_char_class = true
+      buf.write_char(ch)
+      i += 1
+      continue
+    }
+    if in_char_class && ch == ']' {
+      in_char_class = false
+      buf.write_char(ch)
+      i += 1
+      continue
+    }
+    if !in_char_class && ch == '#' {
+      i += 1
+      for {
+        if i >= len {
+          return buf.to_string()
+        }
+        let c = chars[i]
+        if c == '\n' || c == '\r' {
+          break
+        }
+        i += 1
+        continue
+      }
+      continue
+    }
+    if !in_char_class && regex_is_extended_ws(ch) {
+      i += 1
+      continue
+    }
+    buf.write_char(ch)
+    i += 1
+    continue
+  }
+}
+
+///|
+fn regex_rewrite_multiline(
+  pattern : @regex_engine.Pattern,
+) -> @regex_engine.Pattern {
+  match pattern.desc {
+    Char(_) => pattern
+    Sequence(parts) =>
+      @regex_engine.seq(parts.map(part => regex_rewrite_multiline(part)))
+    Alternation(parts) =>
+      @regex_engine.alt(parts.map(part => regex_rewrite_multiline(part)))
+    Quantifier(q, part) =>
+      @regex_engine.quantifier(regex_rewrite_multiline(part), q)
+    Preference(pref, part) =>
+      @regex_engine.preference(pref, regex_rewrite_multiline(part))
+    Capture(name~, part) =>
+      @regex_engine.capture(name?, regex_rewrite_multiline(part))
+    Assertion(assertion) =>
+      match assertion {
+        StartOfInput => @regex_engine.start_of_line
+        EndOfInput => @regex_engine.end_of_line
+        _ => pattern
+      }
+  }
+}
+
+///|
+fn regex_compile_pattern(
+  pattern : String,
+  flags : String,
+) -> CompiledRegexPattern raise EvalError {
+  let mut normalized = regex_expand_shorthand_classes(pattern)
+  if split_regex_flag_enabled(flags, 'x') {
+    normalized = regex_apply_extended_mode(normalized)
+  }
+  if split_regex_flag_enabled(flags, 'i') {
+    normalized = "(?i:" + normalized + ")"
+  }
+  let parsed = try
+    @regex_parser.parse(
+      profile=regex_unicode_profile,
+      mode=@regex_parser.Mode::String,
+      normalized[:],
+    )
+  catch {
+    err => raise TypeError("Regex failure: " + err.to_string())
+  } noraise {
+    value => value
+  }
+  let parsed = if split_regex_flag_enabled(flags, 'm') ||
+    split_regex_flag_enabled(flags, 'p') {
+    regex_rewrite_multiline(parsed)
+  } else {
+    parsed
+  }
+  let regex = @regex_engine.compile(profile=regex_unicode_profile, parsed)
+  CompiledRegexPattern::{
+    regex,
+    group_names: regex.group_names(),
+    skip_empty_match: split_regex_flag_enabled(flags, 'n'),
+  }
+}
+
+///|
+fn regex_slice_string(s : String, start : Int, end_ : Int) -> String {
+  s.view(start_offset=start, end_offset=end_).to_string()
+}
+
+///|
+fn regex_find_next_match(
+  compiled : CompiledRegexPattern,
+  input : String,
+  search_start : Int,
+) -> RegexMatchData? {
+  let len = input.length()
+  let mut current_start = search_start
+  for {
+    if current_start > len {
+      return None
+    }
+    match compiled.regex.execute(input[:], current_start) {
+      None => return None
+      Some(result) =>
+        match result.group(0) {
+          None => return None
+          Some((start, end_)) =>
+            if compiled.skip_empty_match && start == end_ {
+              if start < len {
+                current_start = start + 1
+                continue
+              } else {
+                return None
+              }
+            } else {
+              return Some(RegexMatchData::{ start, end_, result })
+            }
+        }
+    }
+  }
+}
+
+///|
+fn regex_group_value_or_null(
+  s : String,
+  result : @regex_engine.MatchResult,
+  index : Int,
+) -> Json {
+  match result.group(index) {
+    Some((start, end_)) => Json::string(regex_slice_string(s, start, end_))
+    None => Json::null()
+  }
+}
+
+///|
+fn regex_capture_entry(
+  s : String,
+  result : @regex_engine.MatchResult,
+  group_names : ReadOnlyArray[String?],
+  index : Int,
+) -> Json {
+  let name_json = match group_names.get(index) {
+    Some(Some(name)) => Json::string(name)
+    _ => Json::null()
+  }
+  match result.group(index) {
+    Some((start, end_)) =>
+      Json::object_from_entries([
+        ("offset", Json::number(start.to_double())),
+        ("length", Json::number((end_ - start).to_double())),
+        ("string", Json::string(regex_slice_string(s, start, end_))),
+        ("name", name_json),
+      ])
+    None =>
+      Json::object_from_entries([
+        ("offset", Json::number(-1.0)),
+        ("string", Json::null()),
+        ("length", Json::number(0.0)),
+        ("name", name_json),
+      ])
+  }
+}
+
+///|
+fn regex_named_capture_object(
+  s : String,
+  result : @regex_engine.MatchResult,
+  group_names : ReadOnlyArray[String?],
+) -> Json {
+  let out = Map::new()
+  for i in 1..<group_names.length() {
+    match group_names[i] {
+      Some(name) => out[name] = regex_group_value_or_null(s, result, i)
+      None => ()
+    }
+  }
+  Json::object(out)
+}
+
+///|
+fn regex_next_search_start(
+  current_start : Int,
+  match_start : Int,
+  match_end : Int,
+  input_len : Int,
+) -> Int? {
+  if match_end > current_start {
+    Some(match_end)
+  } else if match_start < input_len {
+    Some(match_start + 1)
+  } else {
+    None
+  }
+}
+
+///|
+fn regex_has_match(
   s : String,
   pattern : String,
   flags : String,
-) -> Array[Json] {
-  let chars = string_to_chars(s)
-  let parsed = parse_split_regex_pattern(pattern)
-  let atoms = parsed.atoms
-  let anchor_start = parsed.anchor_start
-  let anchor_end = parsed.anchor_end
-  let ignore_case = split_regex_flag_enabled(flags, 'i')
-  let skip_empty_match = split_regex_flag_enabled(flags, 'n')
-  let len = chars.length()
-  let out = []
+) -> Bool raise EvalError {
+  let compiled = regex_compile_pattern(pattern, flags)
+  regex_find_next_match(compiled, s, 0) is Some(_)
+}
+
+///|
+fn regex_scan_values(
+  s : String,
+  pattern : String,
+  flags : String,
+) -> Array[Json] raise EvalError {
+  let compiled = regex_compile_pattern(pattern, flags)
   let mut search_start = 0
+  let len = s.length()
+  let has_captures = compiled.group_names.length() > 1
+  let out = []
   for {
-    match
-      split_regex_find_next(
-        chars, search_start, atoms, ignore_case, skip_empty_match, anchor_start,
-        anchor_end,
-      ) {
-      Some((match_start, match_end)) => {
-        out.push(
-          Json::string(chars_slice_to_string(chars, match_start, match_end)),
-        )
-        if match_end > search_start {
-          search_start = match_end
-        } else if match_start < len {
-          search_start = match_start + 1
+    match regex_find_next_match(compiled, s, search_start) {
+      Some(found) => {
+        if has_captures {
+          let groups = []
+          for i in 1..<compiled.group_names.length() {
+            groups.push(regex_group_value_or_null(s, found.result, i))
+          }
+          out.push(Json::array(groups))
         } else {
-          return out
+          out.push(Json::string(regex_slice_string(s, found.start, found.end_)))
         }
-        continue
+        match
+          regex_next_search_start(search_start, found.start, found.end_, len) {
+          Some(next_start) => {
+            search_start = next_start
+            continue
+          }
+          None => return out
+        }
       }
       None => return out
     }
@@ -1018,47 +1306,43 @@ fn regex_match_objects(
   s : String,
   pattern : String,
   flags : String,
-) -> Array[Json] {
-  let chars = string_to_chars(s)
-  let parsed = parse_split_regex_pattern(pattern)
-  let atoms = parsed.atoms
-  let anchor_start = parsed.anchor_start
-  let anchor_end = parsed.anchor_end
-  let ignore_case = split_regex_flag_enabled(flags, 'i')
-  let skip_empty_match = split_regex_flag_enabled(flags, 'n')
+) -> Array[Json] raise EvalError {
+  let compiled = regex_compile_pattern(pattern, flags)
   let global = split_regex_flag_enabled(flags, 'g')
-  let len = chars.length()
-  let out = []
   let mut search_start = 0
+  let len = s.length()
+  let out = []
   for {
-    match
-      split_regex_find_next(
-        chars, search_start, atoms, ignore_case, skip_empty_match, anchor_start,
-        anchor_end,
-      ) {
-      Some((match_start, match_end)) => {
+    match regex_find_next_match(compiled, s, search_start) {
+      Some(found) => {
+        let captures = []
+        for i in 1..<compiled.group_names.length() {
+          captures.push(
+            regex_capture_entry(s, found.result, compiled.group_names, i),
+          )
+        }
         out.push(
           Json::object_from_entries([
-            ("offset", Json::number(match_start.to_double())),
-            ("length", Json::number((match_end - match_start).to_double())),
+            ("offset", Json::number(found.start.to_double())),
+            ("length", Json::number((found.end_ - found.start).to_double())),
             (
               "string",
-              Json::string(chars_slice_to_string(chars, match_start, match_end)),
+              Json::string(regex_slice_string(s, found.start, found.end_)),
             ),
-            ("captures", Json::array([])),
+            ("captures", Json::array(captures)),
           ]),
         )
         if !global {
           return out
         }
-        if match_end > search_start {
-          search_start = match_end
-        } else if match_start < len {
-          search_start = match_start + 1
-        } else {
-          return out
+        match
+          regex_next_search_start(search_start, found.start, found.end_, len) {
+          Some(next_start) => {
+            search_start = next_start
+            continue
+          }
+          None => return out
         }
-        continue
       }
       None => return out
     }
@@ -1066,51 +1350,142 @@ fn regex_match_objects(
 }
 
 ///|
-fn regex_substitute_string(
+fn regex_capture_objects(
   s : String,
   pattern : String,
-  replacement : String,
   flags : String,
-  global~ : Bool,
-) -> String {
-  let chars = string_to_chars(s)
-  let parsed = parse_split_regex_pattern(pattern)
-  let atoms = parsed.atoms
-  let anchor_start = parsed.anchor_start
-  let anchor_end = parsed.anchor_end
-  let ignore_case = split_regex_flag_enabled(flags, 'i')
-  let skip_empty_match = split_regex_flag_enabled(flags, 'n')
-  let len = chars.length()
-  let buf = StringBuilder::new()
-  let mut token_start = 0
+) -> Array[Json] raise EvalError {
+  let compiled = regex_compile_pattern(pattern, flags)
+  let global = split_regex_flag_enabled(flags, 'g')
   let mut search_start = 0
+  let len = s.length()
+  let out = []
   for {
-    match
-      split_regex_find_next(
-        chars, search_start, atoms, ignore_case, skip_empty_match, anchor_start,
-        anchor_end,
-      ) {
-      Some((match_start, match_end)) => {
-        buf.write_string(chars_slice_to_string(chars, token_start, match_start))
-        buf.write_string(replacement)
-        token_start = match_end
+    match regex_find_next_match(compiled, s, search_start) {
+      Some(found) => {
+        out.push(
+          regex_named_capture_object(s, found.result, compiled.group_names),
+        )
         if !global {
-          buf.write_string(chars_slice_to_string(chars, token_start, len))
-          return buf.to_string()
+          return out
         }
-        if match_end > search_start {
-          search_start = match_end
-        } else if match_start < len {
-          search_start = match_start + 1
-        } else {
-          buf.write_string(chars_slice_to_string(chars, token_start, len))
-          return buf.to_string()
+        match
+          regex_next_search_start(search_start, found.start, found.end_, len) {
+          Some(next_start) => {
+            search_start = next_start
+            continue
+          }
+          None => return out
         }
-        continue
+      }
+      None => return out
+    }
+  }
+}
+
+///|
+fn regex_apply_replacement_variants(
+  variants : Array[String],
+  replacements : Array[String],
+  matched : String,
+) -> Array[String] {
+  if replacements.length() == 0 {
+    let out = []
+    for variant in variants {
+      out.push(variant + matched)
+    }
+    return out
+  }
+  if variants.length() == 1 && replacements.length() > 1 {
+    let out = []
+    let base = variants[0]
+    for replacement in replacements {
+      out.push(base + replacement)
+    }
+    return out
+  }
+  let out = []
+  for i in 0..<variants.length() {
+    let replacement = if i < replacements.length() {
+      replacements[i]
+    } else {
+      ""
+    }
+    out.push(variants[i] + replacement)
+  }
+  out
+}
+
+///|
+fn regex_substitute_values(
+  s : String,
+  pattern : String,
+  replacement_filter : Filter,
+  flags : String,
+  env : Map[String, Json],
+  global~ : Bool,
+  replacement_error : String,
+) -> Array[String] raise EvalError {
+  let compiled = regex_compile_pattern(pattern, flags)
+  let len = s.length()
+  let mut search_start = 0
+  let mut token_start = 0
+  let mut variants = [""]
+  for {
+    match regex_find_next_match(compiled, s, search_start) {
+      Some(found) => {
+        let prefix = regex_slice_string(s, token_start, found.start)
+        for i in 0..<variants.length() {
+          variants[i] = variants[i] + prefix
+        }
+        let replacement_input = regex_named_capture_object(
+          s,
+          found.result,
+          compiled.group_names,
+        )
+        let replacement_values_json = execute_with_env(
+          replacement_filter, replacement_input, env,
+        )
+        let replacement_values = []
+        for value in replacement_values_json {
+          match value {
+            String(text) => replacement_values.push(text)
+            _ => raise TypeError(replacement_error)
+          }
+        }
+        let matched = regex_slice_string(s, found.start, found.end_)
+        variants = regex_apply_replacement_variants(
+          variants, replacement_values, matched,
+        )
+        token_start = found.end_
+        if !global {
+          let suffix = regex_slice_string(s, token_start, len)
+          for i in 0..<variants.length() {
+            variants[i] = variants[i] + suffix
+          }
+          return variants
+        }
+        match
+          regex_next_search_start(search_start, found.start, found.end_, len) {
+          Some(next_start) => {
+            search_start = next_start
+            continue
+          }
+          None => {
+            let suffix = regex_slice_string(s, token_start, len)
+            for i in 0..<variants.length() {
+              variants[i] = variants[i] + suffix
+            }
+            return variants
+          }
+        }
       }
       None => {
-        buf.write_string(chars_slice_to_string(chars, token_start, len))
-        return buf.to_string()
+        let suffix = regex_slice_string(s, token_start, len)
+        for i in 0..<variants.length() {
+          variants[i] = variants[i] + suffix
+        }
+        return variants
       }
     }
   }

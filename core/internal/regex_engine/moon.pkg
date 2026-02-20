@@ -1,0 +1,10 @@
+import {
+  "moonbitlang/core/builtin",
+  "moonbitlang/core/list",
+  "moonbitlang/core/hashmap",
+  "shina1024/jqx/core/internal/regex_engine/automata",
+  "shina1024/jqx/core/internal/regex_engine/shared_types",
+  "shina1024/jqx/core/internal/regex_engine/ast",
+  "shina1024/jqx/core/internal/regex_engine/symbol_map",
+  "shina1024/jqx/core/internal/regex_engine/shared_types/rechar_set",
+}

@@ -44,6 +44,90 @@
     "man.test:710": {
       "skip_reason": ""
     },
+    "onig.test:2": {
+      "skip_reason": ""
+    },
+    "onig.test:18": {
+      "skip_reason": ""
+    },
+    "onig.test:36": {
+      "skip_reason": ""
+    },
+    "onig.test:41": {
+      "skip_reason": ""
+    },
+    "onig.test:47": {
+      "skip_reason": ""
+    },
+    "onig.test:54": {
+      "skip_reason": ""
+    },
+    "onig.test:75": {
+      "skip_reason": ""
+    },
+    "onig.test:88": {
+      "skip_reason": ""
+    },
+    "onig.test:96": {
+      "skip_reason": ""
+    },
+    "onig.test:132": {
+      "skip_reason": ""
+    },
+    "onig.test:136": {
+      "skip_reason": ""
+    },
+    "onig.test:162": {
+      "skip_reason": ""
+    },
+    "onig.test:166": {
+      "skip_reason": ""
+    },
+    "onig.test:170": {
+      "skip_reason": ""
+    },
+    "onig.test:174": {
+      "skip_reason": ""
+    },
+    "onig.test:179": {
+      "skip_reason": ""
+    },
+    "onig.test:187": {
+      "skip_reason": ""
+    },
+    "onig.test:191": {
+      "skip_reason": ""
+    },
+    "manonig.test:13": {
+      "skip_reason": ""
+    },
+    "manonig.test:18": {
+      "skip_reason": ""
+    },
+    "manonig.test:27": {
+      "skip_reason": ""
+    },
+    "manonig.test:32": {
+      "skip_reason": ""
+    },
+    "manonig.test:37": {
+      "skip_reason": ""
+    },
+    "manonig.test:41": {
+      "skip_reason": ""
+    },
+    "manonig.test:50": {
+      "skip_reason": ""
+    },
+    "manonig.test:74": {
+      "skip_reason": ""
+    },
+    "manonig.test:78": {
+      "skip_reason": ""
+    },
+    "manonig.test:82": {
+      "skip_reason": ""
+    },
     "manonig.test:9": {
       "skip_reason": ""
     },

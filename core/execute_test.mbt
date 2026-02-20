@@ -1284,6 +1284,81 @@ test "execute sub/gsub regex compatibility" {
 }
 
 ///|
+test "execute regex named capture compatibility" {
+  assert_eq(
+    must_execute(
+      parse_filter("capture(\"(?<a>[a-z]+)-(?<n>[0-9]+)\")"),
+      must_parse("\"xyzzy-14\""),
+    ),
+    [must_parse("{\"a\":\"xyzzy\",\"n\":\"14\"}")],
+  )
+  assert_eq(
+    must_execute(parse_filter("capture(\"(?<x>a)?b?\")"), must_parse("\"b\"")),
+    [must_parse("{\"x\":null}")],
+  )
+  assert_eq(
+    must_execute(parse_filter("match(\"(?<x>a)?b?\")"), must_parse("\"b\"")),
+    [
+      must_parse(
+        "{\"offset\":0,\"length\":1,\"string\":\"b\",\"captures\":[{\"offset\":-1,\"string\":null,\"length\":0,\"name\":\"x\"}]}",
+      ),
+    ],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("match(\"(?<a>[a-z]+)-(?<n>[0-9]+)\")"),
+      must_parse("\"xyzzy-14\""),
+    ),
+    [
+      must_parse(
+        "{\"offset\":0,\"length\":8,\"string\":\"xyzzy-14\",\"captures\":[{\"offset\":0,\"length\":5,\"string\":\"xyzzy\",\"name\":\"a\"},{\"offset\":6,\"length\":2,\"string\":\"14\",\"name\":\"n\"}]}",
+      ),
+    ],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("[match([\"foo\", \"ig\"])]"),
+      must_parse("\"foo bar FOO\""),
+    ),
+    [
+      must_parse(
+        "[{\"offset\":0,\"length\":3,\"string\":\"foo\",\"captures\":[]},{\"offset\":8,\"length\":3,\"string\":\"FOO\",\"captures\":[]}]",
+      ),
+    ],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("[scan(\"(a+)(b+)\")]"),
+      must_parse("\"abaabbaaabbb\""),
+    ),
+    [must_parse("[[\"a\",\"b\"],[\"aa\",\"bb\"],[\"aaa\",\"bbb\"]]")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("sub(\"^(?<head>.)\"; \"Head=\\(.head) Tail=\")"),
+      must_parse("\"abcdef\""),
+    ),
+    [Json::string("Head=a Tail=bcdef")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("gsub(\"(?<d>\\\\d)\"; \":\\(.d);\")"),
+      must_parse("\"a1b2\""),
+    ),
+    [Json::string("a:1;b:2;")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter(
+        "[sub(\"(?<a>.)\"; \"\\(.a|ascii_upcase)\", \"\\(.a|ascii_downcase)\", \"c\")]",
+      ),
+      must_parse("\"aB\""),
+    ),
+    [must_parse("[\"AB\",\"aB\",\"cB\"]")],
+  )
+}
+
+///|
 test "execute split errors" {
   guard (try? execute(parse_filter("split(\",\")"), must_parse("1")))
     is Err(err) &&

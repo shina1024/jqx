@@ -4,4 +4,6 @@ import {
   "moonbitlang/core/env",
   "moonbitlang/core/math",
   "moonbitlang/core/strconv",
+  "shina1024/jqx/core/internal/regex_engine",
+  "shina1024/jqx/core/internal/regex_parser",
 }
