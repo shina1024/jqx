@@ -5067,7 +5067,7 @@
     "source_line": 124,
     "source_kind": "runtime",
     "source_expected_count": 1,
-    "skip_reason": "unsupported:regex"
+    "skip_reason": ""
   },
   {
     "name": "upstream-onig-test-l128",

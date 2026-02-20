@@ -98,6 +98,9 @@
     "onig.test:116": {
       "skip_reason": ""
     },
+    "onig.test:124": {
+      "skip_reason": ""
+    },
     "onig.test:141": {
       "skip_reason": ""
     },
