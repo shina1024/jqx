@@ -126,15 +126,15 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           bash ./scripts/jq_upstream_import.sh
-          git diff --exit-code -- scripts/jq_compat_cases.upstream.json scripts/jq_compat_cases.upstream.stage1.json
+          git diff --exit-code -- scripts/jq_compat_cases.upstream.json
 
       - name: Differential Smoke (jq)
         if: runner.os == 'Linux'
         run: bash ./scripts/jq_diff.sh
 
-      - name: Differential Upstream Stage1 (jq)
+      - name: Differential Upstream Full (jq)
         if: runner.os == 'Linux'
-        run: bash ./scripts/jq_diff.sh scripts/jq_compat_cases.upstream.stage1.json
+        run: bash ./scripts/jq_diff.sh scripts/jq_compat_cases.upstream.json
 
       - name: Differential Native Exit (jq)
         if: runner.os == 'Linux'

@@ -1,6 +1,6 @@
 # Upstream Failure Backlog (jq Differential)
 
-Updated: 2026-02-20
+Updated: 2026-02-21
 
 This document tracks failing upstream differential cases so they do not stay
 "postponed forever". Snapshot source:
@@ -144,7 +144,6 @@ From current snapshot (`unknown-function` subset):
   - `path()` evaluation now keeps variable-bound path state through `as` and dynamic `getpath`.
   - full upstream runtime-error-vs-jq-success cluster reduced from `10` to `0`.
 - Differential smoke cases were expanded from 203 to 214.
-- Upstream stage1 subset was expanded from 95 to 110 passing cases.
 - `try ... catch ...` の入力セマンティクスを jq 寄せに修正（catch側へエラーメッセージ文字列を入力）し、
   full upstream diff を `failed 132 -> 99` まで縮小。
 - 例外モデルを拡張し、`error` 系は JSON 値を保持したまま catch へ渡すように修正
@@ -205,4 +204,4 @@ From current snapshot (`unknown-function` subset):
 
 1. Keep differential at `failed 0` while expanding supported-feature coverage.
 2. Continue `def` compatibility improvements (recursion and full filter-argument semantics).
-3. Keep expanding stage1 allowlist incrementally with newly stable cases.
+3. Keep full-upstream differential (`scripts/jq_compat_cases.upstream.json`) at zero-failure/zero-skip.

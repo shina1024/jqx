@@ -531,8 +531,7 @@
     "source_file": "jq.test",
     "source_line": 311,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l315",
@@ -541,8 +540,7 @@
     "source_file": "jq.test",
     "source_line": 315,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l319",
@@ -551,8 +549,7 @@
     "source_file": "jq.test",
     "source_line": 319,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l329",
@@ -561,8 +558,7 @@
     "source_file": "jq.test",
     "source_line": 329,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l333",
@@ -571,8 +567,7 @@
     "source_file": "jq.test",
     "source_line": 333,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l337",
@@ -1346,8 +1341,7 @@
     "source_file": "jq.test",
     "source_line": 775,
     "source_kind": "runtime",
-    "source_expected_count": 2,
-    "skip_reason": ""
+    "source_expected_count": 2
   },
   {
     "name": "upstream-jq-test-l780",
@@ -1356,8 +1350,7 @@
     "source_file": "jq.test",
     "source_line": 780,
     "source_kind": "runtime",
-    "source_expected_count": 2,
-    "skip_reason": ""
+    "source_expected_count": 2
   },
   {
     "name": "upstream-jq-test-l785",
@@ -1366,8 +1359,7 @@
     "source_file": "jq.test",
     "source_line": 785,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l789",
@@ -1376,8 +1368,7 @@
     "source_file": "jq.test",
     "source_line": 789,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l794",
@@ -1386,8 +1377,7 @@
     "source_file": "jq.test",
     "source_line": 794,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l799",
@@ -1396,8 +1386,7 @@
     "source_file": "jq.test",
     "source_line": 799,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l803",
@@ -1496,8 +1485,7 @@
     "source_file": "jq.test",
     "source_line": 851,
     "source_kind": "runtime",
-    "source_expected_count": 4,
-    "skip_reason": ""
+    "source_expected_count": 4
   },
   {
     "name": "upstream-jq-test-l859",
@@ -1506,8 +1494,7 @@
     "source_file": "jq.test",
     "source_line": 859,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l864",
@@ -1516,8 +1503,7 @@
     "source_file": "jq.test",
     "source_line": 864,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l869",
@@ -1526,8 +1512,7 @@
     "source_file": "jq.test",
     "source_line": 869,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l875",
@@ -1536,8 +1521,7 @@
     "source_file": "jq.test",
     "source_line": 875,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l880",
@@ -1546,8 +1530,7 @@
     "source_file": "jq.test",
     "source_line": 880,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l890",
@@ -2182,8 +2165,7 @@
     "source_file": "jq.test",
     "source_line": 1236,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1241",
@@ -2264,8 +2246,7 @@
     "source_file": "jq.test",
     "source_line": 1281,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1285",
@@ -2274,8 +2255,7 @@
     "source_file": "jq.test",
     "source_line": 1285,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1289",
@@ -3391,8 +3371,7 @@
     "source_file": "jq.test",
     "source_line": 1817,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1821",
@@ -3401,8 +3380,7 @@
     "source_file": "jq.test",
     "source_line": 1821,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1825",
@@ -3411,8 +3389,7 @@
     "source_file": "jq.test",
     "source_line": 1825,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1829",
@@ -3421,8 +3398,7 @@
     "source_file": "jq.test",
     "source_line": 1829,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1833",
@@ -3431,8 +3407,7 @@
     "source_file": "jq.test",
     "source_line": 1833,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1838",
@@ -3441,8 +3416,7 @@
     "source_file": "jq.test",
     "source_line": 1838,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1842",
@@ -3451,8 +3425,7 @@
     "source_file": "jq.test",
     "source_line": 1842,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1846",
@@ -3461,8 +3434,7 @@
     "source_file": "jq.test",
     "source_line": 1846,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1851",
@@ -3471,8 +3443,7 @@
     "source_file": "jq.test",
     "source_line": 1851,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1855",
@@ -3481,8 +3452,7 @@
     "source_file": "jq.test",
     "source_line": 1855,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1859",
@@ -3491,8 +3461,7 @@
     "source_file": "jq.test",
     "source_line": 1859,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1865",
@@ -3501,8 +3470,7 @@
     "source_file": "jq.test",
     "source_line": 1865,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1870",
@@ -3511,8 +3479,7 @@
     "source_file": "jq.test",
     "source_line": 1870,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1874",
@@ -3521,8 +3488,7 @@
     "source_file": "jq.test",
     "source_line": 1874,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1878",
@@ -3531,8 +3497,7 @@
     "source_file": "jq.test",
     "source_line": 1878,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1882",
@@ -3541,8 +3506,7 @@
     "source_file": "jq.test",
     "source_line": 1882,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1887",
@@ -3551,8 +3515,7 @@
     "source_file": "jq.test",
     "source_line": 1887,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1891",
@@ -3561,8 +3524,7 @@
     "source_file": "jq.test",
     "source_line": 1891,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1895",
@@ -3571,8 +3533,7 @@
     "source_file": "jq.test",
     "source_line": 1895,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1899",
@@ -3581,8 +3542,7 @@
     "source_file": "jq.test",
     "source_line": 1899,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1939",
@@ -3618,8 +3578,7 @@
     "source_file": "jq.test",
     "source_line": 1963,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l1967",
@@ -3700,8 +3659,7 @@
     "source_file": "jq.test",
     "source_line": 2008,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2012",
@@ -3789,8 +3747,7 @@
     "source_file": "jq.test",
     "source_line": 2059,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2063",
@@ -4111,8 +4068,7 @@
     "source_file": "jq.test",
     "source_line": 2247,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2251",
@@ -4121,8 +4077,7 @@
     "source_file": "jq.test",
     "source_line": 2251,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2255",
@@ -4203,8 +4158,7 @@
     "source_file": "jq.test",
     "source_line": 2303,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2307",
@@ -4213,8 +4167,7 @@
     "source_file": "jq.test",
     "source_line": 2307,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2312",
@@ -4358,8 +4311,7 @@
     "source_file": "jq.test",
     "source_line": 2382,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2386",
@@ -4368,8 +4320,7 @@
     "source_file": "jq.test",
     "source_line": 2386,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2391",
@@ -4378,8 +4329,7 @@
     "source_file": "jq.test",
     "source_line": 2391,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2396",
@@ -4388,8 +4338,7 @@
     "source_file": "jq.test",
     "source_line": 2396,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2401",
@@ -4596,8 +4545,7 @@
     "source_file": "jq.test",
     "source_line": 2514,
     "source_kind": "runtime",
-    "source_expected_count": 2,
-    "skip_reason": ""
+    "source_expected_count": 2
   },
   {
     "name": "upstream-jq-test-l2524",
@@ -4678,8 +4626,7 @@
     "source_file": "base64.test",
     "source_line": 26,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-base64-test-l30",
@@ -4796,8 +4743,7 @@
     "source_file": "optional.test",
     "source_line": 9,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l2",
@@ -4806,8 +4752,7 @@
     "source_file": "onig.test",
     "source_line": 2,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l6",
@@ -4816,8 +4761,7 @@
     "source_file": "onig.test",
     "source_line": 6,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l10",
@@ -4826,8 +4770,7 @@
     "source_file": "onig.test",
     "source_line": 10,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l14",
@@ -4836,8 +4779,7 @@
     "source_file": "onig.test",
     "source_line": 14,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l18",
@@ -4846,8 +4788,7 @@
     "source_file": "onig.test",
     "source_line": 18,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l23",
@@ -4856,8 +4797,7 @@
     "source_file": "onig.test",
     "source_line": 23,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l28",
@@ -4866,8 +4806,7 @@
     "source_file": "onig.test",
     "source_line": 28,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l32",
@@ -4876,8 +4815,7 @@
     "source_file": "onig.test",
     "source_line": 32,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l36",
@@ -4886,8 +4824,7 @@
     "source_file": "onig.test",
     "source_line": 36,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l41",
@@ -4896,8 +4833,7 @@
     "source_file": "onig.test",
     "source_line": 41,
     "source_kind": "runtime",
-    "source_expected_count": 3,
-    "skip_reason": ""
+    "source_expected_count": 3
   },
   {
     "name": "upstream-onig-test-l47",
@@ -4906,8 +4842,7 @@
     "source_file": "onig.test",
     "source_line": 47,
     "source_kind": "runtime",
-    "source_expected_count": 3,
-    "skip_reason": ""
+    "source_expected_count": 3
   },
   {
     "name": "upstream-onig-test-l54",
@@ -4916,8 +4851,7 @@
     "source_file": "onig.test",
     "source_line": 54,
     "source_kind": "runtime",
-    "source_expected_count": 3,
-    "skip_reason": ""
+    "source_expected_count": 3
   },
   {
     "name": "upstream-onig-test-l60",
@@ -4926,8 +4860,7 @@
     "source_file": "onig.test",
     "source_line": 60,
     "source_kind": "runtime",
-    "source_expected_count": 3,
-    "skip_reason": ""
+    "source_expected_count": 3
   },
   {
     "name": "upstream-onig-test-l67",
@@ -4936,8 +4869,7 @@
     "source_file": "onig.test",
     "source_line": 67,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l71",
@@ -4946,8 +4878,7 @@
     "source_file": "onig.test",
     "source_line": 71,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l75",
@@ -4956,8 +4887,7 @@
     "source_file": "onig.test",
     "source_line": 75,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l84",
@@ -4966,8 +4896,7 @@
     "source_file": "onig.test",
     "source_line": 84,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l88",
@@ -4976,8 +4905,7 @@
     "source_file": "onig.test",
     "source_line": 88,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l92",
@@ -4986,8 +4914,7 @@
     "source_file": "onig.test",
     "source_line": 92,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l96",
@@ -4996,8 +4923,7 @@
     "source_file": "onig.test",
     "source_line": 96,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l100",
@@ -5006,8 +4932,7 @@
     "source_file": "onig.test",
     "source_line": 100,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l104",
@@ -5016,8 +4941,7 @@
     "source_file": "onig.test",
     "source_line": 104,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l108",
@@ -5026,8 +4950,7 @@
     "source_file": "onig.test",
     "source_line": 108,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l112",
@@ -5036,8 +4959,7 @@
     "source_file": "onig.test",
     "source_line": 112,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l116",
@@ -5046,8 +4968,7 @@
     "source_file": "onig.test",
     "source_line": 116,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l120",
@@ -5056,8 +4977,7 @@
     "source_file": "onig.test",
     "source_line": 120,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l124",
@@ -5066,8 +4986,7 @@
     "source_file": "onig.test",
     "source_line": 124,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l128",
@@ -5076,8 +4995,7 @@
     "source_file": "onig.test",
     "source_line": 128,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l132",
@@ -5086,8 +5004,7 @@
     "source_file": "onig.test",
     "source_line": 132,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l136",
@@ -5096,8 +5013,7 @@
     "source_file": "onig.test",
     "source_line": 136,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l141",
@@ -5106,8 +5022,7 @@
     "source_file": "onig.test",
     "source_line": 141,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l145",
@@ -5116,8 +5031,7 @@
     "source_file": "onig.test",
     "source_line": 145,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l149",
@@ -5126,8 +5040,7 @@
     "source_file": "onig.test",
     "source_line": 149,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l153",
@@ -5136,8 +5049,7 @@
     "source_file": "onig.test",
     "source_line": 153,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l157",
@@ -5146,8 +5058,7 @@
     "source_file": "onig.test",
     "source_line": 157,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l162",
@@ -5156,8 +5067,7 @@
     "source_file": "onig.test",
     "source_line": 162,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l166",
@@ -5166,8 +5076,7 @@
     "source_file": "onig.test",
     "source_line": 166,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l170",
@@ -5176,8 +5085,7 @@
     "source_file": "onig.test",
     "source_line": 170,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l174",
@@ -5186,8 +5094,7 @@
     "source_file": "onig.test",
     "source_line": 174,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l179",
@@ -5196,8 +5103,7 @@
     "source_file": "onig.test",
     "source_line": 179,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l183",
@@ -5206,8 +5112,7 @@
     "source_file": "onig.test",
     "source_line": 183,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l187",
@@ -5216,8 +5121,7 @@
     "source_file": "onig.test",
     "source_line": 187,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l191",
@@ -5226,8 +5130,7 @@
     "source_file": "onig.test",
     "source_line": 191,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-onig-test-l196",
@@ -5281,8 +5184,7 @@
     "source_file": "manonig.test",
     "source_line": 5,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-manonig-test-l9",
@@ -5291,8 +5193,7 @@
     "source_file": "manonig.test",
     "source_line": 9,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-manonig-test-l13",
@@ -5301,8 +5202,7 @@
     "source_file": "manonig.test",
     "source_line": 13,
     "source_kind": "runtime",
-    "source_expected_count": 2,
-    "skip_reason": ""
+    "source_expected_count": 2
   },
   {
     "name": "upstream-manonig-test-l18",
@@ -5311,8 +5211,7 @@
     "source_file": "manonig.test",
     "source_line": 18,
     "source_kind": "runtime",
-    "source_expected_count": 2,
-    "skip_reason": ""
+    "source_expected_count": 2
   },
   {
     "name": "upstream-manonig-test-l23",
@@ -5321,8 +5220,7 @@
     "source_file": "manonig.test",
     "source_line": 23,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-manonig-test-l27",
@@ -5331,8 +5229,7 @@
     "source_file": "manonig.test",
     "source_line": 27,
     "source_kind": "runtime",
-    "source_expected_count": 2,
-    "skip_reason": ""
+    "source_expected_count": 2
   },
   {
     "name": "upstream-manonig-test-l32",
@@ -5341,8 +5238,7 @@
     "source_file": "manonig.test",
     "source_line": 32,
     "source_kind": "runtime",
-    "source_expected_count": 2,
-    "skip_reason": ""
+    "source_expected_count": 2
   },
   {
     "name": "upstream-manonig-test-l37",
@@ -5351,8 +5247,7 @@
     "source_file": "manonig.test",
     "source_line": 37,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-manonig-test-l41",
@@ -5361,8 +5256,7 @@
     "source_file": "manonig.test",
     "source_line": 41,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-manonig-test-l45",
@@ -5371,8 +5265,7 @@
     "source_file": "manonig.test",
     "source_line": 45,
     "source_kind": "runtime",
-    "source_expected_count": 2,
-    "skip_reason": ""
+    "source_expected_count": 2
   },
   {
     "name": "upstream-manonig-test-l50",
@@ -5381,8 +5274,7 @@
     "source_file": "manonig.test",
     "source_line": 50,
     "source_kind": "runtime",
-    "source_expected_count": 3,
-    "skip_reason": ""
+    "source_expected_count": 3
   },
   {
     "name": "upstream-manonig-test-l56",
@@ -5418,8 +5310,7 @@
     "source_file": "manonig.test",
     "source_line": 74,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-manonig-test-l78",
@@ -5428,8 +5319,7 @@
     "source_file": "manonig.test",
     "source_line": 78,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-manonig-test-l82",
@@ -5438,8 +5328,7 @@
     "source_file": "manonig.test",
     "source_line": 82,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-manonig-test-l86",
@@ -5448,8 +5337,7 @@
     "source_file": "manonig.test",
     "source_line": 86,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-man-test-l1",
@@ -6843,8 +6731,7 @@
     "source_file": "man.test",
     "source_line": 650,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-man-test-l654",
@@ -6862,8 +6749,7 @@
     "source_file": "man.test",
     "source_line": 658,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-man-test-l662",
@@ -6872,8 +6758,7 @@
     "source_file": "man.test",
     "source_line": 662,
     "source_kind": "runtime",
-    "source_expected_count": 4,
-    "skip_reason": ""
+    "source_expected_count": 4
   },
   {
     "name": "upstream-man-test-l669",
@@ -6882,8 +6767,7 @@
     "source_file": "man.test",
     "source_line": 669,
     "source_kind": "runtime",
-    "source_expected_count": 4,
-    "skip_reason": ""
+    "source_expected_count": 4
   },
   {
     "name": "upstream-man-test-l676",
@@ -6892,8 +6776,7 @@
     "source_file": "man.test",
     "source_line": 676,
     "source_kind": "runtime",
-    "source_expected_count": 3,
-    "skip_reason": ""
+    "source_expected_count": 3
   },
   {
     "name": "upstream-man-test-l682",
@@ -6902,8 +6785,7 @@
     "source_file": "man.test",
     "source_line": 682,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-man-test-l686",
@@ -6966,8 +6848,7 @@
     "source_file": "man.test",
     "source_line": 710,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-man-test-l714",
@@ -7048,8 +6929,7 @@
     "source_file": "man.test",
     "source_line": 746,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-man-test-l750",
@@ -7058,8 +6938,7 @@
     "source_file": "man.test",
     "source_line": 750,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-man-test-l754",
@@ -7302,8 +7181,7 @@
     "source_file": "man.test",
     "source_line": 871,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-man-test-l875",
@@ -7312,8 +7190,7 @@
     "source_file": "man.test",
     "source_line": 875,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-man-test-l879",
@@ -7448,8 +7325,7 @@
     "source_file": "man.test",
     "source_line": 945,
     "source_kind": "runtime",
-    "source_expected_count": 4,
-    "skip_reason": ""
+    "source_expected_count": 4
   },
   {
     "name": "upstream-man-test-l952",
@@ -7458,8 +7334,7 @@
     "source_file": "man.test",
     "source_line": 952,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "skip_reason": ""
+    "source_expected_count": 1
   },
   {
     "name": "upstream-man-test-l956",

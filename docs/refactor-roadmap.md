@@ -1,6 +1,6 @@
 # Refactor Roadmap (Core Maintainability)
 
-Updated: 2026-02-14
+Updated: 2026-02-21
 
 ## Why now
 
@@ -148,7 +148,7 @@ Done criteria:
 
 - `moon test`
 - `pwsh -File scripts/jq_diff.ps1`
-- upstream stage1 diff
+- upstream full diff
 
 ### Phase 3 (evaluator split, no behavior change)
 
@@ -158,7 +158,7 @@ Done criteria:
 Done criteria:
 
 - `moon test`
-- smoke + stage1 differential pass
+- smoke + upstream full differential pass
 - `docs/upstream-failure-backlog.md` の件数悪化なし
 
 ### Phase 4 (optional, after stabilization)

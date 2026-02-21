@@ -1,6 +1,6 @@
 # jqx Compatibility Matrix (Baseline)
 
-Updated: 2026-02-20
+Updated: 2026-02-21
 
 Scope:
 - Target compatibility: jq 1.7 behavior
@@ -83,7 +83,7 @@ Implemented builtins/functions in `core/execute.mbt` + `core/builtin*.mbt` inclu
 
 Differential scripts:
 - Smoke: `scripts/jq_diff.ps1`, `scripts/jq_diff.sh`
-- Upstream stage1: `scripts/jq_compat_cases.upstream.stage1.json`
+- Upstream full: `scripts/jq_compat_cases.upstream.json`
 - Native `-e`: `scripts/jq_diff_native.ps1`, `scripts/jq_diff_native.sh`
 - Cases: `scripts/jq_compat_cases.json`, `scripts/jq_exit_cases.json`
 - Imported upstream cases: `scripts/jq_compat_cases.upstream.json`
@@ -93,7 +93,7 @@ CI coverage in `.github/workflows/ci.yml`:
 - Linux/macOS/Windows: MoonBit `check` + tests
 - Linux: `ts/zod-adapter`, `ts/yup-adapter`, `ts/valibot-adapter` (`pnpm lint`, `pnpm typecheck`, `pnpm test`)
 - Linux: imported upstream case drift check (`jq_upstream_import` + `git diff --exit-code`)
-- Linux: differential smoke, upstream stage1 subset, and native `-e` scripts
+- Linux: differential smoke, upstream full, and native `-e` scripts
 
 Notes:
 - `jq_diff.ps1` is the primary runner for Windows environments and can resolve
@@ -108,10 +108,7 @@ Notes:
   not git submodule).
 - `scripts/jq_upstream_import.ps1` converts vendored `*.test` fixtures into
   `scripts/jq_compat_cases.upstream.json` using sidecar config in
-  `scripts/jq_upstream_import.json` (skip patterns + per-case overrides).
-- `scripts/jq_compat_cases.upstream.stage1.json` is auto-generated from
-  `scripts/jq_upstream_stage1_allowlist.txt` and is the current CI-safe subset
-  (110 passing cases as of 2026-02-14).
+  `scripts/jq_upstream_import.json`.
 - Full upstream failure backlog and prioritization:
   `docs/upstream-failure-backlog.md`.
 - CLI compatibility cases can specify `jq_args` / `jqx_args` and
@@ -119,9 +116,6 @@ Notes:
 - Differential runners now default `jqx_use_stdin=true` unless explicitly
   overridden per case.
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.
-- Importer overrides currently unskip 29 regex cases, 35 core-language cases,
-  16 time-builtin cases, 3 io-control cases (1 false positive + 2 minimal-compat
-  cases), and 1 base64-padding case.
 - Smoke differential currently covers 233 cases (as of 2026-02-19).
 - Full upstream differential baseline is currently:
   total 824 / passed 824 / failed 0 / skipped 0

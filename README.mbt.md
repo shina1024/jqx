@@ -151,21 +151,17 @@ Upstream jq test fixtures (copy strategy, not submodule):
 ./scripts/update_jq_tests.ps1
 ./scripts/jq_upstream_import.ps1
 ./scripts/jq_diff.ps1 -CasesPath scripts/jq_compat_cases.upstream.json
-./scripts/jq_diff.ps1 -CasesPath scripts/jq_compat_cases.upstream.stage1.json
 ```
 
 ```bash
 bash ./scripts/update_jq_tests.sh
 bash ./scripts/jq_upstream_import.sh
 bash ./scripts/jq_diff.sh scripts/jq_compat_cases.upstream.json
-bash ./scripts/jq_diff.sh scripts/jq_compat_cases.upstream.stage1.json
 ```
 
 `jq_upstream_import` reads vendored `third_party/jq-tests/tests/*.test` and
-applies sidecar rules from `scripts/jq_upstream_import.json` (skip patterns and
-per-case overrides).
-`scripts/jq_compat_cases.upstream.stage1.json` is generated from
-`scripts/jq_upstream_stage1_allowlist.txt` and used as the stable CI subset.
+applies sidecar config from `scripts/jq_upstream_import.json` (source files and
+output shaping).
 
 Native binary differential test for `-e` exit status parity:
 
