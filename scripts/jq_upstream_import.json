@@ -9,6 +9,7 @@
     "manonig.test",
     "man.test"
   ],
-  "include_compile_fail": false,
+  "include_compile_fail": true,
+  "compile_fail_expect_error_mode": "any",
   "default_case_fields": {}
 }

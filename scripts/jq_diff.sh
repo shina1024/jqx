@@ -161,6 +161,7 @@ while IFS= read -r case_json; do
   input="$("${JQ_BIN_RESOLVED}" -r '.input' <<<"${case_json}")"
   expect_error="$("${JQ_BIN_RESOLVED}" -r '(.expect_error // false) | tostring' <<<"${case_json}")"
   expect_error_mode="$("${JQ_BIN_RESOLVED}" -r '(.expect_error_mode // "strict") | tostring' <<<"${case_json}")"
+  source_kind="$("${JQ_BIN_RESOLVED}" -r '(.source_kind // "") | tostring' <<<"${case_json}")"
   expect_status="$("${JQ_BIN_RESOLVED}" -r 'if has("expect_status") then (.expect_status | tostring) else "" end' <<<"${case_json}")"
   skip_reason="$("${JQ_BIN_RESOLVED}" -r 'if has("skip_reason") and .skip_reason != null then (.skip_reason | tostring) else "" end' <<<"${case_json}")"
   jqx_use_stdin="$("${JQ_BIN_RESOLVED}" -r '(.jqx_use_stdin // true) | tostring' <<<"${case_json}")"
@@ -169,6 +170,7 @@ while IFS= read -r case_json; do
   input="${input%$'\r'}"
   expect_error="${expect_error%$'\r'}"
   expect_error_mode="${expect_error_mode%$'\r'}"
+  source_kind="${source_kind%$'\r'}"
   expect_status="${expect_status%$'\r'}"
   skip_reason="${skip_reason%$'\r'}"
   jqx_use_stdin="${jqx_use_stdin%$'\r'}"
@@ -223,10 +225,16 @@ while IFS= read -r case_json; do
       jqx_has_error=true
     fi
     if [[ "${expect_error_mode}" == "any" || "${expect_error_mode}" == "ignore_msg" ]]; then
-      if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" \
-        && "${jq_value_text}" == "${jqx_value_text}" \
-        && "${jq_debug_text}" == "${jqx_debug_text}" ]]; then
-        ok=true
+      if [[ "${source_kind}" == "compile_fail" ]]; then
+        if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" ]]; then
+          ok=true
+        fi
+      else
+        if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" \
+          && "${jq_value_text}" == "${jqx_value_text}" \
+          && "${jq_debug_text}" == "${jqx_debug_text}" ]]; then
+          ok=true
+        fi
       fi
     else
       if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" \

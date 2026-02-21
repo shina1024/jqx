@@ -184,6 +184,15 @@ if ($config.PSObject.Properties.Name -contains "include_compile_fail" -and $null
   $includeCompileFail = [bool]$config.include_compile_fail
 }
 
+$compileFailExpectErrorMode = "any"
+if ($config.PSObject.Properties.Name -contains "compile_fail_expect_error_mode" -and $null -ne $config.compile_fail_expect_error_mode) {
+  $candidate = ([string]$config.compile_fail_expect_error_mode).ToLowerInvariant()
+  if ($candidate -ne "strict" -and $candidate -ne "any" -and $candidate -ne "ignore_msg") {
+    throw "compile_fail_expect_error_mode must be one of: strict, any, ignore_msg"
+  }
+  $compileFailExpectErrorMode = $candidate
+}
+
 $defaultFields = $null
 if ($config.PSObject.Properties.Name -contains "default_case_fields" -and $null -ne $config.default_case_fields) {
   $defaultFields = $config.default_case_fields
@@ -223,7 +232,7 @@ foreach ($item in $allParsed) {
 
   if ($item.kind -eq "compile_fail") {
     $case["expect_error"] = $true
-    $case["expect_error_mode"] = if ($item.ignore_msg) { "any" } else { "strict" }
+    $case["expect_error_mode"] = if ($item.ignore_msg) { "any" } else { $compileFailExpectErrorMode }
     if ($item.expected_error_lines.Count -gt 0) {
       $case["source_error_lines"] = @($item.expected_error_lines)
     }

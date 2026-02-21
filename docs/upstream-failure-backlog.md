@@ -14,10 +14,16 @@ Compatibility policy:
 
 ## Snapshot Summary
 
-- total: 824
-- passed: 824
+- total: 843
+- passed: 843
 - failed: 0
 - skipped: 0
+
+## Coverage Scope
+
+- Imported upstream set includes `runtime` and `compile_fail`.
+- Current `compile_fail` comparison mode is `expect_error_mode=any`
+  (error-presence parity first; strict diagnostic-text parity is tracked separately).
 
 ## Failure Categories (Current)
 
@@ -37,6 +43,12 @@ From current snapshot (`unknown-function` subset):
 
 ## Latest Progress
 
+- Upstream `compile_fail` coverage was enabled in importer config
+  (`include_compile_fail=true`) and baseline kept at `failed 0`:
+  - full upstream differential moved from `824` to `843` total cases.
+  - `parse_as_pattern` now rejects empty patterns (`. as []`, `. as {}`) as parse errors.
+  - differential runners now treat `compile_fail + expect_error_mode=any` as
+    error-presence parity checks.
 - Added native `strftime` locale bridge for `%A`/`%B` patterns with jq-aligned
   lossy UTF-8 decoding behavior on native targets, and unskipped
   `jq.test:1821` / `optional.test:9` (`skip 2 -> 0`, `failed 0` preserved).
@@ -204,4 +216,5 @@ From current snapshot (`unknown-function` subset):
 
 1. Keep differential at `failed 0` while expanding supported-feature coverage.
 2. Continue `def` compatibility improvements (recursion and full filter-argument semantics).
-3. Keep full-upstream differential (`scripts/jq_compat_cases.upstream.json`) at zero-failure/zero-skip.
+3. Tighten `compile_fail` parity from `any` toward stricter diagnostic compatibility.
+4. Keep full-upstream differential (`scripts/jq_compat_cases.upstream.json`) at zero-failure/zero-skip.

@@ -63,6 +63,7 @@ Implemented builtins/functions in `core/execute.mbt` + `core/builtin*.mbt` inclu
 | Topic | Status | Notes |
 | --- | --- | --- |
 | Number edge behavior | partial | parser/evaluator now avoid non-finite JSON output (`NaN -> null`, `±Infinity -> ±MAX_DOUBLE` in numeric ops), but full jq decnum parity is still out of scope |
+| Compile-time diagnostics | partial | upstream `compile_fail` coverage is enabled, but comparison currently prioritizes error-presence parity (`expect_error_mode=any`) over byte-for-byte diagnostic text parity |
 | Time builtins | partial | `strftime`/`strflocaltime`/`strptime`/`mktime`/`gmtime` are implemented for upstream-covered flows; `%A`/`%B` locale name rendering now delegates to native `strftime` and matches jq differential output on native targets |
 | Exact error text | partial | close to jq style but not byte-for-byte compatible |
 | CLI option coverage | partial | currently `-r`, `-R`, `-c`, `-n`, `-s`, `-e` (JSON stream parsing now handles whitespace-separated and adjacent structured values; remaining byte-for-byte parity differences are still possible) |
@@ -109,6 +110,9 @@ Notes:
 - `scripts/jq_upstream_import.ps1` converts vendored `*.test` fixtures into
   `scripts/jq_compat_cases.upstream.json` using sidecar config in
   `scripts/jq_upstream_import.json`.
+- Imported upstream set now includes both runtime and `compile_fail` cases.
+- `compile_fail` cases are currently generated with `expect_error_mode=any`
+  (error-presence parity first, strict diagnostic text parity tracked separately).
 - Full upstream failure backlog and prioritization:
   `docs/upstream-failure-backlog.md`.
 - CLI compatibility cases can specify `jq_args` / `jqx_args` and
@@ -118,7 +122,7 @@ Notes:
 - Cases with `skip_reason` are counted as skipped by `jq_diff.*`.
 - Smoke differential currently covers 233 cases (as of 2026-02-19).
 - Full upstream differential baseline is currently:
-  total 824 / passed 824 / failed 0 / skipped 0
+  total 843 / passed 843 / failed 0 / skipped 0
   (see `scripts/jq_upstream_failures.snapshot.json` and `docs/upstream-failure-backlog.md`).
 - `expect_error: true` in smoke differential cases compares normalized jq/jqx
   error messages and accepts jqx `moon run` wrapper status behavior.

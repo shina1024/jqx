@@ -288,6 +288,12 @@ test "parse as pattern bindings" {
   guard (try? parse_filter(".[] | . as {a:$a} ?// [$a] | $a")) is Ok(_) else {
     fail("expected ?// parse")
   }
+  guard (try? parse_filter(". as [] | null")) is Err(_) else {
+    fail("expected parse error for empty array as-pattern")
+  }
+  guard (try? parse_filter(". as {} | null")) is Err(_) else {
+    fail("expected parse error for empty object as-pattern")
+  }
 }
 
 ///|

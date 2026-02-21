@@ -162,6 +162,9 @@ bash ./scripts/jq_diff.sh scripts/jq_compat_cases.upstream.json
 `jq_upstream_import` reads vendored `third_party/jq-tests/tests/*.test` and
 applies sidecar config from `scripts/jq_upstream_import.json` (source files and
 output shaping).
+Current upstream import includes both runtime and compile-fail cases.
+Compile-fail cases are compared in `expect_error_mode=any` by default
+(error-presence parity first).
 
 Native binary differential test for `-e` exit status parity:
 

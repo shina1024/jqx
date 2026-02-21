@@ -102,6 +102,21 @@
     "source_expected_count": 1
   },
   {
+    "name": "upstream-jq-test-l63",
+    "filter": "\"u\\vw\"",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 63,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: Invalid escape at line 1, column 4 (while parsing '\"\\v\"') at <top-level>, line 1, column 3:",
+      "    \"u\\vw\"",
+      "      ^^"
+    ]
+  },
+  {
     "name": "upstream-jq-test-l68",
     "filter": "\"inter\\(\"pol\" + \"ation\")\"",
     "input": "null",
@@ -199,6 +214,51 @@
     "source_line": 122,
     "source_kind": "runtime",
     "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l127",
+    "filter": "{(0):1}",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 127,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: Cannot use number (0) as object key at <top-level>, line 1, column 3:",
+      "    {(0):1}",
+      "      ^"
+    ]
+  },
+  {
+    "name": "upstream-jq-test-l133",
+    "filter": "{1+2:3}",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 133,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: May need parentheses around object key expression at <top-level>, line 1, column 2:",
+      "    {1+2:3}",
+      "     ^^^"
+    ]
+  },
+  {
+    "name": "upstream-jq-test-l139",
+    "filter": "{non_const:., (0):1}",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 139,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: Cannot use number (0) as object key at <top-level>, line 1, column 16:",
+      "    {non_const:., (0):1}",
+      "                   ^"
+    ]
   },
   {
     "name": "upstream-jq-test-l148",
@@ -550,6 +610,21 @@
     "source_line": 319,
     "source_kind": "runtime",
     "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l324",
+    "filter": ". as $foo | break $foo",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 324,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: $*label-foo is not defined at <top-level>, line 1, column 13:",
+      "    . as $foo | break $foo",
+      "                ^^^^^^^^^^"
+    ]
   },
   {
     "name": "upstream-jq-test-l329",
@@ -955,6 +1030,66 @@
     "source_line": 543,
     "source_kind": "runtime",
     "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l548",
+    "filter": ". as [] | null",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 548,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: syntax error, unexpected ']', expecting BINDING or '[' or '{' at <top-level>, line 1, column 7:",
+      "    . as [] | null",
+      "          ^"
+    ]
+  },
+  {
+    "name": "upstream-jq-test-l554",
+    "filter": ". as {} | null",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 554,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: syntax error, unexpected '}' at <top-level>, line 1, column 7:",
+      "    . as {} | null",
+      "          ^"
+    ]
+  },
+  {
+    "name": "upstream-jq-test-l560",
+    "filter": ". as $foo | [$foo, $bar]",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 560,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: $bar is not defined at <top-level>, line 1, column 20:",
+      "    . as $foo | [$foo, $bar]",
+      "                       ^^^^"
+    ]
+  },
+  {
+    "name": "upstream-jq-test-l566",
+    "filter": ". as {(true):$foo} | $foo",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 566,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: Cannot use boolean (true) as object key at <top-level>, line 1, column 8:",
+      "    . as {(true):$foo} | $foo",
+      "           ^^^^"
+    ]
   },
   {
     "name": "upstream-jq-test-l577",
@@ -3545,6 +3680,96 @@
     "source_expected_count": 1
   },
   {
+    "name": "upstream-jq-test-l1904",
+    "filter": "module (.+1); 0",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 1904,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: Module metadata must be constant at <top-level>, line 1, column 8:",
+      "    module (.+1); 0",
+      "           ^^^^^"
+    ]
+  },
+  {
+    "name": "upstream-jq-test-l1910",
+    "filter": "module []; 0",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 1910,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: Module metadata must be an object at <top-level>, line 1, column 8:",
+      "    module []; 0",
+      "           ^^"
+    ]
+  },
+  {
+    "name": "upstream-jq-test-l1916",
+    "filter": "include \"a\" (.+1); 0",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 1916,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: Module metadata must be constant at <top-level>, line 1, column 13:",
+      "    include \"a\" (.+1); 0",
+      "                ^^^^^"
+    ]
+  },
+  {
+    "name": "upstream-jq-test-l1922",
+    "filter": "include \"a\" []; 0",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 1922,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: Module metadata must be an object at <top-level>, line 1, column 13:",
+      "    include \"a\" []; 0",
+      "                ^^"
+    ]
+  },
+  {
+    "name": "upstream-jq-test-l1928",
+    "filter": "include \"\\ \"; 0",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 1928,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: Invalid escape at line 1, column 4 (while parsing '\"\\ \"') at <top-level>, line 1, column 10:",
+      "    include \"\\ \"; 0",
+      "             ^^"
+    ]
+  },
+  {
+    "name": "upstream-jq-test-l1934",
+    "filter": "include \"\\(a)\"; 0",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 1934,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: Import path must be constant at <top-level>, line 1, column 9:",
+      "    include \"\\(a)\"; 0",
+      "            ^^^^^^"
+    ]
+  },
+  {
     "name": "upstream-jq-test-l1939",
     "filter": "modulemeta",
     "input": "\"c\"",
@@ -3570,6 +3795,36 @@
     "source_line": 1947,
     "source_kind": "runtime",
     "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l1952",
+    "filter": "import \"syntaxerror\" as e; .",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 1952,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: syntax error, unexpected ';', expecting end of file at tests/modules/syntaxerror/syntaxerror.jq, line 1, column 4:",
+      "    wat;",
+      "       ^"
+    ]
+  },
+  {
+    "name": "upstream-jq-test-l1958",
+    "filter": "%::wat",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 1958,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: syntax error, unexpected '%', expecting end of file at <top-level>, line 1, column 1:",
+      "    %::wat",
+      "    ^"
+    ]
   },
   {
     "name": "upstream-jq-test-l1963",
@@ -3722,6 +3977,36 @@
     "source_file": "jq.test",
     "source_line": 2037,
     "source_kind": "runtime"
+  },
+  {
+    "name": "upstream-jq-test-l2041",
+    "filter": "{",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 2041,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: syntax error, unexpected end of file at <top-level>, line 1, column 1:",
+      "    {",
+      "    ^"
+    ]
+  },
+  {
+    "name": "upstream-jq-test-l2047",
+    "filter": "}",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 2047,
+    "source_kind": "compile_fail",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_error_lines": [
+      "jq: error: syntax error, unexpected INVALID_CHARACTER, expecting end of file at <top-level>, line 1, column 1:",
+      "    }",
+      "    ^"
+    ]
   },
   {
     "name": "upstream-jq-test-l2052",

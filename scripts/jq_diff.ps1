@@ -330,6 +330,10 @@ try {
     if ($case.PSObject.Properties.Name -contains "expect_error_mode" -and $null -ne $case.expect_error_mode) {
       $expectErrorMode = ([string]$case.expect_error_mode).ToLowerInvariant()
     }
+    $sourceKind = ""
+    if ($case.PSObject.Properties.Name -contains "source_kind" -and $null -ne $case.source_kind) {
+      $sourceKind = ([string]$case.source_kind).ToLowerInvariant()
+    }
     $expectStatus = $null
     if ($case.PSObject.Properties.Name -contains "expect_status" -and $null -ne $case.expect_status) {
       $expectStatus = [int]$case.expect_status
@@ -393,13 +397,19 @@ try {
       $jqHasError = $jqStatus -ne 0 -or $jqClass.HasErrorLine
       $jqxHasError = $jqxStatus -ne 0 -or $jqxClass.HasErrorLine
       if ($expectErrorMode -eq "any" -or $expectErrorMode -eq "ignore_msg") {
-        if (
-          $jqHasError -and $jqxHasError -and
-          $jqClass.ValueText -eq $jqxClass.ValueText -and
-          $jqClass.DebugText -eq $jqxClass.DebugText -and
-          $jqClass.StderrOtherText -eq $jqxClass.StderrOtherText
-        ) {
-          $ok = $true
+        if ($sourceKind -eq "compile_fail") {
+          if ($jqHasError -and $jqxHasError) {
+            $ok = $true
+          }
+        } else {
+          if (
+            $jqHasError -and $jqxHasError -and
+            $jqClass.ValueText -eq $jqxClass.ValueText -and
+            $jqClass.DebugText -eq $jqxClass.DebugText -and
+            $jqClass.StderrOtherText -eq $jqxClass.StderrOtherText
+          ) {
+            $ok = $true
+          }
         }
       } elseif (
         $jqHasError -and $jqxHasError -and

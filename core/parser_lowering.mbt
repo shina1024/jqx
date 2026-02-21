@@ -65,8 +65,7 @@ fn FilterCursor::parse_as_pattern(
       ctx.expect_char('[')
       ctx.skip_ws()
       if ctx.peek_char() is Some(']') {
-        ctx.read_char() |> ignore
-        AsPattern::Array([])
+        ctx.invalid_char()
       } else {
         let items = []
         for {
@@ -92,8 +91,7 @@ fn FilterCursor::parse_as_pattern(
       ctx.expect_char('{')
       ctx.skip_ws()
       if ctx.peek_char() is Some('}') {
-        ctx.read_char() |> ignore
-        AsPattern::Object([])
+        ctx.invalid_char()
       } else {
         let entries = []
         for {
