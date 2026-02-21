@@ -59,6 +59,49 @@ normalize_error_message() {
     -e 's/^jqx: error( \(at <stdin>:[0-9:]+\))?:[[:space:]]*//'
 }
 
+is_compiler_summary_line() {
+  local line="$1"
+  [[ "${line}" =~ ^jqx?:[[:space:]]*[0-9]+[[:space:]]+compile[[:space:]]+error(s)?$ ]]
+}
+
+join_lines() {
+  local -n lines_ref=$1
+  if [[ ${#lines_ref[@]} -eq 0 ]]; then
+    printf ''
+    return
+  fi
+  printf '%s' "${lines_ref[0]}"
+  for ((i = 1; i < ${#lines_ref[@]}; i++)); do
+    printf '\n%s' "${lines_ref[$i]}"
+  done
+}
+
+classify_output() {
+  local text="$1"
+  local -a value_lines=()
+  local -a debug_lines=()
+  local -a error_lines=()
+
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    if is_compiler_summary_line "${line}"; then
+      continue
+    fi
+    if [[ "${line}" == \[\"DEBUG:\",* ]]; then
+      debug_lines+=("${line}")
+      continue
+    fi
+    if [[ "${line}" == jq:\ error* || "${line}" == jqx:\ error* ]]; then
+      error_lines+=("$(normalize_error_message "${line}")")
+      continue
+    fi
+    value_lines+=("${line}")
+  done <<< "${text}"
+
+  CLASS_VALUE="$(join_lines value_lines)"
+  CLASS_DEBUG="$(join_lines debug_lines)"
+  CLASS_ERROR="$(join_lines error_lines)"
+}
+
 JQ_BIN_RESOLVED="$(resolve_jq_bin)" || {
   echo "jq binary not found: ${JQ_BIN} (also checked mise)" >&2
   exit 2
@@ -158,43 +201,64 @@ while IFS= read -r case_json; do
 
   jq_out="$(printf '%s' "${jq_out}" | tr -d '\r')"
   jqx_out="$(printf '%s\n' "${jqx_out}" | sed '/^Blocking waiting for file lock /d' | tr -d '\r')"
+  classify_output "${jq_out}"
+  jq_value_text="${CLASS_VALUE}"
+  jq_debug_text="${CLASS_DEBUG}"
+  jq_error_text="${CLASS_ERROR}"
+  classify_output "${jqx_out}"
+  jqx_value_text="${CLASS_VALUE}"
+  jqx_debug_text="${CLASS_DEBUG}"
+  jqx_error_text="${CLASS_ERROR}"
 
   ok=false
   if [[ "${expect_error}" == "true" ]]; then
-    jq_msg="$(normalize_error_message "${jq_out}")"
-    jqx_msg="$(normalize_error_message "${jqx_out}")"
+    jq_msg="${jq_error_text}"
+    jqx_msg="${jqx_error_text}"
     jq_has_error=false
     jqx_has_error=false
-    if [[ ${jq_status} -ne 0 || "${jq_out}" == jq:\ error* ]]; then
+    if [[ ${jq_status} -ne 0 || -n "${jq_error_text}" ]]; then
       jq_has_error=true
     fi
-    if [[ ${jqx_status} -ne 0 || "${jqx_out}" == jqx:\ error* ]]; then
+    if [[ ${jqx_status} -ne 0 || -n "${jqx_error_text}" ]]; then
       jqx_has_error=true
     fi
     if [[ "${expect_error_mode}" == "any" || "${expect_error_mode}" == "ignore_msg" ]]; then
-      if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" ]]; then
+      if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" \
+        && "${jq_value_text}" == "${jqx_value_text}" \
+        && "${jq_debug_text}" == "${jqx_debug_text}" ]]; then
         ok=true
       fi
     else
-      if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" && "${jq_msg}" == "${jqx_msg}" ]]; then
+      if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" \
+        && "${jq_msg}" == "${jqx_msg}" \
+        && "${jq_value_text}" == "${jqx_value_text}" \
+        && "${jq_debug_text}" == "${jqx_debug_text}" ]]; then
         ok=true
       fi
     fi
   elif [[ -n "${expect_status}" ]]; then
-    if [[ ${jq_status} -eq ${expect_status} && ${jqx_status} -eq ${expect_status} && "${jq_out}" == "${jqx_out}" ]]; then
+    if [[ ${jq_status} -eq ${expect_status} && ${jqx_status} -eq ${expect_status} \
+      && "${jq_value_text}" == "${jqx_value_text}" \
+      && "${jq_debug_text}" == "${jqx_debug_text}" \
+      && "${jq_error_text}" == "${jqx_error_text}" ]]; then
       ok=true
     fi
   else
-    if [[ ${jq_status} -eq 0 && ${jqx_status} -eq 0 && "${jq_out}" == "${jqx_out}" ]]; then
+    if [[ ${jq_status} -eq 0 && ${jqx_status} -eq 0 \
+      && "${jq_value_text}" == "${jqx_value_text}" \
+      && "${jq_debug_text}" == "${jqx_debug_text}" \
+      && "${jq_error_text}" == "${jqx_error_text}" ]]; then
       ok=true
     elif [[ ${jq_status} -ne 0 ]]; then
-      jq_msg="$(normalize_error_message "${jq_out}")"
-      jqx_msg="$(normalize_error_message "${jqx_out}")"
+      jq_msg="${jq_error_text}"
+      jqx_msg="${jqx_error_text}"
       jqx_has_error=false
-      if [[ ${jqx_status} -ne 0 || "${jqx_out}" == jqx:\ error* ]]; then
+      if [[ ${jqx_status} -ne 0 || -n "${jqx_error_text}" ]]; then
         jqx_has_error=true
       fi
-      if [[ "${jqx_has_error}" == "true" && "${jq_msg}" == "${jqx_msg}" ]]; then
+      if [[ "${jqx_has_error}" == "true" && "${jq_msg}" == "${jqx_msg}" \
+        && "${jq_value_text}" == "${jqx_value_text}" \
+        && "${jq_debug_text}" == "${jqx_debug_text}" ]]; then
         ok=true
       fi
     fi
