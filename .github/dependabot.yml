@@ -6,6 +6,9 @@
 version: 2
 updates:
   - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/ts" # Location of package manifests
+    directories: # Location of package manifests
+      - "/ts/zod-adapter"
+      - "/ts/yup-adapter"
+      - "/ts/valibot-adapter"
     schedule:
       interval: "weekly"
