@@ -232,7 +232,8 @@ foreach ($item in $allParsed) {
 
   if ($item.kind -eq "compile_fail") {
     $case["expect_error"] = $true
-    $case["expect_error_mode"] = if ($item.ignore_msg) { "any" } else { $compileFailExpectErrorMode }
+    # Keep one policy for all compile_fail cases, including %%FAIL IGNORE MSG.
+    $case["expect_error_mode"] = $compileFailExpectErrorMode
     if ($item.expected_error_lines.Count -gt 0) {
       $case["source_error_lines"] = @($item.expected_error_lines)
     }

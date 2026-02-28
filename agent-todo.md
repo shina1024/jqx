@@ -9,6 +9,13 @@ Updated: 2026-02-28
 - differential smoke (`scripts/jq_compat_cases.json`): total 242 / passed 242 / failed 0 / skipped 0
 - differential upstream full (`scripts/jq_compat_cases.upstream.json`): total 843 / passed 843 / failed 0 / skipped 0
 
+## P0: 理論上の完全互換に向けた追跡
+
+- [x] upstream compile-fail の `%%FAIL IGNORE MSG` を含め strict 比較へ統一する（`expect_error_mode: any` を 0 件にする）
+- [x] native の `strftime`/`strflocaltime` で `%A`/`%B` を locale 依存出力に寄せる（C `strftime` 連携）
+- [ ] locale/timezone 依存ケースの差分検証を OS/タイムゾーン matrix で追加する
+- [ ] jq upstream 更新時の差分台帳（新規 fail / 振る舞い変更）を自動生成する
+
 ## P0: jq互換の未実装/部分実装を埋める
 
 - [x] `def`（ユーザー定義関数）の最小実装を追加する（top-level の parser lowering + 引数付き `def f(a;b)` + differential case）

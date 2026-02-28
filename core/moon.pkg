@@ -9,10 +9,12 @@ import {
 }
 
 options(
-  "native-stub": [ "module_source_fs_native.c" ],
+  "native-stub": [ "module_source_fs_native.c", "strftime_locale_native.c" ],
   targets: {
     "module_source_fs_native.mbt": [ "native", "llvm" ],
     "module_source_fs_native_test.mbt": [ "native", "llvm" ],
     "module_source_fs_stub.mbt": [ "not", "native" ],
+    "strftime_locale_native.mbt": [ "native", "llvm" ],
+    "strftime_locale_stub.mbt": [ "not", "native" ],
   },
 )

@@ -69,10 +69,13 @@ When public APIs change, inspect generated `.mbti` diffs carefully.
 - `moon test --target native --package core`: 195/195 pass
 - differential smoke (`scripts/jq_compat_cases.json`): 242/242 pass
 - differential upstream full (`scripts/jq_compat_cases.upstream.json`): 843/843 pass, skipped 0
+- compile-fail error checks: strict-only (`expect_error_mode: any` は 0 件)
 
 ## Known Compatibility Gaps (High-level)
 
-- Locale/timezone 依存領域は継続監視（`strftime` の曜日/月名は内部フォーマッタ経由で決定化済み）。
+- Differential corpus 内では既知の機能差分はなし。
+- locale 依存の `%A`/`%B` は native で C `strftime` を使用し、jq と同じ環境依存系に揃える。
+- 理論上の完全互換に向けては、timezone 差分と将来 upstream 追加ケースの継続監視を行う。
 
 ## JSON Parser First: Design Notes
 

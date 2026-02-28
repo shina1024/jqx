@@ -430,45 +430,54 @@ fn format_datetime_with_strftime_pattern(
   minute : Int,
   second : Double,
   day_of_week : Int,
+  day_of_year : Int,
 ) -> String {
-  let sb = StringBuilder::new()
   let second_int = second.floor().to_int()
-  let mut i = 0
-  for {
-    if i >= pattern.length() {
-      break
-    }
-    let ch = pattern.unsafe_get(i).to_int().unsafe_to_char()
-    if ch != '%' {
-      sb.write_char(ch)
-      i += 1
-      continue
-    }
-    if i + 1 >= pattern.length() {
-      sb.write_char('%')
-      i += 1
-      continue
-    }
-    let token = pattern.unsafe_get(i + 1).to_int().unsafe_to_char()
-    match token {
-      '%' => sb.write_char('%')
-      'Y' => sb.write_string(year.to_string())
-      'm' => sb.write_string(format_two_digits_zero(month))
-      'd' => sb.write_string(format_two_digits_zero(day))
-      'e' => sb.write_string(format_two_digits_space(day))
-      'H' => sb.write_string(format_two_digits_zero(hour))
-      'M' => sb.write_string(format_two_digits_zero(minute))
-      'S' => sb.write_string(format_two_digits_zero(second_int))
-      'A' => sb.write_string(weekday_name_english(day_of_week))
-      'B' => sb.write_string(month_name_english(month))
-      _ => {
-        sb.write_char('%')
-        sb.write_char(token)
+  match
+    strftime_locale_format(
+      pattern, year, month, day, hour, minute, second_int, day_of_week, day_of_year,
+    ) {
+    Some(localized) => localized
+    None => {
+      let sb = StringBuilder::new()
+      let mut i = 0
+      for {
+        if i >= pattern.length() {
+          break
+        }
+        let ch = pattern.unsafe_get(i).to_int().unsafe_to_char()
+        if ch != '%' {
+          sb.write_char(ch)
+          i += 1
+          continue
+        }
+        if i + 1 >= pattern.length() {
+          sb.write_char('%')
+          i += 1
+          continue
+        }
+        let token = pattern.unsafe_get(i + 1).to_int().unsafe_to_char()
+        match token {
+          '%' => sb.write_char('%')
+          'Y' => sb.write_string(year.to_string())
+          'm' => sb.write_string(format_two_digits_zero(month))
+          'd' => sb.write_string(format_two_digits_zero(day))
+          'e' => sb.write_string(format_two_digits_space(day))
+          'H' => sb.write_string(format_two_digits_zero(hour))
+          'M' => sb.write_string(format_two_digits_zero(minute))
+          'S' => sb.write_string(format_two_digits_zero(second_int))
+          'A' => sb.write_string(weekday_name_english(day_of_week))
+          'B' => sb.write_string(month_name_english(month))
+          _ => {
+            sb.write_char('%')
+            sb.write_char(token)
+          }
+        }
+        i += 2
       }
+      sb.to_string()
     }
-    i += 2
   }
-  sb.to_string()
 }
 
 ///|
@@ -560,7 +569,7 @@ fn builtin_call_numeric(
         raise UnknownFunction("strftime")
       } else {
         let formats = execute_with_env(args[0], input, env)
-        let (year, month, day, hour, minute, second, day_of_week, _day_of_year) = datetime_input_to_format_components(
+        let (year, month, day, hour, minute, second, day_of_week, day_of_year) = datetime_input_to_format_components(
           input, "strftime/1",
         )
         let out = []
@@ -568,7 +577,7 @@ fn builtin_call_numeric(
           match format_value {
             String(pattern) => {
               let formatted = format_datetime_with_strftime_pattern(
-                pattern, year, month, day, hour, minute, second, day_of_week,
+                pattern, year, month, day, hour, minute, second, day_of_week, day_of_year,
               )
               out.push(Json::string(formatted))
             }
@@ -582,7 +591,7 @@ fn builtin_call_numeric(
         raise UnknownFunction("strflocaltime")
       } else {
         let formats = execute_with_env(args[0], input, env)
-        let (year, month, day, hour, minute, second, day_of_week, _day_of_year) = datetime_input_to_format_components(
+        let (year, month, day, hour, minute, second, day_of_week, day_of_year) = datetime_input_to_format_components(
           input, "strflocaltime/1",
         )
         let out = []
@@ -590,7 +599,7 @@ fn builtin_call_numeric(
           match format_value {
             String(pattern) => {
               let formatted = format_datetime_with_strftime_pattern(
-                pattern, year, month, day, hour, minute, second, day_of_week,
+                pattern, year, month, day, hour, minute, second, day_of_week, day_of_year,
               )
               out.push(Json::string(formatted))
             }
