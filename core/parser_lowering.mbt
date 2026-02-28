@@ -273,6 +273,170 @@ fn update_slice_bound_filter(index : Int?) -> Filter {
 }
 
 ///|
+fn update_dynamic_slice_target(filter : Filter) -> (Filter, Filter, Filter)? {
+  match filter {
+    As(
+      base,
+      base_tmp,
+      As(start_filter, start_tmp, As(end_filter, end_tmp, slice_access0))
+    ) => {
+      let slice_access = match slice_access0 {
+        Try(inner) => inner
+        _ => slice_access0
+      }
+      match slice_access {
+        Pipe(Var(bound_base), Call("_slice", args)) =>
+          if args.length() != 2 {
+            None
+          } else {
+            match (args[0], args[1]) {
+              (Var(bound_start), Var(bound_end)) =>
+                if bound_base == base_tmp &&
+                  bound_start == start_tmp &&
+                  bound_end == end_tmp {
+                  Some((base, start_filter, end_filter))
+                } else {
+                  None
+                }
+              _ => None
+            }
+          }
+        _ => None
+      }
+    }
+    _ => None
+  }
+}
+
+///|
+fn update_strip_identity_pipe(filter : Filter) -> Filter {
+  match filter {
+    Pipe(Identity, inner) => inner
+    _ => filter
+  }
+}
+
+///|
+fn update_merge_slice_base(prefix : Filter, suffix_base : Filter) -> Filter {
+  match suffix_base {
+    Identity => prefix
+    _ => Filter::pipe(prefix, suffix_base)
+  }
+}
+
+///|
+fn update_slice_target(filter : Filter) -> (Filter, Filter, Filter)? {
+  match filter {
+    Pipe(base, Slice(start, end)) =>
+      Some(
+        (base, update_slice_bound_filter(start), update_slice_bound_filter(end)),
+      )
+    Pipe(prefix, right) => {
+      let right0 = update_strip_identity_pipe(right)
+      match right0 {
+        Slice(start, end) =>
+          Some(
+            (
+              prefix,
+              update_slice_bound_filter(start),
+              update_slice_bound_filter(end),
+            ),
+          )
+        _ =>
+          match update_dynamic_slice_target(right0) {
+            Some((suffix_base, start_filter, end_filter)) =>
+              Some(
+                (
+                  update_merge_slice_base(prefix, suffix_base),
+                  start_filter,
+                  end_filter,
+                ),
+              )
+            None => update_dynamic_slice_target(filter)
+          }
+      }
+    }
+    _ => update_dynamic_slice_target(filter)
+  }
+}
+
+///|
+fn FilterCursor::lower_dynamic_slice_update_assignment(
+  ctx : FilterCursor,
+  base : Filter,
+  start_arg : Filter,
+  end_arg : Filter,
+  op : UpdateAssignOp,
+  right : Filter,
+) -> Filter {
+  let input_tmp = ctx.fresh_as_tmp()
+  let path_tmp = ctx.fresh_as_tmp()
+  let start_tmp = ctx.fresh_as_tmp()
+  let end_tmp = ctx.fresh_as_tmp()
+  let input_var = Filter::var_(input_tmp)
+  let path_var = Filter::var_(path_tmp)
+  let start_var = Filter::var_(start_tmp)
+  let end_var = Filter::var_(end_tmp)
+  let source = Filter::pipe(input_var, Filter::call("path", [base]))
+  let init = input_var
+  let current_base = Filter::call("getpath", [path_var])
+  let current_slice = Filter::pipe(
+    current_base,
+    Filter::call("_slice", [start_var, end_var]),
+  )
+
+  let lowered = match op {
+    Update => {
+      let updated_slice = Filter::if_else(
+        Filter::call("isempty", [Filter::pipe(current_slice, right)]),
+        Filter::literal(Json::array([])),
+        Filter::call("first", [Filter::pipe(current_slice, right)]),
+      )
+      let value_tmp = ctx.fresh_as_tmp()
+      let value_var = Filter::var_(value_tmp)
+      let updated_base = Filter::pipe(
+        current_base,
+        Filter::call("_set_slice", [start_var, end_var, value_var]),
+      )
+      let update_step = Filter::as_(
+        updated_slice,
+        value_tmp,
+        Filter::call("setpath", [path_var, updated_base]),
+      )
+      Filter::reduce(source, path_tmp, init, update_step)
+    }
+    _ => {
+      let value_tmp = ctx.fresh_as_tmp()
+      let value_var = Filter::var_(value_tmp)
+      let updated_slice = lower_update_assign_op(op, current_slice, value_var)
+      let updated_tmp = ctx.fresh_as_tmp()
+      let updated_var = Filter::var_(updated_tmp)
+      let updated_base = Filter::pipe(
+        current_base,
+        Filter::call("_set_slice", [start_var, end_var, updated_var]),
+      )
+      let update_step = Filter::as_(
+        updated_slice,
+        updated_tmp,
+        Filter::call("setpath", [path_var, updated_base]),
+      )
+      let right_values = Filter::pipe(input_var, right)
+      Filter::as_(
+        right_values,
+        value_tmp,
+        Filter::reduce(source, path_tmp, init, update_step),
+      )
+    }
+  }
+
+  Filter::as_(
+    Filter::identity(),
+    input_tmp,
+    Filter::as_(start_arg, start_tmp, Filter::as_(end_arg, end_tmp, lowered)),
+  )
+}
+
+///|
 fn lower_update_assign_op(
   op : UpdateAssignOp,
   current : Filter,
@@ -345,6 +509,14 @@ fn FilterCursor::lower_update_assignment(
         Filter::as_(updated_slice, value_tmp, updated_root),
       )
     }
+    None => ()
+  }
+
+  match update_slice_target(left) {
+    Some((base, start_arg, end_arg)) =>
+      return ctx.lower_dynamic_slice_update_assignment(
+        base, start_arg, end_arg, op, right,
+      )
     None => ()
   }
 

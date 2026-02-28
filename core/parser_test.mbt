@@ -432,6 +432,12 @@ test "parse update assignment dynamic lhs" {
   guard (try? parse_filter("(.a, .b) = range(3)")) is Ok(_) else {
     fail("expected parse success for grouped update assignment lhs")
   }
+  guard (try? parse_filter("1 as $s | 3 as $e | .[$s:$e] = [9]")) is Ok(_) else {
+    fail("expected parse success for dynamic slice bounds in update lhs")
+  }
+  guard (try? parse_filter("(.[] | .[1:3]) |= map(.+100)")) is Ok(_) else {
+    fail("expected parse success for dynamic base slice update lhs")
+  }
 }
 
 ///|

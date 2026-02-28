@@ -2663,6 +2663,94 @@ test "execute update assignment compatibility" {
 }
 
 ///|
+test "execute update assignment dynamic slice compatibility" {
+  assert_eq(
+    must_execute(
+      parse_filter("1 as $s | 3 as $e | .[$s:$e] = [9]"),
+      must_parse("[0,1,2,3,4]"),
+    ),
+    [
+      Json::array([
+        Json::number(0.0),
+        Json::number(9.0),
+        Json::number(3.0),
+        Json::number(4.0),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("1 as $s | 4 as $e | .[$s:$e] |= map(.+10)"),
+      must_parse("[0,1,2,3,4]"),
+    ),
+    [
+      Json::array([
+        Json::number(0.0),
+        Json::number(11.0),
+        Json::number(12.0),
+        Json::number(13.0),
+        Json::number(4.0),
+      ]),
+    ],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("1 as $s | 4 as $e | .[$s:$e] |= empty"),
+      must_parse("[0,1,2,3,4]"),
+    ),
+    [Json::array([Json::number(0.0), Json::number(4.0)])],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("1 as $s | 4 as $e | .a[$s:$e] += [9]"),
+      must_parse("{\"a\":[0,1,2,3,4]}"),
+    ),
+    [
+      Json::object({
+        "a": Json::array([
+          Json::number(0.0),
+          Json::number(1.0),
+          Json::number(2.0),
+          Json::number(3.0),
+          Json::number(9.0),
+          Json::number(4.0),
+        ]),
+      }),
+    ],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("(.[] | .[1:3]) |= map(.+100)"),
+      must_parse("[[0,1,2,3],[4,5,6,7]]"),
+    ),
+    [
+      Json::array([
+        Json::array([
+          Json::number(0.0),
+          Json::number(101.0),
+          Json::number(102.0),
+          Json::number(3.0),
+        ]),
+        Json::array([
+          Json::number(4.0),
+          Json::number(105.0),
+          Json::number(106.0),
+          Json::number(7.0),
+        ]),
+      ]),
+    ],
+  )
+  guard (try? execute(
+      parse_filter("(.[] | .[1:3]) |= . + 100"),
+      must_parse("[[0,1,2,3],[4,5,6,7]]"),
+    ))
+    is Err(err) &&
+    err.to_string() == "array ([1,2]) and number (100) cannot be added" else {
+    fail("expected jq-compatible dynamic slice update type error")
+  }
+}
+
+///|
 test "execute object literal stream product" {
   let j = must_parse("null")
   assert_eq(must_execute(parse_filter("{a:(1,2)}"), j), [
