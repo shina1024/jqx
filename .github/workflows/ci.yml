@@ -143,8 +143,26 @@ jobs:
       - name: Coverage Analyze (Linux)
         if: runner.os == 'Linux'
         run: |
-          moon coverage analyze > uncovered.log
-          head -n 120 uncovered.log
+          moon coverage analyze | tee uncovered.log
+
+      - name: Coverage Summary (Linux)
+        if: runner.os == 'Linux' && always()
+        shell: bash
+        run: |
+          {
+            echo "### Moon Coverage Analyze (Linux)"
+            echo
+            echo "- Full text is printed in job logs by \`tee\`."
+            echo "- Artifact contains \`uncovered.log\` (download is zipped by GitHub Actions)."
+            echo
+            echo "<details><summary>uncovered.log (first 200 lines)</summary>"
+            echo
+            echo '```text'
+            sed -n '1,200p' uncovered.log
+            echo '```'
+            echo
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload Coverage Report (Linux)
         if: runner.os == 'Linux' && always()
