@@ -18,6 +18,8 @@ Updated: 2026-02-28
 - [x] update assignment（`|=`, `+=` など）の対応範囲を拡張する（`def`由来LHS、optional path、iter/select系の実用ケースを追加）
 - [x] 正規表現ファミリ（`test`/`match`/`capture`/`scan`/`sub`/`gsub`）を最小互換で実装する
 - [x] CLI `-R`/`-s` の入力セマンティクス差分を縮小する（line/slurp境界のjq互換）
+- [x] Windows CLI の UTF-8 引数経路を追加し、Unicode 正規表現ケースの文字化け差分を解消する
+- [x] `strftime`/`strflocaltime` の locale依存分岐を整理し、曜日/月名フォーマットを決定化する
 
 ## P1: 互換性の精度と回帰検知を強化する
 

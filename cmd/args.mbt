@@ -11,6 +11,11 @@ struct CliArgs {
 }
 
 ///|
+fn read_cli_args() -> Array[String] {
+  read_cli_args_internal()
+}
+
+///|
 fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
   if args.length() < 2 {
     return Err("missing filter")

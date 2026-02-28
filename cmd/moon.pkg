@@ -6,7 +6,10 @@ import {
 
 options(
   "is-main": true,
+  "native-stub": [ "windows_utf8_args.c" ],
   targets: {
+    "args_native.mbt": [ "native", "llvm" ],
+    "args_wasm.mbt": [ "wasm", "wasm-gc" ],
     "exit_native.mbt": [ "native", "llvm" ],
     "exit_wasm.mbt": [ "wasm", "wasm-gc" ],
     "stdin_native.mbt": [ "native", "llvm" ],

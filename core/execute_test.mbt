@@ -1743,6 +1743,13 @@ test "execute time builtins minimal compatibility" {
   )
   assert_eq(
     must_execute(
+      parse_filter("strftime(\"%A, %B %d, %Y\")"),
+      must_parse("1435677542.822351"),
+    ),
+    [Json::string("Tuesday, June 30, 2015")],
+  )
+  assert_eq(
+    must_execute(
       parse_filter("strptime(\"%Y-%m-%dT%H:%M:%SZ\")"),
       must_parse("\"2015-03-05T23:51:47Z\""),
     ),

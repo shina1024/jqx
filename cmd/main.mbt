@@ -1,6 +1,6 @@
 ///|
 fn main {
-  let args = @env.args()
+  let args = read_cli_args()
   if args.length() < 2 {
     println(
       "Usage: moon run --target native cmd -- [options] \"<filter>\" [\"<json>\"]",

@@ -72,8 +72,8 @@ When public APIs change, inspect generated `.mbti` diffs carefully.
 
 ## Known Compatibility Gaps (High-level)
 
-- Locale/Unicode 依存の一部ケース（日時/regex）の環境差異は要観察。
 - Compile-time diagnostic text parity is not yet byte-for-byte strict for all cases.
+- Locale/timezone 依存領域は継続監視（`strftime` の曜日/月名は内部フォーマッタ経由で決定化済み）。
 
 ## JSON Parser First: Design Notes
 
