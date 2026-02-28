@@ -653,6 +653,29 @@ fn path_as_value_states(
 }
 
 ///|
+fn path_binding_bind_temp(
+  bindings : Map[String, PathEvalState],
+  name : String,
+  value : PathEvalState,
+) -> PathEvalState? {
+  let previous = bindings.get(name)
+  bindings[name] = value
+  previous
+}
+
+///|
+fn path_binding_restore_temp(
+  bindings : Map[String, PathEvalState],
+  name : String,
+  previous : PathEvalState?,
+) -> Unit {
+  match previous {
+    Some(value) => bindings[name] = value
+    None => bindings.remove(name)
+  }
+}
+
+///|
 fn path_filter_state_with_bindings(
   filter : Filter,
   state : PathEvalState,
@@ -695,20 +718,21 @@ fn path_filter_state_with_bindings(
       let out = []
       let values = path_as_value_states(value, state, env, bindings)
       for v in values {
-        let previous = env_bind_temp(env, name, v.value)
-        let next_bindings = bindings.copy()
-        next_bindings[name] = v
+        let previous_env = env_bind_temp(env, name, v.value)
+        let previous_binding = path_binding_bind_temp(bindings, name, v)
         let body_states = try
-          path_filter_state_with_bindings(body, state, env, next_bindings)
+          path_filter_state_with_bindings(body, state, env, bindings)
         catch {
           err => {
-            env_restore_temp(env, name, previous)
+            env_restore_temp(env, name, previous_env)
+            path_binding_restore_temp(bindings, name, previous_binding)
             raise err
           }
         } noraise {
           states => states
         }
-        env_restore_temp(env, name, previous)
+        env_restore_temp(env, name, previous_env)
+        path_binding_restore_temp(bindings, name, previous_binding)
         for body_state in body_states {
           out.push(body_state)
         }
