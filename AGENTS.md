@@ -154,6 +154,10 @@ CI (`.github/workflows/ci.yml`):
 - Linux differential smoke/upstream/native-exit
 - Linux coverage analyze + summary + artifact
 
+Release workflow:
+- `.github/workflows/release-cli.yml`
+- `v*` tag push (or manual dispatch with tag) builds native CLI artifacts for Linux/macOS/Windows and uploads them to GitHub Releases.
+
 ## Build (Native)
 
 ### Windows
