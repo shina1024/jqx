@@ -31,6 +31,7 @@ jqx の jq 互換性を維持しつつ、実行時ボトルネックを段階的
   - 既存の順序安定性（同値時に入力順維持）は保持
   - `core/execute.mbt` に regex compile cache を導入し、`(pattern, flags)` の再コンパイルを削減
   - `as/reduce/foreach` と path 評価の `as` で `env.copy()` を一時束縛+復元へ置換
+  - `JsonObject` に lex ソート済みキーを保持し、Object 比較時の再ソートを削減
 
 ## Validation policy
 

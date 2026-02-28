@@ -13,6 +13,7 @@ pub enum Json {
 struct JsonObject {
   map : Map[String, Json]
   key_order : Array[String]
+  lex_key_order : Array[String]
 }
 
 ///|
@@ -44,7 +45,12 @@ fn json_object_make(
   map : Map[String, Json],
   key_order : Array[String],
 ) -> JsonObject {
-  { map, key_order: object_keys_in_order(map, key_order) }
+  let normalized_key_order = object_keys_in_order(map, key_order)
+  {
+    map,
+    key_order: normalized_key_order,
+    lex_key_order: sort_strings_lex(normalized_key_order),
+  }
 }
 
 ///|
@@ -77,7 +83,7 @@ fn JsonObject::length(self : JsonObject) -> Int {
 
 ///|
 fn JsonObject::keys(self : JsonObject) -> Array[String] {
-  object_keys_in_order(self.map, self.key_order)
+  self.key_order.copy()
 }
 
 ///|
@@ -350,7 +356,7 @@ fn sort_strings_lex(input : Array[String]) -> Array[String] {
 
 ///|
 fn object_keys_lex_sorted(o : JsonObject) -> Array[String] {
-  sort_strings_lex(object_keys_sorted(o))
+  o.lex_key_order.copy()
 }
 
 ///|
