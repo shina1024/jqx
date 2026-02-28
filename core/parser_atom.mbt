@@ -430,6 +430,7 @@ fn FilterCursor::parse_dot_expr(ctx : FilterCursor) -> Filter raise FilterError 
 ///|
 fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
   ctx.skip_ws()
+  let primary_offset = ctx.offset
   fn parse_postfix(base0 : Filter) -> Filter raise FilterError {
     let mut base = base0
     for {
@@ -538,6 +539,14 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
   }
 
   let base = match ctx.peek_char() {
+    Some('%') =>
+      ctx.raise_syntax_error_at(primary_offset, "'%'", expecting="end of file")
+    Some('}') =>
+      ctx.raise_syntax_error_at(
+        primary_offset,
+        "INVALID_CHARACTER",
+        expecting="end of file",
+      )
     Some('.') => {
       let saved = ctx.offset
       ctx.read_char() |> ignore
@@ -777,7 +786,11 @@ fn FilterCursor::parse_object_literal(
   ctx : FilterCursor,
 ) -> Filter raise FilterError {
   ctx.expect_char('{')
+  let object_start_offset = ctx.offset - 1
   ctx.skip_ws()
+  if ctx.peek_char() is None {
+    ctx.raise_syntax_error_at(object_start_offset, "end of file")
+  }
   if ctx.peek_char() is Some('}') {
     ctx.read_char() |> ignore
     return Filter::Object([])
@@ -789,7 +802,20 @@ fn FilterCursor::parse_object_literal(
     ctx.skip_ws()
     let (key_filter0, var_key_name) = match ctx.peek_char() {
       Some('\"') => (ctx.parse_string_expr(), None)
-      Some('(') => (ctx.parse_paren_expr(), None)
+      Some('(') => {
+        ctx.read_char() |> ignore
+        ctx.skip_ws()
+        let key_offset = ctx.offset
+        let key_expr = ctx.parse_scoped()
+        ctx.skip_ws()
+        ctx.expect_char(')')
+        let key_diag = object_key_diagnostic_prefix_from_filter(key_expr)
+        match key_diag {
+          Some(prefix) => ctx.raise_diagnostic_at(key_offset, prefix)
+          None => ()
+        }
+        (key_expr, None)
+      }
       Some('$') => {
         ctx.read_char() |> ignore
         let name = ctx.parse_identifier()
@@ -797,6 +823,13 @@ fn FilterCursor::parse_object_literal(
       }
       Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') =>
         (Filter::literal(Json::string(ctx.parse_identifier())), None)
+      Some(c) if c is ('0'..='9' | '-') => {
+        let suffix = filter_position_suffix(ctx.input, ctx.offset)
+        ctx.raise_diagnostic([
+          "syntax error, unexpected LITERAL " + suffix,
+          "May need parentheses around object key expression " + suffix,
+        ])
+      }
       Some(_) => ctx.invalid_char()
       None => raise InvalidEof
     }

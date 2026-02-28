@@ -411,14 +411,23 @@ try {
             $ok = $true
           }
         }
-      } elseif (
-        $jqHasError -and $jqxHasError -and
-        $jqMessage -eq $jqxMessage -and
-        $jqClass.ValueText -eq $jqxClass.ValueText -and
-        $jqClass.DebugText -eq $jqxClass.DebugText -and
-        $jqClass.StderrOtherText -eq $jqxClass.StderrOtherText
-      ) {
-        $ok = $true
+      } else {
+        if ($sourceKind -eq "compile_fail") {
+          if (
+            $jqHasError -and $jqxHasError -and
+            $jqMessage -eq $jqxMessage
+          ) {
+            $ok = $true
+          }
+        } elseif (
+          $jqHasError -and $jqxHasError -and
+          $jqMessage -eq $jqxMessage -and
+          $jqClass.ValueText -eq $jqxClass.ValueText -and
+          $jqClass.DebugText -eq $jqxClass.DebugText -and
+          $jqClass.StderrOtherText -eq $jqxClass.StderrOtherText
+        ) {
+          $ok = $true
+        }
       }
     } elseif ($null -ne $expectStatus) {
       if (

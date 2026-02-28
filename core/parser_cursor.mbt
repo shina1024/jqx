@@ -52,6 +52,62 @@ fn filter_offset_to_position(input : StringView, offset : Int) -> Position {
 }
 
 ///|
+fn filter_position_suffix(input : StringView, offset : Int) -> String {
+  let pos = filter_offset_to_position(input, offset)
+  "at <top-level>, line " +
+  pos.line.to_string() +
+  ", column " +
+  pos.column.to_string() +
+  ":"
+}
+
+///|
+fn[T] FilterCursor::raise_diagnostic(
+  _ctx : FilterCursor,
+  lines : Array[String],
+) -> T raise FilterError {
+  raise Diagnostics(lines)
+}
+
+///|
+fn[T] FilterCursor::raise_diagnostic_at(
+  ctx : FilterCursor,
+  offset : Int,
+  prefix : String,
+) -> T raise FilterError {
+  ctx.raise_diagnostic([
+    prefix + " " + filter_position_suffix(ctx.input, offset),
+  ])
+}
+
+///|
+fn[T] FilterCursor::raise_syntax_error_at(
+  ctx : FilterCursor,
+  offset : Int,
+  unexpected : String,
+  expecting? : String,
+) -> T raise FilterError {
+  let prefix = match expecting {
+    Some(exp) => "syntax error, unexpected " + unexpected + ", expecting " + exp
+    None => "syntax error, unexpected " + unexpected
+  }
+  ctx.raise_diagnostic_at(offset, prefix)
+}
+
+///|
+fn[T] FilterCursor::raise_invalid_escape_at(
+  ctx : FilterCursor,
+  backslash_offset : Int,
+  escaped_char : Char,
+) -> T raise FilterError {
+  let snippet = "\"\\" + escaped_char.to_string() + "\""
+  let prefix = "Invalid escape at line 1, column 4 (while parsing '" +
+    snippet +
+    "')"
+  ctx.raise_diagnostic_at(backslash_offset, prefix)
+}
+
+///|
 fn[T] FilterCursor::invalid_char(
   ctx : FilterCursor,
   shift? : Int = 0,
@@ -289,6 +345,7 @@ fn FilterCursor::parse_string_literal(
       Some('\n' | '\r') => ctx.invalid_char(shift=-1)
       Some('\\') => {
         flush(ctx.offset - 1)
+        let escape_offset = ctx.offset - 1
         match ctx.read_char() {
           Some('b') => buf.write_char('\b')
           Some('f') => buf.write_char('\u{0C}')
@@ -302,7 +359,7 @@ fn FilterCursor::parse_string_literal(
             let c = ctx.parse_hex_digits(4)
             buf.write_char(c.unsafe_to_char())
           }
-          Some(_) => ctx.invalid_char(shift=-1)
+          Some(ch) => ctx.raise_invalid_escape_at(escape_offset, ch)
           None => raise InvalidEof
         }
         start = ctx.offset
@@ -349,7 +406,8 @@ fn FilterCursor::parse_string_expr(
         break
       }
       Some('\n' | '\r') => ctx.invalid_char(shift=-1)
-      Some('\\') =>
+      Some('\\') => {
+        let escape_offset = ctx.offset - 1
         match ctx.read_char() {
           Some('(') => {
             flush_text()
@@ -374,9 +432,10 @@ fn FilterCursor::parse_string_expr(
             let c = ctx.parse_hex_digits(4)
             text.write_char(c.unsafe_to_char())
           }
-          Some(_) => ctx.invalid_char(shift=-1)
+          Some(ch) => ctx.raise_invalid_escape_at(escape_offset, ch)
           None => raise InvalidEof
         }
+      }
       Some(ch) =>
         if ch.to_int() < 32 {
           ctx.invalid_char(shift=-1)

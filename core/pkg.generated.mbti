@@ -26,6 +26,8 @@ pub fn set_module_search_paths(Array[String]) -> Unit
 
 pub fn valid(StringView) -> Bool
 
+pub fn validate_filter_compile_diagnostics(Filter, StringView) -> Unit raise FilterError
+
 // Errors
 pub suberror EvalError {
   TypeError(String)
@@ -42,6 +44,7 @@ pub suberror FilterError {
   InvalidChar(Position, Char)
   InvalidEof
   InvalidNumber(Position, String)
+  Diagnostics(Array[String])
 }
 pub impl Eq for FilterError
 pub impl Show for FilterError

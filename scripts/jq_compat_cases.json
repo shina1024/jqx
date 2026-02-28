@@ -94,7 +94,7 @@
     "filter": "def f: g; def g: . + 1; f",
     "input": "1",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_kind": "compile_fail"
   },
   {
@@ -102,7 +102,7 @@
     "filter": "def f(x): g(x); def g(y): y + 1; f(1)",
     "input": "null",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_kind": "compile_fail"
   },
   {
@@ -110,7 +110,7 @@
     "filter": "def even: if . == 0 then true else .-1|odd end; def odd: if . == 0 then false else .-1|even end; 4|even",
     "input": "null",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_kind": "compile_fail"
   },
   {
@@ -1108,14 +1108,14 @@
     "filter": "setpath(\"a\";1)",
     "input": "{}",
     "expect_error": true,
-    "expect_error_mode": "any"
+    "expect_error_mode": "strict"
   },
   {
     "name": "err-delpaths-bad-path",
     "filter": "delpaths([1])",
     "input": "{}",
     "expect_error": true,
-    "expect_error_mode": "any"
+    "expect_error_mode": "strict"
   },
   {
     "name": "split-regex-null-flags",

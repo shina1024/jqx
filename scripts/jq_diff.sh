@@ -237,11 +237,18 @@ while IFS= read -r case_json; do
         fi
       fi
     else
-      if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" \
-        && "${jq_msg}" == "${jqx_msg}" \
-        && "${jq_value_text}" == "${jqx_value_text}" \
-        && "${jq_debug_text}" == "${jqx_debug_text}" ]]; then
-        ok=true
+      if [[ "${source_kind}" == "compile_fail" ]]; then
+        if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" \
+          && "${jq_msg}" == "${jqx_msg}" ]]; then
+          ok=true
+        fi
+      else
+        if [[ "${jq_has_error}" == "true" && "${jqx_has_error}" == "true" \
+          && "${jq_msg}" == "${jqx_msg}" \
+          && "${jq_value_text}" == "${jqx_value_text}" \
+          && "${jq_debug_text}" == "${jqx_debug_text}" ]]; then
+          ok=true
+        fi
       fi
     fi
   elif [[ -n "${expect_status}" ]]; then

@@ -10,6 +10,6 @@
     "man.test"
   ],
   "include_compile_fail": true,
-  "compile_fail_expect_error_mode": "any",
+  "compile_fail_expect_error_mode": "strict",
   "default_case_fields": {}
 }

@@ -50,7 +50,7 @@ fn main {
       }
       match result.1 {
         Some(msg) => {
-          println(format_error_message(msg))
+          print_prefixed_error_lines(msg)
           for v in outputs {
             println(format_output(raw, v))
           }
@@ -67,10 +67,40 @@ fn main {
     }
   } catch {
     err => {
-      let msg = format_error_message(err.to_string())
-      println(msg)
+      print_prefixed_error_lines(err.to_string())
       jqx_exit(5)
     }
+  }
+}
+
+///|
+fn split_error_lines(msg : String) -> Array[String] {
+  let out = []
+  let mut start = 0
+  for i in 0..<msg.length() {
+    let ch = msg.unsafe_get(i).to_int().unsafe_to_char()
+    if ch == '\n' {
+      out.push(msg.view(start_offset=start, end_offset=i).to_string())
+      start = i + 1
+    }
+  }
+  out.push(msg.view(start_offset=start).to_string())
+  out
+}
+
+///|
+fn print_prefixed_error_lines(msg : String) -> Unit {
+  let lines = split_error_lines(msg)
+  let mut printed = false
+  for line in lines {
+    if line.length() == 0 {
+      continue
+    }
+    println(format_error_message(line))
+    printed = true
+  }
+  if !printed {
+    println(format_error_message(msg))
   }
 }
 

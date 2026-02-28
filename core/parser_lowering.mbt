@@ -110,6 +110,90 @@ fn as_pattern_key_access(base : Filter, key : Filter) -> Filter {
 }
 
 ///|
+fn filter_constant_json_for_diagnostics(filter : Filter) -> Json? {
+  match filter {
+    Literal(v) => Some(v)
+    Add(left, right) =>
+      match
+        (
+          filter_constant_json_for_diagnostics(left),
+          filter_constant_json_for_diagnostics(right),
+        ) {
+        (Some(String(a)), Some(String(b))) => Some(Json::string(a + b))
+        _ => None
+      }
+    Array(items) =>
+      if items.length() == 0 {
+        Some(Json::array([]))
+      } else {
+        None
+      }
+    Object(items) => {
+      let out = Map::new()
+      for kv in items {
+        match filter_constant_json_for_diagnostics(kv.1) {
+          Some(value) => out[kv.0] = value
+          None => return None
+        }
+      }
+      Some(Json::object(out))
+    }
+    _ => None
+  }
+}
+
+///|
+fn object_key_diagnostic_prefix_from_filter(filter : Filter) -> String? {
+  match filter {
+    Literal(Number(n, repr)) =>
+      Some(
+        "Cannot use number (" +
+        Json::number(n, repr?).to_json_string() +
+        ") as object key",
+      )
+    Literal(JTrue) => Some("Cannot use boolean (true) as object key")
+    Literal(JFalse) => Some("Cannot use boolean (false) as object key")
+    Literal(JNull) => Some("Cannot use null (null) as object key")
+    _ => None
+  }
+}
+
+///|
+fn FilterCursor::require_constant_object_metadata(
+  ctx : FilterCursor,
+  metadata : Filter,
+  metadata_offset : Int,
+) -> Unit raise FilterError {
+  match filter_constant_json_for_diagnostics(metadata) {
+    Some(Object(_)) => ()
+    Some(_) =>
+      ctx.raise_diagnostic_at(
+        metadata_offset, "Module metadata must be an object",
+      )
+    None =>
+      ctx.raise_diagnostic_at(
+        metadata_offset, "Module metadata must be constant",
+      )
+  }
+}
+
+///|
+fn FilterCursor::parse_module_path_string(
+  ctx : FilterCursor,
+) -> String raise FilterError {
+  ctx.skip_ws()
+  let path_offset = ctx.offset
+  if !(ctx.peek_char() is Some('\"')) {
+    ctx.invalid_char()
+  }
+  let path_expr = ctx.parse_string_expr()
+  match filter_constant_json_for_diagnostics(path_expr) {
+    Some(String(path)) => path
+    _ => ctx.raise_diagnostic_at(path_offset, "Import path must be constant")
+  }
+}
+
+///|
 fn FilterCursor::parse_as_pattern(
   ctx : FilterCursor,
 ) -> AsPattern raise FilterError {
@@ -123,7 +207,11 @@ fn FilterCursor::parse_as_pattern(
       ctx.expect_char('[')
       ctx.skip_ws()
       if ctx.peek_char() is Some(']') {
-        ctx.invalid_char()
+        ctx.raise_syntax_error_at(
+          ctx.offset,
+          "']'",
+          expecting="BINDING or '[' or '{'",
+        )
       } else {
         let items = []
         for {
@@ -149,7 +237,7 @@ fn FilterCursor::parse_as_pattern(
       ctx.expect_char('{')
       ctx.skip_ws()
       if ctx.peek_char() is Some('}') {
-        ctx.invalid_char()
+        ctx.raise_syntax_error_at(ctx.offset, "'}'")
       } else {
         let entries = []
         for {
@@ -177,10 +265,17 @@ fn FilterCursor::parse_as_pattern(
             }
             Some('(') => {
               ctx.read_char() |> ignore
+              ctx.skip_ws()
+              let key_offset = ctx.offset
               let key_expr = ctx.parse_comma()
               ctx.skip_ws()
               ctx.expect_char(')')
+              let key_diag = object_key_diagnostic_prefix_from_filter(key_expr)
               key = key_expr
+              match key_diag {
+                Some(prefix) => ctx.raise_diagnostic_at(key_offset, prefix)
+                None => ()
+              }
               ctx.skip_ws()
               ctx.expect_char(':')
               bindings.push(ctx.parse_as_pattern())
@@ -1290,7 +1385,7 @@ fn FilterCursor::parse_definition_prefix(
     let params = parse_params()
     ctx.expect_char(':')
     let body_source = ctx.read_until_top_level_semicolon()
-    defs.push((name, params, compile(body_source)))
+    defs.push((name, params, parse_filter(body_source)))
   }
   defs
 }
@@ -1607,32 +1702,6 @@ fn append_defs(
 }
 
 ///|
-fn FilterCursor::skip_module_metadata_object(
-  ctx : FilterCursor,
-) -> Unit raise FilterError {
-  ctx.expect_char('{')
-  let mut depth = 1
-  for {
-    if depth == 0 {
-      return
-    }
-    match ctx.peek_char() {
-      Some('{') => {
-        ctx.read_char() |> ignore
-        depth += 1
-      }
-      Some('}') => {
-        ctx.read_char() |> ignore
-        depth -= 1
-      }
-      Some('\"') => ctx.parse_string_literal() |> ignore
-      Some(_) => ctx.read_char() |> ignore
-      None => raise InvalidEof
-    }
-  }
-}
-
-///|
 fn FilterCursor::parse_optional_module_declaration(
   ctx : FilterCursor,
 ) -> Unit raise FilterError {
@@ -1641,7 +1710,9 @@ fn FilterCursor::parse_optional_module_declaration(
     return
   }
   ctx.skip_ws()
-  ctx.parse_comma(allow_as=false) |> ignore
+  let metadata_offset = ctx.offset
+  let metadata = ctx.parse_comma(allow_as=false)
+  ctx.require_constant_object_metadata(metadata, metadata_offset)
   ctx.skip_ws()
   ctx.expect_char(';')
 }
@@ -1705,7 +1776,7 @@ fn FilterCursor::parse_module_prefix_with_stack(
     ctx.skip_ws()
     if ctx.try_keyword("import") {
       ctx.skip_ws()
-      let module_name = ctx.parse_string_literal()
+      let module_name = ctx.parse_module_path_string()
       ctx.skip_ws()
       if !ctx.try_keyword("as") {
         ctx.invalid_char()
@@ -1716,8 +1787,10 @@ fn FilterCursor::parse_module_prefix_with_stack(
       }
       let module_alias = ctx.parse_identifier()
       ctx.skip_ws()
-      if ctx.peek_char() is Some('{') {
-        ctx.skip_module_metadata_object()
+      if !(ctx.peek_char() is Some(';')) {
+        let metadata_offset = ctx.offset
+        let metadata = ctx.parse_comma(allow_as=false)
+        ctx.require_constant_object_metadata(metadata, metadata_offset)
       }
       ctx.skip_ws()
       ctx.expect_char(';')
@@ -1730,10 +1803,12 @@ fn FilterCursor::parse_module_prefix_with_stack(
     }
     if ctx.try_keyword("include") {
       ctx.skip_ws()
-      let module_name = ctx.parse_string_literal()
+      let module_name = ctx.parse_module_path_string()
       ctx.skip_ws()
-      if ctx.peek_char() is Some('{') {
-        ctx.skip_module_metadata_object()
+      if !(ctx.peek_char() is Some(';')) {
+        let metadata_offset = ctx.offset
+        let metadata = ctx.parse_comma(allow_as=false)
+        ctx.require_constant_object_metadata(metadata, metadata_offset)
       }
       ctx.skip_ws()
       ctx.expect_char(';')
@@ -1753,6 +1828,7 @@ fn FilterCursor::parse_scoped(
   ctx : FilterCursor,
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
+  ctx.parse_optional_module_declaration()
   let (module_defs, missing_module) = ctx.parse_module_prefix()
   match missing_module {
     Some(module_name) => {

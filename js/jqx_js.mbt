@@ -125,6 +125,7 @@ fn filter_error_to_jqx_error(
         column~,
         offset=offset_from_line_column(input, line, column),
       )
+    @core.Diagnostics(_) => jqx_error("filter_diagnostics", err.to_string())
   }
 }
 

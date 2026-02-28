@@ -109,7 +109,7 @@
     "source_line": 63,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: Invalid escape at line 1, column 4 (while parsing '\"\\v\"') at <top-level>, line 1, column 3:",
       "    \"u\\vw\"",
@@ -223,7 +223,7 @@
     "source_line": 127,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: Cannot use number (0) as object key at <top-level>, line 1, column 3:",
       "    {(0):1}",
@@ -238,7 +238,7 @@
     "source_line": 133,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: May need parentheses around object key expression at <top-level>, line 1, column 2:",
       "    {1+2:3}",
@@ -253,7 +253,7 @@
     "source_line": 139,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: Cannot use number (0) as object key at <top-level>, line 1, column 16:",
       "    {non_const:., (0):1}",
@@ -619,7 +619,7 @@
     "source_line": 324,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: $*label-foo is not defined at <top-level>, line 1, column 13:",
       "    . as $foo | break $foo",
@@ -1039,7 +1039,7 @@
     "source_line": 548,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: syntax error, unexpected ']', expecting BINDING or '[' or '{' at <top-level>, line 1, column 7:",
       "    . as [] | null",
@@ -1054,7 +1054,7 @@
     "source_line": 554,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: syntax error, unexpected '}' at <top-level>, line 1, column 7:",
       "    . as {} | null",
@@ -1069,7 +1069,7 @@
     "source_line": 560,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: $bar is not defined at <top-level>, line 1, column 20:",
       "    . as $foo | [$foo, $bar]",
@@ -1084,7 +1084,7 @@
     "source_line": 566,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: Cannot use boolean (true) as object key at <top-level>, line 1, column 8:",
       "    . as {(true):$foo} | $foo",
@@ -3687,7 +3687,7 @@
     "source_line": 1904,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: Module metadata must be constant at <top-level>, line 1, column 8:",
       "    module (.+1); 0",
@@ -3702,7 +3702,7 @@
     "source_line": 1910,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: Module metadata must be an object at <top-level>, line 1, column 8:",
       "    module []; 0",
@@ -3717,7 +3717,7 @@
     "source_line": 1916,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: Module metadata must be constant at <top-level>, line 1, column 13:",
       "    include \"a\" (.+1); 0",
@@ -3732,7 +3732,7 @@
     "source_line": 1922,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: Module metadata must be an object at <top-level>, line 1, column 13:",
       "    include \"a\" []; 0",
@@ -3747,7 +3747,7 @@
     "source_line": 1928,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: Invalid escape at line 1, column 4 (while parsing '\"\\ \"') at <top-level>, line 1, column 10:",
       "    include \"\\ \"; 0",
@@ -3762,7 +3762,7 @@
     "source_line": 1934,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: Import path must be constant at <top-level>, line 1, column 9:",
       "    include \"\\(a)\"; 0",
@@ -3804,7 +3804,7 @@
     "source_line": 1952,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: syntax error, unexpected ';', expecting end of file at tests/modules/syntaxerror/syntaxerror.jq, line 1, column 4:",
       "    wat;",
@@ -3819,7 +3819,7 @@
     "source_line": 1958,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: syntax error, unexpected '%', expecting end of file at <top-level>, line 1, column 1:",
       "    %::wat",
@@ -3986,7 +3986,7 @@
     "source_line": 2041,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: syntax error, unexpected end of file at <top-level>, line 1, column 1:",
       "    {",
@@ -4001,7 +4001,7 @@
     "source_line": 2047,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "any",
+    "expect_error_mode": "strict",
     "source_error_lines": [
       "jq: error: syntax error, unexpected INVALID_CHARACTER, expecting end of file at <top-level>, line 1, column 1:",
       "    }",
