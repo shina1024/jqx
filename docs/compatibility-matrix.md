@@ -32,7 +32,7 @@ Legend:
 | Arithmetic / compare / logic | supported | `+ - * / %`, `== != < <= > >=`, `and or not` |
 | User-defined functions (`def`) | partial | local/nested `def` + arity-aware runtime resolution; recursion and filter-arg closure capture are implemented for upstream-covered cases (including `jq.test:789/864/880`, `man.test:945/952`). Remaining edge semantics outside current differential coverage are tracked incrementally |
 | Labels / break | partial | `label $name | ...` と `break $name` の最小互換を実装（upstream `jq.test:315/319/333/2251` を通過）。追加の網羅ケースは継続 |
-| Module system (`import`/`include`) | partial | 実モジュール読み込みは未実装だが、`import`/`include` prefix を解釈して `module not found: <name>` の最小互換エラーを返す |
+| Module system (`import`/`include`) | partial | `register_module_source(name, source)` で登録したモジュール定義の実読み込みに対応（`import as` 名前空間・`include` 展開・ネスト import）。未登録モジュールは `module not found: <name>` を返す。filesystem 自動解決は未実装 |
 | Update assignment (`=`, `|=`, `+=`, `-=`, `*=`, `/=`, `%=`, `//=`) | partial | minimal lowering via `setpath(getpath(...))` for static path LHS (`.foo`, `.[n]`, `.a.b`, `.a.[1]`) |
 
 ## Builtins and Functions (Implemented)

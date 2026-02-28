@@ -6,6 +6,30 @@ fn FilterCursor::fresh_as_tmp(ctx : FilterCursor) -> String {
 }
 
 ///|
+priv struct ModuleSourceState {
+  mut sources : Map[String, String]
+}
+
+///|
+let module_source_state : ModuleSourceState = { sources: Map::new() }
+
+///|
+pub fn clear_module_sources() -> Unit {
+  module_source_state.sources = Map::new()
+}
+
+///|
+pub fn register_module_source(name : String, source : String) -> Unit {
+  module_source_state.sources.set(name, source)
+}
+
+///|
+priv enum ModuleLoadResult {
+  Loaded(Array[(String, Array[String], Filter)])
+  Missing(String)
+}
+
+///|
 fn append_as_pattern_var_once(vars : Array[String], name : String) -> Unit {
   if !vars.contains(name) {
     vars.push(name)
@@ -1225,16 +1249,336 @@ fn FilterCursor::parse_definition_prefix(
 }
 
 ///|
+fn module_source_lookup(module_name : String) -> String? {
+  match module_source_state.sources.get(module_name) {
+    Some(source) => Some(source)
+    None => module_source_state.sources.get(module_name + ".jq")
+  }
+}
+
+///|
+fn module_signature_is_shadowed(
+  shadowed : Array[(String, Int)],
+  name : String,
+  arity : Int,
+) -> Bool {
+  for kv in shadowed {
+    if kv.0 == name && kv.1 == arity {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn maybe_prefix_module_name(
+  name : String,
+  arity : Int,
+  module_defs : Array[(String, Array[String], Filter)],
+  module_alias : String,
+  shadowed : Array[(String, Int)],
+) -> String {
+  if module_signature_is_shadowed(shadowed, name, arity) {
+    return name
+  }
+  match find_filter_definition_arity(module_defs, name, arity) {
+    Some(_) => module_alias + "::" + name
+    None => name
+  }
+}
+
+///|
+fn prefix_module_filter_refs(
+  filter : Filter,
+  module_defs : Array[(String, Array[String], Filter)],
+  module_alias : String,
+  shadowed : Array[(String, Int)],
+) -> Filter {
+  match filter {
+    Identity
+    | Iter
+    | IterOpt
+    | Recurse
+    | Empty
+    | Var(_)
+    | Literal(_)
+    | Field(_)
+    | FieldOpt(_)
+    | Index(_)
+    | IndexOpt(_)
+    | Slice(_, _)
+    | SliceOpt(_, _)
+    | Break(_) => filter
+    Scope(local_defs, body) => {
+      let next_shadowed = shadowed.copy()
+      for def_ in local_defs {
+        next_shadowed.push((def_.0, def_.1.length()))
+      }
+      Filter::scope(
+        local_defs.map(def_ => {
+          (
+            def_.0,
+            def_.1,
+            prefix_module_filter_refs(
+              def_.2,
+              module_defs,
+              module_alias,
+              next_shadowed,
+            ),
+          )
+        }),
+        prefix_module_filter_refs(
+          body, module_defs, module_alias, next_shadowed,
+        ),
+      )
+    }
+    Pipe(left, right) =>
+      Filter::pipe(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    Comma(left, right) =>
+      Filter::comma(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    Array(items) =>
+      Filter::Array(
+        items.map(item => {
+          prefix_module_filter_refs(item, module_defs, module_alias, shadowed)
+        }),
+      )
+    Object(items) =>
+      Filter::Object(
+        items.map(kv => {
+          (
+            kv.0,
+            prefix_module_filter_refs(kv.1, module_defs, module_alias, shadowed),
+          )
+        }),
+      )
+    Builtin(name) => {
+      let next_name = maybe_prefix_module_name(
+        name, 0, module_defs, module_alias, shadowed,
+      )
+      Filter::builtin(next_name)
+    }
+    Call(name, args) => {
+      let lowered_args = args.map(arg => {
+        prefix_module_filter_refs(arg, module_defs, module_alias, shadowed)
+      })
+      let next_name = maybe_prefix_module_name(
+        name,
+        lowered_args.length(),
+        module_defs,
+        module_alias,
+        shadowed,
+      )
+      Filter::call(next_name, lowered_args)
+    }
+    As(value, name, body) =>
+      Filter::as_(
+        prefix_module_filter_refs(value, module_defs, module_alias, shadowed),
+        name,
+        prefix_module_filter_refs(body, module_defs, module_alias, shadowed),
+      )
+    Label(name, body) =>
+      Filter::label(
+        name,
+        prefix_module_filter_refs(body, module_defs, module_alias, shadowed),
+      )
+    Try(inner) =>
+      Filter::try_(
+        prefix_module_filter_refs(inner, module_defs, module_alias, shadowed),
+      )
+    TryCatch(inner, handler) =>
+      Filter::try_catch(
+        prefix_module_filter_refs(inner, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(handler, module_defs, module_alias, shadowed),
+      )
+    Reduce(source, name, init, update) =>
+      Filter::reduce(
+        prefix_module_filter_refs(source, module_defs, module_alias, shadowed),
+        name,
+        prefix_module_filter_refs(init, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(update, module_defs, module_alias, shadowed),
+      )
+    Foreach(source, name, init, update, extract) =>
+      Filter::foreach(
+        prefix_module_filter_refs(source, module_defs, module_alias, shadowed),
+        name,
+        prefix_module_filter_refs(init, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(update, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(extract, module_defs, module_alias, shadowed),
+      )
+    Eq(left, right) =>
+      Filter::eq(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    Neq(left, right) =>
+      Filter::neq(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    Lt(left, right) =>
+      Filter::lt(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    Lte(left, right) =>
+      Filter::lte(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    Gt(left, right) =>
+      Filter::gt(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    Gte(left, right) =>
+      Filter::gte(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    And(left, right) =>
+      Filter::and_(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    Or(left, right) =>
+      Filter::or_(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    Not(inner) =>
+      Filter::not(
+        prefix_module_filter_refs(inner, module_defs, module_alias, shadowed),
+      )
+    Add(left, right) =>
+      Filter::add(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    Sub(left, right) =>
+      Filter::sub(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    Mul(left, right) =>
+      Filter::mul(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    Div(left, right) =>
+      Filter::div(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    Mod(left, right) =>
+      Filter::mod_(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+    IfElse(cond, then_branch, else_branch) =>
+      Filter::if_else(
+        prefix_module_filter_refs(cond, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(
+          then_branch, module_defs, module_alias, shadowed,
+        ),
+        prefix_module_filter_refs(
+          else_branch, module_defs, module_alias, shadowed,
+        ),
+      )
+    Fallback(left, right) =>
+      Filter::fallback(
+        prefix_module_filter_refs(left, module_defs, module_alias, shadowed),
+        prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
+      )
+  }
+}
+
+///|
+fn prefix_module_defs(
+  module_alias : String,
+  defs : Array[(String, Array[String], Filter)],
+) -> Array[(String, Array[String], Filter)] {
+  let out = []
+  for def_ in defs {
+    out.push(
+      (
+        module_alias + "::" + def_.0,
+        def_.1,
+        prefix_module_filter_refs(def_.2, defs, module_alias, []),
+      ),
+    )
+  }
+  out
+}
+
+///|
+fn append_defs(
+  out : Array[(String, Array[String], Filter)],
+  defs : Array[(String, Array[String], Filter)],
+) -> Unit {
+  for def_ in defs {
+    out.push(def_)
+  }
+}
+
+///|
+fn load_module_defs(
+  module_name : String,
+  loading_stack : Array[String],
+) -> ModuleLoadResult raise FilterError {
+  if loading_stack.contains(module_name) {
+    return Missing(module_name)
+  }
+  match module_source_lookup(module_name) {
+    None => Missing(module_name)
+    Some(source) => {
+      let nested_stack = loading_stack.copy()
+      nested_stack.push(module_name)
+      let module_ctx = FilterCursor::make(source.view())
+      let (imported_defs, missing_module) = module_ctx.parse_module_prefix_with_stack(
+        nested_stack,
+      )
+      match missing_module {
+        Some(missing_name) => Missing(missing_name)
+        None => {
+          let defs = module_ctx.parse_definition_prefix()
+          module_ctx.skip_ws()
+          if module_ctx.offset < module_ctx.end_offset {
+            module_ctx.invalid_char()
+          }
+          let out = imported_defs.copy()
+          append_defs(out, defs)
+          Loaded(out)
+        }
+      }
+    }
+  }
+}
+
+///|
 fn FilterCursor::parse_module_prefix(
   ctx : FilterCursor,
-) -> String? raise FilterError {
+) -> (Array[(String, Array[String], Filter)], String?) raise FilterError {
+  ctx.parse_module_prefix_with_stack([])
+}
+
+///|
+fn FilterCursor::parse_module_prefix_with_stack(
+  ctx : FilterCursor,
+  loading_stack : Array[String],
+) -> (Array[(String, Array[String], Filter)], String?) raise FilterError {
+  let imported_defs = []
   let mut missing_module : String? = None
   for {
     ctx.skip_ws()
     if ctx.try_keyword("import") {
       ctx.skip_ws()
       let module_name = ctx.parse_string_literal()
-      missing_module = Some(module_name)
       ctx.skip_ws()
       if !ctx.try_keyword("as") {
         ctx.invalid_char()
@@ -1243,22 +1587,30 @@ fn FilterCursor::parse_module_prefix(
       if ctx.peek_char() is Some('$') {
         ctx.read_char() |> ignore
       }
-      ctx.parse_identifier() |> ignore
+      let module_alias = ctx.parse_identifier()
       ctx.skip_ws()
       ctx.expect_char(';')
+      match load_module_defs(module_name, loading_stack) {
+        Loaded(defs) =>
+          append_defs(imported_defs, prefix_module_defs(module_alias, defs))
+        Missing(missing_name) => missing_module = Some(missing_name)
+      }
       continue
     }
     if ctx.try_keyword("include") {
       ctx.skip_ws()
       let module_name = ctx.parse_string_literal()
-      missing_module = Some(module_name)
       ctx.skip_ws()
       ctx.expect_char(';')
+      match load_module_defs(module_name, loading_stack) {
+        Loaded(defs) => append_defs(imported_defs, defs)
+        Missing(missing_name) => missing_module = Some(missing_name)
+      }
       continue
     }
     break
   }
-  missing_module
+  (imported_defs, missing_module)
 }
 
 ///|
@@ -1266,7 +1618,8 @@ fn FilterCursor::parse_scoped(
   ctx : FilterCursor,
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
-  match ctx.parse_module_prefix() {
+  let (module_defs, missing_module) = ctx.parse_module_prefix()
+  match missing_module {
     Some(module_name) => {
       ctx.offset = ctx.end_offset
       return Filter::call("error", [
@@ -1275,12 +1628,13 @@ fn FilterCursor::parse_scoped(
     }
     None => ()
   }
-  let defs = ctx.parse_definition_prefix()
+  let all_defs = module_defs.copy()
+  append_defs(all_defs, ctx.parse_definition_prefix())
   let raw_filter = ctx.parse_comma(allow_as~)
-  if defs.length() == 0 {
+  if all_defs.length() == 0 {
     raw_filter
   } else {
-    let lowered_defs = lower_definition_sequence(defs)
+    let lowered_defs = lower_definition_sequence(all_defs)
     Filter::scope(lowered_defs, raw_filter)
   }
 }

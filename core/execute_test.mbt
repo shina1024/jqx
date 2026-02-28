@@ -274,6 +274,7 @@ test "execute def no-arg minimal" {
 
 ///|
 test "execute import/include missing module compatibility" {
+  clear_module_sources()
   guard (try? execute(
       parse_filter("import \"a\" as foo; foo::a"),
       must_parse("null"),
@@ -290,6 +291,35 @@ test "execute import/include missing module compatibility" {
     err.to_string() == "module not found: shadow2" else {
     fail("expected missing module error for include")
   }
+  clear_module_sources()
+}
+
+///|
+test "execute import/include module source compatibility" {
+  clear_module_sources()
+  register_module_source("math", "def inc: . + 1; def twice: inc | inc;")
+  register_module_source(
+    "util", "import \"math\" as m; def add3: m::inc | m::inc | m::inc;",
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("import \"math\" as m; . | m::twice"),
+      must_parse("1"),
+    ),
+    [Json::number(3.0)],
+  )
+  assert_eq(
+    must_execute(parse_filter("include \"math\"; . | twice"), must_parse("1")),
+    [Json::number(3.0)],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("import \"util\" as u; . | u::add3"),
+      must_parse("1"),
+    ),
+    [Json::number(4.0)],
+  )
+  clear_module_sources()
 }
 
 ///|

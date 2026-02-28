@@ -681,7 +681,7 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
 fn FilterCursor::parse_identifier_or_call(
   ctx : FilterCursor,
 ) -> Filter raise FilterError {
-  let name = ctx.parse_identifier()
+  let name = ctx.parse_qualified_identifier()
   ctx.skip_ws()
   match ctx.peek_char() {
     Some('(') => {

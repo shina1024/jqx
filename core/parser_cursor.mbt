@@ -192,6 +192,32 @@ fn FilterCursor::parse_identifier(
 }
 
 ///|
+fn FilterCursor::try_double_colon(ctx : FilterCursor) -> Bool {
+  let saved = ctx.offset
+  match (ctx.read_char(), ctx.read_char()) {
+    (Some(':'), Some(':')) => true
+    _ => {
+      ctx.offset = saved
+      false
+    }
+  }
+}
+
+///|
+fn FilterCursor::parse_qualified_identifier(
+  ctx : FilterCursor,
+) -> String raise FilterError {
+  let mut name = ctx.parse_identifier()
+  for {
+    if !ctx.try_double_colon() {
+      break
+    }
+    name = name + "::" + ctx.parse_identifier()
+  }
+  name
+}
+
+///|
 fn FilterCursor::parse_int(ctx : FilterCursor) -> Int raise FilterError {
   ctx.skip_ws()
   let start = ctx.offset

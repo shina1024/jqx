@@ -265,6 +265,16 @@ test "parse call" {
 }
 
 ///|
+test "parse qualified callable names" {
+  inspect(parse_filter("foo::bar"), content="Builtin(\"foo::bar\")")
+  inspect(
+    parse_filter("foo::bar(1)"),
+    content="Call(\"foo::bar\", [Literal(Number(1))])",
+  )
+  inspect(parse_filter("a::b::c"), content="Builtin(\"a::b::c\")")
+}
+
+///|
 test "parse variables and as" {
   inspect(parse_filter("$x"), content="Var(\"x\")")
   inspect(
