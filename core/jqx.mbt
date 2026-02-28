@@ -303,21 +303,49 @@ fn object_keys_sorted(o : JsonObject) -> Array[String] {
 
 ///|
 fn sort_strings_lex(input : Array[String]) -> Array[String] {
-  let sorted = input.copy()
-  for i in 1..<sorted.length() {
-    let v = sorted[i]
-    let mut j = i
+  fn merge_sorted_strings(
+    left : Array[String],
+    right : Array[String],
+  ) -> Array[String] {
+    let merged = []
+    let mut i = 0
+    let mut j = 0
     for {
-      if j > 0 && sorted[j - 1].compare(v) > 0 {
-        sorted[j] = sorted[j - 1]
-        j -= 1
-      } else {
-        break
+      if i < left.length() && j < right.length() {
+        if left[i].compare(right[j]) <= 0 {
+          merged.push(left[i])
+          i += 1
+        } else {
+          merged.push(right[j])
+          j += 1
+        }
+        continue
       }
+      break
     }
-    sorted[j] = v
+    for k in i..<left.length() {
+      merged.push(left[k])
+    }
+    for k in j..<right.length() {
+      merged.push(right[k])
+    }
+    merged
   }
-  sorted
+
+  let n = input.length()
+  if n <= 1 {
+    return input.copy()
+  }
+  let mid = n / 2
+  let left = []
+  let right = []
+  for i in 0..<mid {
+    left.push(input[i])
+  }
+  for i in mid..<n {
+    right.push(input[i])
+  }
+  merge_sorted_strings(sort_strings_lex(left), sort_strings_lex(right))
 }
 
 ///|

@@ -325,23 +325,46 @@ fn compare_json(a : Json, b : Json) -> Int {
 
 ///|
 fn sort_json_array(a : Array[Json]) -> Array[Json] {
-  let mut sorted = []
-  for v in a {
-    let mut inserted = false
-    let next = []
-    for cur in sorted {
-      if !inserted && compare_json(v, cur) < 0 {
-        next.push(v)
-        inserted = true
+  fn merge_sorted_json(left : Array[Json], right : Array[Json]) -> Array[Json] {
+    let merged = []
+    let mut i = 0
+    let mut j = 0
+    for {
+      if i < left.length() && j < right.length() {
+        if compare_json(left[i], right[j]) <= 0 {
+          merged.push(left[i])
+          i += 1
+        } else {
+          merged.push(right[j])
+          j += 1
+        }
+        continue
       }
-      next.push(cur)
+      break
     }
-    if !inserted {
-      next.push(v)
+    for k in i..<left.length() {
+      merged.push(left[k])
     }
-    sorted = next
+    for k in j..<right.length() {
+      merged.push(right[k])
+    }
+    merged
   }
-  sorted
+
+  let n = a.length()
+  if n <= 1 {
+    return a.copy()
+  }
+  let mid = n / 2
+  let left = []
+  let right = []
+  for i in 0..<mid {
+    left.push(a[i])
+  }
+  for i in mid..<n {
+    right.push(a[i])
+  }
+  merge_sorted_json(sort_json_array(left), sort_json_array(right))
 }
 
 ///|
@@ -421,23 +444,49 @@ fn unique_sorted_json_array(a : Array[Json]) -> Array[Json] {
 
 ///|
 fn sort_keyed_pairs(items : Array[(Json, Json)]) -> Array[(Json, Json)] {
-  let mut sorted : Array[(Json, Json)] = []
-  for item in items {
-    let mut inserted = false
-    let next : Array[(Json, Json)] = []
-    for cur in sorted {
-      if !inserted && compare_json(item.0, cur.0) < 0 {
-        next.push(item)
-        inserted = true
+  fn merge_sorted_pairs(
+    left : Array[(Json, Json)],
+    right : Array[(Json, Json)],
+  ) -> Array[(Json, Json)] {
+    let merged : Array[(Json, Json)] = []
+    let mut i = 0
+    let mut j = 0
+    for {
+      if i < left.length() && j < right.length() {
+        if compare_json(left[i].0, right[j].0) <= 0 {
+          merged.push(left[i])
+          i += 1
+        } else {
+          merged.push(right[j])
+          j += 1
+        }
+        continue
       }
-      next.push(cur)
+      break
     }
-    if !inserted {
-      next.push(item)
+    for k in i..<left.length() {
+      merged.push(left[k])
     }
-    sorted = next
+    for k in j..<right.length() {
+      merged.push(right[k])
+    }
+    merged
   }
-  sorted
+
+  let n = items.length()
+  if n <= 1 {
+    return items.copy()
+  }
+  let mid = n / 2
+  let left : Array[(Json, Json)] = []
+  let right : Array[(Json, Json)] = []
+  for i in 0..<mid {
+    left.push(items[i])
+  }
+  for i in mid..<n {
+    right.push(items[i])
+  }
+  merge_sorted_pairs(sort_keyed_pairs(left), sort_keyed_pairs(right))
 }
 
 ///|
