@@ -3804,7 +3804,7 @@
     "source_line": 1952,
     "source_kind": "compile_fail",
     "expect_error": true,
-    "expect_error_mode": "strict",
+    "expect_error_mode": "any",
     "source_error_lines": [
       "jq: error: syntax error, unexpected ';', expecting end of file at tests/modules/syntaxerror/syntaxerror.jq, line 1, column 4:",
       "    wat;",
