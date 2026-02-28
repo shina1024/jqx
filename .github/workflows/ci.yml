@@ -106,7 +106,7 @@ jobs:
           pnpm typecheck
           pnpm build
 
-      - name: TS Adapter (pnpm lint/typecheck/test)
+      - name: TS Adapter (pnpm lint/typecheck/test/build)
         if: runner.os == 'Linux'
         working-directory: ts/zod-adapter
         run: |
@@ -114,8 +114,9 @@ jobs:
           pnpm lint
           pnpm typecheck
           pnpm test
+          pnpm build
 
-      - name: TS Yup Adapter (pnpm lint/typecheck/test)
+      - name: TS Yup Adapter (pnpm lint/typecheck/test/build)
         if: runner.os == 'Linux'
         working-directory: ts/yup-adapter
         run: |
@@ -123,8 +124,9 @@ jobs:
           pnpm lint
           pnpm typecheck
           pnpm test
+          pnpm build
 
-      - name: TS Valibot Adapter (pnpm lint/typecheck/test)
+      - name: TS Valibot Adapter (pnpm lint/typecheck/test/build)
         if: runner.os == 'Linux'
         working-directory: ts/valibot-adapter
         run: |
@@ -132,6 +134,7 @@ jobs:
           pnpm lint
           pnpm typecheck
           pnpm test
+          pnpm build
 
       - name: TS jqx Entrypoint (pnpm lint/typecheck/test/build)
         if: runner.os == 'Linux'
@@ -170,6 +173,15 @@ jobs:
         if: runner.os == 'Linux' && always()
         shell: bash
         run: |
+          if [ ! -f uncovered.log ]; then
+            {
+              echo "### Moon Coverage Analyze (Linux)"
+              echo
+              echo "- `uncovered.log` was not generated because a previous step failed."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
           {
             echo "### Moon Coverage Analyze (Linux)"
             echo
@@ -186,9 +198,9 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload Coverage Report (Linux)
-        if: runner.os == 'Linux' && always()
+        if: runner.os == 'Linux' && always() && hashFiles('uncovered.log') != ''
         uses: actions/upload-artifact@v4
         with:
           name: moon-coverage-uncovered-log
           path: uncovered.log
-          if-no-files-found: error
+          if-no-files-found: ignore

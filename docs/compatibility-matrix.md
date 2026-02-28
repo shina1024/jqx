@@ -95,7 +95,7 @@ Differential scripts:
 CI coverage in `.github/workflows/ci.yml`:
 - Linux/macOS/Windows: MoonBit `check` + tests
 - Linux: `ts/adapter-core` (`pnpm lint`, `pnpm typecheck`, `pnpm build`)
-- Linux: `ts/zod-adapter`, `ts/yup-adapter`, `ts/valibot-adapter` (`pnpm lint`, `pnpm typecheck`, `pnpm test`)
+- Linux: `ts/zod-adapter`, `ts/yup-adapter`, `ts/valibot-adapter` (`pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`)
 - Linux: `ts/jqx` (`pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`)
 - Linux: imported upstream case drift check (`jq_upstream_import` + `git diff --exit-code`)
 - Linux: differential smoke, upstream full, and native `-e` scripts
