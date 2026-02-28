@@ -95,6 +95,7 @@ CI coverage in `.github/workflows/ci.yml`:
 - Linux: `ts/zod-adapter`, `ts/yup-adapter`, `ts/valibot-adapter` (`pnpm lint`, `pnpm typecheck`, `pnpm test`)
 - Linux: imported upstream case drift check (`jq_upstream_import` + `git diff --exit-code`)
 - Linux: differential smoke, upstream full, and native `-e` scripts
+- Linux: `moon coverage analyze` (`uncovered.log` を artifact 保存)
 
 Notes:
 - `jq_diff.ps1` is the primary runner for Windows environments and can resolve

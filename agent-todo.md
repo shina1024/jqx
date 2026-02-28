@@ -81,5 +81,5 @@ Updated: 2026-02-28
 ## P2: CI/運用の底上げ
 
 - [ ] differentialテストの実行対象OSを拡張する（Linux専用からの段階的拡張）
-- [ ] カバレッジ可視化（`moon coverage analyze`）をCIに組み込む
+- [x] カバレッジ可視化（`moon coverage analyze`）をCIに組み込む（Linux CIで `uncovered.log` をartifact保存）
 

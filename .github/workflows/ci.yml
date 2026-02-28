@@ -139,3 +139,17 @@ jobs:
       - name: Differential Native Exit (jq)
         if: runner.os == 'Linux'
         run: bash ./scripts/jq_diff_native.sh
+
+      - name: Coverage Analyze (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          moon coverage analyze > uncovered.log
+          head -n 120 uncovered.log
+
+      - name: Upload Coverage Report (Linux)
+        if: runner.os == 'Linux' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: moon-coverage-uncovered-log
+          path: uncovered.log
+          if-no-files-found: error
