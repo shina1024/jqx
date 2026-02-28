@@ -181,7 +181,8 @@ Cases are defined in `scripts/jq_exit_cases.json`.
 Notes:
 - PowerShell script resolves `jq` via `mise which jq` if `jq` is not in `PATH`.
 - Bash script first uses `PATH`, then falls back to `mise` where possible.
-- Object key traversal/serialization is canonicalized in lexicographic order for deterministic output (this differs from jq insertion-order behavior).
+- Object traversal/serialization preserves input/update order for jq compatibility (`.[]`, `tojson`, `keys_unsorted`).
+- `keys` remains lexicographically sorted, while `keys_unsorted` preserves object order.
 
 Build:
 ```bash

@@ -1,12 +1,19 @@
 # Agent TODO
 
-Updated: 2026-02-14
+Updated: 2026-02-28
+
+## Current baseline (2026-02-28)
+
+- `moon test`: 249/249 pass
+- `moon test --target native --package core`: 190/190 pass
+- differential smoke (`scripts/jq_compat_cases.json`): total 233 / passed 233 / failed 0 / skipped 0
+- differential upstream full (`scripts/jq_compat_cases.upstream.json`): total 843 / passed 843 / failed 0 / skipped 0
 
 ## P0: jq互換の未実装/部分実装を埋める
 
 - [x] `def`（ユーザー定義関数）の最小実装を追加する（top-level の parser lowering + 引数付き `def f(a;b)` + differential case）
 - [x] `def` の対応範囲を拡張する（ネスト定義の配置対応・arity解決改善）
-- [ ] `def` の対応範囲をさらに拡張する（再帰、filter引数セマンティクス、import連携）
+- [ ] `def` の対応範囲をさらに拡張する（再帰/closure capture は upstream-covered ケースで実装済み。残り edge semantics と import 実読み込み）
 - [ ] update assignment（`|=`, `+=` など）の対応範囲を拡張する（静的パス以外の実用ケース）
 - [x] 正規表現ファミリ（`test`/`match`/`capture`/`scan`/`sub`/`gsub`）を最小互換で実装する
 - [x] CLI `-R`/`-s` の入力セマンティクス差分を縮小する（line/slurp境界のjq互換）
@@ -37,9 +44,10 @@ Updated: 2026-02-14
 - [x] upstream unknown-functionクラスタを実質解消する（15→0、`split/splits`+`combinations`+`fromdate`+`env`+`tostream/fromstream/truncate_stream`）
 - [x] upstream unknown-variableクラスタを解消する（8→0、`as`スコープ修正+`?//`変数初期化+`$ENV`/`$__loc__`最小互換）
 - [x] upstream runtime-error-vs-jq-success クラスタを解消する（10→0、string `/` 互換・`abs` 互換・`path` 変数束縛追跡）
-- [x] Objectキー順の扱いを安定化する方針を決めて実装する（辞書順正規化で安定化）
+- [x] Objectキー順の扱いをjq互換へ寄せる（入力/更新順保持。`keys` は辞書順、`keys_unsorted` は入力順）
 - [x] upstream skip件数を追加で縮小する（92→90、`@base64d` lax padding対応 + `io-control` 誤検知1件をunskip）
 - [x] upstream skip件数を追加で縮小する（90→88、`input`/`debug` 最小互換 + 2件unskip）
+- [x] upstream full differential の skip を解消する（88→0、total 843 / failed 0 / skipped 0）
 - [ ] エラーメッセージ差分を縮小する（`expect_error` ケース追加は進捗あり、正規化改善を継続）
 - [x] differentialケースを拡張する（`reduce`/`foreach`/`try-catch`/演算の境界系を11件追加、smoke 169→180）
 - [x] differentialケースをさらに拡張する（upstream pass群から `def` 系3件を取り込み、smoke 180→185）
@@ -48,6 +56,7 @@ Updated: 2026-02-14
 - [x] differentialケースをさらに拡張する（`split/splits`+`combinations`+`fromdate`+`env`+stream系を9件追加、smoke 190→199）
 - [x] differentialケースをさらに拡張する（`as`束縛/スコープ回帰の4件を追加、smoke 199→203）
 - [x] differentialケースをさらに拡張する（runtime互換回帰の7件を追加、smoke 203→210）
+- [x] differentialケースをさらに拡張する（smoke 210→233、failed 0 / skipped 0 を維持）
 
 ## P1: JS/TS公開に向けた仕上げ
 
