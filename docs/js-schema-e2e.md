@@ -1,6 +1,6 @@
 # JS/TS E2E Examples (Schema + jq String + Output Validation)
 
-Updated: 2026-02-10
+Updated: 2026-02-28
 
 This document shows end-to-end usage for:
 
@@ -18,21 +18,28 @@ interface JqxDynamicRuntime {
 }
 ```
 
-In real apps, `runtime.run(...)` should call your actual `jqx` JS runtime entrypoint.
+## Real Runtime Wiring (No Mock)
+
+`docs/examples/runtime-via-cli.ts` provides a real runtime bridge that calls:
+
+- `moon run --target native cmd -- <filter> <input>`
+
+This is suitable for local integration and CI smoke checks.
+
+```ts
+import { createMoonCliRuntime } from "./examples/runtime-via-cli";
+
+const runtime = createMoonCliRuntime(process.cwd());
+```
 
 ## Zod Adapter
 
 ```ts
 import { z } from "zod";
-import { createAdapter } from "@shina1024/jqx-zod-adapter";
+import { createAdapter } from "jqx/zod";
+import { createMoonCliRuntime } from "./examples/runtime-via-cli";
 
-const runtime = {
-  async run(filter: string, input: string) {
-    // Replace this with the actual jqx runtime call:
-    // return jqx.run(filter, input);
-    return { ok: true as const, value: ['"alice"', '"bob"'] };
-  },
-};
+const runtime = createMoonCliRuntime(process.cwd());
 
 const inputSchema = z.object({
   users: z.array(z.object({ name: z.string() })),
@@ -61,13 +68,10 @@ if (!result.ok) {
 
 ```ts
 import * as yup from "yup";
-import { createAdapter } from "@shina1024/jqx-yup-adapter";
+import { createAdapter } from "jqx/yup";
+import { createMoonCliRuntime } from "./examples/runtime-via-cli";
 
-const runtime = {
-  async run(filter: string, input: string) {
-    return { ok: true as const, value: ['{"id":1}', '{"id":2}'] };
-  },
-};
+const runtime = createMoonCliRuntime(process.cwd());
 
 const inputSchema = yup
   .object({
@@ -103,13 +107,10 @@ if (!result.ok) {
 
 ```ts
 import * as v from "valibot";
-import { createAdapter } from "@shina1024/jqx-valibot-adapter";
+import { createAdapter } from "jqx/valibot";
+import { createMoonCliRuntime } from "./examples/runtime-via-cli";
 
-const runtime = {
-  async run(filter: string, input: string) {
-    return { ok: true as const, value: ["1", "2", "3"] };
-  },
-};
+const runtime = createMoonCliRuntime(process.cwd());
 
 const inputSchema = v.object({
   values: v.array(v.number()),
@@ -139,8 +140,10 @@ If you want type hints from the jq string itself (best-effort), use `adapter.inf
 Then keep schema validation for runtime safety in production.
 
 ```ts
-import { createAdapter } from "@shina1024/jqx-zod-adapter";
+import { createAdapter } from "jqx/zod";
+import { createMoonCliRuntime } from "./examples/runtime-via-cli";
 
+const runtime = createMoonCliRuntime(process.cwd());
 const adapter = createAdapter(runtime);
 const inferred = await adapter.inferred({
   filter: ".users[].name",

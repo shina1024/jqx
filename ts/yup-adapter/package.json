@@ -1,7 +1,6 @@
 {
   "name": "@shina1024/jqx-yup-adapter",
   "version": "0.1.0",
-  "private": true,
   "description": "Yup adapter utilities for jqx JS/TS runtime",
   "license": "Apache-2.0",
   "files": [
@@ -18,6 +17,9 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean",
@@ -40,5 +42,8 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "yup": "^1.7.0"
+  },
+  "peerDependencies": {
+    "yup": "^1.0.0"
   }
 }

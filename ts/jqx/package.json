@@ -1,0 +1,62 @@
+{
+  "name": "jqx",
+  "version": "0.1.0",
+  "description": "npm entrypoint for jqx JS/TS runtime and schema adapters",
+  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./zod": {
+      "types": "./dist/zod.d.ts",
+      "import": "./dist/zod.js",
+      "require": "./dist/zod.cjs"
+    },
+    "./yup": {
+      "types": "./dist/yup.d.ts",
+      "import": "./dist/yup.js",
+      "require": "./dist/yup.cjs"
+    },
+    "./valibot": {
+      "types": "./dist/valibot.d.ts",
+      "import": "./dist/valibot.js",
+      "require": "./dist/valibot.cjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts src/zod.ts src/yup.ts src/valibot.ts --format esm,cjs --dts --clean",
+    "format": "oxfmt .",
+    "format:check": "oxfmt . --check",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test test/**/*.test.ts"
+  },
+  "dependencies": {
+    "@shina1024/jqx-adapter-core": "file:../adapter-core",
+    "@shina1024/jqx-valibot-adapter": "file:../valibot-adapter",
+    "@shina1024/jqx-yup-adapter": "file:../yup-adapter",
+    "@shina1024/jqx-zod-adapter": "file:../zod-adapter"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "oxfmt": "^0.35.0",
+    "oxlint": "^1.50.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

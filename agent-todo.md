@@ -60,8 +60,8 @@ Updated: 2026-02-28
 
 ## P1: JS/TS公開に向けた仕上げ
 
-- [ ] npm向け公開エントリポイントを確定する（`import { ... } from \"jqx\"` の最終設計）
-- [ ] Zod/Yup/Valibotの実ランタイム接続例をdocsに追加する（mockではない配線例）
+- [x] npm向け公開エントリポイントを確定する（`import { ... } from \"jqx\"` の最終設計）
+- [x] Zod/Yup/Valibotの実ランタイム接続例をdocsに追加する（mockではない配線例、`docs/examples/runtime-via-cli.ts`）
 - [ ] Typed DSLコンビネータを拡張し、compile-time推論テストを追加する
 
 ## P1: コードベース保守性（リファクタリング）

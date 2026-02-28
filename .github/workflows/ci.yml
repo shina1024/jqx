@@ -52,6 +52,8 @@ jobs:
           node-version: 24
           cache: pnpm
           cache-dependency-path: |
+            ts/adapter-core/pnpm-lock.yaml
+            ts/jqx/pnpm-lock.yaml
             ts/zod-adapter/pnpm-lock.yaml
             ts/yup-adapter/pnpm-lock.yaml
             ts/valibot-adapter/pnpm-lock.yaml
@@ -95,6 +97,15 @@ jobs:
           $vcvars = Join-Path $vs "VC\\Auxiliary\\Build\\vcvars64.bat"
           cmd /c "`"$vcvars`" && moon test --target native core && moon test --target native cmd"
 
+      - name: TS Adapter Core (pnpm lint/typecheck/build)
+        if: runner.os == 'Linux'
+        working-directory: ts/adapter-core
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint
+          pnpm typecheck
+          pnpm build
+
       - name: TS Adapter (pnpm lint/typecheck/test)
         if: runner.os == 'Linux'
         working-directory: ts/zod-adapter
@@ -121,6 +132,16 @@ jobs:
           pnpm lint
           pnpm typecheck
           pnpm test
+
+      - name: TS jqx Entrypoint (pnpm lint/typecheck/test/build)
+        if: runner.os == 'Linux'
+        working-directory: ts/jqx
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint
+          pnpm typecheck
+          pnpm test
+          pnpm build
 
       - name: Verify Imported Upstream Cases
         if: runner.os == 'Linux'

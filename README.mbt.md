@@ -126,8 +126,10 @@ The compatibility baseline and current gap list is tracked in:
 - `docs/compatibility-matrix.md`
 - `docs/js-zod-integration.md` (JS/TS Zod adapter plan)
 - `docs/js-schema-e2e.md` (schema input + jq string + output schema validation examples)
+- `docs/examples/runtime-via-cli.ts` (non-mock runtime bridge for JS/TS adapters)
 
 TS adapter scaffold:
+- `ts/jqx` (npm-facing entrypoint: `jqx`, `jqx/zod`, `jqx/yup`, `jqx/valibot`)
 - `ts/adapter-core` (shared runtime/result/inference helpers for TS adapters)
 - `ts/zod-adapter` (`pnpm build`, `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`)
 - `ts/yup-adapter` (`pnpm build`, `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`)
@@ -218,6 +220,7 @@ and run it directly.
 ## Notes
 
 - The CLI is native-only because stdin is implemented via native `getchar`.
-- JS/TS APIs are available via the MoonBit `js` package. TS adapters also provide `dist` outputs (`esm`/`cjs` + `d.ts`) and share common logic in `ts/adapter-core`.
+- JS/TS APIs are available via the MoonBit `js` package and npm-facing TS entrypoint `ts/jqx` (`jqx`, `jqx/zod`, `jqx/yup`, `jqx/valibot`).
+- TS adapters provide `dist` outputs (`esm`/`cjs` + `d.ts`) and share common logic in `ts/adapter-core`.
 - Library users should import `shina1024/jqx/core` directly; the root package is
   a thin wrapper around core.

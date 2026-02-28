@@ -12,25 +12,30 @@ The architecture keeps MoonBit `core/` pure and places validator coupling in TS 
 
 Implemented adapters:
 
-1. `ts/adapter-core`
+1. `ts/jqx`
+   - npm-facing import entrypoints:
+     - `jqx` (runtime/core types + runtime binding helper)
+     - `jqx/zod`, `jqx/yup`, `jqx/valibot` (adapter re-export subpaths)
+2. `ts/adapter-core`
    - shared `JqxResult`/runtime types, jq-string inference types, and common run/validation plumbing
-2. `ts/zod-adapter`
+3. `ts/zod-adapter`
    - API: `createAdapter(runtime)` with `.filter(...)`, `.query(...)`, `.inferred(...)`
-3. `ts/yup-adapter`
+4. `ts/yup-adapter`
    - API: `createAdapter(runtime)` with `.filter(...)`, `.query(...)`, `.inferred(...)`
-4. `ts/valibot-adapter`
+5. `ts/valibot-adapter`
    - API: `createAdapter(runtime)` with `.filter(...)`, `.query(...)`, `.inferred(...)`
 
 Each adapter includes runtime tests, `pnpm typecheck`, `expectTypeOf`-based compile-time assertions, and Linux CI coverage.
 Each adapter package now provides build output metadata (`main`/`module`/`types` + conditional `exports`) and `pnpm build`.
+Adapter packages are publish-ready for npm (`publishConfig.access=public`, runtime validator peer deps declared).
 Each adapter also provides jq-string partial inference via:
 - `InferJqOutput<Input, Filter, Mode>`
 - `createAdapter(runtime).inferred({ filter, input, fallback? })`
 
 Still pending:
 
-1. Final npm runtime binding and import design (`import { ... } from "jqx"`).
-2. Keep expanding end-to-end usage examples for app integration patterns.
+1. Expand typed-lane compile-time scenarios beyond current adapter-facing assertions.
+2. Add Standard Schema / OpenAPI ecosystem examples as separate optional layers.
 
 ## Design Principles
 
@@ -114,9 +119,10 @@ Practical E2E examples (schema input validation + jq string execution + output
 schema validation) are documented in:
 
 - `docs/js-schema-e2e.md`
+- `docs/examples/runtime-via-cli.ts` (non-mock runtime bridge using `moon run --target native cmd`)
 
 ## Next Steps
 
 1. Expand compile-time assertions from adapter surfaces to richer typed-query composition scenarios.
-2. Finalize npm package layout and runtime binding so users can import from the stable public entrypoint.
-3. Add docs/examples showing end-to-end runtime wiring for each validator.
+2. Add npm publish workflow (`npm pack`/smoke import) and release automation.
+3. Add Standard Schema / OpenAPI ecosystem examples as separate optional layers.

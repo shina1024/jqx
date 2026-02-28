@@ -74,12 +74,13 @@ Implemented builtins/functions in `core/execute.mbt` + `core/builtin*.mbt` inclu
 | --- | --- | --- |
 | Dynamic API | supported | compatibility lane: `run`/`runCompat`/`executeToJsonStrings` (JSON text); convenience lane: `runValues`/`safeRunValues` (core `Json` values) |
 | Typed DSL | partial | `Query[I, O]` scaffold + practical combinators (`identity`, `field`, `index`, `iter`, `pipe`, `comma`, `literal`, `call`, `select`, `eq`, `add`, `fallback`, `try_catch`, `map`) with `executeQuery` / `runQuery` |
+| npm-facing import entrypoint | supported | `ts/jqx` provides `jqx` + subpath exports `jqx/zod`, `jqx/yup`, `jqx/valibot` |
 | TS adapter shared core | supported | `ts/adapter-core` centralizes `JqxResult`/runtime/inference types and common validation run-paths |
 | jq string partial inference layer | supported | `createAdapter(...).inferred(...)` + `InferJqOutput` are available in `ts/zod-adapter`, `ts/yup-adapter`, `ts/valibot-adapter`; unsupported jq syntax falls back to `unknown` (default) or `Json` |
 | TS compile-time inference tests | supported | `expectTypeOf`-based compile-time assertions are present in `ts/zod-adapter`, `ts/yup-adapter`, and `ts/valibot-adapter` |
-| Zod adapter | partial | `ts/zod-adapter` provides `createAdapter(...).filter/query/inferred`, tests, CI checks, and `dist` build metadata (`main`/`module`/`types` + conditional `exports`) |
-| Yup adapter | partial | `ts/yup-adapter` provides `createAdapter(...).filter/query/inferred`, tests, CI checks, and `dist` build metadata (`main`/`module`/`types` + conditional `exports`) |
-| Valibot adapter | partial | `ts/valibot-adapter` provides `createAdapter(...).filter/query/inferred`, tests, CI checks, and `dist` build metadata (`main`/`module`/`types` + conditional `exports`) |
+| Zod adapter | supported | `ts/zod-adapter` provides `createAdapter(...).filter/query/inferred`, tests, CI checks, `dist` metadata, and `zod` peer dependency declaration |
+| Yup adapter | supported | `ts/yup-adapter` provides `createAdapter(...).filter/query/inferred`, tests, CI checks, `dist` metadata, and `yup` peer dependency declaration |
+| Valibot adapter | supported | `ts/valibot-adapter` provides `createAdapter(...).filter/query/inferred`, tests, CI checks, `dist` metadata, and `valibot` peer dependency declaration |
 
 ## Differential Testing and CI
 
@@ -93,7 +94,9 @@ Differential scripts:
 
 CI coverage in `.github/workflows/ci.yml`:
 - Linux/macOS/Windows: MoonBit `check` + tests
+- Linux: `ts/adapter-core` (`pnpm lint`, `pnpm typecheck`, `pnpm build`)
 - Linux: `ts/zod-adapter`, `ts/yup-adapter`, `ts/valibot-adapter` (`pnpm lint`, `pnpm typecheck`, `pnpm test`)
+- Linux: `ts/jqx` (`pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`)
 - Linux: imported upstream case drift check (`jq_upstream_import` + `git diff --exit-code`)
 - Linux: differential smoke, upstream full, and native `-e` scripts
 - Linux: `moon coverage analyze` (`uncovered.log` を artifact 保存)
@@ -135,4 +138,4 @@ Notes:
 1. Expand differential cases from smoke to feature coverage (builtins/operators/options).
 2. Keep zero-skip upstream differential while expanding covered feature surface.
 3. Expand Typed lane from scaffold to richer combinators and compile-time TS tests.
-4. Finalize npm-facing JS/TS runtime binding (including Zod adapter import path design).
+4. Add npm publish workflow (`npm pack`/smoke import) and release automation.
