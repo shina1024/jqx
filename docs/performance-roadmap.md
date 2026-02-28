@@ -33,6 +33,7 @@ jqx の jq 互換性を維持しつつ、実行時ボトルネックを段階的
   - `as/reduce/foreach` と path 評価の `as` で `env.copy()` を一時束縛+復元へ置換
   - `JsonObject` に lex ソート済みキーを保持し、Object 比較時の再ソートを削減
   - Object 比較で lex キー配列のコピー生成を避け、保持済み配列を直接参照
+  - `sub/gsub` の置換生成をチャンク蓄積+最後に結合する方式へ変更
 
 ## Validation policy
 

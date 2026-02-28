@@ -2174,36 +2174,50 @@ fn regex_capture_objects(
 }
 
 ///|
-fn regex_apply_replacement_variants(
-  variants : Array[String],
+fn regex_apply_replacement_chunks(
+  variants : Array[Array[String]],
   replacements : Array[String],
   matched : String,
-) -> Array[String] {
+) -> Array[Array[String]] {
   if replacements.length() == 0 {
-    let out = []
-    for variant in variants {
-      out.push(variant + matched)
+    if matched.length() == 0 {
+      return variants
     }
-    return out
+    for variant in variants {
+      variant.push(matched)
+    }
+    return variants
   }
   if variants.length() == 1 && replacements.length() > 1 {
-    let out = []
-    let base = variants[0]
+    let base_chunks = variants[0]
+    let out : Array[Array[String]] = []
     for replacement in replacements {
-      out.push(base + replacement)
+      let next_chunks = base_chunks.copy()
+      if replacement.length() > 0 {
+        next_chunks.push(replacement)
+      }
+      out.push(next_chunks)
     }
     return out
   }
-  let out = []
+  let out : Array[Array[String]] = []
   for i in 0..<variants.length() {
-    let replacement = if i < replacements.length() {
-      replacements[i]
-    } else {
-      ""
+    let next_chunks = variants[i].copy()
+    if i < replacements.length() && replacements[i].length() > 0 {
+      next_chunks.push(replacements[i])
     }
-    out.push(variants[i] + replacement)
+    out.push(next_chunks)
   }
   out
+}
+
+///|
+fn regex_join_chunks(chunks : Array[String]) -> String {
+  let buf = StringBuilder::new()
+  for chunk in chunks {
+    buf.write_string(chunk)
+  }
+  buf.to_string()
 }
 
 ///|
@@ -2220,13 +2234,15 @@ fn regex_substitute_values(
   let len = s.length()
   let mut search_start = 0
   let mut token_start = 0
-  let mut variants = [""]
+  let mut variants : Array[Array[String]] = [[]]
   for {
     match regex_find_next_match(compiled, s, search_start) {
       Some(found) => {
         let prefix = regex_slice_string(s, token_start, found.start)
-        for i in 0..<variants.length() {
-          variants[i] = variants[i] + prefix
+        if prefix.length() > 0 {
+          for variant in variants {
+            variant.push(prefix)
+          }
         }
         let replacement_input = regex_named_capture_object(
           s,
@@ -2244,16 +2260,22 @@ fn regex_substitute_values(
           }
         }
         let matched = regex_slice_string(s, found.start, found.end_)
-        variants = regex_apply_replacement_variants(
+        variants = regex_apply_replacement_chunks(
           variants, replacement_values, matched,
         )
         token_start = found.end_
         if !global {
           let suffix = regex_slice_string(s, token_start, len)
-          for i in 0..<variants.length() {
-            variants[i] = variants[i] + suffix
+          if suffix.length() > 0 {
+            for variant in variants {
+              variant.push(suffix)
+            }
           }
-          return variants
+          let out = []
+          for chunks in variants {
+            out.push(regex_join_chunks(chunks))
+          }
+          return out
         }
         match
           regex_next_search_start(search_start, found.start, found.end_, len) {
@@ -2263,19 +2285,31 @@ fn regex_substitute_values(
           }
           None => {
             let suffix = regex_slice_string(s, token_start, len)
-            for i in 0..<variants.length() {
-              variants[i] = variants[i] + suffix
+            if suffix.length() > 0 {
+              for variant in variants {
+                variant.push(suffix)
+              }
             }
-            return variants
+            let out = []
+            for chunks in variants {
+              out.push(regex_join_chunks(chunks))
+            }
+            return out
           }
         }
       }
       None => {
         let suffix = regex_slice_string(s, token_start, len)
-        for i in 0..<variants.length() {
-          variants[i] = variants[i] + suffix
+        if suffix.length() > 0 {
+          for variant in variants {
+            variant.push(suffix)
+          }
         }
-        return variants
+        let out = []
+        for chunks in variants {
+          out.push(regex_join_chunks(chunks))
+        }
+        return out
       }
     }
   }
