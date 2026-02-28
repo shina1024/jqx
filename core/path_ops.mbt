@@ -676,6 +676,64 @@ fn path_binding_restore_temp(
 }
 
 ///|
+priv struct PathDefEnvBinding {
+  name : String
+  previous : Json?
+}
+
+///|
+fn path_bind_runtime_def_env(
+  env : Map[String, Json],
+  def_env : Map[String, Json],
+) -> Array[PathDefEnvBinding] {
+  let saved = []
+  for binding in def_env {
+    if !binding.0.has_prefix("__jqx_as_") {
+      let previous = env_bind_temp(env, binding.0, binding.1)
+      saved.push({ name: binding.0, previous })
+    }
+  }
+  saved
+}
+
+///|
+fn path_restore_runtime_def_env(
+  env : Map[String, Json],
+  saved : Array[PathDefEnvBinding],
+) -> Unit {
+  for i in 0..<saved.length() {
+    let idx = saved.length() - 1 - i
+    let binding = saved[idx]
+    env_restore_temp(env, binding.name, binding.previous)
+  }
+}
+
+///|
+fn path_eval_runtime_def_no_args(
+  def_ : RuntimeDef,
+  state : PathEvalState,
+  env : Map[String, Json],
+  bindings : Map[String, PathEvalState],
+) -> Array[PathEvalState] raise EvalError {
+  let prev_defs = runtime_def_state.current
+  runtime_def_state.current = Some(def_)
+  let saved_env = path_bind_runtime_def_env(env, def_.env)
+  try path_filter_state_with_bindings(def_.body, state, env, bindings) catch {
+    err => {
+      path_restore_runtime_def_env(env, saved_env)
+      runtime_def_state.current = prev_defs
+      raise err
+    }
+  } noraise {
+    states => {
+      path_restore_runtime_def_env(env, saved_env)
+      runtime_def_state.current = prev_defs
+      states
+    }
+  }
+}
+
+///|
 fn path_filter_state_with_bindings(
   filter : Filter,
   state : PathEvalState,
@@ -709,6 +767,11 @@ fn path_filter_state_with_bindings(
       }
       out
     }
+    Builtin(name) =>
+      match find_runtime_def(runtime_def_state.current, name, 0) {
+        Some(def_) => path_eval_runtime_def_no_args(def_, state, env, bindings)
+        None => path_fallback_states(filter, state, env)
+      }
     Var(name) =>
       match bindings.get(name) {
         Some(bound_state) => [bound_state]
@@ -775,6 +838,16 @@ fn path_filter_state_with_bindings(
         [state]
       } else {
         []
+      }
+    Call(name, args) =>
+      if args.length() == 0 {
+        match find_runtime_def(runtime_def_state.current, name, 0) {
+          Some(def_) =>
+            path_eval_runtime_def_no_args(def_, state, env, bindings)
+          None => path_fallback_states(filter, state, env)
+        }
+      } else {
+        path_fallback_states(filter, state, env)
       }
     Empty => []
     _ => path_fallback_states(filter, state, env)

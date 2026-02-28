@@ -65,16 +65,14 @@ When public APIs change, inspect generated `.mbti` diffs carefully.
 
 ## Current Baseline (2026-02-28)
 
-- `moon test`: 252/252 pass
-- `moon test --target native --package core`: 193/193 pass
-- differential smoke (`scripts/jq_compat_cases.json`): 233/233 pass
+- `moon test`: 255/255 pass
+- `moon test --target native --package core`: 195/195 pass
+- differential smoke (`scripts/jq_compat_cases.json`): 242/242 pass
 - differential upstream full (`scripts/jq_compat_cases.upstream.json`): 843/843 pass, skipped 0
 
 ## Known Compatibility Gaps (High-level)
 
-- `def`: edge semantics are still being expanded.
-- Module system: registered-source loading is supported; filesystem auto resolution is pending.
-- Update assignment: static-path LHS coverage is stronger than dynamic-path cases.
+- Locale/Unicode 依存の一部ケース（日時/regex）の環境差異は要観察。
 - Compile-time diagnostic text parity is not yet byte-for-byte strict for all cases.
 
 ## JSON Parser First: Design Notes

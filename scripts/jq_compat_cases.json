@@ -85,6 +85,35 @@
     "input": "999999999"
   },
   {
+    "name": "def-capture-outer-var",
+    "filter": "10 as $x | def f: $x; 20 as $x | f",
+    "input": "null"
+  },
+  {
+    "name": "def-forward-reference-error",
+    "filter": "def f: g; def g: . + 1; f",
+    "input": "1",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_kind": "compile_fail"
+  },
+  {
+    "name": "def-forward-reference-arity-error",
+    "filter": "def f(x): g(x); def g(y): y + 1; f(1)",
+    "input": "null",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_kind": "compile_fail"
+  },
+  {
+    "name": "def-mutual-recursion-error",
+    "filter": "def even: if . == 0 then true else .-1|odd end; def odd: if . == 0 then false else .-1|even end; 4|even",
+    "input": "null",
+    "expect_error": true,
+    "expect_error_mode": "any",
+    "source_kind": "compile_fail"
+  },
+  {
     "name": "pow-basic",
     "filter": "pow(2;10)",
     "input": "null"
@@ -828,6 +857,31 @@
     "name": "assign-neg-index",
     "filter": ".[-1] += 1",
     "input": "[1,2,3]"
+  },
+  {
+    "name": "assign-iter-update-inner-index",
+    "filter": ".[] |= .[0]",
+    "input": "[[1,2],[3,4]]"
+  },
+  {
+    "name": "assign-iter-add-root-rhs",
+    "filter": ".[] += .[0]",
+    "input": "[[1,2],[3,4]]"
+  },
+  {
+    "name": "assign-optional-path-add",
+    "filter": "(.[] | .a?) += 1",
+    "input": "[{\"a\":1},{\"b\":2},{\"a\":3}]"
+  },
+  {
+    "name": "assign-optional-path-update-empty",
+    "filter": "(.[] | .a?) |= empty",
+    "input": "[{\"a\":1},{\"b\":2},{\"a\":3}]"
+  },
+  {
+    "name": "assign-select-add",
+    "filter": "(.[] | select(.a != null) | .a) += 10",
+    "input": "[{\"a\":1},{\"b\":2},{\"a\":3}]"
   },
   {
     "name": "chained-index-field",

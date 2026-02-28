@@ -209,6 +209,7 @@ priv struct RuntimeDef {
   name : String
   params : Array[String]
   body : Filter
+  env : Map[String, Json]
   parent : RuntimeDef?
 }
 
@@ -246,10 +247,17 @@ let runtime_filter_closure_state : RuntimeFilterClosureState = {
 fn append_runtime_defs(
   parent : RuntimeDef?,
   defs : Array[(String, Array[String], Filter)],
+  env : Map[String, Json],
 ) -> RuntimeDef? {
   let mut out = parent
   for def_ in defs {
-    out = Some({ name: def_.0, params: def_.1, body: def_.2, parent: out })
+    out = Some({
+      name: def_.0,
+      params: def_.1,
+      body: def_.2,
+      env: clone_runtime_env(env),
+      parent: out,
+    })
   }
   out
 }
@@ -312,91 +320,6 @@ fn lower_scope_defs_with_runtime_context(
     available.push(lowered_def)
   }
   lowered
-}
-
-///|
-fn filter_references_name(filter : Filter, name : String) -> Bool {
-  match filter {
-    Builtin(n) => n == name
-    Call(n, args) =>
-      if n == name && args.length() == 0 {
-        true
-      } else {
-        for arg in args {
-          if filter_references_name(arg, name) {
-            return true
-          }
-        }
-        false
-      }
-    Pipe(left, right)
-    | Comma(left, right)
-    | Eq(left, right)
-    | Neq(left, right)
-    | Lt(left, right)
-    | Lte(left, right)
-    | Gt(left, right)
-    | Gte(left, right)
-    | And(left, right)
-    | Or(left, right)
-    | Add(left, right)
-    | Sub(left, right)
-    | Mul(left, right)
-    | Div(left, right)
-    | Mod(left, right)
-    | Fallback(left, right) =>
-      filter_references_name(left, name) || filter_references_name(right, name)
-    Not(inner) | Try(inner) => filter_references_name(inner, name)
-    TryCatch(inner, handler) =>
-      filter_references_name(inner, name) ||
-      filter_references_name(handler, name)
-    As(value, _, body) =>
-      filter_references_name(value, name) || filter_references_name(body, name)
-    Label(_, body) => filter_references_name(body, name)
-    Reduce(source, _, init, update) =>
-      filter_references_name(source, name) ||
-      filter_references_name(init, name) ||
-      filter_references_name(update, name)
-    Foreach(source, _, init, update, extract) =>
-      filter_references_name(source, name) ||
-      filter_references_name(init, name) ||
-      filter_references_name(update, name) ||
-      filter_references_name(extract, name)
-    Array(items) => {
-      for item in items {
-        if filter_references_name(item, name) {
-          return true
-        }
-      }
-      false
-    }
-    Object(items) => {
-      for item in items {
-        if filter_references_name(item.1, name) {
-          return true
-        }
-      }
-      false
-    }
-    IfElse(cond, then_branch, else_branch) =>
-      filter_references_name(cond, name) ||
-      filter_references_name(then_branch, name) ||
-      filter_references_name(else_branch, name)
-    Scope(local_defs, body) => {
-      for def_ in local_defs {
-        if def_.0 == name {
-          return false
-        }
-      }
-      for def_ in local_defs {
-        if filter_references_name(def_.2, name) {
-          return true
-        }
-      }
-      filter_references_name(body, name)
-    }
-    _ => false
-  }
 }
 
 ///|
@@ -606,20 +529,29 @@ fn execute_runtime_def_call(
     }
   }
 
-  let expanded = lower_filter_def_call(def_.body, def_.params, closure_args)
+  let expanded = lower_filter_def_call(
+    def_.body,
+    def_.params,
+    closure_args,
+    def_.env,
+  )
 
+  let prev_defs = runtime_def_state.current
   let prev_closures = runtime_filter_closure_state.current
+  runtime_def_state.current = Some(def_)
   runtime_filter_closure_state.current = append_runtime_filter_closures(
     runtime_filter_closure_state.current,
     closure_seeds,
   )
   try execute_with_env(expanded, input, env) catch {
     err => {
+      runtime_def_state.current = prev_defs
       runtime_filter_closure_state.current = prev_closures
       raise err
     }
   } noraise {
     values => {
+      runtime_def_state.current = prev_defs
       runtime_filter_closure_state.current = prev_closures
       values
     }
@@ -668,22 +600,12 @@ fn execute_with_env(
     Scope(defs, body) => {
       let prev_defs = runtime_def_state.current
       let lowered_defs = lower_scope_defs_with_runtime_context(defs)
-      let non_recursive_defs = []
-      for def_ in lowered_defs {
-        if !filter_references_name(def_.2, def_.0) {
-          non_recursive_defs.push(def_)
-        }
-      }
-      let lowered_body = if non_recursive_defs.length() == 0 {
-        body
-      } else {
-        lower_filter_with_defs(body, non_recursive_defs)
-      }
       runtime_def_state.current = append_runtime_defs(
         runtime_def_state.current,
         lowered_defs,
+        env,
       )
-      try execute_with_env(lowered_body, input, env) catch {
+      try execute_with_env(body, input, env) catch {
         err => {
           runtime_def_state.current = prev_defs
           raise err

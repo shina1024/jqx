@@ -273,6 +273,43 @@ test "execute def no-arg minimal" {
 }
 
 ///|
+test "execute def edge semantics compatibility" {
+  assert_eq(
+    must_execute(
+      parse_filter("10 as $x | def f: $x; 20 as $x | f"),
+      must_parse("null"),
+    ),
+    [Json::number(10.0)],
+  )
+  guard (try? execute(
+      parse_filter("def f: g; def g: . + 1; f"),
+      must_parse("1"),
+    ))
+    is Err(EvalError::UnknownFunction(name)) &&
+    name == "g" else {
+    fail("expected forward def reference to fail")
+  }
+  guard (try? execute(
+      parse_filter("def f(x): g(x); def g(y): y + 1; f(1)"),
+      must_parse("null"),
+    ))
+    is Err(EvalError::UnknownFunction(name)) &&
+    name == "g" else {
+    fail("expected forward def reference with arity to fail")
+  }
+  guard (try? execute(
+      parse_filter(
+        "def even: if . == 0 then true else .-1|odd end; def odd: if . == 0 then false else .-1|even end; 4|even",
+      ),
+      must_parse("null"),
+    ))
+    is Err(EvalError::UnknownFunction(name)) &&
+    name == "odd" else {
+    fail("expected mutual recursion without prior definition to fail")
+  }
+}
+
+///|
 test "execute import/include missing module compatibility" {
   clear_module_sources()
   guard (try? execute(

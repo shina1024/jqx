@@ -1096,8 +1096,21 @@ fn lower_filter_def_call(
   body : Filter,
   params : Array[String],
   args : Array[Filter],
+  captured_env : Map[String, Json],
 ) -> Filter {
   let mut out = lower_filter_param_refs(body, params, args)
+  let value_param_names = []
+  for param in params {
+    if def_param_is_value(param) {
+      value_param_names.push(def_param_name(param))
+    }
+  }
+  for binding in captured_env {
+    let name = binding.0
+    if !name.has_prefix("__jqx_as_") && !value_param_names.contains(name) {
+      out = Filter::as_(Filter::literal(binding.1), name, out)
+    }
+  }
   for i in 0..<params.length() {
     let idx = params.length() - 1 - i
     let param = params[idx]
