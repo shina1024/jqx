@@ -7,6 +7,8 @@ version: 2
 updates:
   - package-ecosystem: "npm" # See documentation for possible values
     directories: # Location of package manifests
+      - "/ts/jqx"
+      - "/ts/adapter-core"
       - "/ts/zod-adapter"
       - "/ts/yup-adapter"
       - "/ts/valibot-adapter"
