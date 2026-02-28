@@ -1540,6 +1540,14 @@ priv struct CompiledRegexPattern {
 }
 
 ///|
+priv struct RegexCompileCacheState {
+  entries : Map[String, CompiledRegexPattern]
+}
+
+///|
+let regex_compile_cache_state : RegexCompileCacheState = { entries: Map::new() }
+
+///|
 priv struct RegexMatchData {
   start : Int
   end_ : Int
@@ -1762,7 +1770,7 @@ fn regex_compile_engine_pattern(
 }
 
 ///|
-fn regex_compile_pattern(
+fn regex_compile_pattern_uncached(
   pattern : String,
   flags : String,
 ) -> CompiledRegexPattern raise EvalError {
@@ -1785,6 +1793,27 @@ fn regex_compile_pattern(
       matcher: Native(regex),
       group_names: regex.group_names(),
       skip_empty_match,
+    }
+  }
+}
+
+///|
+fn regex_compile_cache_key(pattern : String, flags : String) -> String {
+  flags + "\u{0000}" + pattern
+}
+
+///|
+fn regex_compile_pattern(
+  pattern : String,
+  flags : String,
+) -> CompiledRegexPattern raise EvalError {
+  let key = regex_compile_cache_key(pattern, flags)
+  match regex_compile_cache_state.entries.get(key) {
+    Some(compiled) => compiled
+    None => {
+      let compiled = regex_compile_pattern_uncached(pattern, flags)
+      regex_compile_cache_state.entries[key] = compiled
+      compiled
     }
   }
 }

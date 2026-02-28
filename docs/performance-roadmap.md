@@ -29,6 +29,7 @@ jqx の jq 互換性を維持しつつ、実行時ボトルネックを段階的
   - `core/jqx.mbt` の `sort_strings_lex` を安定 `O(n log n)`（merge sort）に変更
   - `core/collection_ops.mbt` の `sort_json_array` / `sort_keyed_pairs` を安定 `O(n log n)` に変更
   - 既存の順序安定性（同値時に入力順維持）は保持
+  - `core/execute.mbt` に regex compile cache を導入し、`(pattern, flags)` の再コンパイルを削減
 
 ## Validation policy
 
