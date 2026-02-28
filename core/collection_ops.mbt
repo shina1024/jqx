@@ -297,8 +297,8 @@ fn compare_json(a : Json, b : Json) -> Int {
       }
     }
     (Object(x), Object(y)) => {
-      let kx = object_keys_lex_sorted(x)
-      let ky = object_keys_lex_sorted(y)
+      let kx = x.lex_key_order
+      let ky = y.lex_key_order
       let key_cmp = compare_string_arrays(kx, ky)
       if key_cmp != 0 {
         return key_cmp
