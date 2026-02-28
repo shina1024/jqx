@@ -1,6 +1,6 @@
 # JS/TS Schema Integration (Zod/Yup/Valibot)
 
-Updated: 2026-02-10
+Updated: 2026-02-28
 
 ## Goal
 
@@ -12,14 +12,17 @@ The architecture keeps MoonBit `core/` pure and places validator coupling in TS 
 
 Implemented adapters:
 
-1. `ts/zod-adapter`
+1. `ts/adapter-core`
+   - shared `JqxResult`/runtime types, jq-string inference types, and common run/validation plumbing
+2. `ts/zod-adapter`
    - API: `createAdapter(runtime)` with `.filter(...)`, `.query(...)`, `.inferred(...)`
-2. `ts/yup-adapter`
+3. `ts/yup-adapter`
    - API: `createAdapter(runtime)` with `.filter(...)`, `.query(...)`, `.inferred(...)`
-3. `ts/valibot-adapter`
+4. `ts/valibot-adapter`
    - API: `createAdapter(runtime)` with `.filter(...)`, `.query(...)`, `.inferred(...)`
 
 Each adapter includes runtime tests, `pnpm typecheck`, `expectTypeOf`-based compile-time assertions, and Linux CI coverage.
+Each adapter package now provides build output metadata (`main`/`module`/`types` + conditional `exports`) and `pnpm build`.
 Each adapter also provides jq-string partial inference via:
 - `InferJqOutput<Input, Filter, Mode>`
 - `createAdapter(runtime).inferred({ filter, input, fallback? })`

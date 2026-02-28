@@ -6,10 +6,13 @@ Zod integration helpers for `jqx` JS/TS runtime.
 
 This package is an adapter layer.
 It accepts a runtime implementation via dependency injection.
+Core runtime/result/inference helpers are shared via
+`@shina1024/jqx-adapter-core`.
 
 ## Scripts
 
 ```bash
+pnpm build
 pnpm format
 pnpm format:check
 pnpm lint
