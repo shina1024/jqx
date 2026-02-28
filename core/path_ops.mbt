@@ -695,14 +695,21 @@ fn path_filter_state_with_bindings(
       let out = []
       let values = path_as_value_states(value, state, env, bindings)
       for v in values {
-        let next_env = env.copy()
-        next_env[name] = v.value
+        let previous = env_bind_temp(env, name, v.value)
         let next_bindings = bindings.copy()
         next_bindings[name] = v
-        for
-          body_state in path_filter_state_with_bindings(
-            body, state, next_env, next_bindings,
-          ) {
+        let body_states = try
+          path_filter_state_with_bindings(body, state, env, next_bindings)
+        catch {
+          err => {
+            env_restore_temp(env, name, previous)
+            raise err
+          }
+        } noraise {
+          states => states
+        }
+        env_restore_temp(env, name, previous)
+        for body_state in body_states {
           out.push(body_state)
         }
       }

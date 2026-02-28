@@ -82,6 +82,25 @@ fn append_json_values(out : Array[Json], values : Array[Json]) -> Unit {
 }
 
 ///|
+fn env_bind_temp(env : Map[String, Json], name : String, value : Json) -> Json? {
+  let previous = env.get(name)
+  env[name] = value
+  previous
+}
+
+///|
+fn env_restore_temp(
+  env : Map[String, Json],
+  name : String,
+  previous : Json?,
+) -> Unit {
+  match previous {
+    Some(value) => env[name] = value
+    None => env.remove(name)
+  }
+}
+
+///|
 fn[T] raise_with_prefix(
   prefix : Array[Json],
   err : EvalError,
@@ -786,9 +805,17 @@ fn execute_with_env(
       let out = []
       let values = execute_with_env(value, input, env)
       for v in values {
-        let next_env = env.copy()
-        next_env[name] = v
-        for v2 in execute_with_env(body, input, next_env) {
+        let previous = env_bind_temp(env, name, v)
+        let body_values = try execute_with_env(body, input, env) catch {
+          err => {
+            env_restore_temp(env, name, previous)
+            raise err
+          }
+        } noraise {
+          values => values
+        }
+        env_restore_temp(env, name, previous)
+        for v2 in body_values {
           out.push(v2)
         }
       }
@@ -846,14 +873,24 @@ fn execute_with_env(
       let mut accs = execute_with_env(init, input, env)
       let items = execute_with_env(source, input, env)
       for item in items {
-        let next_env = env.copy()
-        next_env[name] = item
-        let next_accs = []
-        for acc in accs {
-          for v in execute_with_env(update, acc, next_env) {
-            next_accs.push(v)
+        let previous = env_bind_temp(env, name, item)
+        let next_accs = try {
+          let next_accs = []
+          for acc in accs {
+            for v in execute_with_env(update, acc, env) {
+              next_accs.push(v)
+            }
           }
+          next_accs
+        } catch {
+          err => {
+            env_restore_temp(env, name, previous)
+            raise err
+          }
+        } noraise {
+          values => values
         }
+        env_restore_temp(env, name, previous)
         accs = next_accs
       }
       accs
@@ -865,31 +902,39 @@ fn execute_with_env(
       for seed in accs {
         let mut states = [seed]
         for item in items {
-          let next_env = env.copy()
-          next_env[name] = item
-          let next_states = []
-          for acc in states {
-            let update_values = try
-              execute_with_env(update, acc, next_env)
-            catch {
-              err => raise_with_prefix(out, err)
-            } noraise {
-              values => values
+          let previous = env_bind_temp(env, name, item)
+          let next_states = try {
+            let next_states = []
+            for acc in states {
+              let update_values = try execute_with_env(update, acc, env) catch {
+                err => raise_with_prefix(out, err)
+              } noraise {
+                values => values
+              }
+              for v in update_values {
+                next_states.push(v)
+              }
             }
-            for v in update_values {
-              next_states.push(v)
+            for acc in next_states {
+              let extract_values = try
+                execute_with_env(extract, acc, env)
+              catch {
+                err => raise_with_prefix(out, err)
+              } noraise {
+                values => values
+              }
+              append_json_values(out, extract_values)
             }
+            next_states
+          } catch {
+            err => {
+              env_restore_temp(env, name, previous)
+              raise err
+            }
+          } noraise {
+            values => values
           }
-          for acc in next_states {
-            let extract_values = try
-              execute_with_env(extract, acc, next_env)
-            catch {
-              err => raise_with_prefix(out, err)
-            } noraise {
-              values => values
-            }
-            append_json_values(out, extract_values)
-          }
+          env_restore_temp(env, name, previous)
           states = next_states
         }
       }
