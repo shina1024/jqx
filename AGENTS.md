@@ -2,184 +2,183 @@
 
 This is a [MoonBit](https://docs.moonbitlang.com) project.
 
+## Doc Policy (Repository)
+
+- CLI/Library user-facing documentation lives in `README.mbt.md`.
+- `README.mbt.md` is distribution/usage-first (executable + npm). Keep source build/test internals out.
+- Development guidance and maintenance policy lives in this file (`AGENTS.md`).
+- Active work items and checklists live in `agent-todo.md`.
+- Keep `docs/` lightweight; do not duplicate long-lived guidance there.
+
+Distribution channels policy:
+- Primary: executable (`jqx`) and npm package (`@shina1024/jqx`).
+- Secondary: MoonBit package registration on `mooncakes.io` (planned).
+
 ## Project Structure
 
-- MoonBit packages are organized per directory, for each directory, there is a
-  `moon.pkg.json` file listing its dependencies. Each package has its files and
-  blackbox test files (common, ending in `_test.mbt`) and whitebox test files
-  (ending in `_wbtest.mbt`).
+- MoonBit packages are organized per directory with `moon.pkg.json`.
+- Package tests:
+  - blackbox: `*_test.mbt`
+  - whitebox: `*_wbtest.mbt`
+- Module metadata is in `moon.mod.json`.
 
-- In the toplevel directory, this is a `moon.mod.json` file listing about the
-  module and some meta information.
+Current package split:
+- `core/`: parser/evaluator shared by CLI and JS/TS paths
+- `cmd/`: native CLI
+- `js/`: MoonBit JS-facing minimal API
+- `ts/jqx`: npm-facing JS/TS entrypoint (`@shina1024/jqx`, `@shina1024/jqx/zod`, `@shina1024/jqx/yup`, `@shina1024/jqx/valibot`)
+- `ts/adapter-core`: shared runtime/result/inference helpers
+- `ts/zod-adapter`, `ts/yup-adapter`, `ts/valibot-adapter`: schema adapters
 
-## Coding convention
+## Coding Convention
 
-- MoonBit code is organized in block style, each block is separated by `///|`,
-  the order of each block is irrelevant. In some refactorings, you can process
-  block by block independently.
-
-- Try to keep deprecated blocks in file called `deprecated.mbt` in each
-  directory.
+- MoonBit code uses block style separated by `///|`.
+- Block order is irrelevant; refactors can be done block-by-block.
+- Keep deprecated blocks in `deprecated.mbt` when needed.
 
 ## Tooling
 
-- `moon fmt` is used to format your code properly.
+Core commands:
+- `moon fmt`
+- `moon info`
+- `moon check`
+- `moon test`
+- `moon test --update` (snapshot updates)
+- `moon coverage analyze > uncovered.log`
 
-- `moon info` is used to update the generated interface of the package, each
-  package has a generated interface file `.mbti`, it is a brief formal
-  description of the package. If nothing in `.mbti` changes, this means your
-  change does not bring the visible changes to the external package users, it is
-  typically a safe refactoring.
+Quality gate for code changes:
+1. `moon info`
+2. `moon fmt`
+3. `moon check`
+4. `moon test`
 
-- In the last step, run `moon info && moon fmt` to update the interface and
-  format the code. Check the diffs of `.mbti` file to see if the changes are
-  expected.
+When public APIs change, inspect generated `.mbti` diffs carefully.
 
-- Run `moon test` to check the test is passed. MoonBit supports snapshot
-  testing, so when your changes indeed change the behavior of the code, you
-  should run `moon test --update` to update the snapshot.
+## Compatibility Policy
 
-- You can run `moon check` to check the code is linted correctly.
+- Target behavior: jq 1.7 semantics.
+- Differential baseline in this repo: jq 1.8.1.
+- Keep strict compatibility checks.
+  - Do not widen skips casually.
+  - Do not weaken error/output comparison rules as a shortcut.
+- Temporary exceptions must be explicit and removable.
 
-- When writing tests, you are encouraged to use `inspect` and run
-  `moon test --update` to update the snapshots, only use assertions like
-  `assert_eq` when you are in some loops where each snapshot may vary. You can
-  use `moon coverage analyze > uncovered.log` to see which parts of your code
-  are not covered by tests.
+## Current Baseline (2026-02-28)
 
-- agent-todo.md has some small tasks that are easy for AI to pick up, agent is
-  welcome to finish the tasks and check the box when you are done
+- `moon test`: 252/252 pass
+- `moon test --target native --package core`: 193/193 pass
+- differential smoke (`scripts/jq_compat_cases.json`): 233/233 pass
+- differential upstream full (`scripts/jq_compat_cases.upstream.json`): 843/843 pass, skipped 0
+
+## Known Compatibility Gaps (High-level)
+
+- `def`: edge semantics are still being expanded.
+- Module system: registered-source loading is supported; filesystem auto resolution is pending.
+- Update assignment: static-path LHS coverage is stronger than dynamic-path cases.
+- Compile-time diagnostic text parity is not yet byte-for-byte strict for all cases.
 
 ## JSON Parser First: Design Notes
 
-- 最優先はJSONパーサー。jq互換ツール/JS・TSライブラリとして共通に使える
-  「純粋コア」を最初に固める。
-- CLI/JS/TSから同一のパーサーAPIを使えるようにする。
+- 最優先は JSON パーサー。
+- CLI/JS/TS で同一コア API を使う。
+- jq evaluator にそのまま接続できる JSON 値モデルを維持する。
+- Object キー順は入力/更新順維持を基本とする。
 
 ### Core Data Model
 
-- jq互換を見据え、JSON値は以下の最小型で表現する。
-  - `Null`, `Bool`, `Number`, `String`, `Array`, `Object`
-- `Number`はjq互換を優先して整数/浮動の区別を保持する方針
-  (将来: `Int`/`Float`または`Decimal`相当の拡張を検討)
+- `Null`, `Bool`, `Number`, `String`, `Array`, `Object`
+- `Number` は jq 互換と JS 制約を踏まえて運用
 
 ### Parser API (Core)
 
-- 文字列入力のパースを最初に提供する。
-  - `parse_json(text: String) -> Result[Json, JsonError]`
-- 位置情報を含むエラー型を用意する。
-  - `JsonError`には `line`, `column`, `offset`, `message`
-- 将来のストリーミングや大規模入力を見据えて
-  `Cursor`/`Reader` 抽象を準備しておく。
+- `parse_json(text: String) -> Result[Json, JsonError]`
+- `JsonError` includes `line`, `column`, `offset`, `message`
 
-### jq互換・評価器への接続
+## JS/TS Strategy
 
-- 解析結果は将来のjqフィルタ評価器でそのまま使える形にする。
-- Objectのキー順は入力順保持を基本とし、必要ならソートは別レイヤで扱う。
+Two-lane approach:
+- Dynamic lane: jq string compatibility API
+- Typed lane: `Query[I, O]`-style typed DSL
 
-### JS/TS対応の考慮
+Guidelines:
+- jq string inference is partial and conservative.
+- Non-inferable syntax falls back to `unknown` or `Json`.
+- Prefer typed DSL for strong static guarantees.
 
-- JS/TSライブラリ向けに、MoonBitのJSバックエンドで
-  直接利用できるAPIを設計する。
-- APIは小さく安定させ、後でTS定義を追加しやすい形にする。
-- 数値はJS互換（IEEE754 Double）を優先し、精度限界は仕様として明記する。
+## Refactoring Policy (Maintainability)
 
-### JS/TS 型推論戦略 (今後)
+- Prioritize behavior-preserving splits.
+- Avoid mixing structural refactor and feature change in one commit.
+- Keep source/test mapping explicit.
 
-- 方針は「2レーン」で進める。
-  - Dynamicレーン: jq文字列入力をそのまま評価する互換API
-  - Typedレーン: `Query[I, O]` 相当の typed DSL で強い型推論を提供
-- jq文字列に対する型付けは「部分推論」に留める。
-  - 推論不能・不安定な箇所は `unknown` / `Json` にフォールバック
-  - 文字列からの「強い」静的型推論を主軸にはしない
-- 強い型安全が必要なユースケースは typed DSL を推奨し、
-  jq文字列APIは互換性重視で維持する。
-- core は既存の `Filter` AST + `eval` を活用する前提とし、
-  typed DSL 導入のための大規模な core 改修は避ける。
+Current core layout intent:
+- Parser responsibilities: `parser_cursor`, `parser_atom`, `parser_expr`, `parser_lowering`
+- Evaluator responsibilities: `execute`, `json_ops`, `path_ops`, `collection_ops`
+- Builtin dispatch responsibilities: `builtin_path`, `builtin_string`, `builtin_collection`, `builtin_numeric`, `builtin_stream`
 
-### JS/TS 実装ロードマップ
+Test naming policy:
+- Single-source primary tests: `<source_stem>_test.mbt`
+- Cross-cut execute suites: `execute_<topic>_test.mbt`
+- Test helpers: `<domain>_test_support_test.mbt`
+- Put `Source under test` header comments at test file tops.
 
-1. JS向け公開APIを Dynamic/Typed で分離する
-2. typed DSL から `Filter` AST を生成するレイヤを追加する
-3. 最低限の型付きコンビネータ (`identity`, `field`, `index`, `pipe`, `map`) を実装する
-4. jq文字列APIには静的検証と部分推論のみを追加する
-5. TSテストで推論結果（コンパイル時）と実行結果（ランタイム）を分けて検証する
-6. バージョン採番前は互換維持を優先せず、必要なら既存APIを直接置き換える
+## Performance Policy
 
-### Implementation Steps (First Pass)
+Goal:
+- Reduce runtime overhead while preserving jq compatibility.
 
-1. JSON値型 `Json` を定義
-2. パーサー `parse_json` を実装
-3. エラー型 `JsonError` に位置情報を付与
-4. 代表的な単体テストを追加 (スナップショット中心)
-5. jq評価器側に接続しやすいAPIを維持する
+Priority themes:
+1. Algorithmic wins first (e.g., avoid `O(n^2)` hot paths).
+2. Reuse/caching for expensive repeated work (e.g., regex compile cache).
+3. Reduce environment/binding copies in evaluation hot paths.
+4. Improve string construction strategy in heavy text operations.
 
-## Package Split
+Potential breaking candidates (evaluate carefully before adoption):
+- Move from copy-heavy env maps to frame-chain environments.
+- Move from eager result arrays to stream-first execution model.
 
-- `core/` にJSONパーサー等のコア実装を置く（CLI/JS/TS共通）
-- `cmd` は `shina1024/jqx/core` を参照
-- ルートパッケージは core への薄いラッパーにし、実装は core に集約する
-- `js/` は JS/TS 向けの最小 API を提供する
-- CLI はネイティブターゲット想定（stdin対応のため）
+## Differential and CI Workflow
 
-## Number Semantics (JS-first)
+Differential scripts:
+- Smoke: `scripts/jq_diff.ps1`, `scripts/jq_diff.sh`
+- Upstream full: `scripts/jq_diff.ps1 -CasesPath scripts/jq_compat_cases.upstream.json`
+- Native `-e`: `scripts/jq_diff_native.ps1`, `scripts/jq_diff_native.sh`
 
-- `Json::Number` は `Double` を基本とする（JS互換優先）
-- 巨大整数の厳密性は保証しない（JS制約）
-- stringify時は入力表現の保持を優先する設計を検討する（必要なら `repr` を保持）
+Upstream fixture update/import:
+- `scripts/update_jq_tests.ps1`, `scripts/update_jq_tests.sh`
+- `scripts/jq_upstream_import.ps1`, `scripts/jq_upstream_import.sh`
 
-## CLI Notes
-
-- jq互換のCLIはネイティブ前提で動作確認する
-- 実行例:
-  - `echo '{"foo": 1}' | moon run --target native cmd -- ".foo"`
-  - `moon run --target native cmd -- ".foo" '{"foo": 1}'`
-- オプション:
-  - `-r` は文字列を raw 出力（`"..."` を外す）
-  - `-n` は入力を無視して null を与える
-
-## jq Compatibility Notes
-
-- `Object` のキー順は `Map` 依存で未保証（順序保持が必要なら改善予定）
-- `Array`/`Object` リテラルや比較/算術は **最初の出力のみ**を使う簡略化実装
-- `+` は数値/文字列/配列/オブジェクトに対応（オブジェクトは右優先でマージ）
-- `?` のオプショナルアクセスは `.foo?`, `.[0]?`, `.[]?` に対応
-- `expr?` はエラーを empty に変換する最小実装
-- `try expr catch expr` は最小実装（エラー時に handler を評価）
-- `reduce`/`foreach` はストリーム対応の最小実装（累積/抽出は複数出力を許容）
-- `as` と `$var` を最小実装（`.expr as $x | ...` で束縛）
-- 非有限数（Infinity/NaN）の扱いは未整理（現状は `Double` 依存）
-- `contains`/`startswith`/`endswith` は文字列/配列の最小実装
-- `empty` と `//` は最小実装（出力が空かどうかでフォールバック）
+CI (`.github/workflows/ci.yml`):
+- Linux/macOS/Windows MoonBit check+tests
+- Linux TS lint/typecheck/test/build (`adapter-core`, adapters, `ts/jqx`)
+- Linux differential smoke/upstream/native-exit
+- Linux coverage analyze + summary + artifact
 
 ## Build (Native)
 
 ### Windows
 
-- Visual Studio Build Tools (C++ build tools) と Windows 10/11 SDK が必要
-- Developer PowerShell for VS を使う（`INCLUDE`/`LIB`/`PATH` が通る）
-- 例:
+- Requires Visual Studio Build Tools + Windows SDK
+- Use Developer PowerShell for VS
+- Example:
   - `moon test --target native --package core`
   - `moon run --target native cmd -- ".foo" '{"foo": 1}'`
-  - `moon build --target native cmd`（ビルド後 `_build/native/release` から `jqx.exe` を実行）
 
 ### macOS
 
-- Xcode Command Line Tools が必要
-- 例:
+- Requires Xcode Command Line Tools
+- Example:
   - `moon test --target native --package core`
   - `moon run --target native cmd -- ".foo" '{"foo": 1}'`
-  - `moon build --target native cmd`（ビルド後 `_build/native/release` の `jqx` を実行）
 
 ### Linux
 
-- gcc/clang などの C toolchain が必要
-- 例:
+- Requires gcc/clang toolchain
+- Example:
   - `moon test --target native --package core`
   - `moon run --target native cmd -- ".foo" '{"foo": 1}'`
-  - `moon build --target native cmd`（ビルド後 `_build/native/release` の `jqx` を実行）
 
-## CI
+## Working Queue
 
-- GitHub Actions で Windows/macOS/Linux の native テストを実行する
-- Windows は `vcvars64.bat` 経由で実行（`INCLUDE`/`LIB`/`PATH` を通す）
+- Use `agent-todo.md` as the single actionable queue.
+- Keep completed items checked with clear scope notes.

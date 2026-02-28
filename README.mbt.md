@@ -1,226 +1,104 @@
-# shina1024/jqx
+# jqx
 
-jqx is a jq-compatible tool (work in progress) written in MoonBit.
+A jq-compatible executable and JS/TS library written in MoonBit.
 
-## Build (Native)
+## Install
 
-### Windows
+- CLI executable: `jqx` (distribution flow in progress)
+- npm package: `@shina1024/jqx`
+- mooncakes.io package: planned
 
-Prerequisites:
-- Visual Studio Build Tools (C++ build tools)
-- Windows 10/11 SDK
-
-Recommended shell:
-- Use **Developer PowerShell for VS** (it sets `INCLUDE`/`LIB`/`PATH`).
-
-Commands:
-```powershell
-moon test --target native --package core
-moon run --target native cmd -- ".foo" '{"foo": 1}'
-```
-
-Build executable:
-```powershell
-moon build --target native cmd
-```
-The executable will be placed under `_build/native/release`. Look for `jqx.exe`
-(or the most recently updated `.exe`) and run it directly.
-
-### macOS
-
-Prerequisites:
-- Xcode Command Line Tools
-
-Commands:
 ```bash
-moon test --target native --package core
-moon run --target native cmd -- ".foo" '{"foo": 1}'
+npm install @shina1024/jqx
 ```
 
-Options:
+Optional validator packages:
+
+```bash
+npm install zod
+# or: npm install yup
+# or: npm install valibot
+```
+
+## CLI Quick Start
+
+Assuming `jqx` is in your `PATH`:
+
+```bash
+# stdin
+echo '{"foo": 1}' | jqx ".foo"
+
+# argument input
+jqx ".foo" '{"foo": 1}'
+```
+
+Common options:
+
 ```bash
 # Raw string output (no JSON quotes)
-moon run --target native cmd -- -r ".foo" '{"foo": "bar"}'
+jqx -r ".foo" '{"foo":"bar"}'
 
-# Raw input mode (read each line as string)
-moon run --target native cmd -- -R "." "a\nb"
+# Raw input mode (line-based strings)
+jqx -R "." "a\nb"
 
-# Raw input slurp (read entire input as one string)
-moon run --target native cmd -- -R -s "." "a\nb\n"
+# Raw input slurp
+jqx -R -s "." "a\nb\n"
 
-# Null input (ignore stdin/arg)
-moon run --target native cmd -- -n "."
+# Null input
+jqx -n "."
 
-# Slurp input values into one array (minimal NDJSON-style support)
-moon run --target native cmd -- -s "." "1"
+# Slurp inputs into one array
+jqx -s "." "1"
 
-# Exit status by result truthiness (jq -e style)
-moon run --target native cmd -- -e ".ok" '{"ok": false}'
+# jq -e style exit status
+jqx -e ".ok" '{"ok": false}'
 ```
 
-## Filters (Current)
+## npm Quick Start
 
-- Basic: `.`, `.foo`, `.[0]`, `.[]`
-- Optional: `.foo?`, `.[0]?`, `.[]?`
-- Try: `expr?` (errors produce empty output)
-- Try/Catch: `try expr catch expr` (errors run handler)
-- Reduce/Foreach: `reduce <expr> as $x (init; update)`, `foreach <expr> as $x (init; update; extract)`
-- Definitions (minimal): `def f: <expr>; <expr>`, `def f(a;b): <expr>; <expr>`
-- Literals: numbers, strings, `true/false/null`, arrays `[ ... ]`, objects `{ ... }`
-- Pipe/comma: `|`, `,`
-- Builtins: `length`, `type`, `keys`
-- Functions: `select(expr)`, `map(expr)`, `contains(x)`, `startswith(x)`, `endswith(x)`
-- Variables: `.expr as $x | ...`, `$x`
-- Logic: `and`, `or`, `not`
-- Compare: `==`, `!=`, `<`, `<=`, `>`, `>=`
-- Arithmetic: `+`, `-`, `*`, `/`
-- Control: `if ... then ... else ... end`, `empty`, `//`
+Entry points:
+- `import { bindRuntime } from "@shina1024/jqx"`
+- `import { createAdapter } from "@shina1024/jqx/zod"`
+- `import { createAdapter } from "@shina1024/jqx/yup"`
+- `import { createAdapter } from "@shina1024/jqx/valibot"`
 
-## JS/TS (Minimal API)
+Runtime binding example:
 
-This package exposes a small, stable API for JS/TS usage. Build with the JS
-target and import the generated bundle.
+```ts
+import { bindRuntime } from "@shina1024/jqx";
 
-Functions:
-- `parseJson(text)` -> Json
-- `safeParseJson(text)` -> `Result<Json, JqxError>` (JS-friendly)
-- `compile(text)` -> Filter
-- `safeCompile(text)` -> `Result<Filter, JqxError>` (JS-friendly)
-- `parseFilter(text)` -> Filter (compat alias)
-- `safeParseFilter(text)` -> `Result<Filter, JqxError>` (compat alias)
-- `execute(filter, json)` -> Json[] (JS-friendly)
-- `tryExecute(filter, json)` -> `Result<Json[], JqxError>`
-- `safeExecute(filter, json)` -> `Result<Json[], JqxError>` (JS-friendly)
-- `executeToJsonStrings(filter, jsonText)` -> `Result<string[], JqxError>`
-- `tryParseJson(text)` -> `Result<Json, JqxError>`
-- `tryCompile(text)` -> `Result<Filter, JqxError>`
-- `tryParseFilter(text)` -> `Result<Filter, JqxError>` (compat alias)
-- `run(filter, jsonText)` -> `Result<string[], JqxError>` (compatibility lane alias)
-- `runCompat(filter, jsonText)` -> `Result<string[], JqxError>` (compatibility lane)
-- `runCompiled(filter, jsonText)` -> `Result<string[], JqxError>` (compiled-filter lane)
-- `runValues(filter, jsonText)` -> `Result<Json[], JqxError>` (convenience lane)
-- `runCompiledValues(filter, jsonText)` -> `Result<Json[], JqxError>` (compiled-filter lane)
-- `safeRunValues(filter, jsonText)` -> `Result<Json[], JqxError>` (convenience lane alias)
+const runtime = bindRuntime({
+  async run(filter, input) {
+    return { ok: true, value: [input] };
+  },
+});
 
-`JqxError` fields:
-- `code`: stable error code (`parse_*`, `filter_*`, `eval_*`)
-- `message`: human-readable message
-- `line`, `column`, `offset`: source location (`-1` when unavailable)
-
-Lanes:
-- Compatibility lane (`run`/`runCompat`/`executeToJsonStrings`) keeps JSON text output to preserve numeric representation.
-- Convenience lane (`runValues`/`safeRunValues`) returns `Json` values directly (`Number` uses Double semantics).
-
-Typed lane (scaffold):
-- `Query[I, O]`
-- `identity`, `field`, `index`, `pipe`, `map`
-- `iter`, `comma`, `literal`, `call`, `select`, `eq`, `add`, `fallback`, `try_catch`
-- `executeQuery(query, json)` -> `Result<Json[], string>`
-- `runQuery(query, jsonText)` -> `Result<string[], string>`
-- Current combinators focus on `Json -> Json`; `I/O` parameters are reserved for further typed expansion.
-
-## Compatibility Baseline
-
-The compatibility baseline and current gap list is tracked in:
-
-- `docs/compatibility-matrix.md`
-- `docs/js-zod-integration.md` (JS/TS Zod adapter plan)
-- `docs/js-schema-e2e.md` (schema input + jq string + output schema validation examples)
-- `docs/examples/runtime-via-cli.ts` (non-mock runtime bridge for JS/TS adapters)
-
-TS adapter scaffold:
-- `ts/jqx` (npm-facing entrypoint: `jqx`, `jqx/zod`, `jqx/yup`, `jqx/valibot`)
-- `ts/adapter-core` (shared runtime/result/inference helpers for TS adapters)
-- `ts/zod-adapter` (`pnpm build`, `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`)
-- `ts/yup-adapter` (`pnpm build`, `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`)
-- `ts/valibot-adapter` (`pnpm build`, `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`)
-
-Differential smoke test against `jq`:
-
-```powershell
-./scripts/jq_diff.ps1
+const out = await runtime.run(".", '{"x":1}');
 ```
 
-```bash
-bash ./scripts/jq_diff.sh
+Schema adapter example (Zod):
+
+```ts
+import { z } from "zod";
+import { createAdapter } from "@shina1024/jqx/zod";
+
+const runtime = {
+  async run(filter: string, input: string) {
+    return { ok: true as const, value: ['"alice"', '"bob"'] };
+  },
+};
+
+const adapter = createAdapter(runtime);
+const result = await adapter.filter({
+  filter: ".users[].name",
+  input: { users: [{ name: "alice" }, { name: "bob" }] },
+  inputSchema: z.object({ users: z.array(z.object({ name: z.string() })) }),
+  outputSchema: z.string(),
+});
 ```
 
-Cases are defined in `scripts/jq_compat_cases.json` and are expected to be
-expanded continuously.
+## For Contributors
 
-Upstream jq test fixtures (copy strategy, not submodule):
-
-```powershell
-./scripts/update_jq_tests.ps1
-./scripts/jq_upstream_import.ps1
-./scripts/jq_diff.ps1 -CasesPath scripts/jq_compat_cases.upstream.json
-```
-
-```bash
-bash ./scripts/update_jq_tests.sh
-bash ./scripts/jq_upstream_import.sh
-bash ./scripts/jq_diff.sh scripts/jq_compat_cases.upstream.json
-```
-
-`jq_upstream_import` reads vendored `third_party/jq-tests/tests/*.test` and
-applies sidecar config from `scripts/jq_upstream_import.json` (source files and
-output shaping).
-Current upstream import includes both runtime and compile-fail cases.
-Compile-fail cases are compared in `expect_error_mode=any` by default
-(error-presence parity first).
-
-Native binary differential test for `-e` exit status parity:
-
-```powershell
-./scripts/jq_diff_native.ps1
-```
-
-```bash
-bash ./scripts/jq_diff_native.sh
-```
-
-Cases are defined in `scripts/jq_exit_cases.json`.
-
-Notes:
-- PowerShell script resolves `jq` via `mise which jq` if `jq` is not in `PATH`.
-- Bash script first uses `PATH`, then falls back to `mise` where possible.
-- Object traversal/serialization preserves input/update order for jq compatibility (`.[]`, `tojson`, `keys_unsorted`).
-- `keys` remains lexicographically sorted, while `keys_unsorted` preserves object order.
-
-Build:
-```bash
-moon build --target js js
-```
-
-Build executable:
-```bash
-moon build --target native cmd
-```
-The executable will be placed under `_build/native/release`. Look for `jqx`
-and run it directly.
-
-### Linux
-
-Prerequisites:
-- C toolchain (gcc/clang) and standard build essentials
-
-Commands:
-```bash
-moon test --target native --package core
-moon run --target native cmd -- ".foo" '{"foo": 1}'
-```
-
-Build executable:
-```bash
-moon build --target native cmd
-```
-The executable will be placed under `_build/native/release`. Look for `jqx`
-and run it directly.
-
-## Notes
-
-- The CLI is native-only because stdin is implemented via native `getchar`.
-- JS/TS APIs are available via the MoonBit `js` package and npm-facing TS entrypoint `ts/jqx` (`jqx`, `jqx/zod`, `jqx/yup`, `jqx/valibot`).
-- TS adapters provide `dist` outputs (`esm`/`cjs` + `d.ts`) and share common logic in `ts/adapter-core`.
-- Library users should import `shina1024/jqx/core` directly; the root package is
-  a thin wrapper around core.
+Development docs:
+- `AGENTS.md`
+- `agent-todo.md`

@@ -1,20 +1,20 @@
-# jqx
+# @shina1024/jqx
 
-npm-facing JS/TS entrypoint for `jqx`.
+npm-facing JS/TS entrypoint for `@shina1024/jqx`.
 
 ## Exports
 
-- `jqx`:
+- `@shina1024/jqx`:
   - runtime/result/core types
   - `bindRuntime(runtime)` / `createRuntime(runtime)`
-- `jqx/zod`: re-exports `@shina1024/jqx-zod-adapter`
-- `jqx/yup`: re-exports `@shina1024/jqx-yup-adapter`
-- `jqx/valibot`: re-exports `@shina1024/jqx-valibot-adapter`
+- `@shina1024/jqx/zod`: re-exports `@shina1024/jqx-zod-adapter`
+- `@shina1024/jqx/yup`: re-exports `@shina1024/jqx-yup-adapter`
+- `@shina1024/jqx/valibot`: re-exports `@shina1024/jqx-valibot-adapter`
 
 ## Runtime Binding
 
 ```ts
-import { bindRuntime } from "jqx";
+import { bindRuntime } from "@shina1024/jqx";
 
 const runtime = bindRuntime({
   run(filter, input) {

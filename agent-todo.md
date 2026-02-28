@@ -4,8 +4,8 @@ Updated: 2026-02-28
 
 ## Current baseline (2026-02-28)
 
-- `moon test`: 249/249 pass
-- `moon test --target native --package core`: 190/190 pass
+- `moon test`: 252/252 pass
+- `moon test --target native --package core`: 193/193 pass
 - differential smoke (`scripts/jq_compat_cases.json`): total 233 / passed 233 / failed 0 / skipped 0
 - differential upstream full (`scripts/jq_compat_cases.upstream.json`): total 843 / passed 843 / failed 0 / skipped 0
 
@@ -29,7 +29,7 @@ Updated: 2026-02-28
 - [x] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ84→92件へ段階追加）
 - [x] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ92→95件へ段階追加）
 - [x] upstream stage1 subsetをさらに拡張する（安定性を維持しつつ95→110件へ段階追加）
-- [x] upstream失敗ケースをカテゴリ集計して台帳化する（`docs/upstream-failure-backlog.md` + snapshot）
+- [x] upstream失敗ケースをカテゴリ集計して台帳化する（`scripts/jq_upstream_failures.snapshot.json` + AGENTS backlog notes）
 - [x] upstream parser失敗クラスタの第1段を実施する（188→147、`=`/`%`/単項`-`/`."..."`/`foreach`2句/object shorthand/`.[1,2]`）
 - [x] upstream parser失敗クラスタの第2段を実施する（145→108、`if/elif/else/end`拡張・`else`省略・任意式`[]`後置・配列/オブジェクト値で比較式）
 - [x] upstream parser失敗クラスタの第3段を実施する（108→80、`as`配列/オブジェクトパターン束縛と`?//` destructuring fallback）
@@ -60,8 +60,8 @@ Updated: 2026-02-28
 
 ## P1: JS/TS公開に向けた仕上げ
 
-- [x] npm向け公開エントリポイントを確定する（`import { ... } from \"jqx\"` の最終設計）
-- [x] Zod/Yup/Valibotの実ランタイム接続例をdocsに追加する（mockではない配線例、`docs/examples/runtime-via-cli.ts`）
+- [x] npm向け公開エントリポイントを確定する（`import { ... } from \"@shina1024/jqx\"` の最終設計）
+- [x] Zod/Yup/Valibotの実ランタイム接続例をREADMEに追加する（mockではない配線例）
 - [ ] Typed DSLコンビネータを拡張し、compile-time推論テストを追加する
 
 ## P1: コードベース保守性（リファクタリング）
@@ -73,8 +73,8 @@ Updated: 2026-02-28
 - [x] `core/parser.mbt` を `cursor/atom/expr/lowering` に段階分割する（挙動不変、`cursor` / `atom` / `expr` / `lowering` の分割完了）
 - [x] `core/execute.mbt` を `core/json_ops/path_ops/collection_ops` に段階分割する（挙動不変）
 - [x] `core/builtin_dispatch.mbt` を責務別（numeric/string/path/stream）に段階分割する（挙動不変、path/string/collection/numeric/stream 分割完了）
-- [x] 段階分割ガイドを維持する（`docs/refactor-roadmap.md` を分割進捗と命名方針に追従更新）
-- [x] テスト命名方針を明文化する（`source_stem_test` と `execute_topic_test` の使い分けを `docs/refactor-roadmap.md` に追記）
+- [x] 段階分割ガイドを維持する（`AGENTS.md` の分割進捗と命名方針に追従更新）
+- [x] テスト命名方針を明文化する（`source_stem_test` と `execute_topic_test` の使い分けを `AGENTS.md` に追記）
 - [x] parser テストを source 対応へ揃える（`core/filter_test.mbt` → `core/parser_test.mbt`）
 - [x] テストファイル先頭に source 対応コメントを追加する（`Source under test` ヘッダ）
 

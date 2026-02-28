@@ -1,5 +1,5 @@
 {
-  "name": "jqx",
+  "name": "@shina1024/jqx",
   "version": "0.1.0",
   "description": "npm entrypoint for jqx JS/TS runtime and schema adapters",
   "license": "Apache-2.0",
