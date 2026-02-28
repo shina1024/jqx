@@ -362,7 +362,7 @@ fn object_keys_lex_sorted(o : JsonObject) -> Array[String] {
 ///|
 fn object_entries_sorted(o : JsonObject) -> Array[(String, Json)] {
   let out = []
-  for key in object_keys_sorted(o) {
+  for key in o.key_order {
     match o.get(key) {
       Some(value) => out.push((key, value))
       None => ()
