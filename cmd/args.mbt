@@ -5,6 +5,7 @@ struct CliArgs {
   no_input : Bool
   exit_status : Bool
   slurp : Bool
+  module_search_paths : Array[String]
   filter : String
   input : String?
 }
@@ -19,6 +20,7 @@ fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
   let mut no_input = false
   let mut exit_status = false
   let mut slurp = false
+  let module_search_paths = []
   let mut idx = 1
   while idx < args.length() {
     let a = args[idx]
@@ -55,6 +57,20 @@ fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
       idx += 1
       continue
     }
+    if a == "-L" {
+      idx += 1
+      if idx >= args.length() {
+        return Err("missing argument for -L")
+      }
+      module_search_paths.push(args[idx])
+      idx += 1
+      continue
+    }
+    if a.length() > 2 && a.has_prefix("-L") {
+      module_search_paths.push(a.view(start_offset=2).to_string())
+      idx += 1
+      continue
+    }
     if a.has_prefix("-") {
       return Err("unknown option: " + a)
     }
@@ -75,6 +91,7 @@ fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
       no_input,
       exit_status,
       slurp,
+      module_search_paths,
       filter,
       input: None,
     })
@@ -89,5 +106,14 @@ fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
   } else {
     None
   }
-  Ok({ raw, raw_input, no_input, exit_status, slurp, filter, input })
+  Ok({
+    raw,
+    raw_input,
+    no_input,
+    exit_status,
+    slurp,
+    module_search_paths,
+    filter,
+    input,
+  })
 }

@@ -19,6 +19,7 @@ test "parse cli inputs json basic" {
     no_input: false,
     exit_status: false,
     slurp: false,
+    module_search_paths: [],
     filter: ".",
     input: Some("{\"a\":1}"),
   }
@@ -34,6 +35,7 @@ test "parse cli inputs json stream accepts leading bom" {
     no_input: false,
     exit_status: false,
     slurp: false,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }
@@ -49,6 +51,7 @@ test "parse cli inputs json stream ndjson" {
     no_input: false,
     exit_status: false,
     slurp: false,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }
@@ -68,6 +71,7 @@ test "parse cli inputs json stream whitespace separated" {
     no_input: false,
     exit_status: false,
     slurp: false,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }
@@ -83,6 +87,7 @@ test "parse cli inputs json stream adjacent structured values" {
     no_input: false,
     exit_status: false,
     slurp: false,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }
@@ -102,6 +107,7 @@ test "parse cli inputs json stream invalid scalar adjacency" {
     no_input: false,
     exit_status: false,
     slurp: false,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }
@@ -118,6 +124,7 @@ test "parse cli inputs json empty stdin" {
     no_input: false,
     exit_status: false,
     slurp: false,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }
@@ -133,6 +140,7 @@ test "parse cli inputs json slurp single" {
     no_input: false,
     exit_status: false,
     slurp: true,
+    module_search_paths: [],
     filter: ".",
     input: Some("{\"a\":1}"),
   }
@@ -150,6 +158,7 @@ test "parse cli inputs json slurp ndjson" {
     no_input: false,
     exit_status: false,
     slurp: true,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }
@@ -171,6 +180,7 @@ test "parse cli inputs json slurp whitespace separated" {
     no_input: false,
     exit_status: false,
     slurp: true,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }
@@ -188,6 +198,7 @@ test "parse cli inputs json slurp empty" {
     no_input: false,
     exit_status: false,
     slurp: true,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }
@@ -203,6 +214,7 @@ test "parse cli inputs no-input with slurp" {
     no_input: true,
     exit_status: false,
     slurp: true,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }
@@ -218,6 +230,7 @@ test "parse cli inputs raw lines" {
     no_input: false,
     exit_status: false,
     slurp: false,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }
@@ -233,6 +246,7 @@ test "parse cli inputs raw lines keep empty records" {
     no_input: false,
     exit_status: false,
     slurp: false,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }
@@ -252,6 +266,7 @@ test "parse cli inputs raw lines trim crlf" {
     no_input: false,
     exit_status: false,
     slurp: false,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }
@@ -267,6 +282,7 @@ test "parse cli inputs raw slurp" {
     no_input: false,
     exit_status: false,
     slurp: true,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }
@@ -282,6 +298,7 @@ test "parse cli inputs raw no-input takes precedence" {
     no_input: true,
     exit_status: false,
     slurp: true,
+    module_search_paths: [],
     filter: ".",
     input: None,
   }

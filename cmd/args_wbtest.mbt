@@ -7,6 +7,7 @@ test "parse args -n" {
   assert_eq(cfg.raw_input, false)
   assert_eq(cfg.exit_status, false)
   assert_eq(cfg.slurp, false)
+  assert_eq(cfg.module_search_paths, [])
   assert_eq(cfg.filter, ".")
   assert_eq(cfg.input, None)
 }
@@ -20,6 +21,7 @@ test "parse args input" {
   assert_eq(cfg.raw_input, false)
   assert_eq(cfg.exit_status, false)
   assert_eq(cfg.slurp, false)
+  assert_eq(cfg.module_search_paths, [])
   assert_eq(cfg.filter, ".foo")
   assert_eq(cfg.input, Some("{\"foo\":1}"))
 }
@@ -127,4 +129,22 @@ test "parse args too many arguments" {
   let args = ["jqx", ".", "1", "2"]
   let parsed = parse_cli_args(args)
   guard parsed is Err(_) else { fail("expected Err") }
+}
+
+///|
+test "parse args -L paths" {
+  let args = ["jqx", "-L", "modules", "-Llib", "."]
+  let parsed = parse_cli_args(args)
+  guard parsed is Ok(cfg) else { fail("expected Ok") }
+  assert_eq(cfg.module_search_paths, ["modules", "lib"])
+  assert_eq(cfg.filter, ".")
+}
+
+///|
+test "parse args -L missing value" {
+  let args = ["jqx", "-L"]
+  let parsed = parse_cli_args(args)
+  guard parsed is Err(msg) && msg == "missing argument for -L" else {
+    fail("expected missing argument error for -L")
+  }
 }

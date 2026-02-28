@@ -13,7 +13,8 @@ Updated: 2026-02-28
 
 - [x] `def`（ユーザー定義関数）の最小実装を追加する（top-level の parser lowering + 引数付き `def f(a;b)` + differential case）
 - [x] `def` の対応範囲を拡張する（ネスト定義の配置対応・arity解決改善）
-- [ ] `def` の対応範囲をさらに拡張する（再帰/closure capture は upstream-covered ケースで実装済み。残り edge semantics と import 実読み込みの filesystem 解決）
+- [ ] `def` の対応範囲をさらに拡張する（再帰/closure capture は upstream-covered ケースで実装済み。残り edge semantics）
+- [x] `import` / `include` の filesystem 解決を追加する（検索パス + native実読み込みの最小互換）
 - [ ] update assignment（`|=`, `+=` など）の対応範囲を拡張する（静的パス以外の実用ケース）
 - [x] 正規表現ファミリ（`test`/`match`/`capture`/`scan`/`sub`/`gsub`）を最小互換で実装する
 - [x] CLI `-R`/`-s` の入力セマンティクス差分を縮小する（line/slurp境界のjq互換）

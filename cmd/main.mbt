@@ -12,7 +12,7 @@ fn main {
       "Example (arg):   moon run --target native cmd -- \".foo\" '{\"foo\": 1}'",
     )
     println(
-      "Options: -r (raw strings), -R (raw input), -c (compact; default), -n (null input), -s (slurp inputs), -e (set exit status)",
+      "Options: -r (raw strings), -R (raw input), -c (compact; default), -n (null input), -s (slurp inputs), -e (set exit status), -L <dir> (module search path)",
     )
     return
   }
@@ -31,6 +31,12 @@ fn main {
     ""
   } else {
     read_stdin_all()
+  }
+  @lib.clear_module_search_paths()
+  if cfg.module_search_paths.length() == 0 {
+    @lib.set_module_search_paths(["."])
+  } else {
+    @lib.set_module_search_paths(cfg.module_search_paths)
   }
   try {
     let f = @lib.compile(filter)
