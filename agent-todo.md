@@ -14,7 +14,7 @@ Updated: 2026-02-28
 - [x] upstream compile-fail の `%%FAIL IGNORE MSG` を含め strict 比較へ統一する（`expect_error_mode: any` を 0 件にする）
 - [x] native の `strftime`/`strflocaltime` で `%A`/`%B` を locale 依存出力に寄せる（C `strftime` 連携）
 - [ ] locale/timezone 依存ケースの差分検証を OS/タイムゾーン matrix で追加する
-- [ ] jq upstream 更新時の差分台帳（新規 fail / 振る舞い変更）を自動生成する
+- [x] jq upstream 更新時の差分台帳（新規 fail / 振る舞い変更）を自動生成する（`scripts/jq_upstream_ledger.*` + `scripts/jq_upstream_diff_ledger.md`）
 
 ## P0: jq互換の未実装/部分実装を埋める
 

@@ -147,6 +147,9 @@ Differential scripts:
 Upstream fixture update/import:
 - `scripts/update_jq_tests.ps1`, `scripts/update_jq_tests.sh`
 - `scripts/jq_upstream_import.ps1`, `scripts/jq_upstream_import.sh`
+- `scripts/jq_upstream_ledger.ps1`, `scripts/jq_upstream_ledger.sh`
+  - updates `scripts/jq_upstream_failures.snapshot.json`
+  - generates `scripts/jq_upstream_diff_ledger.md` (new fail / resolved fail / behavior changes)
 
 CI (`.github/workflows/ci.yml`):
 - Linux/macOS/Windows MoonBit check+tests

@@ -70,3 +70,6 @@ printf '%s\n' "${UPSTREAM_COMMIT}" > "${DEST_DIR}/UPSTREAM_COMMIT"
 
 echo "Vendored jq tests to: ${DEST_DIR}"
 echo "Upstream commit: ${UPSTREAM_COMMIT}"
+
+bash "${SCRIPT_DIR}/jq_upstream_import.sh"
+bash "${SCRIPT_DIR}/jq_upstream_ledger.sh"

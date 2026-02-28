@@ -99,6 +99,19 @@ or `scripts/update_jq_tests.sh`.
 
   Write-Host "Vendored jq tests to: $destinationPath"
   Write-Host "Upstream commit: $upstreamCommit"
+
+  $importScript = Join-Path $PSScriptRoot "jq_upstream_import.ps1"
+  $ledgerScript = Join-Path $PSScriptRoot "jq_upstream_ledger.ps1"
+
+  & $importScript
+  if (-not $?) {
+    throw "jq_upstream_import.ps1 failed"
+  }
+
+  & $ledgerScript
+  if (-not $?) {
+    throw "jq_upstream_ledger.ps1 failed"
+  }
 } finally {
   if (Test-Path $tempRoot) {
     Remove-Item -Recurse -Force $tempRoot
