@@ -98,7 +98,7 @@ Updated: 2026-03-01
 
 - [ ] Differential Nightly の運用確認を完了する（`workflow_dispatch` 初回ドライラン + 手順明文化）
 - [ ] jq upstream fixtures 更新の定期運用を自動化する
-- [ ] npm パッケージ公開ワークフローを追加する
+- [x] npm パッケージ公開ワークフローを追加する（`.github/workflows/release-npm.yml`）
 
 ## Done (2026-03-01)
 
