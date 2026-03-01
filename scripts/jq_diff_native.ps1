@@ -240,6 +240,7 @@ try {
   if ($failed -ne 0) {
     exit 1
   }
+  exit 0
 } finally {
   Pop-Location
 }
