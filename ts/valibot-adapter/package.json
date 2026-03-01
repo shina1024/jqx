@@ -31,7 +31,7 @@
     "test": "node --import tsx --test test/**/*.test.ts"
   },
   "dependencies": {
-    "@shina1024/jqx-adapter-core": "file:../adapter-core"
+    "@shina1024/jqx-adapter-core": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^25.3.0",
@@ -45,5 +45,10 @@
   },
   "peerDependencies": {
     "valibot": "^1.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@shina1024/jqx-adapter-core": "file:../adapter-core"
+    }
   }
 }

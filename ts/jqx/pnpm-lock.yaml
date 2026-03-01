@@ -4,6 +4,12 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@shina1024/jqx-adapter-core': file:../adapter-core
+  '@shina1024/jqx-valibot-adapter': file:../valibot-adapter
+  '@shina1024/jqx-yup-adapter': file:../yup-adapter
+  '@shina1024/jqx-zod-adapter': file:../zod-adapter
+
 importers:
 
   .:
