@@ -282,11 +282,11 @@ jobs:
       - name: jq Version
         run: jq --version
 
-      - name: Differential TZ Smoke (Linux)
-        if: runner.os == 'Linux'
+      - name: Differential TZ Smoke (Linux/macOS)
+        if: runner.os != 'Windows'
         run: bash ./scripts/jq_diff.sh scripts/jq_compat_cases.tz_matrix.json
 
-      - name: Differential TZ Smoke (macOS/Windows)
-        if: runner.os != 'Linux'
+      - name: Differential TZ Smoke (Windows)
+        if: runner.os == 'Windows'
         shell: pwsh
         run: ./scripts/jq_diff.ps1 -CasesPath scripts/jq_compat_cases.tz_matrix.json

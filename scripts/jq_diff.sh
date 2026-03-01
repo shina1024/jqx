@@ -65,14 +65,17 @@ is_compiler_summary_line() {
 }
 
 join_lines() {
-  local -n lines_ref=$1
-  if [[ ${#lines_ref[@]} -eq 0 ]]; then
+  if [[ $# -eq 0 ]]; then
     printf ''
     return
   fi
-  printf '%s' "${lines_ref[0]}"
-  for ((i = 1; i < ${#lines_ref[@]}; i++)); do
-    printf '\n%s' "${lines_ref[$i]}"
+
+  printf '%s' "$1"
+  shift
+
+  local line
+  for line in "$@"; do
+    printf '\n%s' "${line}"
   done
 }
 
@@ -97,9 +100,23 @@ classify_output() {
     value_lines+=("${line}")
   done <<< "${text}"
 
-  CLASS_VALUE="$(join_lines value_lines)"
-  CLASS_DEBUG="$(join_lines debug_lines)"
-  CLASS_ERROR="$(join_lines error_lines)"
+  if [[ ${#value_lines[@]} -eq 0 ]]; then
+    CLASS_VALUE=""
+  else
+    CLASS_VALUE="$(join_lines "${value_lines[@]}")"
+  fi
+
+  if [[ ${#debug_lines[@]} -eq 0 ]]; then
+    CLASS_DEBUG=""
+  else
+    CLASS_DEBUG="$(join_lines "${debug_lines[@]}")"
+  fi
+
+  if [[ ${#error_lines[@]} -eq 0 ]]; then
+    CLASS_ERROR=""
+  else
+    CLASS_ERROR="$(join_lines "${error_lines[@]}")"
+  fi
 }
 
 JQ_BIN_RESOLVED="$(resolve_jq_bin)" || {
@@ -192,12 +209,24 @@ while IFS= read -r case_json; do
   done < <("${JQ_BIN_RESOLVED}" -r '.jqx_args // [] | .[]' <<<"${case_json}")
 
   set +e
-  jq_out="$(printf '%s' "${input}" | "${JQ_BIN_RESOLVED}" -c "${jq_args[@]}" "${filter}" 2>&1)"
+  if [[ ${#jq_args[@]} -gt 0 ]]; then
+    jq_out="$(printf '%s' "${input}" | "${JQ_BIN_RESOLVED}" -c "${jq_args[@]}" "${filter}" 2>&1)"
+  else
+    jq_out="$(printf '%s' "${input}" | "${JQ_BIN_RESOLVED}" -c "${filter}" 2>&1)"
+  fi
   jq_status=$?
   if [[ "${jqx_use_stdin}" == "true" ]]; then
-    jqx_out="$(printf '%s' "${input}" | "${MOON_BIN_RESOLVED}" run --target native cmd -- "${jqx_args[@]}" "${filter}" 2>&1)"
+    if [[ ${#jqx_args[@]} -gt 0 ]]; then
+      jqx_out="$(printf '%s' "${input}" | "${MOON_BIN_RESOLVED}" run --target native cmd -- "${jqx_args[@]}" "${filter}" 2>&1)"
+    else
+      jqx_out="$(printf '%s' "${input}" | "${MOON_BIN_RESOLVED}" run --target native cmd -- "${filter}" 2>&1)"
+    fi
   else
-    jqx_out="$("${MOON_BIN_RESOLVED}" run --target native cmd -- "${jqx_args[@]}" "${filter}" "${input}" 2>&1 </dev/null)"
+    if [[ ${#jqx_args[@]} -gt 0 ]]; then
+      jqx_out="$("${MOON_BIN_RESOLVED}" run --target native cmd -- "${jqx_args[@]}" "${filter}" "${input}" 2>&1 </dev/null)"
+    else
+      jqx_out="$("${MOON_BIN_RESOLVED}" run --target native cmd -- "${filter}" "${input}" 2>&1 </dev/null)"
+    fi
   fi
   jqx_status=$?
   set -e

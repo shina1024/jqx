@@ -167,12 +167,24 @@ while IFS= read -r case_json; do
   done < <("${JQ_BIN_RESOLVED}" -r '.jqx_args // [] | .[]' <<<"${case_json}")
 
   set +e
-  jq_out="$(printf '%s' "${input}" | "${JQ_BIN_RESOLVED}" -c "${jq_args[@]}" "${filter}" 2>&1)"
+  if [[ ${#jq_args[@]} -gt 0 ]]; then
+    jq_out="$(printf '%s' "${input}" | "${JQ_BIN_RESOLVED}" -c "${jq_args[@]}" "${filter}" 2>&1)"
+  else
+    jq_out="$(printf '%s' "${input}" | "${JQ_BIN_RESOLVED}" -c "${filter}" 2>&1)"
+  fi
   jq_status=$?
   if [[ "${jqx_use_stdin}" == "true" ]]; then
-    jqx_out="$(printf '%s' "${input}" | "${JQX_BIN_RESOLVED}" "${jqx_args[@]}" "${filter}" 2>&1)"
+    if [[ ${#jqx_args[@]} -gt 0 ]]; then
+      jqx_out="$(printf '%s' "${input}" | "${JQX_BIN_RESOLVED}" "${jqx_args[@]}" "${filter}" 2>&1)"
+    else
+      jqx_out="$(printf '%s' "${input}" | "${JQX_BIN_RESOLVED}" "${filter}" 2>&1)"
+    fi
   else
-    jqx_out="$("${JQX_BIN_RESOLVED}" "${jqx_args[@]}" "${filter}" "${input}" 2>&1 </dev/null)"
+    if [[ ${#jqx_args[@]} -gt 0 ]]; then
+      jqx_out="$("${JQX_BIN_RESOLVED}" "${jqx_args[@]}" "${filter}" "${input}" 2>&1 </dev/null)"
+    else
+      jqx_out="$("${JQX_BIN_RESOLVED}" "${filter}" "${input}" 2>&1 </dev/null)"
+    fi
   fi
   jqx_status=$?
   set -e
