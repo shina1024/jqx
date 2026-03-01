@@ -181,14 +181,15 @@ while IFS= read -r case_json; do
     continue
   fi
 
-  mapfile -t jq_args < <("${JQ_BIN_RESOLVED}" -r '.jq_args // [] | .[]' <<<"${case_json}")
-  mapfile -t jqx_args < <("${JQ_BIN_RESOLVED}" -r '.jqx_args // [] | .[]' <<<"${case_json}")
-  for i in "${!jq_args[@]}"; do
-    jq_args[$i]="${jq_args[$i]%$'\r'}"
-  done
-  for i in "${!jqx_args[@]}"; do
-    jqx_args[$i]="${jqx_args[$i]%$'\r'}"
-  done
+  jq_args=()
+  while IFS= read -r arg; do
+    jq_args+=("${arg%$'\r'}")
+  done < <("${JQ_BIN_RESOLVED}" -r '.jq_args // [] | .[]' <<<"${case_json}")
+
+  jqx_args=()
+  while IFS= read -r arg; do
+    jqx_args+=("${arg%$'\r'}")
+  done < <("${JQ_BIN_RESOLVED}" -r '.jqx_args // [] | .[]' <<<"${case_json}")
 
   set +e
   jq_out="$(printf '%s' "${input}" | "${JQ_BIN_RESOLVED}" -c "${jq_args[@]}" "${filter}" 2>&1)"

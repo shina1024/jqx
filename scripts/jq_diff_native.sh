@@ -8,7 +8,7 @@ JQ_BIN="${JQ_BIN:-jq}"
 MOON_BIN="${MOON_BIN:-moon}"
 JQX_BIN="${JQX_BIN:-}"
 JQX_PROFILE="${JQX_PROFILE:-debug}"
-JQX_PROFILE_LOWER="${JQX_PROFILE,,}"
+JQX_PROFILE_LOWER="$(printf '%s' "${JQX_PROFILE}" | tr '[:upper:]' '[:lower:]')"
 
 resolve_jq_bin() {
   if command -v "${JQ_BIN}" >/dev/null 2>&1; then
@@ -156,14 +156,15 @@ while IFS= read -r case_json; do
   expect_status="${expect_status%$'\r'}"
   jqx_use_stdin="${jqx_use_stdin%$'\r'}"
 
-  mapfile -t jq_args < <("${JQ_BIN_RESOLVED}" -r '.jq_args // [] | .[]' <<<"${case_json}")
-  mapfile -t jqx_args < <("${JQ_BIN_RESOLVED}" -r '.jqx_args // [] | .[]' <<<"${case_json}")
-  for i in "${!jq_args[@]}"; do
-    jq_args[$i]="${jq_args[$i]%$'\r'}"
-  done
-  for i in "${!jqx_args[@]}"; do
-    jqx_args[$i]="${jqx_args[$i]%$'\r'}"
-  done
+  jq_args=()
+  while IFS= read -r arg; do
+    jq_args+=("${arg%$'\r'}")
+  done < <("${JQ_BIN_RESOLVED}" -r '.jq_args // [] | .[]' <<<"${case_json}")
+
+  jqx_args=()
+  while IFS= read -r arg; do
+    jqx_args+=("${arg%$'\r'}")
+  done < <("${JQ_BIN_RESOLVED}" -r '.jqx_args // [] | .[]' <<<"${case_json}")
 
   set +e
   jq_out="$(printf '%s' "${input}" | "${JQ_BIN_RESOLVED}" -c "${jq_args[@]}" "${filter}" 2>&1)"
