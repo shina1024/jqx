@@ -7,6 +7,7 @@ npm-facing JS/TS entrypoint for `@shina1024/jqx`.
 - `@shina1024/jqx`:
   - runtime/result/core types
   - `bindRuntime(runtime)` / `createRuntime(runtime)`
+  - Typed DSL combinators (`identity`, `field`, `pipe`, `map`, `select`, ...)
 - `@shina1024/jqx/zod`: re-exports `@shina1024/jqx-zod-adapter`
 - `@shina1024/jqx/yup`: re-exports `@shina1024/jqx-yup-adapter`
 - `@shina1024/jqx/valibot`: re-exports `@shina1024/jqx-valibot-adapter`
@@ -24,6 +25,16 @@ const runtime = bindRuntime({
 });
 
 const out = await runtime.run(".", '{"x":1}');
+```
+
+## Typed DSL (compile-time inference)
+
+```ts
+import { field, identity, pipe } from "@shina1024/jqx";
+
+type Input = { user: { name: string } };
+const q = pipe(identity<Input>(), pipe(field("user"), field("name")));
+// q: Query<Input, string>
 ```
 
 ## Scripts

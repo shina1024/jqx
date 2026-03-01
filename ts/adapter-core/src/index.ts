@@ -22,6 +22,8 @@ export interface JqxTypedRuntime<Q = unknown> {
 
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
+export * from "./typed_query.js";
+
 export type InferenceFallbackMode = "unknown" | "json";
 
 type InferenceFallbackValue<Mode extends InferenceFallbackMode> = Mode extends "json"

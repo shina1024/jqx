@@ -72,7 +72,7 @@ Updated: 2026-03-01
 
 - [x] npm向け公開エントリポイントを確定する（`import { ... } from \"@shina1024/jqx\"` の最終設計）
 - [x] Zod/Yup/Valibotの実ランタイム接続例をREADMEに追加する（mockではない配線例）
-- [ ] Typed DSLコンビネータを拡張し、compile-time推論テストを追加する
+- [x] Typed DSLコンビネータを拡張し、compile-time推論テストを追加する（`ts/adapter-core/src/typed_query.ts` + `ts/adapter-core/test/typecheck.ts` + `ts/jqx/test/typecheck.ts`）
 
 ## P1: コードベース保守性（リファクタリング）
 

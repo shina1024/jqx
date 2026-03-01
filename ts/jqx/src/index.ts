@@ -9,16 +9,45 @@ import type {
 } from "@shina1024/jqx-adapter-core";
 
 export type {
+  InferTypedQueryOutput,
   InferJqOutput,
   InferenceFallbackMode,
   InferredOptions,
   Json,
+  Query,
+  QueryAst,
+  QueryInput,
+  QueryOutput,
   JqxDynamicRuntime,
   JqxError,
   JqxResult,
   JqxRuntimeError,
   JqxTypedRuntime,
   MaybePromise,
+} from "@shina1024/jqx-adapter-core";
+
+export {
+  add,
+  and_,
+  call,
+  comma,
+  eq,
+  fallback,
+  field,
+  gt,
+  identity,
+  ifElse,
+  index,
+  iter,
+  literal,
+  lt,
+  map,
+  not_,
+  or_,
+  pipe,
+  select,
+  toAst,
+  tryCatch,
 } from "@shina1024/jqx-adapter-core";
 
 export interface JqxRuntimeBinding extends JqxDynamicRuntime {
