@@ -37,6 +37,22 @@ const q = pipe(identity<Input>(), pipe(field("user"), field("name")));
 // q: Query<Input, string>
 ```
 
+## Typed DSL Runtime Bridge (`QueryAst -> runtime`)
+
+```ts
+import { field, identity, pipe, runTypedQuery, type QueryAst } from "@shina1024/jqx";
+
+const runtime = {
+  runQuery(query: QueryAst, input: string) {
+    // connect to a runtime lane that accepts QueryAst
+    return { ok: true as const, value: [input] };
+  },
+};
+
+const q = pipe(identity<{ user: { name: string } }>(), pipe(field("user"), field("name")));
+const out = await runTypedQuery(runtime, q, '{"user":{"name":"alice"}}');
+```
+
 ## Scripts
 
 ```bash

@@ -4,8 +4,14 @@ import { test } from "node:test";
 import {
   bindRuntime,
   createRuntime,
+  field,
   RUNTIME_UNSUPPORTED_ERRORS,
+  runTypedQuery,
+  runTypedQueryAst,
+  toAst,
   type JqxRuntimeBinding,
+  type QueryAst,
+  type JqxTypedRuntime,
 } from "../src/index.js";
 
 test("bindRuntime delegates run", async () => {
@@ -48,4 +54,34 @@ test("runValues returns unsupported error when runtime does not provide it", asy
   if (!result.ok) {
     assert.equal(result.error, RUNTIME_UNSUPPORTED_ERRORS.runValues);
   }
+});
+
+test("runTypedQuery forwards QueryAst to runtime.runQuery", async () => {
+  const calls: Array<{ query: QueryAst; input: string }> = [];
+  const runtime: JqxTypedRuntime<QueryAst> = {
+    runQuery(query, input) {
+      calls.push({ query, input });
+      return { ok: true as const, value: ["typed"] };
+    },
+  };
+  const query = field("user");
+  const input = '{"user":"alice"}';
+  const result = await runTypedQuery(runtime, query, input);
+  assert.equal(result.ok, true);
+  assert.deepEqual(calls, [{ query: toAst(query), input }]);
+});
+
+test("runTypedQueryAst forwards ast as-is", async () => {
+  const calls: Array<{ query: QueryAst; input: string }> = [];
+  const runtime: JqxTypedRuntime<QueryAst> = {
+    runQuery(query, input) {
+      calls.push({ query, input });
+      return { ok: true as const, value: ["typed-ast"] };
+    },
+  };
+  const queryAst: QueryAst = { kind: "identity" };
+  const input = "1";
+  const result = await runTypedQueryAst(runtime, queryAst, input);
+  assert.equal(result.ok, true);
+  assert.deepEqual(calls, [{ query: queryAst, input }]);
 });

@@ -1,9 +1,12 @@
+import { toAst as toQueryAst } from "@shina1024/jqx-adapter-core";
 import type {
   Json,
   JqxDynamicRuntime,
   JqxError,
   JqxResult,
   JqxRuntimeError,
+  Query,
+  QueryAst,
   JqxTypedRuntime,
   MaybePromise,
 } from "@shina1024/jqx-adapter-core";
@@ -61,10 +64,28 @@ export interface JqxRuntime {
   runValues(filter: string, input: string): Promise<JqxResult<Json[], JqxRuntimeError>>;
 }
 
+export type JqxQueryAstRuntime = JqxTypedRuntime<QueryAst>;
+
 const RUN_VALUES_UNSUPPORTED_ERROR = "runValues is not available on the bound runtime";
 
 function toPromise<T>(value: MaybePromise<T>): Promise<T> {
   return Promise.resolve(value);
+}
+
+export function runTypedQuery<I, O, Ast extends QueryAst>(
+  runtime: JqxQueryAstRuntime,
+  query: Query<I, O, Ast>,
+  input: string,
+): Promise<JqxResult<string[], JqxRuntimeError>> {
+  return toPromise(runtime.runQuery(toQueryAst(query), input));
+}
+
+export function runTypedQueryAst(
+  runtime: JqxQueryAstRuntime,
+  query: QueryAst,
+  input: string,
+): Promise<JqxResult<string[], JqxRuntimeError>> {
+  return toPromise(runtime.runQuery(query, input));
 }
 
 export function bindRuntime(runtime: JqxRuntimeBinding): JqxRuntime {
