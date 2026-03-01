@@ -1284,6 +1284,33 @@ test "execute match regex compatibility" {
 }
 
 ///|
+test "execute regex alternation sequence merge compatibility" {
+  assert_eq(
+    must_execute(parse_filter("match(\"a|ab\")"), must_parse("\"ab\"")),
+    [must_parse("{\"offset\":0,\"length\":1,\"string\":\"a\",\"captures\":[]}")],
+  )
+  assert_eq(
+    must_execute(parse_filter("match(\"ab|ac\")"), must_parse("\"ac\"")),
+    [
+      must_parse(
+        "{\"offset\":0,\"length\":2,\"string\":\"ac\",\"captures\":[]}",
+      ),
+    ],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("match(\"あい|あう\")"),
+      must_parse("\"あう\""),
+    ),
+    [
+      must_parse(
+        "{\"offset\":0,\"length\":2,\"string\":\"あう\",\"captures\":[]}",
+      ),
+    ],
+  )
+}
+
+///|
 test "execute capture regex compatibility" {
   assert_eq(
     must_execute(parse_filter("capture(\"a+\")"), must_parse("\"baaaac\"")),
