@@ -4,8 +4,8 @@ Updated: 2026-03-01
 
 ## Current baseline (2026-02-28)
 
-- `moon test`: 255/255 pass
-- `moon test --target native --package core`: 195/195 pass
+- `moon test`: 256/256 pass
+- `moon test --target native --package core`: 196/196 pass
 - differential smoke (`scripts/jq_compat_cases.json`): total 242 / passed 242 / failed 0 / skipped 0
 - differential upstream full (`scripts/jq_compat_cases.upstream.json`): total 843 / passed 843 / failed 0 / skipped 0
 
@@ -98,6 +98,9 @@ Updated: 2026-03-01
 
 - [ ] Differential Nightly の運用確認を完了する（`workflow_dispatch` 初回ドライラン + 手順明文化）
 - [ ] jq upstream fixtures 更新の定期運用を自動化する
-- [ ] Typed DSL の実行レーン（QueryAst -> runtime）を標準化する
 - [ ] npm パッケージ公開ワークフローを追加する
-- [ ] regex translator の `TODO: merge sequences` を解消する
+
+## Done (2026-03-01)
+
+- [x] Typed DSL の実行レーン（QueryAst -> runtime）を標準化する（`ts/jqx` に `runTypedQuery` / `runTypedQueryAst` を追加）
+- [x] regex translator の `TODO: merge sequences` を解消する（`core/internal/regex_engine/translate.mbt` で先頭 `Char` 共通分岐の merge を実装）
