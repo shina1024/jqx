@@ -96,8 +96,8 @@ Updated: 2026-03-01
 
 ## Next Queue (2026-03-01)
 
-- [ ] [#11](https://github.com/shina1024/jqx/issues/11) Differential Nightly を運用化する（通知/初回ドライラン/手順明文化）
-- [ ] [#14](https://github.com/shina1024/jqx/issues/14) jq upstream fixtures 更新の定期運用を自動化する
-- [ ] [#10](https://github.com/shina1024/jqx/issues/10) Typed DSL の実行レーン（QueryAst -> runtime）を標準化する
-- [ ] [#12](https://github.com/shina1024/jqx/issues/12) npm パッケージ公開ワークフローを追加する
-- [ ] [#13](https://github.com/shina1024/jqx/issues/13) regex translator の `TODO: merge sequences` を解消する
+- [ ] Differential Nightly の運用確認を完了する（`workflow_dispatch` 初回ドライラン + 手順明文化）
+- [ ] jq upstream fixtures 更新の定期運用を自動化する
+- [ ] Typed DSL の実行レーン（QueryAst -> runtime）を標準化する
+- [ ] npm パッケージ公開ワークフローを追加する
+- [ ] regex translator の `TODO: merge sequences` を解消する
