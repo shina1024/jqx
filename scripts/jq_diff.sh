@@ -114,7 +114,7 @@ MOON_BIN_RESOLVED="$(resolve_moon_bin)" || {
 
 had_pager=0
 saved_pager=""
-if [[ -v PAGER ]]; then
+if [[ -n "${PAGER+x}" ]]; then
   had_pager=1
   saved_pager="${PAGER}"
 fi
