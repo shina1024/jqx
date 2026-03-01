@@ -157,6 +157,11 @@ CI (`.github/workflows/ci.yml`):
 - Linux differential smoke/upstream/native-exit
 - Linux coverage analyze + summary + artifact
 
+Nightly differential (`.github/workflows/differential-nightly.yml`):
+- cross-OS full differential + native-exit (`schedule` + `workflow_dispatch`)
+- on failure, auto-open/update GitHub issue: `[CI] Differential Nightly failed`
+- on recovery, auto-comment and close the above issue
+
 Release workflow:
 - `.github/workflows/release-cli.yml`
 - `v*` tag push (or manual dispatch with tag) builds native CLI artifacts for Linux/macOS/Windows and uploads them to GitHub Releases.
