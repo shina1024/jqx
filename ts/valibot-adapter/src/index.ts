@@ -1,7 +1,6 @@
 import * as v from "valibot";
 
 import {
-  hasTypedRuntime,
   runFilterWithValidation,
   runInferred,
   runQueryWithValidation,
@@ -92,12 +91,8 @@ async function validateWithValibot<TSchema extends ValibotSchema>(
   };
 }
 
-export function createAdapter<Q>(runtime: JqxRuntime & JqxTypedRuntime<Q>): TypedAdapter<Q>;
-export function createAdapter(runtime: JqxRuntime): DynamicAdapter;
-export function createAdapter<Q>(
-  runtime: JqxRuntime & Partial<JqxTypedRuntime<Q>>,
-): DynamicAdapter | TypedAdapter<Q> {
-  const dynamicAdapter: DynamicAdapter = {
+function createDynamic(runtime: JqxRuntime): DynamicAdapter {
+  return {
     filter(options) {
       return runFilterWithValidation(runtime, options, {
         validateInput: validateWithValibot,
@@ -108,19 +103,21 @@ export function createAdapter<Q>(
       return runInferred(runtime, options);
     },
   };
+}
 
-  if (hasTypedRuntime(runtime)) {
-    const typedAdapter: TypedAdapter<Q> = {
-      ...dynamicAdapter,
-      query(options) {
-        return runQueryWithValidation(runtime, options, {
-          validateInput: validateWithValibot,
-          validateOutput: validateWithValibot,
-        });
-      },
-    };
-    return typedAdapter;
-  }
+export function createAdapter(runtime: JqxRuntime): DynamicAdapter {
+  return createDynamic(runtime);
+}
 
-  return dynamicAdapter;
+export function createTypedAdapter<Q>(runtime: JqxRuntime & JqxTypedRuntime<Q>): TypedAdapter<Q> {
+  const dynamic = createDynamic(runtime);
+  return {
+    ...dynamic,
+    query(options) {
+      return runQueryWithValidation(runtime, options, {
+        validateInput: validateWithValibot,
+        validateOutput: validateWithValibot,
+      });
+    },
+  };
 }

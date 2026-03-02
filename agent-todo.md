@@ -81,7 +81,7 @@ Updated: 2026-03-03
 - [x] エラーモデルを利用者中心に再設計する（`JqxRuntimeError` を判別可能 union 化し、`toJqxRuntimeError` / `isJqxRuntimeError` / `runtimeErrorToMessage` を追加）
 - [x] `QueryAst` を外部連携向けに仕様化する（v1 document envelope: `format/version/ast` を導入、import/export helper と strict version check を追加）
 - [x] 大規模データ向けレーンを設計する（`AsyncIterable` ベースの streaming API を追加し、`Json[]` バッファ前提を緩和）
-- [ ] capability 表現を改善する（`hasTypedRuntime` 依存を減らし、factory段階で機能差を明示）
+- [x] capability 表現を改善する（`hasTypedRuntime` 依存を減らし、factory段階で機能差を明示）
 - [ ] 公開APIの型テストを強化する（`expect-type` で主要ユースケースを固定し、DX回 regressions を即検知）
 - [ ] 利用者導線を強化する（README に backend 実装契約 + 実運用レシピ + エラーハンドリング指針を追加）
 

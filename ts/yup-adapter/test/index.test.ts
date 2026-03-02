@@ -1,7 +1,7 @@
 import * as yup from "yup";
 
 import { registerAdapterContractCases } from "../../adapter-core/test/adapter_contract_cases.js";
-import { createAdapter } from "../src/index.js";
+import { createAdapter, createTypedAdapter } from "../src/index.js";
 
 registerAdapterContractCases({
   label: "yup",
@@ -9,7 +9,7 @@ registerAdapterContractCases({
     return createAdapter(runtime);
   },
   createTypedAdapter(runtime) {
-    return createAdapter(runtime);
+    return createTypedAdapter(runtime);
   },
   schemas: {
     userNameInput() {

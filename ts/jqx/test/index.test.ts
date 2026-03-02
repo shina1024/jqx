@@ -2,7 +2,9 @@ import * as assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  createAstJqx,
   createJqx,
+  createTypedJqx,
   exportQueryAstDocument,
   exportTypedQueryDocument,
   field,
@@ -234,7 +236,7 @@ test("createJqx runStream returns parse error with index", async () => {
   }
 });
 
-test("createJqx typed client supports queryRaw and query", async () => {
+test("createAstJqx typed client supports queryRaw and query", async () => {
   const calls: Array<{ query: QueryAst; input: string }> = [];
   const backend: JqxTypedBackend<QueryAst> = {
     runRaw() {
@@ -245,7 +247,7 @@ test("createJqx typed client supports queryRaw and query", async () => {
       return { ok: true as const, value: ['{"name":"alice"}'] };
     },
   };
-  const jqx = createJqx(backend);
+  const jqx = createAstJqx(backend);
   const dslQuery = field("user");
   const queryAst = toAst(dslQuery);
 
@@ -263,7 +265,7 @@ test("createJqx typed client supports queryRaw and query", async () => {
   ]);
 });
 
-test("createJqx queryRawStream falls back to runQueryRaw", async () => {
+test("createAstJqx queryRawStream falls back to runQueryRaw", async () => {
   const backend: JqxTypedBackend<QueryAst> = {
     runRaw() {
       return { ok: true as const, value: [] };
@@ -274,12 +276,12 @@ test("createJqx queryRawStream falls back to runQueryRaw", async () => {
       return { ok: true as const, value: ['{"name":"alice"}'] };
     },
   };
-  const jqx = createJqx(backend);
+  const jqx = createAstJqx(backend);
   const items = await collectStream(jqx.queryRawStream(field("user"), '{"user":{"name":"alice"}}'));
   assert.deepEqual(items, [{ ok: true, value: '{"name":"alice"}' }]);
 });
 
-test("createJqx queryStream uses typed streaming lane and normalizes DSL query", async () => {
+test("createAstJqx queryStream uses typed streaming lane and normalizes DSL query", async () => {
   const calls: QueryAst[] = [];
   const backend: JqxTypedBackend<QueryAst> & {
     runQueryRawStream(query: QueryAst, input: string): {
@@ -304,11 +306,33 @@ test("createJqx queryStream uses typed streaming lane and normalizes DSL query",
       };
     },
   };
-  const jqx = createJqx(backend);
+  const jqx = createAstJqx(backend);
   const dslQuery = field("user");
   const items = await collectStream(jqx.queryStream(dslQuery, { user: { name: "alice" } }));
   assert.deepEqual(items, [{ ok: true, value: { name: "alice" } }]);
   assert.deepEqual(calls, [toAst(dslQuery)]);
+});
+
+test("createTypedJqx provides typed query lane without DSL normalization", async () => {
+  const calls: Array<{ query: { kind: "custom"; key: string }; input: string }> = [];
+  const backend = {
+    runRaw() {
+      return { ok: true as const, value: [] };
+    },
+    runQueryRaw(query: { kind: "custom"; key: string }, input: string) {
+      calls.push({ query, input });
+      return { ok: true as const, value: ['{"name":"alice"}'] };
+    },
+  };
+  const jqx = createTypedJqx(backend);
+  const result = await jqx.query(
+    { kind: "custom", key: "user" },
+    { user: { name: "alice" } },
+  );
+  assert.equal(result.ok, true);
+  assert.deepEqual(calls, [
+    { query: { kind: "custom", key: "user" }, input: '{"user":{"name":"alice"}}' },
+  ]);
 });
 
 test("QueryAst document export/import supports v1 envelope", () => {
