@@ -18,6 +18,14 @@ import {
   type QueryAst,
 } from "../src/index.js";
 
+async function collectStream<T, E>(stream: AsyncIterable<{ ok: true; value: T } | { ok: false; error: E }>) {
+  const items: Array<{ ok: true; value: T } | { ok: false; error: E }> = [];
+  for await (const item of stream) {
+    items.push(item);
+  }
+  return items;
+}
+
 test("createJqx delegates runRaw", async () => {
   const backend: JqxBackend = {
     runRaw(filter, input) {
@@ -79,6 +87,153 @@ test("createJqx normalizes legacy backend string errors", async () => {
   }
 });
 
+test("createJqx runRawStream falls back to runRaw", async () => {
+  const backend: JqxBackend = {
+    runRaw(filter, input) {
+      assert.equal(filter, ".");
+      assert.equal(input, '{"x":1}');
+      return { ok: true as const, value: ['{"x":1}', '{"x":2}'] };
+    },
+  };
+  const jqx = createJqx(backend);
+  const items = await collectStream(jqx.runRawStream(".", '{"x":1}'));
+  assert.deepEqual(items, [
+    { ok: true, value: '{"x":1}' },
+    { ok: true, value: '{"x":2}' },
+  ]);
+});
+
+test("createJqx runRawStream prefers backend streaming lane", async () => {
+  const backend: JqxBackend & {
+    runRawStream(filter: string, input: string): {
+      ok: true;
+      value: AsyncIterable<string>;
+    };
+  } = {
+    runRaw() {
+      assert.fail("runRaw should not be called when runRawStream exists");
+    },
+    runRawStream(filter, input) {
+      assert.equal(filter, ".");
+      assert.equal(input, '{"x":1}');
+      return {
+        ok: true as const,
+        value: (async function* () {
+          yield '{"x":1}';
+          yield '{"x":2}';
+        })(),
+      };
+    },
+  };
+  const jqx = createJqx(backend);
+  const items = await collectStream(jqx.runRawStream(".", '{"x":1}'));
+  assert.deepEqual(items, [
+    { ok: true, value: '{"x":1}' },
+    { ok: true, value: '{"x":2}' },
+  ]);
+});
+
+test("createJqx runRawStream yields backend_runtime on stream iteration failure", async () => {
+  const backend: JqxBackend & {
+    runRawStream(filter: string, input: string): {
+      ok: true;
+      value: AsyncIterable<string>;
+    };
+  } = {
+    runRaw() {
+      assert.fail("runRaw should not be called when runRawStream exists");
+    },
+    runRawStream(filter, input) {
+      assert.equal(filter, ".");
+      assert.equal(input, '{"x":1}');
+      return {
+        ok: true as const,
+        value: (async function* () {
+          yield '{"x":1}';
+          throw new Error("stream boom");
+        })(),
+      };
+    },
+  };
+  const jqx = createJqx(backend);
+  const items = await collectStream(jqx.runRawStream(".", '{"x":1}'));
+  assert.equal(items.length, 2);
+  assert.deepEqual(items[0], { ok: true, value: '{"x":1}' });
+  assert.equal(items[1]?.ok, false);
+  if (!items[1]?.ok) {
+    assert.deepEqual(items[1].error, {
+      kind: "backend_runtime",
+      message: "stream boom",
+    });
+  }
+});
+
+test("createJqx runStream parses each streamed json value", async () => {
+  const backend: JqxBackend & {
+    runRawStream(filter: string, input: string): {
+      ok: true;
+      value: AsyncIterable<string>;
+    };
+  } = {
+    runRaw() {
+      return { ok: true as const, value: [] };
+    },
+    runRawStream(filter, input) {
+      assert.equal(filter, ".x");
+      assert.equal(input, '{"x":1}');
+      return {
+        ok: true as const,
+        value: (async function* () {
+          yield "1";
+          yield "2";
+        })(),
+      };
+    },
+  };
+  const jqx = createJqx(backend);
+  const items = await collectStream(jqx.runStream(".x", { x: 1 }));
+  assert.deepEqual(items, [
+    { ok: true, value: 1 },
+    { ok: true, value: 2 },
+  ]);
+});
+
+test("createJqx runStream returns parse error with index", async () => {
+  const backend: JqxBackend & {
+    runRawStream(filter: string, input: string): {
+      ok: true;
+      value: AsyncIterable<string>;
+    };
+  } = {
+    runRaw() {
+      return { ok: true as const, value: [] };
+    },
+    runRawStream(filter, input) {
+      assert.equal(filter, ".x");
+      assert.equal(input, '{"x":1}');
+      return {
+        ok: true as const,
+        value: (async function* () {
+          yield "1";
+          yield "not-json";
+          yield "3";
+        })(),
+      };
+    },
+  };
+  const jqx = createJqx(backend);
+  const items = await collectStream(jqx.runStream(".x", { x: 1 }));
+  assert.equal(items.length, 2);
+  assert.deepEqual(items[0], { ok: true, value: 1 });
+  assert.equal(items[1]?.ok, false);
+  if (!items[1]?.ok) {
+    assert.equal(items[1].error.kind, "output_parse");
+    if (items[1].error.kind === "output_parse") {
+      assert.equal(items[1].error.index, 1);
+    }
+  }
+});
+
 test("createJqx typed client supports queryRaw and query", async () => {
   const calls: Array<{ query: QueryAst; input: string }> = [];
   const backend: JqxTypedBackend<QueryAst> = {
@@ -106,6 +261,54 @@ test("createJqx typed client supports queryRaw and query", async () => {
     { query: queryAst, input: '{"user":{"name":"alice"}}' },
     { query: queryAst, input: '{"user":{"name":"alice"}}' },
   ]);
+});
+
+test("createJqx queryRawStream falls back to runQueryRaw", async () => {
+  const backend: JqxTypedBackend<QueryAst> = {
+    runRaw() {
+      return { ok: true as const, value: [] };
+    },
+    runQueryRaw(query, input) {
+      assert.deepEqual(query, toAst(field("user")));
+      assert.equal(input, '{"user":{"name":"alice"}}');
+      return { ok: true as const, value: ['{"name":"alice"}'] };
+    },
+  };
+  const jqx = createJqx(backend);
+  const items = await collectStream(jqx.queryRawStream(field("user"), '{"user":{"name":"alice"}}'));
+  assert.deepEqual(items, [{ ok: true, value: '{"name":"alice"}' }]);
+});
+
+test("createJqx queryStream uses typed streaming lane and normalizes DSL query", async () => {
+  const calls: QueryAst[] = [];
+  const backend: JqxTypedBackend<QueryAst> & {
+    runQueryRawStream(query: QueryAst, input: string): {
+      ok: true;
+      value: AsyncIterable<string>;
+    };
+  } = {
+    runRaw() {
+      return { ok: true as const, value: [] };
+    },
+    runQueryRaw() {
+      assert.fail("runQueryRaw should not be called when runQueryRawStream exists");
+    },
+    runQueryRawStream(query, input) {
+      calls.push(query);
+      assert.equal(input, '{"user":{"name":"alice"}}');
+      return {
+        ok: true as const,
+        value: (async function* () {
+          yield '{"name":"alice"}';
+        })(),
+      };
+    },
+  };
+  const jqx = createJqx(backend);
+  const dslQuery = field("user");
+  const items = await collectStream(jqx.queryStream(dslQuery, { user: { name: "alice" } }));
+  assert.deepEqual(items, [{ ok: true, value: { name: "alice" } }]);
+  assert.deepEqual(calls, [toAst(dslQuery)]);
 });
 
 test("QueryAst document export/import supports v1 envelope", () => {

@@ -1,4 +1,5 @@
 export type JqxResult<T, E = string> = { ok: true; value: T } | { ok: false; error: E };
+export type JqxResultStream<T, E = string> = AsyncIterable<JqxResult<T, E>>;
 
 export type MaybePromise<T> = T | Promise<T>;
 

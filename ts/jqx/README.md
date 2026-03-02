@@ -28,6 +28,27 @@ const out = await jqx.run(".", { x: 1 }); // Json[] output
 // `run` / `query` inputs are Json values.
 ```
 
+## Streaming Lane (`AsyncIterable`)
+
+`createJqx` client always exposes stream methods:
+
+- `runRawStream(filter, input): AsyncIterable<JqxResult<string, JqxRuntimeError>>`
+- `runStream(filter, input): AsyncIterable<JqxResult<Json, JqxRuntimeError>>`
+- `queryRawStream(query, input): AsyncIterable<JqxResult<string, JqxRuntimeError>>` (typed backend)
+- `queryStream(query, input): AsyncIterable<JqxResult<Json, JqxRuntimeError>>` (typed backend)
+
+Backend contract (optional):
+
+- `runRawStream(filter, input) -> JqxResult<AsyncIterable<string>, JqxRuntimeError>`
+- `runQueryRawStream(query, input) -> JqxResult<AsyncIterable<string>, JqxRuntimeError>`
+
+If backend stream methods are absent, client falls back to `runRaw` / `runQueryRaw` and emits each array element as stream items.
+
+Error behavior:
+
+- backend/runtime failure: emits one `{ ok: false, error }` item and ends
+- `runStream` / `queryStream` output JSON parse failure: emits `{ kind: "output_parse", index, ... }` and ends
+
 ## Runtime Error Model
 
 `run` / `query` / `runRaw` / `queryRaw` return `JqxRuntimeError` as a discriminated union:

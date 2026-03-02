@@ -62,6 +62,10 @@ const runOut = jqx.run(".", { user: { name: "a" } });
 expectTypeOf(runOut).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeError>>>();
 const runRawOut = jqx.runRaw(".", '{"user":{"name":"a"}}');
 expectTypeOf(runRawOut).toEqualTypeOf<Promise<JqxResult<string[], JqxRuntimeError>>>();
+const runStreamOut = jqx.runStream(".", { user: { name: "a" } });
+expectTypeOf(runStreamOut).toEqualTypeOf<AsyncIterable<JqxResult<Json, JqxRuntimeError>>>();
+const runRawStreamOut = jqx.runRawStream(".", '{"user":{"name":"a"}}');
+expectTypeOf(runRawStreamOut).toEqualTypeOf<AsyncIterable<JqxResult<string, JqxRuntimeError>>>();
 // @ts-expect-error `undefined` is not a JSON value.
 jqx.run(".", { user: undefined });
 
@@ -76,6 +80,10 @@ const typedRawOut = typedJqx.queryRaw(ast, '{"user":{"name":"a"}}');
 expectTypeOf(typedRawOut).toEqualTypeOf<Promise<JqxResult<string[], JqxRuntimeError>>>();
 const typedRawOutFromDsl = typedJqx.queryRaw(nameQuery, '{"user":{"name":"a"}}');
 expectTypeOf(typedRawOutFromDsl).toEqualTypeOf<Promise<JqxResult<string[], JqxRuntimeError>>>();
+const typedStreamOut = typedJqx.queryStream(ast, { user: { name: "a" } });
+expectTypeOf(typedStreamOut).toEqualTypeOf<AsyncIterable<JqxResult<Json, JqxRuntimeError>>>();
+const typedRawStreamOut = typedJqx.queryRawStream(ast, '{"user":{"name":"a"}}');
+expectTypeOf(typedRawStreamOut).toEqualTypeOf<AsyncIterable<JqxResult<string, JqxRuntimeError>>>();
 // @ts-expect-error `undefined` is not a JSON value.
 typedJqx.query(ast, { user: undefined });
 
