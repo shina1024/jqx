@@ -40,7 +40,7 @@ const q = pipe(identity<Input>(), pipe(field("user"), field("name")));
 ## Typed Runtime Bridge (`runQueryRaw -> query`)
 
 ```ts
-import { createJqx, field, identity, pipe, toAst, type QueryAst } from "@shina1024/jqx";
+import { createJqx, field, identity, pipe, type QueryAst } from "@shina1024/jqx";
 
 const jqx = createJqx({
   runRaw(filter: string, input: string) {
@@ -53,7 +53,8 @@ const jqx = createJqx({
 });
 
 const q = pipe(identity<{ user: { name: string } }>(), pipe(field("user"), field("name")));
-const out = await jqx.query(toAst(q), { user: { name: "alice" } });
+const out = await jqx.query(q, { user: { name: "alice" } });
+// passing QueryAst is also supported: jqx.query({ kind: "identity" }, input)
 ```
 
 ## Scripts

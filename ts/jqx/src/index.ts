@@ -1,8 +1,11 @@
+import { toAst as toQueryAst } from "@shina1024/jqx-adapter-core";
+
 import type {
   Json,
   JqxResult,
   JqxRuntime,
   JqxRuntimeError,
+  Query,
   QueryAst,
   JqxTypedRuntime,
   MaybePromise,
@@ -63,9 +66,11 @@ export interface JqxClient extends JqxRuntime {
   runRaw(filter: string, input: string): Promise<JqxResult<string[], JqxRuntimeError>>;
 }
 
+type TypedDslQuery = Query<unknown, unknown, QueryAst>;
+
 export interface JqxTypedClient<Q = QueryAst> extends JqxClient, JqxTypedRuntime<Q> {
-  query(query: Q, input: unknown): Promise<JqxResult<Json[], JqxRuntimeError>>;
-  queryRaw(query: Q, input: string): Promise<JqxResult<string[], JqxRuntimeError>>;
+  query(query: Q | TypedDslQuery, input: unknown): Promise<JqxResult<Json[], JqxRuntimeError>>;
+  queryRaw(query: Q | TypedDslQuery, input: string): Promise<JqxResult<string[], JqxRuntimeError>>;
 }
 
 function toPromise<T>(value: MaybePromise<T>): Promise<T> {
@@ -111,6 +116,17 @@ function hasTypedBackend<Q>(
   return typeof backend.runQueryRaw === "function";
 }
 
+function isTypedDslQuery(value: unknown): value is TypedDslQuery {
+  return typeof value === "object" && value !== null && "ast" in value;
+}
+
+function normalizeTypedQueryInput<Q>(query: Q | TypedDslQuery): Q {
+  if (isTypedDslQuery(query)) {
+    return toQueryAst(query) as Q;
+  }
+  return query as Q;
+}
+
 export function createJqx<Q>(backend: JqxTypedBackend<Q>): JqxTypedClient<Q>;
 export function createJqx(backend: JqxBackend): JqxClient;
 export function createJqx<Q>(
@@ -137,14 +153,16 @@ export function createJqx<Q>(
     const typedClient: JqxTypedClient<Q> = {
       ...client,
       queryRaw(query, input) {
-        return toPromise(backend.runQueryRaw(query, input));
+        const normalized = normalizeTypedQueryInput(query);
+        return toPromise(backend.runQueryRaw(normalized, input));
       },
       async query(query, input) {
+        const normalized = normalizeTypedQueryInput(query);
         const encoded = encodeRuntimeInput(input);
         if (!encoded.ok) {
           return encoded;
         }
-        const runtimeOut = await toPromise(backend.runQueryRaw(query, encoded.value));
+        const runtimeOut = await toPromise(backend.runQueryRaw(normalized, encoded.value));
         if (!runtimeOut.ok) {
           return runtimeOut;
         }

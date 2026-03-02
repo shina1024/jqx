@@ -1,6 +1,6 @@
 # Agent TODO
 
-Updated: 2026-03-01
+Updated: 2026-03-03
 
 ## Current baseline (2026-02-28)
 
@@ -74,6 +74,17 @@ Updated: 2026-03-01
 - [x] Zod/Yup/Valibotの実ランタイム接続例をREADMEに追加する（mockではない配線例）
 - [x] Typed DSLコンビネータを拡張し、compile-time推論テストを追加する（`ts/adapter-core/src/typed_query.ts` + `ts/adapter-core/test/typecheck.ts` + `ts/jqx/test/typecheck.ts`）
 
+## P1: JS/TSライブラリ価値最大化
+
+- [ ] Typed lane の最適UXを確定する（`query/queryRaw` の `Query`/`QueryAst` 受理方針を一本化し、型補完と実行時挙動を単純化）
+- [ ] 入出力モデルを最適化する（`input`/`output` を `Json` 中心に寄せるか `unknown` を維持するか決め、schema連携時のDXを最大化）
+- [ ] エラーモデルを利用者中心に再設計する（`string | JqxError` から判別可能 union + helper API を検討）
+- [ ] `QueryAst` を外部連携向けに仕様化する（versioning / 互換ルール / import-export 形式を整備）
+- [ ] 大規模データ向けレーンを設計する（`AsyncIterable` ベースの streaming API を追加し、`Json[]` バッファ前提を緩和）
+- [ ] capability 表現を改善する（`hasTypedRuntime` 依存を減らし、factory段階で機能差を明示）
+- [ ] 公開APIの型テストを強化する（`expect-type` で主要ユースケースを固定し、DX回 regressions を即検知）
+- [ ] 利用者導線を強化する（README に backend 実装契約 + 実運用レシピ + エラーハンドリング指針を追加）
+
 ## P1: コードベース保守性（リファクタリング）
 
 - [x] 公開API命名をjq寄せに揃える（`compile`/`execute` を主、旧名は互換alias）
@@ -104,3 +115,7 @@ Updated: 2026-03-01
 
 - [x] Typed DSL の実行レーン（QueryAst -> runtime）を標準化する（`ts/jqx` に `runTypedQuery` / `runTypedQueryAst` を追加）
 - [x] regex translator の `TODO: merge sequences` を解消する（`core/internal/regex_engine/translate.mbt` で先頭 `Char` 共通分岐の merge を実装）
+
+## Done (2026-03-03)
+
+- [x] JS/TS runtime API を `createJqx` 中心へ再設計する（`run/query` は JSON 入出力、`runRaw/queryRaw` は backend 契約として分離）

@@ -1,7 +1,14 @@
 import * as assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { createJqx, type JqxBackend, type JqxTypedBackend, type QueryAst } from "../src/index.js";
+import {
+  createJqx,
+  field,
+  toAst,
+  type JqxBackend,
+  type JqxTypedBackend,
+  type QueryAst,
+} from "../src/index.js";
 
 test("createJqx delegates runRaw", async () => {
   const backend: JqxBackend = {
@@ -59,17 +66,19 @@ test("createJqx typed client supports queryRaw and query", async () => {
     },
   };
   const jqx = createJqx(backend);
+  const dslQuery = field("user");
+  const queryAst = toAst(dslQuery);
 
-  const rawResult = await jqx.queryRaw({ kind: "identity" }, '{"user":{"name":"alice"}}');
+  const rawResult = await jqx.queryRaw(queryAst, '{"user":{"name":"alice"}}');
   assert.equal(rawResult.ok, true);
 
-  const result = await jqx.query({ kind: "identity" }, { user: { name: "alice" } });
+  const result = await jqx.query(dslQuery, { user: { name: "alice" } });
   assert.equal(result.ok, true);
   if (result.ok) {
     assert.deepEqual(result.value, [{ name: "alice" }]);
   }
   assert.deepEqual(calls, [
-    { query: { kind: "identity" }, input: '{"user":{"name":"alice"}}' },
-    { query: { kind: "identity" }, input: '{"user":{"name":"alice"}}' },
+    { query: queryAst, input: '{"user":{"name":"alice"}}' },
+    { query: queryAst, input: '{"user":{"name":"alice"}}' },
   ]);
 });
