@@ -10,6 +10,7 @@ import {
   type InferJqOutput,
   type InferenceFallbackMode,
   type InferredOptions,
+  type Json,
   type JqxRuntime,
   type JqxResult,
   type JqxTypedRuntime,
@@ -47,7 +48,11 @@ export interface DynamicAdapter {
   filter<InSchema extends z.ZodTypeAny, OutSchema extends z.ZodTypeAny>(
     options: FilterOptions<InSchema, OutSchema>,
   ): Promise<JqxResult<z.output<OutSchema>[], AdapterError>>;
-  inferred<Filter extends string, Input, Mode extends InferenceFallbackMode = "unknown">(
+  inferred<
+    Filter extends string,
+    Input extends Json,
+    Mode extends InferenceFallbackMode = "unknown",
+  >(
     options: InferredOptions<Filter, Input, Mode>,
   ): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], string>>;
 }

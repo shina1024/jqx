@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { JqxRuntime, JqxTypedRuntime } from "../src/index.js";
+import type { Json, JqxRuntime, JqxTypedRuntime } from "../src/index.js";
 
 type TestResult = { ok: true; value: unknown } | { ok: false; error: unknown };
 
@@ -21,7 +21,7 @@ type QueryOptions<Schema> = {
 
 type InferredOptions = {
   filter: string;
-  input: unknown;
+  input: Json;
 };
 
 type DynamicAdapterLike<Schema> = {

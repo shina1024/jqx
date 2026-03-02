@@ -47,6 +47,8 @@ const runOut = jqx.run(".", { user: { name: "a" } });
 expectTypeOf(runOut).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeError>>>();
 const runRawOut = jqx.runRaw(".", '{"user":{"name":"a"}}');
 expectTypeOf(runRawOut).toEqualTypeOf<Promise<JqxResult<string[], JqxRuntimeError>>>();
+// @ts-expect-error `undefined` is not a JSON value.
+jqx.run(".", { user: undefined });
 
 declare const typedBackend: JqxTypedBackend<QueryAst>;
 const typedJqx = createJqx(typedBackend);
@@ -59,6 +61,8 @@ const typedRawOut = typedJqx.queryRaw(ast, '{"user":{"name":"a"}}');
 expectTypeOf(typedRawOut).toEqualTypeOf<Promise<JqxResult<string[], JqxRuntimeError>>>();
 const typedRawOutFromDsl = typedJqx.queryRaw(nameQuery, '{"user":{"name":"a"}}');
 expectTypeOf(typedRawOutFromDsl).toEqualTypeOf<Promise<JqxResult<string[], JqxRuntimeError>>>();
+// @ts-expect-error `undefined` is not a JSON value.
+typedJqx.query(ast, { user: undefined });
 
 type CustomQuery = { kind: "custom"; key: string };
 declare const customBackend: JqxTypedBackend<CustomQuery>;

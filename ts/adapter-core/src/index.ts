@@ -15,11 +15,11 @@ export type JqxRuntimeError = string | JqxError;
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
 export interface JqxRuntime {
-  run(filter: string, input: unknown): MaybePromise<JqxResult<Json[], JqxRuntimeError>>;
+  run(filter: string, input: Json): MaybePromise<JqxResult<Json[], JqxRuntimeError>>;
 }
 
 export interface JqxTypedRuntime<Q = unknown> {
-  query(query: Q, input: unknown): MaybePromise<JqxResult<Json[], JqxRuntimeError>>;
+  query(query: Q, input: Json): MaybePromise<JqxResult<Json[], JqxRuntimeError>>;
 }
 
 export * from "./typed_query.js";
@@ -115,7 +115,7 @@ export type InferJqOutput<
 
 export interface InferredOptions<
   Filter extends string,
-  Input,
+  Input extends Json,
   Mode extends InferenceFallbackMode = "unknown",
 > {
   filter: Filter;
@@ -205,7 +205,13 @@ async function parseAndValidateOutputs<OutSchema, OutValue, Issues>(
   return { ok: true, value: validated };
 }
 
-export async function runFilterWithValidation<InSchema, OutSchema, InValue, OutValue, Issues>(
+export async function runFilterWithValidation<
+  InSchema,
+  OutSchema,
+  InValue extends Json,
+  OutValue,
+  Issues,
+>(
   runtime: JqxRuntime,
   options: FilterOptions<InSchema, OutSchema>,
   hooks: ValidationHooks<InSchema, OutSchema, InValue, OutValue, Issues>,
@@ -234,7 +240,14 @@ export async function runFilterWithValidation<InSchema, OutSchema, InValue, OutV
   );
 }
 
-export async function runQueryWithValidation<Q, InSchema, OutSchema, InValue, OutValue, Issues>(
+export async function runQueryWithValidation<
+  Q,
+  InSchema,
+  OutSchema,
+  InValue extends Json,
+  OutValue,
+  Issues,
+>(
   runtime: JqxTypedRuntime<Q>,
   options: QueryOptions<Q, InSchema, OutSchema>,
   hooks: ValidationHooks<InSchema, OutSchema, InValue, OutValue, Issues>,
@@ -265,7 +278,7 @@ export async function runQueryWithValidation<Q, InSchema, OutSchema, InValue, Ou
 
 export async function runInferred<
   Filter extends string,
-  Input,
+  Input extends Json,
   Mode extends InferenceFallbackMode = "unknown",
 >(
   runtime: JqxRuntime,

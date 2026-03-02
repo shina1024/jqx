@@ -62,22 +62,19 @@ export interface JqxTypedBackend<Q = QueryAst> extends JqxBackend {
 }
 
 export interface JqxClient extends JqxRuntime {
-  run(filter: string, input: unknown): Promise<JqxResult<Json[], JqxRuntimeError>>;
+  run(filter: string, input: Json): Promise<JqxResult<Json[], JqxRuntimeError>>;
   runRaw(filter: string, input: string): Promise<JqxResult<string[], JqxRuntimeError>>;
 }
 
 type TypedDslQuery = Query<unknown, unknown, QueryAst>;
 
 export interface JqxTypedClient<Q = QueryAst> extends JqxClient, JqxTypedRuntime<Q> {
-  query(query: Q, input: unknown): Promise<JqxResult<Json[], JqxRuntimeError>>;
+  query(query: Q, input: Json): Promise<JqxResult<Json[], JqxRuntimeError>>;
   queryRaw(query: Q, input: string): Promise<JqxResult<string[], JqxRuntimeError>>;
 }
 
 export interface JqxAstClient extends JqxTypedClient<QueryAst> {
-  query(
-    query: QueryAst | TypedDslQuery,
-    input: unknown,
-  ): Promise<JqxResult<Json[], JqxRuntimeError>>;
+  query(query: QueryAst | TypedDslQuery, input: Json): Promise<JqxResult<Json[], JqxRuntimeError>>;
   queryRaw(
     query: QueryAst | TypedDslQuery,
     input: string,
@@ -88,7 +85,7 @@ function toPromise<T>(value: MaybePromise<T>): Promise<T> {
   return Promise.resolve(value);
 }
 
-function encodeRuntimeInput(input: unknown): JqxResult<string, JqxRuntimeError> {
+function encodeRuntimeInput(input: Json): JqxResult<string, JqxRuntimeError> {
   try {
     const encoded = JSON.stringify(input);
     if (typeof encoded !== "string") {
@@ -175,7 +172,7 @@ export function createJqx<Q>(
         }
         return toPromise(backend.runQueryRaw(normalized as Q, input));
       },
-      async query(query: unknown, input: unknown) {
+      async query(query: unknown, input: Json) {
         let normalized: unknown = query;
         if (isTypedDslQuery(query)) {
           normalized = normalizeAstQueryInput(query);

@@ -25,6 +25,7 @@ const jqx = createJqx({
 });
 
 const out = await jqx.run(".", { x: 1 }); // Json[] output
+// `run` / `query` inputs are Json values.
 ```
 
 ## Typed DSL (compile-time inference)
