@@ -101,7 +101,7 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
   test(`${label}: adapter.filter returns runtime error`, async () => {
     const runtime: JqxRuntime = {
       run() {
-        return { ok: false, error: "boom" };
+        return { ok: false, error: { kind: "backend_runtime", message: "boom" } };
       },
     };
     const adapter = createDynamicAdapter(runtime);
@@ -186,7 +186,7 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
   test(`${label}: adapter.inferred returns runtime error`, async () => {
     const runtime: JqxRuntime = {
       run() {
-        return { ok: false, error: "boom" };
+        return { ok: false, error: { kind: "backend_runtime", message: "boom" } };
       },
     };
     const adapter = createDynamicAdapter(runtime);

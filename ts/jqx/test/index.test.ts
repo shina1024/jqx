@@ -6,6 +6,7 @@ import {
   field,
   toAst,
   type JqxBackend,
+  type JqxRuntimeError,
   type JqxTypedBackend,
   type QueryAst,
 } from "../src/index.js";
@@ -50,7 +51,24 @@ test("createJqx run returns parse error for invalid raw JSON", async () => {
   const result = await jqx.run(".", 1);
   assert.equal(result.ok, false);
   if (!result.ok) {
-    assert.match(String(result.error), /output_parse at index 0/);
+    assert.equal(result.error.kind, "output_parse");
+    if (result.error.kind === "output_parse") {
+      assert.equal(result.error.index, 0);
+    }
+  }
+});
+
+test("createJqx normalizes legacy backend string errors", async () => {
+  const backend: JqxBackend = {
+    runRaw() {
+      return { ok: false as const, error: "boom" as unknown as JqxRuntimeError };
+    },
+  };
+  const jqx = createJqx(backend);
+  const rawOut = await jqx.runRaw(".", "{}");
+  assert.equal(rawOut.ok, false);
+  if (!rawOut.ok) {
+    assert.deepEqual(rawOut.error, { kind: "backend_runtime", message: "boom" });
   }
 });
 

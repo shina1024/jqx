@@ -10,7 +10,27 @@ export interface JqxError {
   offset: number;
 }
 
-export type JqxRuntimeError = string | JqxError;
+export interface JqxBackendRuntimeError {
+  kind: "backend_runtime";
+  message: string;
+  details?: Partial<JqxError>;
+}
+
+export interface JqxInputStringifyRuntimeError {
+  kind: "input_stringify";
+  message: string;
+}
+
+export interface JqxOutputParseRuntimeError {
+  kind: "output_parse";
+  message: string;
+  index: number;
+}
+
+export type JqxRuntimeError =
+  | JqxBackendRuntimeError
+  | JqxInputStringifyRuntimeError
+  | JqxOutputParseRuntimeError;
 
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
@@ -176,8 +196,80 @@ function fail<T, E>(error: E): JqxResult<T, E> {
   return { ok: false, error };
 }
 
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+export function isJqxError(value: unknown): value is JqxError {
+  if (!isObjectRecord(value)) {
+    return false;
+  }
+  return (
+    typeof value.code === "string" &&
+    typeof value.message === "string" &&
+    typeof value.line === "number" &&
+    typeof value.column === "number" &&
+    typeof value.offset === "number"
+  );
+}
+
+export function isJqxRuntimeError(value: unknown): value is JqxRuntimeError {
+  if (
+    !isObjectRecord(value) ||
+    typeof value.kind !== "string" ||
+    typeof value.message !== "string"
+  ) {
+    return false;
+  }
+  if (value.kind === "backend_runtime") {
+    return value.details === undefined || isObjectRecord(value.details);
+  }
+  if (value.kind === "input_stringify") {
+    return true;
+  }
+  if (value.kind === "output_parse") {
+    return typeof value.index === "number";
+  }
+  return false;
+}
+
+export function toJqxRuntimeError(error: unknown): JqxRuntimeError {
+  if (isJqxRuntimeError(error)) {
+    return error;
+  }
+  if (isJqxError(error)) {
+    return {
+      kind: "backend_runtime",
+      message: error.message,
+      details: error,
+    };
+  }
+  if (typeof error === "string") {
+    return {
+      kind: "backend_runtime",
+      message: error,
+    };
+  }
+  if (error instanceof Error) {
+    return {
+      kind: "backend_runtime",
+      message: error.message,
+    };
+  }
+  if (isObjectRecord(error) && typeof error.message === "string") {
+    return {
+      kind: "backend_runtime",
+      message: error.message,
+    };
+  }
+  return {
+    kind: "backend_runtime",
+    message: "Unknown runtime error",
+  };
+}
+
 export function runtimeErrorToMessage(error: JqxRuntimeError): string {
-  return typeof error === "string" ? error : error.message;
+  return error.message;
 }
 
 async function parseAndValidateOutputs<OutSchema, OutValue, Issues>(

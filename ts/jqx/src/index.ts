@@ -1,4 +1,4 @@
-import { toAst as toQueryAst } from "@shina1024/jqx-adapter-core";
+import { toAst as toQueryAst, toJqxRuntimeError } from "@shina1024/jqx-adapter-core";
 
 import type {
   Json,
@@ -22,7 +22,10 @@ export type {
   QueryInput,
   QueryOutput,
   JqxRuntime,
+  JqxBackendRuntimeError,
   JqxError,
+  JqxInputStringifyRuntimeError,
+  JqxOutputParseRuntimeError,
   JqxResult,
   JqxRuntimeError,
   JqxTypedRuntime,
@@ -51,6 +54,13 @@ export {
   select,
   toAst,
   tryCatch,
+} from "@shina1024/jqx-adapter-core";
+
+export {
+  isJqxError,
+  isJqxRuntimeError,
+  runtimeErrorToMessage,
+  toJqxRuntimeError,
 } from "@shina1024/jqx-adapter-core";
 
 export interface JqxBackend {
@@ -85,20 +95,35 @@ function toPromise<T>(value: MaybePromise<T>): Promise<T> {
   return Promise.resolve(value);
 }
 
+function normalizeRuntimeResult<T>(
+  result: JqxResult<T, JqxRuntimeError>,
+): JqxResult<T, JqxRuntimeError> {
+  if (result.ok) {
+    return result;
+  }
+  return { ok: false, error: toJqxRuntimeError(result.error) };
+}
+
 function encodeRuntimeInput(input: Json): JqxResult<string, JqxRuntimeError> {
   try {
     const encoded = JSON.stringify(input);
     if (typeof encoded !== "string") {
       return {
         ok: false,
-        error: "input_stringify failed: JSON.stringify returned undefined",
+        error: {
+          kind: "input_stringify",
+          message: "JSON.stringify returned undefined",
+        },
       };
     }
     return { ok: true, value: encoded };
   } catch (error) {
     return {
       ok: false,
-      error: `input_stringify failed: ${error instanceof Error ? error.message : "Failed to stringify input"}`,
+      error: {
+        kind: "input_stringify",
+        message: error instanceof Error ? error.message : "Failed to stringify input",
+      },
     };
   }
 }
@@ -111,7 +136,11 @@ function decodeRuntimeOutputs(rawValues: string[]): JqxResult<Json[], JqxRuntime
     } catch (error) {
       return {
         ok: false,
-        error: `output_parse at index ${index}: ${error instanceof Error ? error.message : "Failed to parse output"}`,
+        error: {
+          kind: "output_parse",
+          index,
+          message: error instanceof Error ? error.message : "Failed to parse output",
+        },
       };
     }
   }
@@ -146,8 +175,9 @@ export function createJqx<Q>(
   backend: JqxBackend & Partial<JqxTypedBackend<Q>>,
 ): JqxClient | JqxTypedClient<Q> | JqxAstClient {
   const client: JqxClient = {
-    runRaw(filter, input) {
-      return toPromise(backend.runRaw(filter, input));
+    async runRaw(filter, input) {
+      const runtimeOut = await toPromise(backend.runRaw(filter, input));
+      return normalizeRuntimeResult(runtimeOut);
     },
     async run(filter, input) {
       const encoded = encodeRuntimeInput(input);
@@ -155,10 +185,11 @@ export function createJqx<Q>(
         return encoded;
       }
       const runtimeOut = await toPromise(backend.runRaw(filter, encoded.value));
-      if (!runtimeOut.ok) {
-        return runtimeOut;
+      const normalizedOut = normalizeRuntimeResult(runtimeOut);
+      if (!normalizedOut.ok) {
+        return normalizedOut;
       }
-      return decodeRuntimeOutputs(runtimeOut.value);
+      return decodeRuntimeOutputs(normalizedOut.value);
     },
   };
 
@@ -170,7 +201,7 @@ export function createJqx<Q>(
         if (isTypedDslQuery(query)) {
           normalized = normalizeAstQueryInput(query);
         }
-        return toPromise(backend.runQueryRaw(normalized as Q, input));
+        return toPromise(backend.runQueryRaw(normalized as Q, input)).then(normalizeRuntimeResult);
       },
       async query(query: unknown, input: Json) {
         let normalized: unknown = query;
@@ -182,10 +213,11 @@ export function createJqx<Q>(
           return encoded;
         }
         const runtimeOut = await toPromise(backend.runQueryRaw(normalized as Q, encoded.value));
-        if (!runtimeOut.ok) {
-          return runtimeOut;
+        const normalizedOut = normalizeRuntimeResult(runtimeOut);
+        if (!normalizedOut.ok) {
+          return normalizedOut;
         }
-        return decodeRuntimeOutputs(runtimeOut.value);
+        return decodeRuntimeOutputs(normalizedOut.value);
       },
     };
     return typedCore as JqxTypedClient<Q>;

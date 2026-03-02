@@ -5,15 +5,20 @@ import {
   field,
   gt,
   identity,
+  isJqxRuntimeError,
   iter,
   literal,
   pipe,
+  runtimeErrorToMessage,
   select,
   toAst,
+  toJqxRuntimeError,
 } from "../src/index.js";
 import type {
   InferTypedQueryOutput,
   JqxBackend,
+  JqxBackendRuntimeError,
+  JqxError,
   Json,
   JqxResult,
   JqxRuntimeError,
@@ -74,3 +79,22 @@ const customTypedOut = customJqx.query(
 expectTypeOf(customTypedOut).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeError>>>();
 // @ts-expect-error Typed DSL query input is only available when backend query type is QueryAst.
 customJqx.query(nameQuery, { user: { name: "a" } });
+
+const normalizedRuntimeError = toJqxRuntimeError("boom");
+expectTypeOf(normalizedRuntimeError).toEqualTypeOf<JqxRuntimeError>();
+if (isJqxRuntimeError(normalizedRuntimeError)) {
+  expectTypeOf(normalizedRuntimeError).toEqualTypeOf<JqxRuntimeError>();
+}
+
+const backendRuntimeError: JqxBackendRuntimeError = {
+  kind: "backend_runtime",
+  message: "boom",
+  details: {
+    code: "E",
+    message: "boom",
+    line: 1,
+    column: 1,
+    offset: 0,
+  } satisfies JqxError,
+};
+expectTypeOf(runtimeErrorToMessage(backendRuntimeError)).toEqualTypeOf<string>();

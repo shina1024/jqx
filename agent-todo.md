@@ -78,7 +78,7 @@ Updated: 2026-03-03
 
 - [x] Typed lane の最適UXを確定する（`JqxTypedClient<Q>` は `Q` を厳密受理、`QueryAst` backend 向けに `JqxAstClient` で `Query` 直渡しを許可）
 - [x] 入出力モデルを最適化する（コア実行APIの `input` を `Json` 契約に統一、`runRaw/queryRaw` を文字列境界として分離）
-- [ ] エラーモデルを利用者中心に再設計する（`string | JqxError` から判別可能 union + helper API を検討）
+- [x] エラーモデルを利用者中心に再設計する（`JqxRuntimeError` を判別可能 union 化し、`toJqxRuntimeError` / `isJqxRuntimeError` / `runtimeErrorToMessage` を追加）
 - [ ] `QueryAst` を外部連携向けに仕様化する（versioning / 互換ルール / import-export 形式を整備）
 - [ ] 大規模データ向けレーンを設計する（`AsyncIterable` ベースの streaming API を追加し、`Json[]` バッファ前提を緩和）
 - [ ] capability 表現を改善する（`hasTypedRuntime` 依存を減らし、factory段階で機能差を明示）

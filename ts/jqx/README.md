@@ -28,6 +28,20 @@ const out = await jqx.run(".", { x: 1 }); // Json[] output
 // `run` / `query` inputs are Json values.
 ```
 
+## Runtime Error Model
+
+`run` / `query` / `runRaw` / `queryRaw` return `JqxRuntimeError` as a discriminated union:
+
+- `{ kind: "backend_runtime", message, details? }`
+- `{ kind: "input_stringify", message }`
+- `{ kind: "output_parse", message, index }`
+
+Helpers:
+
+- `runtimeErrorToMessage(error)`
+- `isJqxRuntimeError(value)`
+- `toJqxRuntimeError(value)`
+
 ## Typed DSL (compile-time inference)
 
 ```ts
