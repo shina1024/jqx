@@ -69,8 +69,19 @@ export interface JqxClient extends JqxRuntime {
 type TypedDslQuery = Query<unknown, unknown, QueryAst>;
 
 export interface JqxTypedClient<Q = QueryAst> extends JqxClient, JqxTypedRuntime<Q> {
-  query(query: Q | TypedDslQuery, input: unknown): Promise<JqxResult<Json[], JqxRuntimeError>>;
-  queryRaw(query: Q | TypedDslQuery, input: string): Promise<JqxResult<string[], JqxRuntimeError>>;
+  query(query: Q, input: unknown): Promise<JqxResult<Json[], JqxRuntimeError>>;
+  queryRaw(query: Q, input: string): Promise<JqxResult<string[], JqxRuntimeError>>;
+}
+
+export interface JqxAstClient extends JqxTypedClient<QueryAst> {
+  query(
+    query: QueryAst | TypedDslQuery,
+    input: unknown,
+  ): Promise<JqxResult<Json[], JqxRuntimeError>>;
+  queryRaw(
+    query: QueryAst | TypedDslQuery,
+    input: string,
+  ): Promise<JqxResult<string[], JqxRuntimeError>>;
 }
 
 function toPromise<T>(value: MaybePromise<T>): Promise<T> {
@@ -117,21 +128,26 @@ function hasTypedBackend<Q>(
 }
 
 function isTypedDslQuery(value: unknown): value is TypedDslQuery {
-  return typeof value === "object" && value !== null && "ast" in value;
-}
-
-function normalizeTypedQueryInput<Q>(query: Q | TypedDslQuery): Q {
-  if (isTypedDslQuery(query)) {
-    return toQueryAst(query) as Q;
+  if (typeof value !== "object" || value === null || !("ast" in value)) {
+    return false;
   }
-  return query as Q;
+  const keys = Object.keys(value as Record<string, unknown>);
+  return keys.length === 1 && keys[0] === "ast";
 }
 
+function normalizeAstQueryInput(query: QueryAst | TypedDslQuery): QueryAst {
+  if (isTypedDslQuery(query)) {
+    return toQueryAst(query);
+  }
+  return query;
+}
+
+export function createJqx(backend: JqxTypedBackend<QueryAst>): JqxAstClient;
 export function createJqx<Q>(backend: JqxTypedBackend<Q>): JqxTypedClient<Q>;
 export function createJqx(backend: JqxBackend): JqxClient;
 export function createJqx<Q>(
   backend: JqxBackend & Partial<JqxTypedBackend<Q>>,
-): JqxClient | JqxTypedClient<Q> {
+): JqxClient | JqxTypedClient<Q> | JqxAstClient {
   const client: JqxClient = {
     runRaw(filter, input) {
       return toPromise(backend.runRaw(filter, input));
@@ -150,26 +166,32 @@ export function createJqx<Q>(
   };
 
   if (hasTypedBackend(backend)) {
-    const typedClient: JqxTypedClient<Q> = {
+    const typedCore = {
       ...client,
-      queryRaw(query, input) {
-        const normalized = normalizeTypedQueryInput(query);
-        return toPromise(backend.runQueryRaw(normalized, input));
+      queryRaw(query: unknown, input: string) {
+        let normalized: unknown = query;
+        if (isTypedDslQuery(query)) {
+          normalized = normalizeAstQueryInput(query);
+        }
+        return toPromise(backend.runQueryRaw(normalized as Q, input));
       },
-      async query(query, input) {
-        const normalized = normalizeTypedQueryInput(query);
+      async query(query: unknown, input: unknown) {
+        let normalized: unknown = query;
+        if (isTypedDslQuery(query)) {
+          normalized = normalizeAstQueryInput(query);
+        }
         const encoded = encodeRuntimeInput(input);
         if (!encoded.ok) {
           return encoded;
         }
-        const runtimeOut = await toPromise(backend.runQueryRaw(normalized, encoded.value));
+        const runtimeOut = await toPromise(backend.runQueryRaw(normalized as Q, encoded.value));
         if (!runtimeOut.ok) {
           return runtimeOut;
         }
         return decodeRuntimeOutputs(runtimeOut.value);
       },
     };
-    return typedClient;
+    return typedCore as JqxTypedClient<Q>;
   }
 
   return client;

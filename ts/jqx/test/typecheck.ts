@@ -59,3 +59,14 @@ const typedRawOut = typedJqx.queryRaw(ast, '{"user":{"name":"a"}}');
 expectTypeOf(typedRawOut).toEqualTypeOf<Promise<JqxResult<string[], JqxRuntimeError>>>();
 const typedRawOutFromDsl = typedJqx.queryRaw(nameQuery, '{"user":{"name":"a"}}');
 expectTypeOf(typedRawOutFromDsl).toEqualTypeOf<Promise<JqxResult<string[], JqxRuntimeError>>>();
+
+type CustomQuery = { kind: "custom"; key: string };
+declare const customBackend: JqxTypedBackend<CustomQuery>;
+const customJqx = createJqx(customBackend);
+const customTypedOut = customJqx.query(
+  { kind: "custom", key: "user.name" },
+  { user: { name: "a" } },
+);
+expectTypeOf(customTypedOut).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeError>>>();
+// @ts-expect-error Typed DSL query input is only available when backend query type is QueryAst.
+customJqx.query(nameQuery, { user: { name: "a" } });
