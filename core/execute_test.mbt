@@ -1290,6 +1290,10 @@ test "execute regex alternation sequence merge compatibility" {
     [must_parse("{\"offset\":0,\"length\":1,\"string\":\"a\",\"captures\":[]}")],
   )
   assert_eq(
+    must_execute(parse_filter("match(\"ab|[ac]|ac\")"), must_parse("\"ac\"")),
+    [must_parse("{\"offset\":0,\"length\":1,\"string\":\"a\",\"captures\":[]}")],
+  )
+  assert_eq(
     must_execute(parse_filter("match(\"ab|ac\")"), must_parse("\"ac\"")),
     [
       must_parse(

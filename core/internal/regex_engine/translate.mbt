@@ -134,42 +134,38 @@ fn rechar_set_equal(a : RecharSet, b : RecharSet) -> Bool {
 
 ///|
 /// Merge alternation branches that share the same leading `Char`.
-/// This keeps branch order for each head and avoids touching non-char prefixes.
+/// This only merges contiguous branches to preserve left-to-right priority.
 fn merge_alternation_sequences(
   exprs : ReadOnlyArray[Pattern],
 ) -> Array[Pattern] {
-  let consumed = []
-  for _ in 0..<exprs.length() {
-    consumed.push(false)
-  }
   let merged = []
-  for i in 0..<exprs.length() {
-    if consumed[i] {
-      continue
-    }
-    match split_char_head(exprs[i]) {
+  let mut i = 0
+  while i < exprs.length() {
+    let current = exprs[i]
+    match split_char_head(current) {
       Some((head, tail)) => {
         let tails = [tail]
-        let from = i + 1
-        for j in from..<exprs.length() {
-          if consumed[j] {
-            continue
-          }
+        let mut j = i + 1
+        while j < exprs.length() {
           match split_char_head(exprs[j]) {
             Some((head2, tail2)) if rechar_set_equal(head2, head) => {
-              consumed[j] = true
               tails.push(tail2)
+              j += 1
             }
-            _ => ()
+            _ => break
           }
         }
         if tails.length() > 1 {
           merged.push(seq([char(head), alt(ReadOnlyArray::from_array(tails))]))
         } else {
-          merged.push(exprs[i])
+          merged.push(current)
         }
+        i = j
       }
-      None => merged.push(exprs[i])
+      None => {
+        merged.push(current)
+        i += 1
+      }
     }
   }
   merged
