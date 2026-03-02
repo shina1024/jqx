@@ -34,18 +34,18 @@ export type {
 export type AdapterError = CoreAdapterError<z.ZodIssue[]>;
 
 export interface FilterOptions<
-  InSchema extends z.ZodTypeAny,
+  InSchema extends z.ZodType<Json>,
   OutSchema extends z.ZodTypeAny,
 > extends CoreFilterOptions<InSchema, OutSchema> {}
 
 export interface QueryOptions<
   Q,
-  InSchema extends z.ZodTypeAny,
+  InSchema extends z.ZodType<Json>,
   OutSchema extends z.ZodTypeAny,
 > extends CoreQueryOptions<Q, InSchema, OutSchema> {}
 
 export interface DynamicAdapter {
-  filter<InSchema extends z.ZodTypeAny, OutSchema extends z.ZodTypeAny>(
+  filter<InSchema extends z.ZodType<Json>, OutSchema extends z.ZodTypeAny>(
     options: FilterOptions<InSchema, OutSchema>,
   ): Promise<JqxResult<z.output<OutSchema>[], AdapterError>>;
   inferred<
@@ -58,7 +58,7 @@ export interface DynamicAdapter {
 }
 
 export interface TypedAdapter<Q> extends DynamicAdapter {
-  query<InSchema extends z.ZodTypeAny, OutSchema extends z.ZodTypeAny>(
+  query<InSchema extends z.ZodType<Json>, OutSchema extends z.ZodTypeAny>(
     options: QueryOptions<Q, InSchema, OutSchema>,
   ): Promise<JqxResult<z.output<OutSchema>[], AdapterError>>;
 }
