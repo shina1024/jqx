@@ -12,15 +12,15 @@ export interface JqxError {
 
 export type JqxRuntimeError = string | JqxError;
 
-export interface JqxDynamicRuntime {
-  run(filter: string, input: string): MaybePromise<JqxResult<string[], JqxRuntimeError>>;
+export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
+
+export interface JqxRuntime {
+  run(filter: string, input: unknown): MaybePromise<JqxResult<Json[], JqxRuntimeError>>;
 }
 
 export interface JqxTypedRuntime<Q = unknown> {
-  runQuery(query: Q, input: string): MaybePromise<JqxResult<string[], JqxRuntimeError>>;
+  query(query: Q, input: unknown): MaybePromise<JqxResult<Json[], JqxRuntimeError>>;
 }
-
-export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
 export * from "./typed_query.js";
 
@@ -149,12 +149,6 @@ export type AdapterError<Issues> =
       runtimeError: JqxRuntimeError;
     }
   | {
-      kind: "output_parse";
-      index: number;
-      raw: string;
-      message: string;
-    }
-  | {
       kind: "output_validation";
       index: number;
       message: string;
@@ -186,24 +180,9 @@ export function runtimeErrorToMessage(error: JqxRuntimeError): string {
   return typeof error === "string" ? error : error.message;
 }
 
-export function parseRuntimeJsonOutputs(rawValues: string[]): JqxResult<unknown[]> {
-  const parsed: unknown[] = [];
-  for (const [index, raw] of rawValues.entries()) {
-    try {
-      parsed.push(JSON.parse(raw));
-    } catch (error) {
-      return {
-        ok: false,
-        error: `output_parse at index ${index}: ${error instanceof Error ? error.message : "Failed to parse output"}`,
-      };
-    }
-  }
-  return { ok: true, value: parsed };
-}
-
 async function parseAndValidateOutputs<OutSchema, OutValue, Issues>(
   outputSchema: OutSchema,
-  rawValues: string[],
+  values: Json[],
   validateOutput: (
     schema: OutSchema,
     input: unknown,
@@ -211,19 +190,8 @@ async function parseAndValidateOutputs<OutSchema, OutValue, Issues>(
   outputValidationMessage: string,
 ): Promise<JqxResult<OutValue[], AdapterError<Issues>>> {
   const validated: OutValue[] = [];
-  for (const [index, raw] of rawValues.entries()) {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (error) {
-      return fail({
-        kind: "output_parse",
-        index,
-        raw,
-        message: error instanceof Error ? error.message : "Failed to parse output",
-      });
-    }
-    const parsedOut = await validateOutput(outputSchema, parsed);
+  for (const [index, value] of values.entries()) {
+    const parsedOut = await validateOutput(outputSchema, value);
     if (!parsedOut.ok) {
       return fail({
         kind: "output_validation",
@@ -238,7 +206,7 @@ async function parseAndValidateOutputs<OutSchema, OutValue, Issues>(
 }
 
 export async function runFilterWithValidation<InSchema, OutSchema, InValue, OutValue, Issues>(
-  runtime: JqxDynamicRuntime,
+  runtime: JqxRuntime,
   options: FilterOptions<InSchema, OutSchema>,
   hooks: ValidationHooks<InSchema, OutSchema, InValue, OutValue, Issues>,
 ): Promise<JqxResult<OutValue[], AdapterError<Issues>>> {
@@ -250,7 +218,7 @@ export async function runFilterWithValidation<InSchema, OutSchema, InValue, OutV
       issues: parsedIn.issues,
     });
   }
-  const runtimeOut = await runtime.run(options.filter, JSON.stringify(parsedIn.value));
+  const runtimeOut = await runtime.run(options.filter, parsedIn.value);
   if (!runtimeOut.ok) {
     return fail({
       kind: "runtime",
@@ -279,7 +247,7 @@ export async function runQueryWithValidation<Q, InSchema, OutSchema, InValue, Ou
       issues: parsedIn.issues,
     });
   }
-  const runtimeOut = await runtime.runQuery(options.query, JSON.stringify(parsedIn.value));
+  const runtimeOut = await runtime.query(options.query, parsedIn.value);
   if (!runtimeOut.ok) {
     return fail({
       kind: "runtime",
@@ -300,22 +268,18 @@ export async function runInferred<
   Input,
   Mode extends InferenceFallbackMode = "unknown",
 >(
-  runtime: JqxDynamicRuntime,
+  runtime: JqxRuntime,
   options: InferredOptions<Filter, Input, Mode>,
 ): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], string>> {
-  const runtimeOut = await runtime.run(options.filter, JSON.stringify(options.input));
+  const runtimeOut = await runtime.run(options.filter, options.input);
   if (!runtimeOut.ok) {
     return { ok: false, error: runtimeErrorToMessage(runtimeOut.error) };
   }
-  const parsed = parseRuntimeJsonOutputs(runtimeOut.value);
-  if (!parsed.ok) {
-    return parsed;
-  }
-  return { ok: true, value: parsed.value as InferJqOutput<Input, Filter, Mode>[] };
+  return { ok: true, value: runtimeOut.value as InferJqOutput<Input, Filter, Mode>[] };
 }
 
 export function hasTypedRuntime<Q>(
-  runtime: JqxDynamicRuntime & Partial<JqxTypedRuntime<Q>>,
-): runtime is JqxDynamicRuntime & JqxTypedRuntime<Q> {
-  return typeof runtime.runQuery === "function";
+  runtime: JqxRuntime & Partial<JqxTypedRuntime<Q>>,
+): runtime is JqxRuntime & JqxTypedRuntime<Q> {
+  return typeof runtime.query === "function";
 }

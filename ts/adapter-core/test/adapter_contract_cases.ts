@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { JqxDynamicRuntime, JqxTypedRuntime } from "../src/index.js";
+import type { JqxRuntime, JqxTypedRuntime } from "../src/index.js";
 
 type TestResult = { ok: true; value: unknown } | { ok: false; error: unknown };
 
@@ -42,9 +42,9 @@ type SchemaFactory<Schema> = {
 
 type AdapterContractConfig<Schema> = {
   label: string;
-  createDynamicAdapter(runtime: JqxDynamicRuntime): DynamicAdapterLike<Schema>;
+  createDynamicAdapter(runtime: JqxRuntime): DynamicAdapterLike<Schema>;
   createTypedAdapter(
-    runtime: JqxDynamicRuntime & JqxTypedRuntime<{ kind: "Q" }>,
+    runtime: JqxRuntime & JqxTypedRuntime<{ kind: "Q" }>,
   ): TypedAdapterLike<Schema>;
   schemas: SchemaFactory<Schema>;
 };
@@ -62,11 +62,11 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
   const { label, createDynamicAdapter, createTypedAdapter, schemas } = config;
 
   test(`${label}: adapter.filter validates input and output`, async () => {
-    const runtime: JqxDynamicRuntime = {
+    const runtime: JqxRuntime = {
       run(filter, input) {
         assert.equal(filter, ".user.name");
-        assert.equal(input, '{"user":{"name":"alice"}}');
-        return { ok: true, value: ['"alice"'] };
+        assert.deepEqual(input, { user: { name: "alice" } });
+        return { ok: true, value: ["alice"] };
       },
     };
     const adapter = createDynamicAdapter(runtime);
@@ -83,9 +83,9 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
   });
 
   test(`${label}: adapter.filter returns input_validation error`, async () => {
-    const runtime: JqxDynamicRuntime = {
+    const runtime: JqxRuntime = {
       run() {
-        return { ok: true, value: ["1"] };
+        return { ok: true, value: [1] };
       },
     };
     const adapter = createDynamicAdapter(runtime);
@@ -99,7 +99,7 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
   });
 
   test(`${label}: adapter.filter returns runtime error`, async () => {
-    const runtime: JqxDynamicRuntime = {
+    const runtime: JqxRuntime = {
       run() {
         return { ok: false, error: "boom" };
       },
@@ -118,32 +118,10 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
     }
   });
 
-  test(`${label}: adapter.filter returns output_parse error`, async () => {
-    const runtime: JqxDynamicRuntime = {
-      run() {
-        return { ok: true, value: ["not-json"] };
-      },
-    };
-    const adapter = createDynamicAdapter(runtime);
-    const result = await adapter.filter({
-      filter: ".",
-      input: { x: 1 },
-      inputSchema: schemas.xNumberInput(),
-      outputSchema: schemas.numberOutput(),
-    });
-    expectErrorKind(result, "output_parse");
-    if (!result.ok) {
-      const error = result.error as { kind?: string; index?: number };
-      if (error.kind === "output_parse") {
-        assert.equal(error.index, 0);
-      }
-    }
-  });
-
   test(`${label}: adapter.filter returns output_validation error`, async () => {
-    const runtime: JqxDynamicRuntime = {
+    const runtime: JqxRuntime = {
       run() {
-        return { ok: true, value: ["1"] };
+        return { ok: true, value: [1] };
       },
     };
     const adapter = createDynamicAdapter(runtime);
@@ -163,14 +141,14 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
   });
 
   test(`${label}: adapter.query validates through typed runtime`, async () => {
-    const runtime: JqxDynamicRuntime & JqxTypedRuntime<{ kind: "Q" }> = {
+    const runtime: JqxRuntime & JqxTypedRuntime<{ kind: "Q" }> = {
       run() {
         return { ok: true, value: [] };
       },
-      runQuery(query, input) {
+      query(query, input) {
         assert.deepEqual(query, { kind: "Q" });
-        assert.equal(input, '{"x":7}');
-        return { ok: true, value: ["7"] };
+        assert.deepEqual(input, { x: 7 });
+        return { ok: true, value: [7] };
       },
     };
     const adapter = createTypedAdapter(runtime);
@@ -186,12 +164,12 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
     }
   });
 
-  test(`${label}: adapter.inferred parses JSON outputs`, async () => {
-    const runtime: JqxDynamicRuntime = {
+  test(`${label}: adapter.inferred returns runtime values`, async () => {
+    const runtime: JqxRuntime = {
       run(filter, input) {
         assert.equal(filter, ".user.name");
-        assert.equal(input, '{"user":{"name":"alice"}}');
-        return { ok: true, value: ['"alice"'] };
+        assert.deepEqual(input, { user: { name: "alice" } });
+        return { ok: true, value: ["alice"] };
       },
     };
     const adapter = createDynamicAdapter(runtime);
@@ -205,10 +183,10 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
     }
   });
 
-  test(`${label}: adapter.inferred returns output_parse error for invalid JSON`, async () => {
-    const runtime: JqxDynamicRuntime = {
+  test(`${label}: adapter.inferred returns runtime error`, async () => {
+    const runtime: JqxRuntime = {
       run() {
-        return { ok: true, value: ["not-json"] };
+        return { ok: false, error: "boom" };
       },
     };
     const adapter = createDynamicAdapter(runtime);
@@ -218,7 +196,7 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
     });
     assert.equal(result.ok, false);
     if (!result.ok) {
-      assert.match(String(result.error), /output_parse at index 0/);
+      assert.equal(result.error, "boom");
     }
   });
 }

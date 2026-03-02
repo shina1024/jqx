@@ -6,7 +6,7 @@ import {
   type FilterOptions,
   type InferJqOutput,
   type InferredOptions,
-  type JqxDynamicRuntime,
+  type JqxRuntime,
   type JqxResult,
   type JqxTypedRuntime,
   type Json,
@@ -38,9 +38,9 @@ const outputSchema = yup
   })
   .defined();
 
-const dynamicRuntime: JqxDynamicRuntime = {
+const dynamicRuntime: JqxRuntime = {
   run() {
-    return { ok: true, value: ['{"name":"alice"}'] };
+    return { ok: true, value: [{ name: "alice" }] };
   },
 };
 
@@ -84,12 +84,12 @@ const inferredFallbackJson = dynamicAdapter.inferred({
 });
 expectTypeOf(inferredFallbackJson).toEqualTypeOf<Promise<JqxResult<Json[], string>>>();
 
-const typedRuntime: JqxDynamicRuntime & JqxTypedRuntime<{ kind: "query" }> = {
+const typedRuntime: JqxRuntime & JqxTypedRuntime<{ kind: "query" }> = {
   run() {
     return { ok: true, value: [] };
   },
-  runQuery() {
-    return { ok: true, value: ['{"name":"alice"}'] };
+  query() {
+    return { ok: true, value: [{ name: "alice" }] };
   },
 };
 

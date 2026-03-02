@@ -1,87 +1,75 @@
 import * as assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  bindRuntime,
-  createRuntime,
-  field,
-  RUNTIME_UNSUPPORTED_ERRORS,
-  runTypedQuery,
-  runTypedQueryAst,
-  toAst,
-  type JqxRuntimeBinding,
-  type QueryAst,
-  type JqxTypedRuntime,
-} from "../src/index.js";
+import { createJqx, type JqxBackend, type JqxTypedBackend, type QueryAst } from "../src/index.js";
 
-test("bindRuntime delegates run", async () => {
-  const runtime: JqxRuntimeBinding = {
-    run(filter, input) {
+test("createJqx delegates runRaw", async () => {
+  const backend: JqxBackend = {
+    runRaw(filter, input) {
       return { ok: true as const, value: [`${filter}:${input}`] };
     },
   };
-  const jqx = bindRuntime(runtime);
-  const result = await jqx.run(".", '{"x":1}');
+  const jqx = createJqx(backend);
+  const result = await jqx.runRaw(".", '{"x":1}');
   assert.equal(result.ok, true);
   if (result.ok) {
     assert.deepEqual(result.value, ['.:{"x":1}']);
   }
 });
 
-test("runCompat falls back to run", async () => {
-  const runtime: JqxRuntimeBinding = {
-    run() {
-      return { ok: true as const, value: ["fallback"] };
+test("createJqx run stringifies input and parses outputs", async () => {
+  const backend: JqxBackend = {
+    runRaw(filter, input) {
+      assert.equal(filter, ".x");
+      assert.equal(input, '{"x":1}');
+      return { ok: true as const, value: ['{"x":1}'] };
     },
   };
-  const jqx = createRuntime(runtime);
-  const result = await jqx.runCompat(".", "1");
+  const jqx = createJqx(backend);
+  const result = await jqx.run(".x", { x: 1 });
   assert.equal(result.ok, true);
   if (result.ok) {
-    assert.deepEqual(result.value, ["fallback"]);
+    assert.deepEqual(result.value, [{ x: 1 }]);
   }
 });
 
-test("runValues returns unsupported error when runtime does not provide it", async () => {
-  const runtime: JqxRuntimeBinding = {
-    run() {
-      return { ok: true as const, value: ["1"] };
+test("createJqx run returns parse error for invalid raw JSON", async () => {
+  const backend: JqxBackend = {
+    runRaw() {
+      return { ok: true as const, value: ["not-json"] };
     },
   };
-  const jqx = bindRuntime(runtime);
-  const result = await jqx.runValues(".", "1");
+  const jqx = createJqx(backend);
+  const result = await jqx.run(".", 1);
   assert.equal(result.ok, false);
   if (!result.ok) {
-    assert.equal(result.error, RUNTIME_UNSUPPORTED_ERRORS.runValues);
+    assert.match(String(result.error), /output_parse at index 0/);
   }
 });
 
-test("runTypedQuery forwards QueryAst to runtime.runQuery", async () => {
+test("createJqx typed client supports queryRaw and query", async () => {
   const calls: Array<{ query: QueryAst; input: string }> = [];
-  const runtime: JqxTypedRuntime<QueryAst> = {
-    runQuery(query, input) {
+  const backend: JqxTypedBackend<QueryAst> = {
+    runRaw() {
+      return { ok: true as const, value: [] };
+    },
+    runQueryRaw(query, input) {
       calls.push({ query, input });
-      return { ok: true as const, value: ["typed"] };
+      return { ok: true as const, value: ['{"name":"alice"}'] };
     },
   };
-  const query = field("user");
-  const input = '{"user":"alice"}';
-  const result = await runTypedQuery(runtime, query, input);
-  assert.equal(result.ok, true);
-  assert.deepEqual(calls, [{ query: toAst(query), input }]);
-});
+  const jqx = createJqx(backend);
 
-test("runTypedQueryAst forwards ast as-is", async () => {
-  const calls: Array<{ query: QueryAst; input: string }> = [];
-  const runtime: JqxTypedRuntime<QueryAst> = {
-    runQuery(query, input) {
-      calls.push({ query, input });
-      return { ok: true as const, value: ["typed-ast"] };
-    },
-  };
-  const queryAst: QueryAst = { kind: "identity" };
-  const input = "1";
-  const result = await runTypedQueryAst(runtime, queryAst, input);
+  const rawResult = await jqx.queryRaw({ kind: "identity" }, '{"user":{"name":"alice"}}');
+  assert.equal(rawResult.ok, true);
+
+  const result = await jqx.query({ kind: "identity" }, { user: { name: "alice" } });
   assert.equal(result.ok, true);
-  assert.deepEqual(calls, [{ query: queryAst, input }]);
+  if (result.ok) {
+    assert.deepEqual(result.value, [{ name: "alice" }]);
+  }
+  assert.deepEqual(calls, [
+    { query: { kind: "identity" }, input: '{"user":{"name":"alice"}}' },
+    { query: { kind: "identity" }, input: '{"user":{"name":"alice"}}' },
+  ]);
 });

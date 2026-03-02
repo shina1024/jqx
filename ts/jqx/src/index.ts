@@ -1,11 +1,8 @@
-import { toAst as toQueryAst } from "@shina1024/jqx-adapter-core";
 import type {
   Json,
-  JqxDynamicRuntime,
-  JqxError,
   JqxResult,
+  JqxRuntime,
   JqxRuntimeError,
-  Query,
   QueryAst,
   JqxTypedRuntime,
   MaybePromise,
@@ -21,7 +18,7 @@ export type {
   QueryAst,
   QueryInput,
   QueryOutput,
-  JqxDynamicRuntime,
+  JqxRuntime,
   JqxError,
   JqxResult,
   JqxRuntimeError,
@@ -53,65 +50,109 @@ export {
   tryCatch,
 } from "@shina1024/jqx-adapter-core";
 
-export interface JqxRuntimeBinding extends JqxDynamicRuntime {
-  runCompat?: JqxDynamicRuntime["run"];
-  runValues?: (filter: string, input: string) => MaybePromise<JqxResult<Json[], JqxRuntimeError>>;
+export interface JqxBackend {
+  runRaw(filter: string, input: string): MaybePromise<JqxResult<string[], JqxRuntimeError>>;
 }
 
-export interface JqxRuntime {
-  run(filter: string, input: string): Promise<JqxResult<string[], JqxRuntimeError>>;
-  runCompat(filter: string, input: string): Promise<JqxResult<string[], JqxRuntimeError>>;
-  runValues(filter: string, input: string): Promise<JqxResult<Json[], JqxRuntimeError>>;
+export interface JqxTypedBackend<Q = QueryAst> extends JqxBackend {
+  runQueryRaw(query: Q, input: string): MaybePromise<JqxResult<string[], JqxRuntimeError>>;
 }
 
-export type JqxQueryAstRuntime = JqxTypedRuntime<QueryAst>;
+export interface JqxClient extends JqxRuntime {
+  run(filter: string, input: unknown): Promise<JqxResult<Json[], JqxRuntimeError>>;
+  runRaw(filter: string, input: string): Promise<JqxResult<string[], JqxRuntimeError>>;
+}
 
-const RUN_VALUES_UNSUPPORTED_ERROR = "runValues is not available on the bound runtime";
+export interface JqxTypedClient<Q = QueryAst> extends JqxClient, JqxTypedRuntime<Q> {
+  query(query: Q, input: unknown): Promise<JqxResult<Json[], JqxRuntimeError>>;
+  queryRaw(query: Q, input: string): Promise<JqxResult<string[], JqxRuntimeError>>;
+}
 
 function toPromise<T>(value: MaybePromise<T>): Promise<T> {
   return Promise.resolve(value);
 }
 
-export function runTypedQuery<I, O, Ast extends QueryAst>(
-  runtime: JqxQueryAstRuntime,
-  query: Query<I, O, Ast>,
-  input: string,
-): Promise<JqxResult<string[], JqxRuntimeError>> {
-  return toPromise(runtime.runQuery(toQueryAst(query), input));
-}
-
-export function runTypedQueryAst(
-  runtime: JqxQueryAstRuntime,
-  query: QueryAst,
-  input: string,
-): Promise<JqxResult<string[], JqxRuntimeError>> {
-  return toPromise(runtime.runQuery(query, input));
-}
-
-export function bindRuntime(runtime: JqxRuntimeBinding): JqxRuntime {
-  return {
-    run(filter, input) {
-      return toPromise(runtime.run(filter, input));
-    },
-    runCompat(filter, input) {
-      if (runtime.runCompat) {
-        return toPromise(runtime.runCompat(filter, input));
-      }
-      return toPromise(runtime.run(filter, input));
-    },
-    runValues(filter, input) {
-      if (runtime.runValues) {
-        return toPromise(runtime.runValues(filter, input));
-      }
-      return Promise.resolve({
+function encodeRuntimeInput(input: unknown): JqxResult<string, JqxRuntimeError> {
+  try {
+    const encoded = JSON.stringify(input);
+    if (typeof encoded !== "string") {
+      return {
         ok: false,
-        error: RUN_VALUES_UNSUPPORTED_ERROR,
-      });
+        error: "input_stringify failed: JSON.stringify returned undefined",
+      };
+    }
+    return { ok: true, value: encoded };
+  } catch (error) {
+    return {
+      ok: false,
+      error: `input_stringify failed: ${error instanceof Error ? error.message : "Failed to stringify input"}`,
+    };
+  }
+}
+
+function decodeRuntimeOutputs(rawValues: string[]): JqxResult<Json[], JqxRuntimeError> {
+  const parsed: Json[] = [];
+  for (const [index, raw] of rawValues.entries()) {
+    try {
+      parsed.push(JSON.parse(raw) as Json);
+    } catch (error) {
+      return {
+        ok: false,
+        error: `output_parse at index ${index}: ${error instanceof Error ? error.message : "Failed to parse output"}`,
+      };
+    }
+  }
+  return { ok: true, value: parsed };
+}
+
+function hasTypedBackend<Q>(
+  backend: JqxBackend & Partial<JqxTypedBackend<Q>>,
+): backend is JqxTypedBackend<Q> {
+  return typeof backend.runQueryRaw === "function";
+}
+
+export function createJqx<Q>(backend: JqxTypedBackend<Q>): JqxTypedClient<Q>;
+export function createJqx(backend: JqxBackend): JqxClient;
+export function createJqx<Q>(
+  backend: JqxBackend & Partial<JqxTypedBackend<Q>>,
+): JqxClient | JqxTypedClient<Q> {
+  const client: JqxClient = {
+    runRaw(filter, input) {
+      return toPromise(backend.runRaw(filter, input));
+    },
+    async run(filter, input) {
+      const encoded = encodeRuntimeInput(input);
+      if (!encoded.ok) {
+        return encoded;
+      }
+      const runtimeOut = await toPromise(backend.runRaw(filter, encoded.value));
+      if (!runtimeOut.ok) {
+        return runtimeOut;
+      }
+      return decodeRuntimeOutputs(runtimeOut.value);
     },
   };
-}
 
-export const createRuntime = bindRuntime;
-export const RUNTIME_UNSUPPORTED_ERRORS = {
-  runValues: RUN_VALUES_UNSUPPORTED_ERROR,
-} as const;
+  if (hasTypedBackend(backend)) {
+    const typedClient: JqxTypedClient<Q> = {
+      ...client,
+      queryRaw(query, input) {
+        return toPromise(backend.runQueryRaw(query, input));
+      },
+      async query(query, input) {
+        const encoded = encodeRuntimeInput(input);
+        if (!encoded.ok) {
+          return encoded;
+        }
+        const runtimeOut = await toPromise(backend.runQueryRaw(query, encoded.value));
+        if (!runtimeOut.ok) {
+          return runtimeOut;
+        }
+        return decodeRuntimeOutputs(runtimeOut.value);
+      },
+    };
+    return typedClient;
+  }
+
+  return client;
+}

@@ -10,7 +10,7 @@ import {
   type InferJqOutput,
   type InferenceFallbackMode,
   type InferredOptions,
-  type JqxDynamicRuntime,
+  type JqxRuntime,
   type JqxResult,
   type JqxTypedRuntime,
   type QueryOptions as CoreQueryOptions,
@@ -21,7 +21,7 @@ export type {
   InferJqOutput,
   InferenceFallbackMode,
   InferredOptions,
-  JqxDynamicRuntime,
+  JqxRuntime,
   JqxResult,
   JqxTypedRuntime,
   Json,
@@ -69,10 +69,10 @@ function validateWithZod<TSchema extends z.ZodTypeAny>(
   return { ok: true, value: parsed.data };
 }
 
-export function createAdapter<Q>(runtime: JqxDynamicRuntime & JqxTypedRuntime<Q>): TypedAdapter<Q>;
-export function createAdapter(runtime: JqxDynamicRuntime): DynamicAdapter;
+export function createAdapter<Q>(runtime: JqxRuntime & JqxTypedRuntime<Q>): TypedAdapter<Q>;
+export function createAdapter(runtime: JqxRuntime): DynamicAdapter;
 export function createAdapter<Q>(
-  runtime: JqxDynamicRuntime & Partial<JqxTypedRuntime<Q>>,
+  runtime: JqxRuntime & Partial<JqxTypedRuntime<Q>>,
 ): DynamicAdapter | TypedAdapter<Q> {
   const dynamicAdapter: DynamicAdapter = {
     filter(options) {
