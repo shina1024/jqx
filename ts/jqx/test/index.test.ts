@@ -3,7 +3,14 @@ import { test } from "node:test";
 
 import {
   createJqx,
+  exportQueryAstDocument,
+  exportTypedQueryDocument,
   field,
+  importQueryAstDocument,
+  parseQueryAstDocument,
+  QUERY_AST_DOCUMENT_FORMAT,
+  QUERY_AST_DOCUMENT_VERSION,
+  stringifyQueryAstDocument,
   toAst,
   type JqxBackend,
   type JqxRuntimeError,
@@ -99,4 +106,59 @@ test("createJqx typed client supports queryRaw and query", async () => {
     { query: queryAst, input: '{"user":{"name":"alice"}}' },
     { query: queryAst, input: '{"user":{"name":"alice"}}' },
   ]);
+});
+
+test("QueryAst document export/import supports v1 envelope", () => {
+  const query = field("user");
+  const ast = toAst(query);
+  const document = exportTypedQueryDocument(query);
+  assert.deepEqual(document, {
+    format: QUERY_AST_DOCUMENT_FORMAT,
+    version: QUERY_AST_DOCUMENT_VERSION,
+    ast,
+  });
+
+  const imported = importQueryAstDocument(document);
+  assert.equal(imported.ok, true);
+  if (imported.ok) {
+    assert.deepEqual(imported.value, ast);
+  }
+});
+
+test("QueryAst import rejects bare ast", () => {
+  const ast = toAst(field("name"));
+  const imported = importQueryAstDocument(ast);
+  assert.equal(imported.ok, false);
+  if (!imported.ok) {
+    assert.equal(imported.error.kind, "invalid_document");
+  }
+});
+
+test("QueryAst import rejects unsupported document version", () => {
+  const ast = toAst(field("name"));
+  const imported = importQueryAstDocument({
+    format: QUERY_AST_DOCUMENT_FORMAT,
+    version: 999,
+    ast,
+  });
+  assert.equal(imported.ok, false);
+  if (!imported.ok) {
+    assert.equal(imported.error.kind, "unsupported_version");
+  }
+});
+
+test("QueryAst parse handles json text", () => {
+  const ast = toAst(field("name"));
+  const text = stringifyQueryAstDocument(exportQueryAstDocument(ast).ast);
+  const parsed = parseQueryAstDocument(text);
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) {
+    assert.deepEqual(parsed.value, ast);
+  }
+
+  const invalid = parseQueryAstDocument("{");
+  assert.equal(invalid.ok, false);
+  if (!invalid.ok) {
+    assert.equal(invalid.error.kind, "invalid_json");
+  }
 });

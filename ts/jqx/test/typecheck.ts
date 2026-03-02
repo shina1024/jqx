@@ -2,15 +2,23 @@ import { expectTypeOf } from "expect-type";
 
 import {
   createJqx,
+  exportQueryAstDocument,
+  exportTypedQueryDocument,
   field,
   gt,
   identity,
+  importQueryAstDocument,
   isJqxRuntimeError,
+  isQueryAst,
   iter,
   literal,
+  parseQueryAstDocument,
   pipe,
+  QUERY_AST_DOCUMENT_FORMAT,
+  QUERY_AST_DOCUMENT_VERSION,
   runtimeErrorToMessage,
   select,
+  stringifyQueryAstDocument,
   toAst,
   toJqxRuntimeError,
 } from "../src/index.js";
@@ -23,6 +31,8 @@ import type {
   JqxResult,
   JqxRuntimeError,
   JqxTypedBackend,
+  QueryAstDocument,
+  QueryAstImportResult,
   QueryAst,
 } from "../src/index.js";
 
@@ -98,3 +108,23 @@ const backendRuntimeError: JqxBackendRuntimeError = {
   } satisfies JqxError,
 };
 expectTypeOf(runtimeErrorToMessage(backendRuntimeError)).toEqualTypeOf<string>();
+
+const exportedAstDoc = exportTypedQueryDocument(nameQuery);
+expectTypeOf(exportedAstDoc).toEqualTypeOf<QueryAstDocument>();
+
+const astDocFromAst = exportQueryAstDocument(ast);
+expectTypeOf(astDocFromAst).toEqualTypeOf<QueryAstDocument>();
+
+const importedAst = importQueryAstDocument(astDocFromAst);
+expectTypeOf(importedAst).toEqualTypeOf<QueryAstImportResult<QueryAst>>();
+
+const parsedAst = parseQueryAstDocument(stringifyQueryAstDocument(ast));
+expectTypeOf(parsedAst).toEqualTypeOf<QueryAstImportResult<QueryAst>>();
+
+expectTypeOf(QUERY_AST_DOCUMENT_FORMAT).toEqualTypeOf<"jqx-query-ast">();
+expectTypeOf(QUERY_AST_DOCUMENT_VERSION).toEqualTypeOf<1>();
+
+if (importedAst.ok) {
+  expectTypeOf(importedAst.value).toEqualTypeOf<QueryAst>();
+  expectTypeOf(isQueryAst(importedAst.value)).toEqualTypeOf<boolean>();
+}

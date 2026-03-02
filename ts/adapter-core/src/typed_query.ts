@@ -68,6 +68,43 @@ export type QueryAst =
   | { kind: "fallback"; left: QueryAst; right: QueryAst }
   | { kind: "try_catch"; inner: QueryAst; handler: QueryAst };
 
+export const QUERY_AST_DOCUMENT_FORMAT = "jqx-query-ast" as const;
+export const QUERY_AST_DOCUMENT_VERSION = 1 as const;
+
+export type QueryAstDocumentFormat = typeof QUERY_AST_DOCUMENT_FORMAT;
+export type QueryAstDocumentVersion = typeof QUERY_AST_DOCUMENT_VERSION;
+
+export interface QueryAstDocument {
+  format: QueryAstDocumentFormat;
+  version: QueryAstDocumentVersion;
+  ast: QueryAst;
+}
+
+export type QueryAstImportError =
+  | {
+      kind: "invalid_json";
+      message: string;
+    }
+  | {
+      kind: "invalid_document";
+      path: string;
+      message: string;
+    }
+  | {
+      kind: "unsupported_version";
+      version: number;
+      message: string;
+    }
+  | {
+      kind: "invalid_ast";
+      path: string;
+      message: string;
+    };
+
+export type QueryAstImportResult<T> =
+  | { ok: true; value: T }
+  | { ok: false; error: QueryAstImportError };
+
 type InferCallAst<_Name extends string, _Args extends readonly QueryAst[], _Input> = QueryFallback;
 
 export type InferQueryAst<Ast extends QueryAst, Input> = Ast extends { kind: "identity" }
@@ -162,8 +199,246 @@ function queryOfAst<I, O, Ast extends QueryAst>(ast: Ast): Query<I, O, Ast> {
   return { ast };
 }
 
+function failImport<T>(error: QueryAstImportError): QueryAstImportResult<T> {
+  return { ok: false, error };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isJsonValue(value: unknown): value is Json {
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "boolean" ||
+    typeof value === "number"
+  ) {
+    return true;
+  }
+  if (Array.isArray(value)) {
+    return value.every(isJsonValue);
+  }
+  if (isRecord(value)) {
+    return Object.values(value).every(isJsonValue);
+  }
+  return false;
+}
+
+function hasExactKeys(value: Record<string, unknown>, expected: readonly string[]): boolean {
+  const actualKeys = Object.keys(value);
+  if (actualKeys.length !== expected.length) {
+    return false;
+  }
+  return expected.every((key) => actualKeys.includes(key));
+}
+
+function invalidAst(path: string, message: string): QueryAstImportError {
+  return { kind: "invalid_ast", path, message };
+}
+
+function validateQueryAstNode(value: unknown, path: string): QueryAstImportError | null {
+  if (!isRecord(value)) {
+    return invalidAst(path, "Expected object");
+  }
+  const kind = value.kind;
+  if (typeof kind !== "string") {
+    return invalidAst(`${path}.kind`, "Expected string");
+  }
+
+  const validateUnaryNode = (
+    fieldName: string,
+    expectedKeys: readonly string[],
+  ): QueryAstImportError | null => {
+    if (!hasExactKeys(value, expectedKeys)) {
+      return invalidAst(path, "Unexpected fields");
+    }
+    return validateQueryAstNode(value[fieldName], `${path}.${fieldName}`);
+  };
+
+  const validateBinaryNode = (
+    leftField: string,
+    rightField: string,
+    expectedKeys: readonly string[],
+  ): QueryAstImportError | null => {
+    if (!hasExactKeys(value, expectedKeys)) {
+      return invalidAst(path, "Unexpected fields");
+    }
+    const leftError = validateQueryAstNode(value[leftField], `${path}.${leftField}`);
+    if (leftError !== null) {
+      return leftError;
+    }
+    return validateQueryAstNode(value[rightField], `${path}.${rightField}`);
+  };
+
+  switch (kind) {
+    case "identity":
+    case "iter":
+      return hasExactKeys(value, ["kind"]) ? null : invalidAst(path, "Unexpected fields");
+    case "field":
+      if (!hasExactKeys(value, ["kind", "name"])) {
+        return invalidAst(path, "Unexpected fields");
+      }
+      return typeof value.name === "string" ? null : invalidAst(`${path}.name`, "Expected string");
+    case "index":
+      if (!hasExactKeys(value, ["kind", "index"])) {
+        return invalidAst(path, "Unexpected fields");
+      }
+      return typeof value.index === "number"
+        ? null
+        : invalidAst(`${path}.index`, "Expected number");
+    case "literal":
+      if (!hasExactKeys(value, ["kind", "value"])) {
+        return invalidAst(path, "Unexpected fields");
+      }
+      return isJsonValue(value.value) ? null : invalidAst(`${path}.value`, "Expected Json value");
+    case "map":
+      return validateUnaryNode("inner", ["kind", "inner"]);
+    case "select":
+      return validateUnaryNode("predicate", ["kind", "predicate"]);
+    case "not":
+      return validateUnaryNode("value", ["kind", "value"]);
+    case "pipe":
+    case "comma":
+    case "eq":
+    case "lt":
+    case "gt":
+    case "and":
+    case "or":
+    case "add":
+    case "fallback":
+      return validateBinaryNode("left", "right", ["kind", "left", "right"]);
+    case "if_else":
+      if (!hasExactKeys(value, ["kind", "cond", "then_branch", "else_branch"])) {
+        return invalidAst(path, "Unexpected fields");
+      }
+      {
+        const condError = validateQueryAstNode(value.cond, `${path}.cond`);
+        if (condError !== null) {
+          return condError;
+        }
+        const thenError = validateQueryAstNode(value.then_branch, `${path}.then_branch`);
+        if (thenError !== null) {
+          return thenError;
+        }
+        return validateQueryAstNode(value.else_branch, `${path}.else_branch`);
+      }
+    case "try_catch":
+      return validateBinaryNode("inner", "handler", ["kind", "inner", "handler"]);
+    case "call":
+      if (!hasExactKeys(value, ["kind", "name", "args"])) {
+        return invalidAst(path, "Unexpected fields");
+      }
+      if (typeof value.name !== "string") {
+        return invalidAst(`${path}.name`, "Expected string");
+      }
+      if (!Array.isArray(value.args)) {
+        return invalidAst(`${path}.args`, "Expected array");
+      }
+      for (const [index, arg] of value.args.entries()) {
+        const argError = validateQueryAstNode(arg, `${path}.args[${index}]`);
+        if (argError !== null) {
+          return argError;
+        }
+      }
+      return null;
+    default:
+      return invalidAst(`${path}.kind`, `Unsupported kind: ${kind}`);
+  }
+}
+
+export function isQueryAst(value: unknown): value is QueryAst {
+  return validateQueryAstNode(value, "$") === null;
+}
+
 export function toAst<I, O, Ast extends QueryAst>(query: Query<I, O, Ast>): Ast {
   return query.ast;
+}
+
+/// QueryAst external interchange contract:
+/// - Export always emits `{ format: "jqx-query-ast", version: 1, ast }`.
+/// - Import accepts only that document format.
+/// - Unknown versions are rejected to keep compatibility explicit.
+export function exportQueryAstDocument(ast: QueryAst): QueryAstDocument {
+  return {
+    format: QUERY_AST_DOCUMENT_FORMAT,
+    version: QUERY_AST_DOCUMENT_VERSION,
+    ast,
+  };
+}
+
+export function exportTypedQueryDocument<I, O, Ast extends QueryAst>(
+  query: Query<I, O, Ast>,
+): QueryAstDocument {
+  return exportQueryAstDocument(query.ast);
+}
+
+export function importQueryAstDocument(input: unknown): QueryAstImportResult<QueryAst> {
+  if (!isRecord(input)) {
+    return failImport({
+      kind: "invalid_document",
+      path: "$",
+      message: "Expected object",
+    });
+  }
+
+  if (!("format" in input) || !("version" in input) || !("ast" in input)) {
+    return failImport({
+      kind: "invalid_document",
+      path: "$",
+      message: "Expected { format, version, ast } document",
+    });
+  }
+
+  if (input.format !== QUERY_AST_DOCUMENT_FORMAT) {
+    return failImport({
+      kind: "invalid_document",
+      path: "$.format",
+      message: `Expected ${QUERY_AST_DOCUMENT_FORMAT}`,
+    });
+  }
+  if (typeof input.version !== "number") {
+    return failImport({
+      kind: "invalid_document",
+      path: "$.version",
+      message: "Expected number",
+    });
+  }
+  if (input.version !== QUERY_AST_DOCUMENT_VERSION) {
+    return failImport({
+      kind: "unsupported_version",
+      version: input.version,
+      message: `Unsupported QueryAst document version: ${input.version}`,
+    });
+  }
+  if (!("ast" in input)) {
+    return failImport({
+      kind: "invalid_document",
+      path: "$.ast",
+      message: "Missing ast field",
+    });
+  }
+
+  const astError = validateQueryAstNode(input.ast, "$.ast");
+  if (astError !== null) {
+    return failImport(astError);
+  }
+  return { ok: true, value: input.ast as QueryAst };
+}
+
+export function parseQueryAstDocument(text: string): QueryAstImportResult<QueryAst> {
+  try {
+    return importQueryAstDocument(JSON.parse(text));
+  } catch (error) {
+    return failImport({
+      kind: "invalid_json",
+      message: error instanceof Error ? error.message : "Invalid JSON",
+    });
+  }
+}
+
+export function stringifyQueryAstDocument(ast: QueryAst): string {
+  return JSON.stringify(exportQueryAstDocument(ast));
 }
 
 export function identity<Input = Json>(): Query<Input, Input, { kind: "identity" }> {

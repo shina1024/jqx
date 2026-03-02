@@ -52,6 +52,31 @@ const q = pipe(identity<Input>(), pipe(field("user"), field("name")));
 // q: Query<Input, string>
 ```
 
+## QueryAst Interop
+
+External interchange uses a versioned document envelope:
+
+```json
+{
+  "format": "jqx-query-ast",
+  "version": 1,
+  "ast": { "kind": "field", "name": "user" }
+}
+```
+
+Helpers:
+
+- `exportQueryAstDocument(ast)`
+- `exportTypedQueryDocument(query)`
+- `importQueryAstDocument(value)`
+- `parseQueryAstDocument(text)`
+- `stringifyQueryAstDocument(ast)`
+
+Compatibility rule:
+
+- importer accepts only the document envelope (`format/version/ast`)
+- unknown `version` is rejected as `unsupported_version`
+
 ## Typed Runtime Bridge (`runQueryRaw -> query`)
 
 ```ts
