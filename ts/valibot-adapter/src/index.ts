@@ -35,21 +35,25 @@ export type ValibotSchema =
   | v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>
   | v.BaseSchemaAsync<unknown, unknown, v.BaseIssue<unknown>>;
 
+export type ValibotInputSchema =
+  | v.BaseSchema<unknown, Json, v.BaseIssue<unknown>>
+  | v.BaseSchemaAsync<unknown, Json, v.BaseIssue<unknown>>;
+
 export type AdapterError = CoreAdapterError<string[]>;
 
 export interface FilterOptions<
-  InSchema extends ValibotSchema,
+  InSchema extends ValibotInputSchema,
   OutSchema extends ValibotSchema,
 > extends CoreFilterOptions<InSchema, OutSchema> {}
 
 export interface QueryOptions<
   Q,
-  InSchema extends ValibotSchema,
+  InSchema extends ValibotInputSchema,
   OutSchema extends ValibotSchema,
 > extends CoreQueryOptions<Q, InSchema, OutSchema> {}
 
 export interface DynamicAdapter {
-  filter<InSchema extends ValibotSchema, OutSchema extends ValibotSchema>(
+  filter<InSchema extends ValibotInputSchema, OutSchema extends ValibotSchema>(
     options: FilterOptions<InSchema, OutSchema>,
   ): Promise<JqxResult<v.InferOutput<OutSchema>[], AdapterError>>;
   inferred<
@@ -62,7 +66,7 @@ export interface DynamicAdapter {
 }
 
 export interface TypedAdapter<Q> extends DynamicAdapter {
-  query<InSchema extends ValibotSchema, OutSchema extends ValibotSchema>(
+  query<InSchema extends ValibotInputSchema, OutSchema extends ValibotSchema>(
     options: QueryOptions<Q, InSchema, OutSchema>,
   ): Promise<JqxResult<v.InferOutput<OutSchema>[], AdapterError>>;
 }

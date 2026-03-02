@@ -33,19 +33,21 @@ export type {
 
 export type AdapterError = CoreAdapterError<string[]>;
 
+export type YupInputSchema = yup.Schema<Json>;
+
 export interface FilterOptions<
-  InSchema extends yup.AnySchema,
+  InSchema extends YupInputSchema,
   OutSchema extends yup.AnySchema,
 > extends CoreFilterOptions<InSchema, OutSchema> {}
 
 export interface QueryOptions<
   Q,
-  InSchema extends yup.AnySchema,
+  InSchema extends YupInputSchema,
   OutSchema extends yup.AnySchema,
 > extends CoreQueryOptions<Q, InSchema, OutSchema> {}
 
 export interface DynamicAdapter {
-  filter<InSchema extends yup.AnySchema, OutSchema extends yup.AnySchema>(
+  filter<InSchema extends YupInputSchema, OutSchema extends yup.AnySchema>(
     options: FilterOptions<InSchema, OutSchema>,
   ): Promise<JqxResult<yup.InferType<OutSchema>[], AdapterError>>;
   inferred<
@@ -58,7 +60,7 @@ export interface DynamicAdapter {
 }
 
 export interface TypedAdapter<Q> extends DynamicAdapter {
-  query<InSchema extends yup.AnySchema, OutSchema extends yup.AnySchema>(
+  query<InSchema extends YupInputSchema, OutSchema extends yup.AnySchema>(
     options: QueryOptions<Q, InSchema, OutSchema>,
   ): Promise<JqxResult<yup.InferType<OutSchema>[], AdapterError>>;
 }
