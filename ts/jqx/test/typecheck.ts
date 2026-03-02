@@ -1,9 +1,8 @@
 import { expectTypeOf } from "expect-type";
 
 import {
-  createAstJqx,
   createJqx,
-  createTypedJqx,
+  createQueryJqx,
   exportQueryAstDocument,
   exportTypedQueryDocument,
   field,
@@ -31,8 +30,8 @@ import type {
   JqxError,
   Json,
   JqxResult,
+  JqxQueryBackend,
   JqxRuntimeError,
-  JqxTypedBackend,
   QueryAstDocument,
   QueryAstImportResult,
   QueryAst,
@@ -71,8 +70,8 @@ expectTypeOf(runRawStreamOut).toEqualTypeOf<AsyncIterable<JqxResult<string, JqxR
 // @ts-expect-error `undefined` is not a JSON value.
 jqx.run(".", { user: undefined });
 
-declare const typedBackend: JqxTypedBackend<QueryAst>;
-const typedJqx = createAstJqx(typedBackend);
+declare const typedBackend: JqxQueryBackend<QueryAst>;
+const typedJqx = createQueryJqx(typedBackend);
 const ast = toAst(nameQuery);
 const typedOut = typedJqx.query(ast, { user: { name: "a" } });
 expectTypeOf(typedOut).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeError>>>();
@@ -90,18 +89,18 @@ expectTypeOf(typedRawStreamOut).toEqualTypeOf<AsyncIterable<JqxResult<string, Jq
 typedJqx.query(ast, { user: undefined });
 
 type CustomQuery = { kind: "custom"; key: string };
-declare const customBackend: JqxTypedBackend<CustomQuery>;
-const customJqx = createTypedJqx(customBackend);
+declare const customBackend: JqxQueryBackend<CustomQuery>;
+const customJqx = createQueryJqx(customBackend);
 const customTypedOut = customJqx.query(
   { kind: "custom", key: "user.name" },
   { user: { name: "a" } },
 );
 expectTypeOf(customTypedOut).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeError>>>();
-// @ts-expect-error Typed DSL query input is only available with createAstJqx.
+// @ts-expect-error Typed DSL query input is only available when query type is QueryAst.
 customJqx.query(nameQuery, { user: { name: "a" } });
 
 const dynamicFromTyped = createJqx(customBackend);
-// @ts-expect-error query is only available on createTypedJqx/createAstJqx.
+// @ts-expect-error query is only available on createQueryJqx.
 dynamicFromTyped.query({ kind: "custom", key: "user.name" }, { user: { name: "a" } });
 
 const normalizedRuntimeError = toJqxRuntimeError("boom");

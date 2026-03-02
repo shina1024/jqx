@@ -7,8 +7,7 @@ npm-facing JS/TS entrypoint for `@shina1024/jqx`.
 - `@shina1024/jqx`:
   - runtime/result/core types
   - `createJqx(backend)` (dynamic lane)
-  - `createTypedJqx(backend)` (typed lane)
-  - `createAstJqx(backend)` (QueryAst + Typed DSL lane)
+  - `createQueryJqx(backend)` (query lane)
   - Typed DSL combinators (`identity`, `field`, `pipe`, `map`, `select`, ...)
 - `@shina1024/jqx/zod`: re-exports `@shina1024/jqx-zod-adapter`
 - `@shina1024/jqx/yup`: re-exports `@shina1024/jqx-yup-adapter`
@@ -103,9 +102,9 @@ Compatibility rule:
 ## Typed Runtime Bridge (`runQueryRaw -> query`)
 
 ```ts
-import { createAstJqx, field, identity, pipe, type QueryAst } from "@shina1024/jqx";
+import { createQueryJqx, field, identity, pipe, type QueryAst } from "@shina1024/jqx";
 
-const jqx = createAstJqx({
+const jqx = createQueryJqx({
   runRaw(filter: string, input: string) {
     return { ok: true as const, value: [input] };
   },
@@ -118,7 +117,7 @@ const jqx = createAstJqx({
 const q = pipe(identity<{ user: { name: string } }>(), pipe(field("user"), field("name")));
 const out = await jqx.query(q, { user: { name: "alice" } });
 // passing QueryAst is also supported: jqx.query({ kind: "identity" }, input)
-// Typed DSL query input is available only via createAstJqx.
+// Typed DSL query input is available when backend query type is QueryAst.
 ```
 
 ## Scripts

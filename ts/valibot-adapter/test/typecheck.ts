@@ -12,7 +12,7 @@ import {
   type Json,
   type QueryOptions,
   createAdapter,
-  createTypedAdapter,
+  createQueryAdapter,
 } from "../src/index.js";
 
 type InputData = {
@@ -86,7 +86,7 @@ const typedRuntime: JqxRuntime & JqxTypedRuntime<{ kind: "query" }> = {
   },
 };
 
-const typedAdapter = createTypedAdapter(typedRuntime);
+const typedAdapter = createQueryAdapter(typedRuntime);
 const queryResult = typedAdapter.query({
   query: { kind: "query" },
   input: { user: { name: "alice" } },
@@ -98,7 +98,7 @@ expectTypeOf(queryResult).toEqualTypeOf<
 >();
 
 const dynamicFromTyped = createAdapter(typedRuntime);
-// @ts-expect-error query is only available from createTypedAdapter.
+// @ts-expect-error query is only available from createQueryAdapter.
 dynamicFromTyped.query({
   query: { kind: "query" },
   input: { user: { name: "alice" } },

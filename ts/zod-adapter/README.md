@@ -26,6 +26,6 @@ pnpm test
 
 - `createAdapter(runtime).filter(options)`
 - `createAdapter(runtime).inferred(options)`
-- `createTypedAdapter(runtime).query(options)`
+- `createQueryAdapter(runtime).query(options)`
 
 See `src/index.ts` for full types.

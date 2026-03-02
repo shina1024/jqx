@@ -56,7 +56,7 @@ export interface DynamicAdapter {
   ): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], string>>;
 }
 
-export interface TypedAdapter<Q> extends DynamicAdapter {
+export interface QueryAdapter<Q> extends DynamicAdapter {
   query<InSchema extends z.ZodType<Json>, OutSchema extends z.ZodTypeAny>(
     options: QueryOptions<Q, InSchema, OutSchema>,
   ): Promise<JqxResult<z.output<OutSchema>[], AdapterError>>;
@@ -91,7 +91,7 @@ export function createAdapter(runtime: JqxRuntime): DynamicAdapter {
   return createDynamic(runtime);
 }
 
-export function createTypedAdapter<Q>(runtime: JqxRuntime & JqxTypedRuntime<Q>): TypedAdapter<Q> {
+export function createQueryAdapter<Q>(runtime: JqxRuntime & JqxTypedRuntime<Q>): QueryAdapter<Q> {
   const dynamic = createDynamic(runtime);
   return {
     ...dynamic,

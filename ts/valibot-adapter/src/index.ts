@@ -64,7 +64,7 @@ export interface DynamicAdapter {
   ): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], string>>;
 }
 
-export interface TypedAdapter<Q> extends DynamicAdapter {
+export interface QueryAdapter<Q> extends DynamicAdapter {
   query<InSchema extends ValibotInputSchema, OutSchema extends ValibotSchema>(
     options: QueryOptions<Q, InSchema, OutSchema>,
   ): Promise<JqxResult<v.InferOutput<OutSchema>[], AdapterError>>;
@@ -109,7 +109,7 @@ export function createAdapter(runtime: JqxRuntime): DynamicAdapter {
   return createDynamic(runtime);
 }
 
-export function createTypedAdapter<Q>(runtime: JqxRuntime & JqxTypedRuntime<Q>): TypedAdapter<Q> {
+export function createQueryAdapter<Q>(runtime: JqxRuntime & JqxTypedRuntime<Q>): QueryAdapter<Q> {
   const dynamic = createDynamic(runtime);
   return {
     ...dynamic,
