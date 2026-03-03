@@ -1,0 +1,69 @@
+name: Sync jq Upstream Fixtures
+
+on:
+  schedule:
+    - cron: "20 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: "jq upstream ref to sync (branch/tag/sha)"
+        required: false
+        default: "master"
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Sync Fixtures
+    runs-on: ubuntu-latest
+    env:
+      UPSTREAM_REF: ${{ github.event.inputs.upstream_ref || 'master' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Configure git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Update vendored jq tests and derived ledgers
+        run: bash ./scripts/update_jq_tests.sh
+
+      - name: Detect changes
+        id: detect
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create or update pull request
+        if: steps.detect.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/jq-upstream-sync
+          delete-branch: true
+          commit-message: "chore: sync jq upstream fixtures"
+          title: "chore: sync jq upstream fixtures"
+          body: |
+            Automated sync of vendored jq upstream fixtures.
+
+            - upstream ref: `${{ env.UPSTREAM_REF }}`
+            - workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          add-paths: |
+            third_party/jq-tests/**
+            scripts/jq_compat_cases.upstream.json
+            scripts/jq_upstream_failures.snapshot.json
+            scripts/jq_upstream_diff_ledger.md
+
+      - name: No changes
+        if: steps.detect.outputs.changed != 'true'
+        run: echo "No jq upstream fixture changes detected."
