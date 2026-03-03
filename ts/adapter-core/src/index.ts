@@ -383,9 +383,3 @@ export async function runInferred<
   }
   return { ok: true, value: runtimeOut.value as InferJqOutput<Input, Filter, Mode>[] };
 }
-
-export function hasQueryRuntime<Q>(
-  runtime: JqxRuntime & Partial<JqxQueryRuntime<Q>>,
-): runtime is JqxRuntime & JqxQueryRuntime<Q> {
-  return typeof runtime.query === "function";
-}
