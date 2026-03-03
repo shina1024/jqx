@@ -119,11 +119,11 @@ Schema adapter example (Zod):
 
 ```ts
 import { z } from "zod";
-import { createAdapter } from "@shina1024/jqx/zod";
+import { createAdapter, type JqxRuntime } from "@shina1024/jqx/zod";
 
-const runtime = {
-  async run(filter: string, input: string) {
-    return { ok: true as const, value: ['"alice"', '"bob"'] };
+const runtime: JqxRuntime = {
+  async run(filter, input) {
+    return { ok: true as const, value: ["alice", "bob"] };
   },
 };
 
