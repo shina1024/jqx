@@ -93,6 +93,28 @@ const jqx = createQueryJqx<QueryAst>({
 const out = await jqx.query({ kind: "identity" }, { x: 1 });
 ```
 
+Backend runtime contract:
+- `createJqx`: implement `runRaw(filter: string, input: string)` and return `JqxResult<string[], JqxRuntimeError>`
+- `createQueryJqx`: additionally implement `runQueryRaw(query: QueryAst, input: string)`
+- `runRaw`/`runQueryRaw` outputs are JSON texts (`string[]`), one entry per jq output
+
+Error handling guideline:
+
+```ts
+import { createJqx, runtimeErrorToMessage } from "@shina1024/jqx";
+
+const jqx = createJqx({
+  async runRaw(filter, input) {
+    return { ok: true as const, value: [input] };
+  },
+});
+
+const result = await jqx.run(".foo", { foo: 1 });
+if (!result.ok) {
+  console.error(runtimeErrorToMessage(result.error));
+}
+```
+
 Schema adapter example (Zod):
 
 ```ts

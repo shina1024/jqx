@@ -82,8 +82,8 @@ Updated: 2026-03-03
 - [x] `QueryAst` を外部連携向けに仕様化する（v1 document envelope: `format/version/ast` を導入、import/export helper と strict version check を追加）
 - [x] 大規模データ向けレーンを設計する（`AsyncIterable` ベースの streaming API を追加し、`Json[]` バッファ前提を緩和）
 - [x] capability 表現を改善する（`hasQueryRuntime` 依存を減らし、factory段階で機能差を明示）
-- [ ] 公開APIの型テストを強化する（`expect-type` で主要ユースケースを固定し、DX回 regressions を即検知）
-- [ ] 利用者導線を強化する（README に backend 実装契約 + 実運用レシピ + エラーハンドリング指針を追加）
+- [x] 公開APIの型テストを強化する（`expect-type` を `ts/adapter-core|jqx|zod-adapter|yup-adapter|valibot-adapter` の `test/typecheck.ts` に配置し、CIの `pnpm typecheck` で回帰検知）
+- [x] 利用者導線を強化する（`README.mbt.md` に backend 実装契約 + `createJqx`/`createQueryJqx` 実運用レシピ + `runtimeErrorToMessage` を使うエラーハンドリング指針を追加）
 
 ## P1: コードベース保守性（リファクタリング）
 
