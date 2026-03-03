@@ -9,6 +9,7 @@ import {
   type JqxRuntime,
   type JqxResult,
   type JqxQueryRuntime,
+  type JqxRuntimeError,
   type Json,
   type QueryOptions,
   createAdapter,
@@ -50,32 +51,36 @@ const inferredIdentity = dynamicAdapter.inferred({
   filter: ".",
   input: {} as InputData,
 });
-expectTypeOf(inferredIdentity).toEqualTypeOf<Promise<JqxResult<InputData[], string>>>();
+expectTypeOf(inferredIdentity).toEqualTypeOf<Promise<JqxResult<InputData[], JqxRuntimeError>>>();
 
 const inferredField = dynamicAdapter.inferred({
   filter: ".user.name",
   input: {} as InputData,
 });
-expectTypeOf(inferredField).toEqualTypeOf<Promise<JqxResult<string[], string>>>();
+expectTypeOf(inferredField).toEqualTypeOf<Promise<JqxResult<string[], JqxRuntimeError>>>();
 
 const inferredIter = dynamicAdapter.inferred({
   filter: ".list[]",
   input: {} as InputData,
 });
-expectTypeOf(inferredIter).toEqualTypeOf<Promise<JqxResult<Array<{ id: number }>, string>>>();
+expectTypeOf(inferredIter).toEqualTypeOf<
+  Promise<JqxResult<Array<{ id: number }>, JqxRuntimeError>>
+>();
 
 const inferredFallbackUnknown = dynamicAdapter.inferred({
   filter: ".user | .name",
   input: {} as InputData,
 });
-expectTypeOf(inferredFallbackUnknown).toEqualTypeOf<Promise<JqxResult<unknown[], string>>>();
+expectTypeOf(inferredFallbackUnknown).toEqualTypeOf<
+  Promise<JqxResult<unknown[], JqxRuntimeError>>
+>();
 
 const inferredFallbackJson = dynamicAdapter.inferred({
   filter: ".user | .name",
   input: {} as InputData,
   fallback: "json" as const,
 });
-expectTypeOf(inferredFallbackJson).toEqualTypeOf<Promise<JqxResult<Json[], string>>>();
+expectTypeOf(inferredFallbackJson).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeError>>>();
 
 const queryRuntime: JqxRuntime & JqxQueryRuntime<{ kind: "query" }> = {
   run() {

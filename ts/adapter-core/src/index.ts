@@ -376,10 +376,10 @@ export async function runInferred<
 >(
   runtime: JqxRuntime,
   options: InferredOptions<Filter, Input, Mode>,
-): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], string>> {
+): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], JqxRuntimeError>> {
   const runtimeOut = await runtime.run(options.filter, options.input);
   if (!runtimeOut.ok) {
-    return { ok: false, error: runtimeErrorToMessage(runtimeOut.error) };
+    return { ok: false, error: runtimeOut.error };
   }
   return { ok: true, value: runtimeOut.value as InferJqOutput<Input, Filter, Mode>[] };
 }

@@ -196,7 +196,9 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
     });
     assert.equal(result.ok, false);
     if (!result.ok) {
-      assert.equal(result.error, "boom");
+      const error = result.error as { kind?: string; message?: string };
+      assert.equal(error.kind, "backend_runtime");
+      assert.equal(error.message, "boom");
     }
   });
 }

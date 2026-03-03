@@ -12,6 +12,7 @@ import {
   type Json,
   type JqxRuntime,
   type JqxResult,
+  type JqxRuntimeError,
   type JqxQueryRuntime,
   type QueryOptions as CoreQueryOptions,
   type ValidationResult,
@@ -61,7 +62,7 @@ export interface DynamicAdapter {
     Mode extends InferenceFallbackMode = "unknown",
   >(
     options: InferredOptions<Filter, Input, Mode>,
-  ): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], string>>;
+  ): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], JqxRuntimeError>>;
 }
 
 export interface QueryAdapter<Q> extends DynamicAdapter {
