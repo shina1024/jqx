@@ -63,10 +63,10 @@ When public APIs change, inspect generated `.mbti` diffs carefully.
   - Do not weaken error/output comparison rules as a shortcut.
 - Temporary exceptions must be explicit and removable.
 
-## Current Baseline (2026-02-28)
+## Current Baseline (2026-03-03)
 
-- `moon test`: 255/255 pass
-- `moon test --target native --package core`: 195/195 pass
+- `moon test`: 256/256 pass
+- `moon test --target native --package core`: 196/196 pass
 - differential smoke (`scripts/jq_compat_cases.json`): 242/242 pass
 - differential upstream full (`scripts/jq_compat_cases.upstream.json`): 843/843 pass, skipped 0
 - compile-fail error checks: strict-only (`expect_error_mode: any` は 0 件)
