@@ -68,7 +68,7 @@ Runtime binding example (`createJqx`):
 import { createJqx } from "@shina1024/jqx";
 
 const jqx = createJqx({
-  async runRaw(filter, input) {
+  async runJsonText(filter, input) {
     return { ok: true as const, value: [input] };
   },
 });
@@ -82,10 +82,10 @@ Query lane example (`createQueryJqx` + `QueryAst`):
 import { createQueryJqx, type QueryAst } from "@shina1024/jqx";
 
 const jqx = createQueryJqx<QueryAst>({
-  async runRaw(filter, input) {
+  async runJsonText(filter, input) {
     return { ok: true as const, value: [input] };
   },
-  async runQueryRaw(query, input) {
+  async runQueryJsonText(query, input) {
     return { ok: true as const, value: [input] };
   },
 });
@@ -94,9 +94,9 @@ const out = await jqx.query({ kind: "identity" }, { x: 1 });
 ```
 
 Backend runtime contract:
-- `createJqx`: implement `runRaw(filter: string, input: string)` and return `JqxResult<string[], JqxRuntimeError>`
-- `createQueryJqx`: additionally implement `runQueryRaw(query: QueryAst, input: string)`
-- `runRaw`/`runQueryRaw` outputs are JSON texts (`string[]`), one entry per jq output
+- `createJqx`: implement `runJsonText(filter: string, input: string)` and return `JqxResult<string[], JqxRuntimeError>`
+- `createQueryJqx`: additionally implement `runQueryJsonText(query: QueryAst, input: string)`
+- `runJsonText`/`runQueryJsonText` outputs are JSON texts (`string[]`), one entry per jq output
 
 Error handling guideline:
 
@@ -104,7 +104,7 @@ Error handling guideline:
 import { createJqx, runtimeErrorToMessage } from "@shina1024/jqx";
 
 const jqx = createJqx({
-  async runRaw(filter, input) {
+  async runJsonText(filter, input) {
     return { ok: true as const, value: [input] };
   },
 });

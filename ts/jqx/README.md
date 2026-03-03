@@ -15,17 +15,17 @@ npm-facing JS/TS entrypoint for `@shina1024/jqx`.
 
 ## Factory Choice
 
-- Use `createJqx` when you only need jq-string filters (`run` / `runRaw`).
-- Use `createQueryJqx` when runtime also supports `runQueryRaw`.
+- Use `createJqx` when you only need jq-string filters (`run` / `runJsonText`).
+- Use `createQueryJqx` when runtime also supports `runQueryJsonText`.
 - With `createQueryJqx`, Typed DSL `Query` input is accepted when `Q` is `QueryAst`.
 
-## Runtime Bridge (`runRaw -> run`)
+## Runtime Bridge (`runJsonText -> run`)
 
 ```ts
 import { createJqx } from "@shina1024/jqx";
 
 const jqx = createJqx({
-  runRaw(filter, input) {
+  runJsonText(filter, input) {
     // connect to MoonBit-generated JS runtime here
     return { ok: true, value: [input] };
   },
@@ -39,17 +39,17 @@ const out = await jqx.run(".", { x: 1 }); // Json[] output
 
 All client factories expose stream methods:
 
-- `runRawStream(filter, input): AsyncIterable<JqxResult<string, JqxRuntimeError>>`
+- `runJsonTextStream(filter, input): AsyncIterable<JqxResult<string, JqxRuntimeError>>`
 - `runStream(filter, input): AsyncIterable<JqxResult<Json, JqxRuntimeError>>`
-- `queryRawStream(query, input): AsyncIterable<JqxResult<string, JqxRuntimeError>>` (query backend)
+- `queryJsonTextStream(query, input): AsyncIterable<JqxResult<string, JqxRuntimeError>>` (query backend)
 - `queryStream(query, input): AsyncIterable<JqxResult<Json, JqxRuntimeError>>` (query backend)
 
 Backend contract (optional):
 
-- `runRawStream(filter, input) -> JqxResult<AsyncIterable<string>, JqxRuntimeError>`
-- `runQueryRawStream(query, input) -> JqxResult<AsyncIterable<string>, JqxRuntimeError>`
+- `runJsonTextStream(filter, input) -> JqxResult<AsyncIterable<string>, JqxRuntimeError>`
+- `runQueryJsonTextStream(query, input) -> JqxResult<AsyncIterable<string>, JqxRuntimeError>`
 
-If backend stream methods are absent, client falls back to `runRaw` / `runQueryRaw` and emits each array element as stream items.
+If backend stream methods are absent, client falls back to `runJsonText` / `runQueryJsonText` and emits each array element as stream items.
 
 Error behavior:
 
@@ -58,7 +58,7 @@ Error behavior:
 
 ## Runtime Error Model
 
-`run` / `query` / `runRaw` / `queryRaw` return `JqxRuntimeError` as a discriminated union:
+`run` / `query` / `runJsonText` / `queryJsonText` return `JqxRuntimeError` as a discriminated union:
 
 - `{ kind: "backend_runtime", message, details? }`
 - `{ kind: "input_stringify", message }`
@@ -105,16 +105,16 @@ Compatibility rule:
 - importer accepts only the document envelope (`format/version/ast`)
 - unknown `version` is rejected as `unsupported_version`
 
-## Query Runtime Bridge (`runQueryRaw -> query`)
+## Query Runtime Bridge (`runQueryJsonText -> query`)
 
 ```ts
 import { createQueryJqx, field, identity, pipe, type QueryAst } from "@shina1024/jqx";
 
 const jqx = createQueryJqx({
-  runRaw(filter: string, input: string) {
+  runJsonText(filter: string, input: string) {
     return { ok: true as const, value: [input] };
   },
-  runQueryRaw(query: QueryAst, input: string) {
+  runQueryJsonText(query: QueryAst, input: string) {
     // connect to a runtime lane that accepts QueryAst
     return { ok: true as const, value: [input] };
   },
