@@ -57,23 +57,40 @@ jqx -e ".ok" '{"ok": false}'
 ## npm Quick Start
 
 Entry points:
-- `import { bindRuntime } from "@shina1024/jqx"`
+- `import { createJqx, createQueryJqx } from "@shina1024/jqx"`
 - `import { createAdapter } from "@shina1024/jqx/zod"`
 - `import { createAdapter } from "@shina1024/jqx/yup"`
 - `import { createAdapter } from "@shina1024/jqx/valibot"`
 
-Runtime binding example:
+Runtime binding example (`createJqx`):
 
 ```ts
-import { bindRuntime } from "@shina1024/jqx";
+import { createJqx } from "@shina1024/jqx";
 
-const runtime = bindRuntime({
-  async run(filter, input) {
-    return { ok: true, value: [input] };
+const jqx = createJqx({
+  async runRaw(filter, input) {
+    return { ok: true as const, value: [input] };
   },
 });
 
-const out = await runtime.run(".", '{"x":1}');
+const out = await jqx.run(".", { x: 1 });
+```
+
+Query lane example (`createQueryJqx` + `QueryAst`):
+
+```ts
+import { createQueryJqx, type QueryAst } from "@shina1024/jqx";
+
+const jqx = createQueryJqx<QueryAst>({
+  async runRaw(filter, input) {
+    return { ok: true as const, value: [input] };
+  },
+  async runQueryRaw(query, input) {
+    return { ok: true as const, value: [input] };
+  },
+});
+
+const out = await jqx.query({ kind: "identity" }, { x: 1 });
 ```
 
 Schema adapter example (Zod):
