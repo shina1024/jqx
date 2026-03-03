@@ -64,9 +64,9 @@ export type QueryAst =
   | { kind: "or"; left: QueryAst; right: QueryAst }
   | { kind: "not"; value: QueryAst }
   | { kind: "add"; left: QueryAst; right: QueryAst }
-  | { kind: "if_else"; cond: QueryAst; then_branch: QueryAst; else_branch: QueryAst }
+  | { kind: "ifElse"; cond: QueryAst; thenBranch: QueryAst; elseBranch: QueryAst }
   | { kind: "fallback"; left: QueryAst; right: QueryAst }
-  | { kind: "try_catch"; inner: QueryAst; handler: QueryAst };
+  | { kind: "tryCatch"; inner: QueryAst; handler: QueryAst };
 
 export const QUERY_AST_DOCUMENT_FORMAT = "jqx-query-ast" as const;
 export const QUERY_AST_DOCUMENT_VERSION = 1 as const;
@@ -150,9 +150,9 @@ export type InferQueryAst<Ast extends QueryAst, Input> = Ast extends { kind: "id
                           }
                         ? AddValues<InferQueryAst<Left, Input>, InferQueryAst<Right, Input>>
                         : Ast extends {
-                              kind: "if_else";
-                              then_branch: infer ThenAst extends QueryAst;
-                              else_branch: infer ElseAst extends QueryAst;
+                              kind: "ifElse";
+                              thenBranch: infer ThenAst extends QueryAst;
+                              elseBranch: infer ElseAst extends QueryAst;
                             }
                           ? InferQueryAst<ThenAst, Input> | InferQueryAst<ElseAst, Input>
                           : Ast extends {
@@ -165,7 +165,7 @@ export type InferQueryAst<Ast extends QueryAst, Input> = Ast extends { kind: "id
                                 InferQueryAst<Right, Input>
                               >
                             : Ast extends {
-                                  kind: "try_catch";
+                                  kind: "tryCatch";
                                   inner: infer Inner extends QueryAst;
                                   handler: infer Handler extends QueryAst;
                                 }
@@ -308,8 +308,8 @@ function validateQueryAstNode(value: unknown, path: string): QueryAstImportError
     case "add":
     case "fallback":
       return validateBinaryNode("left", "right", ["kind", "left", "right"]);
-    case "if_else":
-      if (!hasExactKeys(value, ["kind", "cond", "then_branch", "else_branch"])) {
+    case "ifElse":
+      if (!hasExactKeys(value, ["kind", "cond", "thenBranch", "elseBranch"])) {
         return invalidAst(path, "Unexpected fields");
       }
       {
@@ -317,13 +317,13 @@ function validateQueryAstNode(value: unknown, path: string): QueryAstImportError
         if (condError !== null) {
           return condError;
         }
-        const thenError = validateQueryAstNode(value.then_branch, `${path}.then_branch`);
+        const thenError = validateQueryAstNode(value.thenBranch, `${path}.thenBranch`);
         if (thenError !== null) {
           return thenError;
         }
-        return validateQueryAstNode(value.else_branch, `${path}.else_branch`);
+        return validateQueryAstNode(value.elseBranch, `${path}.elseBranch`);
       }
-    case "try_catch":
+    case "tryCatch":
       return validateBinaryNode("inner", "handler", ["kind", "inner", "handler"]);
     case "call":
       if (!hasExactKeys(value, ["kind", "name", "args"])) {
@@ -564,13 +564,13 @@ export function ifElse<
 ): Query<
   Input,
   InferQueryAst<ThenAst, Input> | InferQueryAst<ElseAst, Input>,
-  { kind: "if_else"; cond: CondAst; then_branch: ThenAst; else_branch: ElseAst }
+  { kind: "ifElse"; cond: CondAst; thenBranch: ThenAst; elseBranch: ElseAst }
 > {
   return queryOfAst({
-    kind: "if_else",
+    kind: "ifElse",
     cond: cond.ast,
-    then_branch: then_.ast,
-    else_branch: else_.ast,
+    thenBranch: then_.ast,
+    elseBranch: else_.ast,
   });
 }
 
@@ -590,6 +590,6 @@ export function tryCatch<
 >(
   inner: Query<Input, Inner, InnerAst>,
   handler: Query<Input, Handler, HandlerAst>,
-): Query<Input, Inner | Handler, { kind: "try_catch"; inner: InnerAst; handler: HandlerAst }> {
-  return queryOfAst({ kind: "try_catch", inner: inner.ast, handler: handler.ast });
+): Query<Input, Inner | Handler, { kind: "tryCatch"; inner: InnerAst; handler: HandlerAst }> {
+  return queryOfAst({ kind: "tryCatch", inner: inner.ast, handler: handler.ast });
 }
