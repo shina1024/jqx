@@ -162,6 +162,13 @@ Nightly differential (`.github/workflows/differential-nightly.yml`):
 - on failure, auto-open/update GitHub issue: `[CI] Differential Nightly failed`
 - on recovery, auto-comment and close the above issue
 
+Nightly operation checklist (`workflow_dispatch`):
+1. Trigger `Differential Nightly` on `main`.
+2. Confirm all `differential-full` matrix jobs are `success` and `nightly-status` is `success`.
+3. Confirm no open issue titled `[CI] Differential Nightly failed` remains.
+4. If a failure issue existed, confirm recovery comment + close were posted by the same run.
+5. Record run URL/date in `agent-todo.md` when closing an operational task.
+
 Release workflow:
 - `.github/workflows/release-cli.yml`
 - `v*` tag push (or manual dispatch with tag) builds native CLI artifacts for Linux/macOS/Windows and uploads them to GitHub Releases.

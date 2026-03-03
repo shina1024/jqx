@@ -107,7 +107,7 @@ Updated: 2026-03-03
 
 ## Next Queue (2026-03-01)
 
-- [ ] Differential Nightly の運用確認を完了する（`workflow_dispatch` 初回ドライラン + 手順明文化）
+- [x] Differential Nightly の運用確認を完了する（`workflow_dispatch` 初回ドライラン + 手順明文化。run: `https://github.com/shina1024/jqx/actions/runs/22540033203`、手順: `AGENTS.md` の `Nightly operation checklist`）
 - [x] jq upstream fixtures 更新の定期運用を自動化する（`.github/workflows/jq-upstream-sync.yml`: `schedule` + `workflow_dispatch` + PR自動作成）
 - [x] npm パッケージ公開ワークフローを追加する（`.github/workflows/release-npm.yml`）
 
