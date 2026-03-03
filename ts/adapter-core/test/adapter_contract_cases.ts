@@ -26,7 +26,7 @@ type InferredOptions = {
 
 type DynamicAdapterLike<Schema> = {
   filter(options: FilterOptions<Schema>): Promise<TestResult>;
-  inferred(options: InferredOptions): Promise<TestResult>;
+  infer(options: InferredOptions): Promise<TestResult>;
 };
 
 type QueryAdapterLike<Schema> = DynamicAdapterLike<Schema> & {
@@ -164,7 +164,7 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
     }
   });
 
-  test(`${label}: adapter.inferred returns runtime values`, async () => {
+  test(`${label}: adapter.infer returns runtime values`, async () => {
     const runtime: JqxRuntime = {
       run(filter, input) {
         assert.equal(filter, ".user.name");
@@ -173,7 +173,7 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
       },
     };
     const adapter = createDynamicAdapter(runtime);
-    const result = await adapter.inferred({
+    const result = await adapter.infer({
       filter: ".user.name",
       input: { user: { name: "alice" } },
     });
@@ -183,14 +183,14 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
     }
   });
 
-  test(`${label}: adapter.inferred returns runtime error`, async () => {
+  test(`${label}: adapter.infer returns runtime error`, async () => {
     const runtime: JqxRuntime = {
       run() {
         return { ok: false, error: { kind: "backend_runtime", message: "boom" } };
       },
     };
     const adapter = createDynamicAdapter(runtime);
-    const result = await adapter.inferred({
+    const result = await adapter.infer({
       filter: ".",
       input: { x: 1 },
     });

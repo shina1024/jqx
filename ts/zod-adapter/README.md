@@ -26,7 +26,7 @@ pnpm test
 ## Core APIs
 
 - `createAdapter(runtime).filter(options)`
-- `createAdapter(runtime).inferred(options)`
+- `createAdapter(runtime).infer(options)`
 - `createQueryAdapter(runtime).query(options)`
 
 See `src/index.ts` for full types.

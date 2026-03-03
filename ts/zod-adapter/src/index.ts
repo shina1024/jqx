@@ -48,7 +48,7 @@ export interface DynamicAdapter {
   filter<InSchema extends z.ZodType<Json>, OutSchema extends z.ZodTypeAny>(
     options: FilterOptions<InSchema, OutSchema>,
   ): Promise<JqxResult<z.output<OutSchema>[], AdapterError>>;
-  inferred<
+  infer<
     Filter extends string,
     Input extends Json,
     Mode extends InferenceFallbackMode = "unknown",
@@ -82,7 +82,7 @@ function createDynamic(runtime: JqxRuntime): DynamicAdapter {
         validateOutput: validateWithZod,
       });
     },
-    inferred(options) {
+    infer(options) {
       return runInferred(runtime, options);
     },
   };

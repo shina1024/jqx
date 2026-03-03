@@ -50,7 +50,7 @@ export interface DynamicAdapter {
   filter<InSchema extends YupInputSchema, OutSchema extends yup.AnySchema>(
     options: FilterOptions<InSchema, OutSchema>,
   ): Promise<JqxResult<yup.InferType<OutSchema>[], AdapterError>>;
-  inferred<
+  infer<
     Filter extends string,
     Input extends Json,
     Mode extends InferenceFallbackMode = "unknown",
@@ -101,7 +101,7 @@ function createDynamic(runtime: JqxRuntime): DynamicAdapter {
         validateOutput: validateWithYup,
       });
     },
-    inferred(options) {
+    infer(options) {
       return runInferred(runtime, options);
     },
   };
