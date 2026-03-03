@@ -46,6 +46,11 @@
   "peerDependencies": {
     "valibot": "^1.0.0"
   },
+  "peerDependenciesMeta": {
+    "valibot": {
+      "optional": true
+    }
+  },
   "pnpm": {
     "overrides": {
       "@shina1024/jqx-adapter-core": "file:../adapter-core"

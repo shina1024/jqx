@@ -46,6 +46,11 @@
   "peerDependencies": {
     "yup": "^1.0.0"
   },
+  "peerDependenciesMeta": {
+    "yup": {
+      "optional": true
+    }
+  },
   "pnpm": {
     "overrides": {
       "@shina1024/jqx-adapter-core": "file:../adapter-core"
