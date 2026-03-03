@@ -70,23 +70,23 @@ expectTypeOf(runRawStreamOut).toEqualTypeOf<AsyncIterable<JqxResult<string, JqxR
 // @ts-expect-error `undefined` is not a JSON value.
 jqx.run(".", { user: undefined });
 
-declare const typedBackend: JqxQueryBackend<QueryAst>;
-const typedJqx = createQueryJqx(typedBackend);
+declare const queryBackend: JqxQueryBackend<QueryAst>;
+const queryJqx = createQueryJqx(queryBackend);
 const ast = toAst(nameQuery);
-const typedOut = typedJqx.query(ast, { user: { name: "a" } });
-expectTypeOf(typedOut).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeError>>>();
-const typedOutFromDsl = typedJqx.query(nameQuery, { user: { name: "a" } });
-expectTypeOf(typedOutFromDsl).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeError>>>();
-const typedRawOut = typedJqx.queryRaw(ast, '{"user":{"name":"a"}}');
-expectTypeOf(typedRawOut).toEqualTypeOf<Promise<JqxResult<string[], JqxRuntimeError>>>();
-const typedRawOutFromDsl = typedJqx.queryRaw(nameQuery, '{"user":{"name":"a"}}');
-expectTypeOf(typedRawOutFromDsl).toEqualTypeOf<Promise<JqxResult<string[], JqxRuntimeError>>>();
-const typedStreamOut = typedJqx.queryStream(ast, { user: { name: "a" } });
-expectTypeOf(typedStreamOut).toEqualTypeOf<AsyncIterable<JqxResult<Json, JqxRuntimeError>>>();
-const typedRawStreamOut = typedJqx.queryRawStream(ast, '{"user":{"name":"a"}}');
-expectTypeOf(typedRawStreamOut).toEqualTypeOf<AsyncIterable<JqxResult<string, JqxRuntimeError>>>();
+const queryOut = queryJqx.query(ast, { user: { name: "a" } });
+expectTypeOf(queryOut).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeError>>>();
+const queryOutFromDsl = queryJqx.query(nameQuery, { user: { name: "a" } });
+expectTypeOf(queryOutFromDsl).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeError>>>();
+const queryRawOut = queryJqx.queryRaw(ast, '{"user":{"name":"a"}}');
+expectTypeOf(queryRawOut).toEqualTypeOf<Promise<JqxResult<string[], JqxRuntimeError>>>();
+const queryRawOutFromDsl = queryJqx.queryRaw(nameQuery, '{"user":{"name":"a"}}');
+expectTypeOf(queryRawOutFromDsl).toEqualTypeOf<Promise<JqxResult<string[], JqxRuntimeError>>>();
+const queryStreamOut = queryJqx.queryStream(ast, { user: { name: "a" } });
+expectTypeOf(queryStreamOut).toEqualTypeOf<AsyncIterable<JqxResult<Json, JqxRuntimeError>>>();
+const queryRawStreamOut = queryJqx.queryRawStream(ast, '{"user":{"name":"a"}}');
+expectTypeOf(queryRawStreamOut).toEqualTypeOf<AsyncIterable<JqxResult<string, JqxRuntimeError>>>();
 // @ts-expect-error `undefined` is not a JSON value.
-typedJqx.query(ast, { user: undefined });
+queryJqx.query(ast, { user: undefined });
 
 type CustomQuery = { kind: "custom"; key: string };
 declare const customBackend: JqxQueryBackend<CustomQuery>;
@@ -99,9 +99,9 @@ expectTypeOf(customTypedOut).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeE
 // @ts-expect-error Typed DSL query input is only available when query type is QueryAst.
 customJqx.query(nameQuery, { user: { name: "a" } });
 
-const dynamicFromTyped = createJqx(customBackend);
+const dynamicFromQuery = createJqx(customBackend);
 // @ts-expect-error query is only available on createQueryJqx.
-dynamicFromTyped.query({ kind: "custom", key: "user.name" }, { user: { name: "a" } });
+dynamicFromQuery.query({ kind: "custom", key: "user.name" }, { user: { name: "a" } });
 
 const normalizedRuntimeError = toJqxRuntimeError("boom");
 expectTypeOf(normalizedRuntimeError).toEqualTypeOf<JqxRuntimeError>();

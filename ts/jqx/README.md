@@ -13,6 +13,12 @@ npm-facing JS/TS entrypoint for `@shina1024/jqx`.
 - `@shina1024/jqx/yup`: re-exports `@shina1024/jqx-yup-adapter`
 - `@shina1024/jqx/valibot`: re-exports `@shina1024/jqx-valibot-adapter`
 
+## Factory Choice
+
+- Use `createJqx` when you only need jq-string filters (`run` / `runRaw`).
+- Use `createQueryJqx` when runtime also supports `runQueryRaw`.
+- With `createQueryJqx`, Typed DSL `Query` input is accepted when `Q` is `QueryAst`.
+
 ## Runtime Bridge (`runRaw -> run`)
 
 ```ts
@@ -35,8 +41,8 @@ All client factories expose stream methods:
 
 - `runRawStream(filter, input): AsyncIterable<JqxResult<string, JqxRuntimeError>>`
 - `runStream(filter, input): AsyncIterable<JqxResult<Json, JqxRuntimeError>>`
-- `queryRawStream(query, input): AsyncIterable<JqxResult<string, JqxRuntimeError>>` (typed backend)
-- `queryStream(query, input): AsyncIterable<JqxResult<Json, JqxRuntimeError>>` (typed backend)
+- `queryRawStream(query, input): AsyncIterable<JqxResult<string, JqxRuntimeError>>` (query backend)
+- `queryStream(query, input): AsyncIterable<JqxResult<Json, JqxRuntimeError>>` (query backend)
 
 Backend contract (optional):
 
@@ -99,7 +105,7 @@ Compatibility rule:
 - importer accepts only the document envelope (`format/version/ast`)
 - unknown `version` is rejected as `unsupported_version`
 
-## Typed Runtime Bridge (`runQueryRaw -> query`)
+## Query Runtime Bridge (`runQueryRaw -> query`)
 
 ```ts
 import { createQueryJqx, field, identity, pipe, type QueryAst } from "@shina1024/jqx";

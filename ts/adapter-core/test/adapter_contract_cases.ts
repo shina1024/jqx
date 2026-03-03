@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { Json, JqxRuntime, JqxTypedRuntime } from "../src/index.js";
+import type { Json, JqxQueryRuntime, JqxRuntime } from "../src/index.js";
 
 type TestResult = { ok: true; value: unknown } | { ok: false; error: unknown };
 
@@ -29,7 +29,7 @@ type DynamicAdapterLike<Schema> = {
   inferred(options: InferredOptions): Promise<TestResult>;
 };
 
-type TypedAdapterLike<Schema> = DynamicAdapterLike<Schema> & {
+type QueryAdapterLike<Schema> = DynamicAdapterLike<Schema> & {
   query(options: QueryOptions<Schema>): Promise<TestResult>;
 };
 
@@ -43,9 +43,9 @@ type SchemaFactory<Schema> = {
 type AdapterContractConfig<Schema> = {
   label: string;
   createDynamicAdapter(runtime: JqxRuntime): DynamicAdapterLike<Schema>;
-  createTypedAdapter(
-    runtime: JqxRuntime & JqxTypedRuntime<{ kind: "Q" }>,
-  ): TypedAdapterLike<Schema>;
+  createQueryAdapter(
+    runtime: JqxRuntime & JqxQueryRuntime<{ kind: "Q" }>,
+  ): QueryAdapterLike<Schema>;
   schemas: SchemaFactory<Schema>;
 };
 
@@ -59,7 +59,7 @@ function expectErrorKind(result: TestResult, expected: string): void {
 }
 
 export function registerAdapterContractCases<Schema>(config: AdapterContractConfig<Schema>): void {
-  const { label, createDynamicAdapter, createTypedAdapter, schemas } = config;
+  const { label, createDynamicAdapter, createQueryAdapter, schemas } = config;
 
   test(`${label}: adapter.filter validates input and output`, async () => {
     const runtime: JqxRuntime = {
@@ -140,8 +140,8 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
     }
   });
 
-  test(`${label}: adapter.query validates through typed runtime`, async () => {
-    const runtime: JqxRuntime & JqxTypedRuntime<{ kind: "Q" }> = {
+  test(`${label}: adapter.query validates through query runtime`, async () => {
+    const runtime: JqxRuntime & JqxQueryRuntime<{ kind: "Q" }> = {
       run() {
         return { ok: true, value: [] };
       },
@@ -151,7 +151,7 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
         return { ok: true, value: [7] };
       },
     };
-    const adapter = createTypedAdapter(runtime);
+    const adapter = createQueryAdapter(runtime);
     const result = await adapter.query({
       query: { kind: "Q" },
       input: { x: 7 },

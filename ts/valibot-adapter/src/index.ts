@@ -12,7 +12,7 @@ import {
   type Json,
   type JqxRuntime,
   type JqxResult,
-  type JqxTypedRuntime,
+  type JqxQueryRuntime,
   type QueryOptions as CoreQueryOptions,
   type ValidationResult,
 } from "@shina1024/jqx-adapter-core";
@@ -23,7 +23,7 @@ export type {
   InferredOptions,
   JqxRuntime,
   JqxResult,
-  JqxTypedRuntime,
+  JqxQueryRuntime,
   Json,
   JqxError,
   JqxRuntimeError,
@@ -109,7 +109,7 @@ export function createAdapter(runtime: JqxRuntime): DynamicAdapter {
   return createDynamic(runtime);
 }
 
-export function createQueryAdapter<Q>(runtime: JqxRuntime & JqxTypedRuntime<Q>): QueryAdapter<Q> {
+export function createQueryAdapter<Q>(runtime: JqxRuntime & JqxQueryRuntime<Q>): QueryAdapter<Q> {
   const dynamic = createDynamic(runtime);
   return {
     ...dynamic,

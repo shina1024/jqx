@@ -280,7 +280,7 @@ test("createQueryJqx queryRawStream falls back to runQueryRaw", async () => {
   assert.deepEqual(items, [{ ok: true, value: '{"name":"alice"}' }]);
 });
 
-test("createQueryJqx queryStream uses typed streaming lane and normalizes DSL query", async () => {
+test("createQueryJqx queryStream uses query streaming lane and normalizes DSL query", async () => {
   const calls: QueryAst[] = [];
   const backend: JqxQueryBackend<QueryAst> & {
     runQueryRawStream(query: QueryAst, input: string): {

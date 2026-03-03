@@ -8,7 +8,7 @@ registerAdapterContractCases({
   createDynamicAdapter(runtime) {
     return createAdapter(runtime);
   },
-  createTypedAdapter(runtime) {
+  createQueryAdapter(runtime) {
     return createQueryAdapter(runtime);
   },
   schemas: {

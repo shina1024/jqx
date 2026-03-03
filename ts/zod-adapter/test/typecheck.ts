@@ -8,7 +8,7 @@ import {
   type InferredOptions,
   type JqxRuntime,
   type JqxResult,
-  type JqxTypedRuntime,
+  type JqxQueryRuntime,
   type Json,
   type QueryOptions,
   createAdapter,
@@ -77,7 +77,7 @@ const inferredFallbackJson = dynamicAdapter.inferred({
 });
 expectTypeOf(inferredFallbackJson).toEqualTypeOf<Promise<JqxResult<Json[], string>>>();
 
-const typedRuntime: JqxRuntime & JqxTypedRuntime<{ kind: "query" }> = {
+const queryRuntime: JqxRuntime & JqxQueryRuntime<{ kind: "query" }> = {
   run() {
     return { ok: true, value: [] };
   },
@@ -86,8 +86,8 @@ const typedRuntime: JqxRuntime & JqxTypedRuntime<{ kind: "query" }> = {
   },
 };
 
-const typedAdapter = createQueryAdapter(typedRuntime);
-const queryResult = typedAdapter.query({
+const queryAdapter = createQueryAdapter(queryRuntime);
+const queryResult = queryAdapter.query({
   query: { kind: "query" },
   input: { user: { name: "alice" } },
   inputSchema,
@@ -97,9 +97,9 @@ expectTypeOf(queryResult).toEqualTypeOf<
   Promise<JqxResult<Array<{ name: string }>, AdapterError>>
 >();
 
-const dynamicFromTyped = createAdapter(typedRuntime);
+const dynamicFromQuery = createAdapter(queryRuntime);
 // @ts-expect-error query is only available from createQueryAdapter.
-dynamicFromTyped.query({
+dynamicFromQuery.query({
   query: { kind: "query" },
   input: { user: { name: "alice" } },
   inputSchema,

@@ -34,7 +34,7 @@ export type {
   JqxResult,
   JqxResultStream,
   JqxRuntimeError,
-  JqxTypedRuntime,
+  JqxQueryRuntime,
   MaybePromise,
 } from "@shina1024/jqx-adapter-core";
 
@@ -310,7 +310,7 @@ function createTypedClient<Q>(
   backend: JqxQueryBackend<Q> & Partial<JqxStreamingBackend> & Partial<JqxQueryStreamingBackend<Q>>,
 ): JqxQueryClient<Q> {
   const client = createDynamicClient(backend);
-  const typedCore: JqxQueryClient<Q> = {
+  const queryCore: JqxQueryClient<Q> = {
     ...client,
     queryRaw(query: QueryInputFor<Q>, input: string) {
       const normalized = normalizeQueryInput(query);
@@ -348,7 +348,7 @@ function createTypedClient<Q>(
       return decodeRawResultStream(rawStream);
     },
   };
-  return typedCore;
+  return queryCore;
 }
 
 export function createJqx(backend: JqxBackend & Partial<JqxStreamingBackend>): JqxClient {

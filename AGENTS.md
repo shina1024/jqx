@@ -98,12 +98,12 @@ When public APIs change, inspect generated `.mbti` diffs carefully.
 
 Two-lane approach:
 - Dynamic lane: jq string compatibility API
-- Typed lane: `Query[I, O]`-style typed DSL
+- Query lane: `Query[I, O]`-style DSL/AST API
 
 Guidelines:
 - jq string inference is partial and conservative.
 - Non-inferable syntax falls back to `unknown` or `Json`.
-- Prefer typed DSL for strong static guarantees.
+- Prefer query DSL for strong static guarantees.
 
 ## Refactoring Policy (Maintainability)
 

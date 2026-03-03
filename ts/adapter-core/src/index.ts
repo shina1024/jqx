@@ -39,7 +39,7 @@ export interface JqxRuntime {
   run(filter: string, input: Json): MaybePromise<JqxResult<Json[], JqxRuntimeError>>;
 }
 
-export interface JqxTypedRuntime<Q = unknown> {
+export interface JqxQueryRuntime<Q = unknown> {
   query(query: Q, input: Json): MaybePromise<JqxResult<Json[], JqxRuntimeError>>;
 }
 
@@ -341,7 +341,7 @@ export async function runQueryWithValidation<
   OutValue,
   Issues,
 >(
-  runtime: JqxTypedRuntime<Q>,
+  runtime: JqxQueryRuntime<Q>,
   options: QueryOptions<Q, InSchema, OutSchema>,
   hooks: ValidationHooks<InSchema, OutSchema, InValue, OutValue, Issues>,
 ): Promise<JqxResult<OutValue[], AdapterError<Issues>>> {
@@ -384,8 +384,8 @@ export async function runInferred<
   return { ok: true, value: runtimeOut.value as InferJqOutput<Input, Filter, Mode>[] };
 }
 
-export function hasTypedRuntime<Q>(
-  runtime: JqxRuntime & Partial<JqxTypedRuntime<Q>>,
-): runtime is JqxRuntime & JqxTypedRuntime<Q> {
+export function hasQueryRuntime<Q>(
+  runtime: JqxRuntime & Partial<JqxQueryRuntime<Q>>,
+): runtime is JqxRuntime & JqxQueryRuntime<Q> {
   return typeof runtime.query === "function";
 }
