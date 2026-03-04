@@ -1,4 +1,7 @@
 ///|
+// Source under test: cmd/main.mbt
+
+///|
 test "compute exit status" {
   assert_eq(compute_exit_status([]), 4)
   assert_eq(compute_exit_status([@lib.Json::null()]), 1)
@@ -304,4 +307,41 @@ test "parse cli inputs raw no-input takes precedence" {
   }
   let parsed = parse_cli_inputs(cfg, "a\n")
   assert_eq(parsed, [@lib.Json::null()])
+}
+
+///|
+test "split error lines keeps trailing empty line" {
+  assert_eq(split_error_lines("line1\nline2\n"), ["line1", "line2", ""])
+  assert_eq(split_error_lines("single"), ["single"])
+}
+
+///|
+test "format error message rewrites line and column" {
+  assert_eq(
+    format_error_message("Invalid number abc at line 3, column 14"),
+    "jqx: error (at <stdin>:3:14): Invalid number abc",
+  )
+  assert_eq(
+    format_error_message("Unexpected end of file"),
+    "jqx: error: Unexpected end of file",
+  )
+}
+
+///|
+test "parse json value end reports structured and string eof errors" {
+  guard (try? parse_json_value_end("{\"a\":1", 0)) is Err(_) else {
+    fail("expected parse error for unclosed object")
+  }
+  guard (try? parse_json_value_end("{]", 0)) is Err(_) else {
+    fail("expected parse error for mismatched braces")
+  }
+  guard (try? parse_json_value_end("\"abc", 0)) is Err(_) else {
+    fail("expected parse error for unclosed string")
+  }
+}
+
+///|
+test "parse raw lines handles empty and no-trailing-newline" {
+  assert_eq(parse_raw_lines(""), [])
+  assert_eq(parse_raw_lines("last"), [@lib.Json::string("last")])
 }

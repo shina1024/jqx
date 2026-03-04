@@ -1,4 +1,7 @@
 ///|
+// Source under test: cmd/args.mbt
+
+///|
 test "parse args -n" {
   let args = ["jqx", "-n", "."]
   let parsed = parse_cli_args(args)
@@ -146,5 +149,37 @@ test "parse args -L missing value" {
   let parsed = parse_cli_args(args)
   guard parsed is Err(msg) && msg == "missing argument for -L" else {
     fail("expected missing argument error for -L")
+  }
+}
+
+///|
+test "parse args missing filter when no expression is provided" {
+  guard parse_cli_args(["jqx"]) is Err(msg) && msg == "missing filter" else {
+    fail("expected missing filter error")
+  }
+}
+
+///|
+test "parse args respects -- option terminator" {
+  let parsed = parse_cli_args(["jqx", "--", ".foo", "1"])
+  guard parsed is Ok(cfg) else { fail("expected Ok") }
+  assert_eq(cfg.filter, ".foo")
+  assert_eq(cfg.input, Some("1"))
+}
+
+///|
+test "parse args -r and -c are accepted" {
+  let parsed = parse_cli_args(["jqx", "-r", "-c", ".", "\"x\""])
+  guard parsed is Ok(cfg) else { fail("expected Ok") }
+  assert_eq(cfg.raw, true)
+  assert_eq(cfg.filter, ".")
+  assert_eq(cfg.input, Some("\"x\""))
+}
+
+///|
+test "parse args missing filter after options" {
+  guard parse_cli_args(["jqx", "-r", "-c"]) is Err(msg) &&
+    msg == "missing filter" else {
+    fail("expected missing filter after options")
   }
 }

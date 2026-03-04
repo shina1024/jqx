@@ -35,8 +35,8 @@ fn category_from_symbol(
 pub fn MatchResult::group(self : MatchResult, index : Int) -> (Int, Int)? {
   let start_pos = self.0.get(index * 2)
   guard start_pos is Some(start_pos) && start_pos >= 0 else { None }
-  let end_pos = self.0[index * 2 + 1]
-  guard end_pos >= 0 else { panic() }
+  let end_pos = self.0.get(index * 2 + 1)
+  guard end_pos is Some(end_pos) && end_pos >= 0 else { None }
   Some((start_pos, end_pos))
 }
 
@@ -63,7 +63,9 @@ pub fn[T : Input] Regex::execute(
   input : T,
   lastIndex : Int,
 ) -> MatchResult? {
-  guard lastIndex >= 0 && lastIndex <= input.length() else { panic() }
+  if lastIndex < 0 || lastIndex > input.length() {
+    return None
+  }
   let mut pos = lastIndex
   let end = input.length()
   let start_cat = if pos == 0 {
