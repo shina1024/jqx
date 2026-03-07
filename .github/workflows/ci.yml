@@ -51,12 +51,7 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-          cache-dependency-path: |
-            ts/adapter-core/pnpm-lock.yaml
-            ts/jqx/pnpm-lock.yaml
-            ts/zod-adapter/pnpm-lock.yaml
-            ts/yup-adapter/pnpm-lock.yaml
-            ts/valibot-adapter/pnpm-lock.yaml
+          cache-dependency-path: ts/*/pnpm-lock.yaml
 
       - name: Install jq (Linux)
         if: runner.os == 'Linux'
@@ -97,54 +92,9 @@ jobs:
           $vcvars = Join-Path $vs "VC\\Auxiliary\\Build\\vcvars64.bat"
           cmd /c "`"$vcvars`" && moon test --target native core && moon test --target native cmd"
 
-      - name: TS Adapter Core (pnpm lint/typecheck/build)
+      - name: TS Packages (verify)
         if: runner.os == 'Linux'
-        working-directory: ts/adapter-core
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm lint
-          pnpm typecheck
-          pnpm build
-
-      - name: TS Adapter (pnpm lint/typecheck/test/build)
-        if: runner.os == 'Linux'
-        working-directory: ts/zod-adapter
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm lint
-          pnpm typecheck
-          pnpm test
-          pnpm build
-
-      - name: TS Yup Adapter (pnpm lint/typecheck/test/build)
-        if: runner.os == 'Linux'
-        working-directory: ts/yup-adapter
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm lint
-          pnpm typecheck
-          pnpm test
-          pnpm build
-
-      - name: TS Valibot Adapter (pnpm lint/typecheck/test/build)
-        if: runner.os == 'Linux'
-        working-directory: ts/valibot-adapter
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm lint
-          pnpm typecheck
-          pnpm test
-          pnpm build
-
-      - name: TS jqx Entrypoint (pnpm lint/typecheck/test/build)
-        if: runner.os == 'Linux'
-        working-directory: ts/jqx
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm lint
-          pnpm typecheck
-          pnpm test
-          pnpm build
+        run: bash ./scripts/ts_packages.sh verify --frozen-lockfile
 
       - name: Verify Imported Upstream Cases
         if: runner.os == 'Linux'

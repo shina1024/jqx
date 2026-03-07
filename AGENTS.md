@@ -46,6 +46,12 @@ Core commands:
 - `moon test --update` (snapshot updates)
 - `moon coverage analyze > uncovered.log`
 
+TS package maintenance:
+- Linux/macOS: `bash ./scripts/ts_packages.sh refresh`
+- Windows: `./scripts/ts_packages.ps1 refresh`
+- CI-equivalent verification: `bash ./scripts/ts_packages.sh verify --frozen-lockfile`
+- Use the TS package script to refresh `adapter-core -> adapters -> jqx` in dependency order when local `file:` dependencies change.
+
 Quality gate for code changes:
 1. `moon info`
 2. `moon fmt`

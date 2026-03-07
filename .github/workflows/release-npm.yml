@@ -83,14 +83,11 @@ jobs:
         run: |
           node <<'NODE'
           const fs = require("fs");
+          const { execFileSync } = require("child_process");
           const expected = process.env.RELEASE_VERSION;
-          const dirs = [
-            "ts/adapter-core",
-            "ts/zod-adapter",
-            "ts/yup-adapter",
-            "ts/valibot-adapter",
-            "ts/jqx",
-          ];
+          const dirs = execFileSync("node", ["./scripts/ts_packages.mjs", "list"], {
+            encoding: "utf8",
+          }).trim().split(/\r?\n/).filter(Boolean);
           for (const dir of dirs) {
             const pkg = JSON.parse(fs.readFileSync(`${dir}/package.json`, "utf8"));
             if (pkg.version !== expected) {
@@ -101,43 +98,15 @@ jobs:
           console.log(`all package versions match tag v${expected}`);
           NODE
 
-      - name: Install, lint, typecheck, test, build (publish order)
+      - name: Verify TS packages
         shell: bash
-        run: |
-          set -euo pipefail
-          packages=(
-            "ts/adapter-core"
-            "ts/zod-adapter"
-            "ts/yup-adapter"
-            "ts/valibot-adapter"
-            "ts/jqx"
-          )
-
-          for package_dir in "${packages[@]}"; do
-            echo "::group::${package_dir}"
-            pushd "${package_dir}" >/dev/null
-            pnpm install --frozen-lockfile
-            pnpm lint
-            pnpm typecheck
-            if node -e "const s=require('./package.json').scripts||{}; process.exit(s.test ? 0 : 1)"; then
-              pnpm test
-            fi
-            pnpm build
-            popd >/dev/null
-            echo "::endgroup::"
-          done
+        run: bash ./scripts/ts_packages.sh verify --frozen-lockfile
 
       - name: Publish to npm (or dry-run)
         shell: bash
         run: |
           set -euo pipefail
-          packages=(
-            "ts/adapter-core"
-            "ts/zod-adapter"
-            "ts/yup-adapter"
-            "ts/valibot-adapter"
-            "ts/jqx"
-          )
+          mapfile -t packages < <(node ./scripts/ts_packages.mjs list)
 
           if [ "${DRY_RUN}" != "true" ] && [ -z "${NODE_AUTH_TOKEN:-}" ]; then
             echo "::error::NPM_TOKEN is required for non-dry-run publish"

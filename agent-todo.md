@@ -119,3 +119,7 @@ Updated: 2026-03-07
 ## Done (2026-03-03)
 
 - [x] JS/TS runtime API を `createJqx` 中心へ再設計する（`run/query` は JSON 入出力、`runRaw/queryRaw` は backend 契約として分離）
+
+## Done (2026-03-07)
+
+- [x] TS パッケージ更新手順を一本化する（`scripts/ts_packages.{mjs,ps1,sh}` を追加し、CI/release から共通 verify 手順を使う）
