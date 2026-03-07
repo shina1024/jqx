@@ -12,6 +12,7 @@ options(
     "args_wasm.mbt": [ "wasm", "wasm-gc" ],
     "exit_native.mbt": [ "native", "llvm" ],
     "exit_wasm.mbt": [ "wasm", "wasm-gc" ],
+    "main_native_wbtest.mbt": [ "native", "llvm" ],
     "stdin_native.mbt": [ "native", "llvm" ],
     "stdin_wasm.mbt": [ "wasm", "wasm-gc" ],
   },
