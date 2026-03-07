@@ -1,11 +1,11 @@
 # Agent TODO
 
-Updated: 2026-03-03
+Updated: 2026-03-07
 
-## Current baseline (2026-02-28)
+## Current baseline (2026-03-07)
 
-- `moon test`: 256/256 pass
-- `moon test --target native --package core`: 196/196 pass
+- `moon test`: 274/274 pass
+- `moon test --target native --package core`: 206/206 pass
 - differential smoke (`scripts/jq_compat_cases.json`): total 242 / passed 242 / failed 0 / skipped 0
 - differential upstream full (`scripts/jq_compat_cases.upstream.json`): total 843 / passed 843 / failed 0 / skipped 0
 

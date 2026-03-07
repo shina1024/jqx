@@ -63,10 +63,10 @@ When public APIs change, inspect generated `.mbti` diffs carefully.
   - Do not weaken error/output comparison rules as a shortcut.
 - Temporary exceptions must be explicit and removable.
 
-## Current Baseline (2026-03-03)
+## Current Baseline (2026-03-07)
 
-- `moon test`: 256/256 pass
-- `moon test --target native --package core`: 196/196 pass
+- `moon test`: 274/274 pass
+- `moon test --target native --package core`: 206/206 pass
 - differential smoke (`scripts/jq_compat_cases.json`): 242/242 pass
 - differential upstream full (`scripts/jq_compat_cases.upstream.json`): 843/843 pass, skipped 0
 - compile-fail error checks: strict-only (`expect_error_mode: any` は 0 件)
@@ -143,6 +143,7 @@ Differential scripts:
 - Smoke: `scripts/jq_diff.ps1`, `scripts/jq_diff.sh`
 - Upstream full: `scripts/jq_diff.ps1 -CasesPath scripts/jq_compat_cases.upstream.json`
 - Native `-e`: `scripts/jq_diff_native.ps1`, `scripts/jq_diff_native.sh`
+- Windows では `*.ps1` を `pwsh -NoProfile -File ...` で実行する。`powershell.exe` 5.1 は quoted filter 引数を壊して偽陽性 fail を起こしうる。
 
 Upstream fixture update/import:
 - `scripts/update_jq_tests.ps1`, `scripts/update_jq_tests.sh`
