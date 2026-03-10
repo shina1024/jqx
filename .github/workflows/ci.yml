@@ -127,7 +127,7 @@ jobs:
             {
               echo "### Moon Coverage Analyze (Linux)"
               echo
-              echo "- `uncovered.log` was not generated because a previous step failed."
+              echo '- `uncovered.log` was not generated because a previous step failed.'
             } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi

@@ -18,22 +18,14 @@ fn append_range_outputs(
   }
   let mut current = start
   if step > 0.0 {
-    for {
-      if current < end {
-        out.push(json_number_value(current))
-        current += step
-        continue
-      }
-      break
+    while current < end {
+      out.push(json_number_value(current))
+      current += step
     }
   } else {
-    for {
-      if current > end {
-        out.push(json_number_value(current))
-        current += step
-        continue
-      }
-      break
+    while current > end {
+      out.push(json_number_value(current))
+      current += step
     }
   }
 }
@@ -441,10 +433,7 @@ fn format_datetime_with_strftime_pattern(
     None => {
       let sb = StringBuilder::new()
       let mut i = 0
-      for {
-        if i >= pattern.length() {
-          break
-        }
+      while i < pattern.length() {
         let ch = pattern.unsafe_get(i).to_int().unsafe_to_char()
         if ch != '%' {
           sb.write_char(ch)

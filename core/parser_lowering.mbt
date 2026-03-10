@@ -214,17 +214,15 @@ fn FilterCursor::parse_as_pattern(
         )
       } else {
         let items = []
-        for {
+        let mut closed = false
+        while !closed {
           items.push(ctx.parse_as_pattern())
           ctx.skip_ws()
           match ctx.peek_char() {
-            Some(',') => {
-              ctx.read_char() |> ignore
-              continue
-            }
+            Some(',') => ctx.read_char() |> ignore
             Some(']') => {
               ctx.read_char() |> ignore
-              break
+              closed = true
             }
             Some(_) => ctx.invalid_char()
             None => raise InvalidEof
@@ -240,7 +238,8 @@ fn FilterCursor::parse_as_pattern(
         ctx.raise_syntax_error_at(ctx.offset, "'}'")
       } else {
         let entries = []
-        for {
+        let mut closed = false
+        while !closed {
           ctx.skip_ws()
           let mut key = Filter::identity()
           let bindings = []
@@ -297,13 +296,10 @@ fn FilterCursor::parse_as_pattern(
           entries.push({ key, bindings })
           ctx.skip_ws()
           match ctx.peek_char() {
-            Some(',') => {
-              ctx.read_char() |> ignore
-              continue
-            }
+            Some(',') => ctx.read_char() |> ignore
             Some('}') => {
               ctx.read_char() |> ignore
-              break
+              closed = true
             }
             Some(_) => ctx.invalid_char()
             None => raise InvalidEof
@@ -1280,7 +1276,7 @@ fn FilterCursor::read_until_top_level_semicolon(
     !next_is_ident
   }
 
-  for {
+  while ctx.offset < ctx.end_offset {
     match ctx.read_char() {
       Some(c) =>
         if in_string {
@@ -1326,6 +1322,7 @@ fn FilterCursor::read_until_top_level_semicolon(
       None => raise InvalidEof
     }
   }
+  raise InvalidEof
 }
 
 ///|
@@ -1342,7 +1339,8 @@ fn FilterCursor::parse_definition_prefix(
         return []
       }
       let params = []
-      for {
+      let mut closed = false
+      while !closed {
         ctx.skip_ws()
         let (name, is_value_param) = if ctx.peek_char() is Some('$') {
           ctx.read_char() |> ignore
@@ -1357,13 +1355,10 @@ fn FilterCursor::parse_definition_prefix(
         }
         ctx.skip_ws()
         match ctx.peek_char() {
-          Some(';') => {
-            ctx.read_char() |> ignore
-            continue
-          }
+          Some(';') => ctx.read_char() |> ignore
           Some(')') => {
             ctx.read_char() |> ignore
-            break
+            closed = true
           }
           Some(_) => ctx.invalid_char()
           None => raise InvalidEof
@@ -1376,16 +1371,14 @@ fn FilterCursor::parse_definition_prefix(
   }
 
   let defs = []
-  for {
-    ctx.skip_ws()
-    if !ctx.try_keyword("def") {
-      break
-    }
+  ctx.skip_ws()
+  while ctx.try_keyword("def") {
     let name = ctx.parse_identifier()
     let params = parse_params()
     ctx.expect_char(':')
     let body_source = ctx.read_until_top_level_semicolon()
     defs.push((name, params, parse_filter(body_source)))
+    ctx.skip_ws()
   }
   defs
 }
@@ -1772,7 +1765,8 @@ fn FilterCursor::parse_module_prefix_with_stack(
 ) -> (Array[(String, Array[String], Filter)], String?) raise FilterError {
   let imported_defs = []
   let mut missing_module : String? = None
-  for {
+  let mut parsing = true
+  while parsing {
     ctx.skip_ws()
     if ctx.try_keyword("import") {
       ctx.skip_ws()
@@ -1818,7 +1812,7 @@ fn FilterCursor::parse_module_prefix_with_stack(
       }
       continue
     }
-    break
+    parsing = false
   }
   (imported_defs, missing_module)
 }

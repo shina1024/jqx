@@ -504,10 +504,7 @@ fn builtin_call_stream(
       } else {
         let out = []
         let mut frontier = [input]
-        for {
-          if frontier.length() == 0 {
-            break
-          }
+        while frontier.length() > 0 {
           let next = []
           for value in frontier {
             let produced = try execute_with_env(args[0], value, env) catch {

@@ -46,7 +46,7 @@ fn parse_json_stream_values(
   let values = []
   let mut start = 0
   let len = text.length()
-  for {
+  while start < len {
     start = skip_ascii_ws_offset(text, start)
     if start >= len {
       return values
@@ -55,22 +55,21 @@ fn parse_json_stream_values(
     values.push(parse_json_piece(text, start, end_))
     start = end_
   }
+  values
 }
 
 ///|
 fn skip_ascii_ws_offset(text : String, start : Int) -> Int {
   let mut i = start
-  for {
-    if i >= text.length() {
-      return i
-    }
+  while i < text.length() {
     let ch = text.unsafe_get(i).to_int().unsafe_to_char()
     if is_ascii_ws(ch) || ch.to_int() == 0xFEFF {
       i += 1
-      continue
+    } else {
+      return i
     }
-    return i
   }
+  i
 }
 
 ///|
@@ -100,10 +99,7 @@ fn parse_structured_value_end(
   let mut i = start
   let mut in_string = false
   let mut escaped = false
-  for {
-    if i >= text.length() {
-      return raise_parse_error_end_from_offset(text, start)
-    }
+  while i < text.length() {
     let ch = text.unsafe_get(i).to_int().unsafe_to_char()
     if in_string {
       if escaped {
@@ -133,6 +129,7 @@ fn parse_structured_value_end(
     }
     i += 1
   }
+  raise_parse_error_end_from_offset(text, start)
 }
 
 ///|
@@ -142,10 +139,7 @@ fn parse_string_value_end(
 ) -> Int raise @lib.ParseError {
   let mut i = start + 1
   let mut escaped = false
-  for {
-    if i >= text.length() {
-      return raise_parse_error_end_from_offset(text, start)
-    }
+  while i < text.length() {
     let ch = text.unsafe_get(i).to_int().unsafe_to_char()
     if escaped {
       escaped = false
@@ -156,21 +150,20 @@ fn parse_string_value_end(
     }
     i += 1
   }
+  raise_parse_error_end_from_offset(text, start)
 }
 
 ///|
 fn parse_scalar_value_end(text : String, start : Int) -> Int {
   let mut i = start
-  for {
-    if i >= text.length() {
-      return i
-    }
+  while i < text.length() {
     let ch = text.unsafe_get(i).to_int().unsafe_to_char()
     if i > start && is_scalar_boundary(ch) {
       return i
     }
     i += 1
   }
+  i
 }
 
 ///|

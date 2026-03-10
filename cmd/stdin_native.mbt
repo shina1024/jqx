@@ -10,10 +10,7 @@ fn read_stdin_all_internal() -> String {
   }
   let buf = StringBuilder::new()
   let mut i = 0
-  for {
-    if i >= bytes.length() {
-      break
-    }
+  while i < bytes.length() {
     match utf8_decode_next_strict(bytes, i) {
       Some((code, width)) => {
         buf.write_char(code.unsafe_to_char())

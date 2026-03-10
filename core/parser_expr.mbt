@@ -23,7 +23,8 @@ fn FilterCursor::parse_unary(ctx : FilterCursor) -> Filter raise FilterError {
 ///|
 fn FilterCursor::parse_mul(ctx : FilterCursor) -> Filter raise FilterError {
   let mut left = ctx.parse_unary()
-  for {
+  let mut parsing = true
+  while parsing {
     ctx.skip_ws()
     match ctx.peek_char() {
       Some('*') => {
@@ -31,10 +32,11 @@ fn FilterCursor::parse_mul(ctx : FilterCursor) -> Filter raise FilterError {
         ctx.read_char() |> ignore
         if ctx.peek_char() is Some('=') {
           ctx.offset = saved
-          break
+          parsing = false
+        } else {
+          let right = ctx.parse_unary()
+          left = Filter::mul(left, right)
         }
-        let right = ctx.parse_unary()
-        left = Filter::mul(left, right)
       }
       Some('/') => {
         // Don't consume '/=' or '//' / '//=' here; update/fallback handle them.
@@ -43,24 +45,26 @@ fn FilterCursor::parse_mul(ctx : FilterCursor) -> Filter raise FilterError {
         match ctx.peek_char() {
           Some('/' | '=') => {
             ctx.offset = saved
-            break
+            parsing = false
           }
-          _ => ()
+          _ => {
+            let right = ctx.parse_unary()
+            left = Filter::div(left, right)
+          }
         }
-        let right = ctx.parse_unary()
-        left = Filter::div(left, right)
       }
       Some('%') => {
         let saved = ctx.offset
         ctx.read_char() |> ignore
         if ctx.peek_char() is Some('=') {
           ctx.offset = saved
-          break
+          parsing = false
+        } else {
+          let right = ctx.parse_unary()
+          left = Filter::mod_(left, right)
         }
-        let right = ctx.parse_unary()
-        left = Filter::mod_(left, right)
       }
-      _ => break
+      _ => parsing = false
     }
   }
   left
@@ -69,7 +73,8 @@ fn FilterCursor::parse_mul(ctx : FilterCursor) -> Filter raise FilterError {
 ///|
 fn FilterCursor::parse_add(ctx : FilterCursor) -> Filter raise FilterError {
   let mut left = ctx.parse_mul()
-  for {
+  let mut parsing = true
+  while parsing {
     ctx.skip_ws()
     match ctx.peek_char() {
       Some('+') => {
@@ -77,22 +82,24 @@ fn FilterCursor::parse_add(ctx : FilterCursor) -> Filter raise FilterError {
         ctx.read_char() |> ignore
         if ctx.peek_char() is Some('=') {
           ctx.offset = saved
-          break
+          parsing = false
+        } else {
+          let right = ctx.parse_mul()
+          left = Filter::add(left, right)
         }
-        let right = ctx.parse_mul()
-        left = Filter::add(left, right)
       }
       Some('-') => {
         let saved = ctx.offset
         ctx.read_char() |> ignore
         if ctx.peek_char() is Some('=') {
           ctx.offset = saved
-          break
+          parsing = false
+        } else {
+          let right = ctx.parse_mul()
+          left = Filter::sub(left, right)
         }
-        let right = ctx.parse_mul()
-        left = Filter::sub(left, right)
       }
-      _ => break
+      _ => parsing = false
     }
   }
   left
@@ -104,19 +111,17 @@ fn FilterCursor::parse_pipe_no_comma(
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
   let mut left = ctx.parse_fallback(allow_as~)
-  for {
+  let mut parsing = true
+  while parsing {
     ctx.skip_ws()
     if allow_as && ctx.try_keyword("as") {
       let pattern = ctx.parse_as_pattern()
       ctx.skip_ws()
       if ctx.try_qslash_fallback_sep() {
         let patterns = [pattern]
-        for {
+        patterns.push(ctx.parse_as_pattern())
+        while ctx.try_qslash_fallback_sep() {
           patterns.push(ctx.parse_as_pattern())
-          if ctx.try_qslash_fallback_sep() {
-            continue
-          }
-          break
         }
         ctx.skip_ws()
         ctx.expect_char('|')
@@ -159,63 +164,61 @@ fn FilterCursor::parse_pipe_no_comma(
         ctx.read_char() |> ignore
         if ctx.peek_char() is Some('=') {
           ctx.offset = saved
-          break
-        }
-        let mut right = if ctx.peek_keyword("def") {
-          ctx.parse_scoped(allow_as~)
+          parsing = false
         } else {
-          ctx.parse_fallback(allow_as~)
-        }
-        if allow_as && ctx.try_keyword("as") {
-          let pattern = ctx.parse_as_pattern()
-          ctx.skip_ws()
-          if ctx.try_qslash_fallback_sep() {
-            let patterns = [pattern]
-            for {
-              patterns.push(ctx.parse_as_pattern())
-              if ctx.try_qslash_fallback_sep() {
-                continue
-              }
-              break
-            }
+          let mut right = if ctx.peek_keyword("def") {
+            ctx.parse_scoped(allow_as~)
+          } else {
+            ctx.parse_fallback(allow_as~)
+          }
+          if allow_as && ctx.try_keyword("as") {
+            let pattern = ctx.parse_as_pattern()
             ctx.skip_ws()
-            ctx.expect_char('|')
-            let body = if ctx.peek_keyword("def") {
-              ctx.parse_scoped(allow_as~)
-            } else {
-              ctx.parse_pipe_no_comma(allow_as~)
-            }
-            let source_tmp = ctx.fresh_as_tmp()
-            let source_var = Filter::var_(source_tmp)
-            let mut branch = ctx.lower_as_pattern_with_source(
-              source_var,
-              patterns[patterns.length() - 1],
-              body,
-            )
-            for i in 0..<(patterns.length() - 1) {
-              let idx = patterns.length() - 2 - i
-              let candidate = ctx.lower_as_pattern_with_source(
+            if ctx.try_qslash_fallback_sep() {
+              let patterns = [pattern]
+              patterns.push(ctx.parse_as_pattern())
+              while ctx.try_qslash_fallback_sep() {
+                patterns.push(ctx.parse_as_pattern())
+              }
+              ctx.skip_ws()
+              ctx.expect_char('|')
+              let body = if ctx.peek_keyword("def") {
+                ctx.parse_scoped(allow_as~)
+              } else {
+                ctx.parse_pipe_no_comma(allow_as~)
+              }
+              let source_tmp = ctx.fresh_as_tmp()
+              let source_var = Filter::var_(source_tmp)
+              let mut branch = ctx.lower_as_pattern_with_source(
                 source_var,
-                patterns[idx],
+                patterns[patterns.length() - 1],
                 body,
               )
-              branch = Filter::try_catch(candidate, branch)
-            }
-            branch = lower_with_null_defaults_for_patterns(branch, patterns)
-            right = Filter::as_(right, source_tmp, branch)
-          } else {
-            ctx.expect_char('|')
-            let body = if ctx.peek_keyword("def") {
-              ctx.parse_scoped(allow_as~)
+              for i in 0..<(patterns.length() - 1) {
+                let idx = patterns.length() - 2 - i
+                let candidate = ctx.lower_as_pattern_with_source(
+                  source_var,
+                  patterns[idx],
+                  body,
+                )
+                branch = Filter::try_catch(candidate, branch)
+              }
+              branch = lower_with_null_defaults_for_patterns(branch, patterns)
+              right = Filter::as_(right, source_tmp, branch)
             } else {
-              ctx.parse_pipe_no_comma(allow_as~)
+              ctx.expect_char('|')
+              let body = if ctx.peek_keyword("def") {
+                ctx.parse_scoped(allow_as~)
+              } else {
+                ctx.parse_pipe_no_comma(allow_as~)
+              }
+              right = ctx.lower_as_pattern_with_source(right, pattern, body)
             }
-            right = ctx.lower_as_pattern_with_source(right, pattern, body)
           }
+          left = Filter::pipe(left, right)
         }
-        left = Filter::pipe(left, right)
       }
-      _ => break
+      _ => parsing = false
     }
   }
   left
@@ -227,7 +230,8 @@ fn FilterCursor::parse_comma_tight(
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
   let mut left = ctx.parse_fallback(allow_as~)
-  for {
+  let mut parsing = true
+  while parsing {
     ctx.skip_ws()
     match ctx.peek_char() {
       Some(',') => {
@@ -239,7 +243,7 @@ fn FilterCursor::parse_comma_tight(
         }
         left = Filter::comma(left, right)
       }
-      _ => break
+      _ => parsing = false
     }
   }
   left
@@ -251,19 +255,17 @@ fn FilterCursor::parse_pipe(
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
   let mut left = ctx.parse_comma_tight(allow_as~)
-  for {
+  let mut parsing = true
+  while parsing {
     ctx.skip_ws()
     if allow_as && ctx.try_keyword("as") {
       let pattern = ctx.parse_as_pattern()
       ctx.skip_ws()
       if ctx.try_qslash_fallback_sep() {
         let patterns = [pattern]
-        for {
+        patterns.push(ctx.parse_as_pattern())
+        while ctx.try_qslash_fallback_sep() {
           patterns.push(ctx.parse_as_pattern())
-          if ctx.try_qslash_fallback_sep() {
-            continue
-          }
-          break
         }
         ctx.skip_ws()
         ctx.expect_char('|')
@@ -306,63 +308,61 @@ fn FilterCursor::parse_pipe(
         ctx.read_char() |> ignore
         if ctx.peek_char() is Some('=') {
           ctx.offset = saved
-          break
-        }
-        let mut right = if ctx.peek_keyword("def") {
-          ctx.parse_scoped(allow_as~)
+          parsing = false
         } else {
-          ctx.parse_comma_tight(allow_as~)
-        }
-        if allow_as && ctx.try_keyword("as") {
-          let pattern = ctx.parse_as_pattern()
-          ctx.skip_ws()
-          if ctx.try_qslash_fallback_sep() {
-            let patterns = [pattern]
-            for {
-              patterns.push(ctx.parse_as_pattern())
-              if ctx.try_qslash_fallback_sep() {
-                continue
-              }
-              break
-            }
+          let mut right = if ctx.peek_keyword("def") {
+            ctx.parse_scoped(allow_as~)
+          } else {
+            ctx.parse_comma_tight(allow_as~)
+          }
+          if allow_as && ctx.try_keyword("as") {
+            let pattern = ctx.parse_as_pattern()
             ctx.skip_ws()
-            ctx.expect_char('|')
-            let body = if ctx.peek_keyword("def") {
-              ctx.parse_scoped(allow_as~)
-            } else {
-              ctx.parse_comma(allow_as~)
-            }
-            let source_tmp = ctx.fresh_as_tmp()
-            let source_var = Filter::var_(source_tmp)
-            let mut branch = ctx.lower_as_pattern_with_source(
-              source_var,
-              patterns[patterns.length() - 1],
-              body,
-            )
-            for i in 0..<(patterns.length() - 1) {
-              let idx = patterns.length() - 2 - i
-              let candidate = ctx.lower_as_pattern_with_source(
+            if ctx.try_qslash_fallback_sep() {
+              let patterns = [pattern]
+              patterns.push(ctx.parse_as_pattern())
+              while ctx.try_qslash_fallback_sep() {
+                patterns.push(ctx.parse_as_pattern())
+              }
+              ctx.skip_ws()
+              ctx.expect_char('|')
+              let body = if ctx.peek_keyword("def") {
+                ctx.parse_scoped(allow_as~)
+              } else {
+                ctx.parse_comma(allow_as~)
+              }
+              let source_tmp = ctx.fresh_as_tmp()
+              let source_var = Filter::var_(source_tmp)
+              let mut branch = ctx.lower_as_pattern_with_source(
                 source_var,
-                patterns[idx],
+                patterns[patterns.length() - 1],
                 body,
               )
-              branch = Filter::try_catch(candidate, branch)
-            }
-            branch = lower_with_null_defaults_for_patterns(branch, patterns)
-            right = Filter::as_(right, source_tmp, branch)
-          } else {
-            ctx.expect_char('|')
-            let body = if ctx.peek_keyword("def") {
-              ctx.parse_scoped(allow_as~)
+              for i in 0..<(patterns.length() - 1) {
+                let idx = patterns.length() - 2 - i
+                let candidate = ctx.lower_as_pattern_with_source(
+                  source_var,
+                  patterns[idx],
+                  body,
+                )
+                branch = Filter::try_catch(candidate, branch)
+              }
+              branch = lower_with_null_defaults_for_patterns(branch, patterns)
+              right = Filter::as_(right, source_tmp, branch)
             } else {
-              ctx.parse_comma(allow_as~)
+              ctx.expect_char('|')
+              let body = if ctx.peek_keyword("def") {
+                ctx.parse_scoped(allow_as~)
+              } else {
+                ctx.parse_comma(allow_as~)
+              }
+              right = ctx.lower_as_pattern_with_source(right, pattern, body)
             }
-            right = ctx.lower_as_pattern_with_source(right, pattern, body)
           }
+          left = Filter::pipe(left, right)
         }
-        left = Filter::pipe(left, right)
       }
-      _ => break
+      _ => parsing = false
     }
   }
   left
@@ -476,7 +476,8 @@ fn FilterCursor::parse_compare(
 ) -> Filter raise FilterError {
   allow_as |> ignore
   let mut left = ctx.parse_add()
-  for {
+  let mut parsing = true
+  while parsing {
     ctx.skip_ws()
     match ctx.peek_char() {
       Some('=') => {
@@ -490,7 +491,7 @@ fn FilterCursor::parse_compare(
           }
           _ => {
             ctx.offset = saved
-            break
+            parsing = false
           }
         }
       }
@@ -533,7 +534,7 @@ fn FilterCursor::parse_compare(
           }
         }
       }
-      _ => break
+      _ => parsing = false
     }
   }
   left
@@ -545,14 +546,11 @@ fn FilterCursor::parse_and(
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
   let mut left = ctx.parse_compare(allow_as~)
-  for {
+  ctx.skip_ws()
+  while ctx.try_keyword("and") {
+    let right = ctx.parse_compare(allow_as~)
+    left = Filter::and_(left, right)
     ctx.skip_ws()
-    if ctx.try_keyword("and") {
-      let right = ctx.parse_compare(allow_as~)
-      left = Filter::and_(left, right)
-    } else {
-      break
-    }
   }
   left
 }
@@ -563,14 +561,11 @@ fn FilterCursor::parse_or(
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
   let mut left = ctx.parse_and(allow_as~)
-  for {
+  ctx.skip_ws()
+  while ctx.try_keyword("or") {
+    let right = ctx.parse_and(allow_as~)
+    left = Filter::or_(left, right)
     ctx.skip_ws()
-    if ctx.try_keyword("or") {
-      let right = ctx.parse_and(allow_as~)
-      left = Filter::or_(left, right)
-    } else {
-      break
-    }
   }
   left
 }
@@ -581,7 +576,8 @@ fn FilterCursor::parse_fallback(
   allow_as? : Bool = true,
 ) -> Filter raise FilterError {
   let mut left = ctx.parse_update(allow_as~)
-  for {
+  let mut parsing = true
+  while parsing {
     ctx.skip_ws()
     match ctx.peek_char() {
       Some('?') => {
@@ -596,12 +592,12 @@ fn FilterCursor::parse_fallback(
               }
               _ => {
                 ctx.offset = saved
-                break
+                parsing = false
               }
             }
           _ => {
             ctx.offset = saved
-            break
+            parsing = false
           }
         }
       }
@@ -613,18 +609,19 @@ fn FilterCursor::parse_fallback(
             ctx.read_char() |> ignore
             if ctx.peek_char() is Some('=') {
               ctx.offset = saved
-              break
+              parsing = false
+            } else {
+              let right = ctx.parse_update(allow_as~)
+              left = Filter::fallback(left, right)
             }
-            let right = ctx.parse_update(allow_as~)
-            left = Filter::fallback(left, right)
           }
           _ => {
             ctx.offset = saved
-            break
+            parsing = false
           }
         }
       }
-      _ => break
+      _ => parsing = false
     }
   }
   left

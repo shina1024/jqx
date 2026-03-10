@@ -253,7 +253,8 @@ fn FilterCursor::parse_bracket_postfix(
     Some(v) => keys.push(v)
     None => ctx.invalid_char()
   }
-  for {
+  let mut closed = false
+  while !closed {
     ctx.skip_ws()
     match ctx.peek_char() {
       Some(',') => {
@@ -262,7 +263,7 @@ fn FilterCursor::parse_bracket_postfix(
       }
       Some(']') => {
         ctx.read_char() |> ignore
-        break
+        closed = true
       }
       Some(_) => ctx.invalid_char()
       None => raise InvalidEof
@@ -330,18 +331,18 @@ fn FilterCursor::parse_dot_suffix(
             match first_opt {
               Some(first) => {
                 let mut combined = first
-                for {
+                let mut closed = false
+                while !closed {
                   ctx.skip_ws()
                   match ctx.peek_char() {
                     Some(',') => {
                       ctx.read_char() |> ignore
                       let next = parse_index_or_field_item()
                       combined = Filter::comma(combined, next)
-                      continue
                     }
                     Some(']') => {
                       ctx.read_char() |> ignore
-                      break
+                      closed = true
                     }
                     Some(_) => ctx.invalid_char()
                     None => raise InvalidEof
@@ -408,20 +409,21 @@ fn FilterCursor::parse_dot_expr(ctx : FilterCursor) -> Filter raise FilterError 
     }
     _ => ()
   }
-  for {
+  let mut parsing = true
+  while parsing {
     ctx.skip_ws()
     match ctx.peek_char() {
       Some('.') => {
         ctx.read_char() |> ignore
         let suffix = ctx.parse_dot_suffix()
         if suffix is Identity {
-          continue
+          ()
         } else {
           current = Filter::pipe(current, suffix)
         }
       }
       Some('[') => current = ctx.parse_bracket_postfix(current)
-      _ => break
+      _ => parsing = false
     }
   }
   current
@@ -433,7 +435,8 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
   let primary_offset = ctx.offset
   fn parse_postfix(base0 : Filter) -> Filter raise FilterError {
     let mut base = base0
-    for {
+    let mut parsing = true
+    while parsing {
       ctx.skip_ws()
       match ctx.peek_char() {
         Some('[') => base = ctx.parse_bracket_postfix(base)
@@ -441,12 +444,12 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
           ctx.read_char() |> ignore
           let suffix = ctx.parse_dot_suffix()
           if suffix is Identity {
-            continue
+            ()
           } else {
             base = Filter::pipe(base, suffix)
           }
         }
-        _ => break
+        _ => parsing = false
       }
     }
     base
@@ -640,17 +643,14 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
         guard ctx.try_keyword("then") else { ctx.invalid_char() }
         let then0 = ctx.parse_comma()
         let branches = [(cond0, then0)]
-        for {
+        ctx.skip_ws()
+        while ctx.try_keyword("elif") {
+          let elif_cond = ctx.parse_comma()
           ctx.skip_ws()
-          if ctx.try_keyword("elif") {
-            let elif_cond = ctx.parse_comma()
-            ctx.skip_ws()
-            guard ctx.try_keyword("then") else { ctx.invalid_char() }
-            let elif_then = ctx.parse_comma()
-            branches.push((elif_cond, elif_then))
-            continue
-          }
-          break
+          guard ctx.try_keyword("then") else { ctx.invalid_char() }
+          let elif_then = ctx.parse_comma()
+          branches.push((elif_cond, elif_then))
+          ctx.skip_ws()
         }
         let else_branch = if ctx.try_keyword("else") {
           ctx.parse_comma()
@@ -701,7 +701,8 @@ fn FilterCursor::parse_identifier_or_call(
         Filter::call(name, [])
       } else {
         let args = []
-        for {
+        let mut closed = false
+        while !closed {
           let arg = ctx.parse_comma()
           args.push(arg)
           ctx.skip_ws()
@@ -709,11 +710,10 @@ fn FilterCursor::parse_identifier_or_call(
             Some(';') => {
               ctx.read_char() |> ignore
               ctx.skip_ws()
-              continue
             }
             Some(')') => {
               ctx.read_char() |> ignore
-              break
+              closed = true
             }
             Some(_) => ctx.invalid_char()
             None => raise InvalidEof
@@ -798,7 +798,8 @@ fn FilterCursor::parse_object_literal(
   let static_items = []
   let dynamic_items = []
   let mut use_dynamic_lowering = false
-  for {
+  let mut closed = false
+  while !closed {
     ctx.skip_ws()
     let (key_filter0, var_key_name) = match ctx.peek_char() {
       Some('\"') => (ctx.parse_string_expr(), None)
@@ -888,13 +889,10 @@ fn FilterCursor::parse_object_literal(
 
     ctx.skip_ws()
     match ctx.peek_char() {
-      Some(',') => {
-        ctx.read_char() |> ignore
-        continue
-      }
+      Some(',') => ctx.read_char() |> ignore
       Some('}') => {
         ctx.read_char() |> ignore
-        break
+        closed = true
       }
       Some(_) => ctx.invalid_char()
       None => raise InvalidEof

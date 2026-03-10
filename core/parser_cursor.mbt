@@ -234,14 +234,11 @@ fn FilterCursor::parse_identifier(
     Some(_) => ctx.invalid_char(shift=-1)
     None => raise InvalidEof
   }
-  for {
-    match ctx.read_char() {
-      Some(c) if c is ('a'..='z' | 'A'..='Z' | '_' | '0'..='9') => continue
-      Some(_) => {
-        ctx.offset -= 1
-        break
-      }
-      None => break
+  while ctx.offset < ctx.end_offset {
+    match ctx.peek_char() {
+      Some(c) if c is ('a'..='z' | 'A'..='Z' | '_' | '0'..='9') =>
+        ignore(ctx.read_char())
+      _ => break
     }
   }
   ctx.input.view(start_offset=start, end_offset=ctx.offset).to_string()
@@ -264,10 +261,7 @@ fn FilterCursor::parse_qualified_identifier(
   ctx : FilterCursor,
 ) -> String raise FilterError {
   let mut name = ctx.parse_identifier()
-  for {
-    if !ctx.try_double_colon() {
-      break
-    }
+  while ctx.try_double_colon() {
     name = name + "::" + ctx.parse_identifier()
   }
   name
@@ -283,14 +277,10 @@ fn FilterCursor::parse_int(ctx : FilterCursor) -> Int raise FilterError {
     Some(_) => ctx.invalid_char(shift=-1)
     None => raise InvalidEof
   }
-  for {
-    match ctx.read_char() {
-      Some(c) if c is ('0'..='9') => continue
-      Some(_) => {
-        ctx.offset -= 1
-        break
-      }
-      None => break
+  while ctx.offset < ctx.end_offset {
+    match ctx.peek_char() {
+      Some(c) if c is ('0'..='9') => ignore(ctx.read_char())
+      _ => break
     }
   }
   let end = ctx.offset
@@ -332,15 +322,16 @@ fn FilterCursor::parse_string_literal(
   let mut start = ctx.offset
   fn flush(end : Int) {
     if start > 0 && end > start {
-      buf.write_view(try! ctx.input[start:end])
+      buf.write_view(ctx.input.view(start_offset=start, end_offset=end))
     }
   }
 
-  for {
+  let mut closed = false
+  while !closed {
     match ctx.read_char() {
       Some('\"') => {
         flush(ctx.offset - 1)
-        break
+        closed = true
       }
       Some('\n' | '\r') => ctx.invalid_char(shift=-1)
       Some('\\') => {
@@ -399,11 +390,12 @@ fn FilterCursor::parse_string_expr(
     }
   }
 
-  for {
+  let mut closed = false
+  while !closed {
     match ctx.read_char() {
       Some('\"') => {
         flush_text()
-        break
+        closed = true
       }
       Some('\n' | '\r') => ctx.invalid_char(shift=-1)
       Some('\\') => {
@@ -481,11 +473,12 @@ fn FilterCursor::parse_format_string_expr(
     }
   }
 
-  for {
+  let mut closed = false
+  while !closed {
     match ctx.read_char() {
       Some('\"') => {
         flush_text()
-        break
+        closed = true
       }
       Some('\n' | '\r') => ctx.invalid_char(shift=-1)
       Some('\\') =>
@@ -550,7 +543,8 @@ fn FilterCursor::parse_hex_digits(
   n : Int,
 ) -> Int raise FilterError {
   let mut r = 0
-  for i in 0..<n {
+  let mut digits_read = 0
+  while digits_read < n {
     match ctx.read_char() {
       Some(c) =>
         if c >= 'A' {
@@ -570,6 +564,7 @@ fn FilterCursor::parse_hex_digits(
         }
       None => raise InvalidEof
     }
+    digits_read += 1
   }
   r
 }
@@ -588,25 +583,20 @@ fn FilterCursor::parse_number_literal(
     None => raise InvalidEof
   }
   let mut prev_is_exp_marker = false
-  for {
-    match ctx.read_char() {
+  while ctx.offset < ctx.end_offset {
+    match ctx.peek_char() {
       Some(c) if c is ('0'..='9' | '.' | 'e' | 'E') => {
+        ignore(ctx.read_char())
         prev_is_exp_marker = c == 'e' || c == 'E'
-        continue
       }
-      Some(c) if c is ('+' | '-') => {
+      Some(c) if c is ('+' | '-') =>
         if prev_is_exp_marker {
+          ignore(ctx.read_char())
           prev_is_exp_marker = false
-          continue
+        } else {
+          break
         }
-        ctx.offset -= 1
-        break
-      }
-      Some(_) => {
-        ctx.offset -= 1
-        break
-      }
-      None => break
+      _ => break
     }
   }
   let end = ctx.offset

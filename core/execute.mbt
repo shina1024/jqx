@@ -159,20 +159,13 @@ fn is_ascii_ws(ch : Char) -> Bool {
 fn trim_ascii_ws(s : String) -> String {
   let mut start = 0
   let mut end = s.length()
-  for {
-    if start < end && is_ascii_ws(s.unsafe_get(start).to_int().unsafe_to_char()) {
-      start += 1
-    } else {
-      break
-    }
+  while start < end &&
+        is_ascii_ws(s.unsafe_get(start).to_int().unsafe_to_char()) {
+    start += 1
   }
-  for {
-    if end > start &&
-      is_ascii_ws(s.unsafe_get(end - 1).to_int().unsafe_to_char()) {
-      end -= 1
-    } else {
-      break
-    }
+  while end > start &&
+        is_ascii_ws(s.unsafe_get(end - 1).to_int().unsafe_to_char()) {
+    end -= 1
   }
   s.view(start_offset=start, end_offset=end).to_string()
 }
@@ -268,43 +261,29 @@ fn find_runtime_def(
   name : String,
   arity : Int,
 ) -> RuntimeDef? {
-  let mut current = scope
-  for {
-    match current {
-      Some(def_) =>
-        if def_.name == name && def_.params.length() == arity {
-          return Some(def_)
-        } else {
-          current = def_.parent
-          continue
-        }
-      None => break
-    }
+  match scope {
+    Some(def_) =>
+      if def_.name == name && def_.params.length() == arity {
+        Some(def_)
+      } else {
+        find_runtime_def(def_.parent, name, arity)
+      }
+    None => None
   }
-  None
 }
 
 ///|
 fn collect_runtime_defs(
   scope : RuntimeDef?,
 ) -> Array[(String, Array[String], Filter)] {
-  let rev_defs = []
-  let mut current = scope
-  for {
-    match current {
-      Some(def_) => {
-        rev_defs.push((def_.name, def_.params, def_.body))
-        current = def_.parent
-      }
-      None => break
+  match scope {
+    Some(def_) => {
+      let out = collect_runtime_defs(def_.parent)
+      out.push((def_.name, def_.params, def_.body))
+      out
     }
+    None => []
   }
-  let out = []
-  for i in 0..<rev_defs.length() {
-    let idx = rev_defs.length() - 1 - i
-    out.push(rev_defs[idx])
-  }
-  out
 }
 
 ///|
@@ -459,20 +438,15 @@ fn find_runtime_filter_closure(
   scope : RuntimeFilterClosure?,
   name : String,
 ) -> RuntimeFilterClosure? {
-  let mut current = scope
-  for {
-    match current {
-      Some(closure) =>
-        if closure.name == name {
-          return Some(closure)
-        } else {
-          current = closure.parent
-          continue
-        }
-      None => break
-    }
+  match scope {
+    Some(closure) =>
+      if closure.name == name {
+        Some(closure)
+      } else {
+        find_runtime_filter_closure(closure.parent, name)
+      }
+    None => None
   }
-  None
 }
 
 ///|
@@ -1143,7 +1117,7 @@ fn split_string(s : String, sep : String) -> Array[Json] {
   let out = []
   let mut start = 0
   let sep_len = sep.length()
-  for {
+  while start <= s.length() {
     let rest = s.view(start_offset=start)
     match rest.find(sep) {
       Some(i) => {
@@ -1161,6 +1135,7 @@ fn split_string(s : String, sep : String) -> Array[Json] {
       }
     }
   }
+  out
 }
 
 ///|

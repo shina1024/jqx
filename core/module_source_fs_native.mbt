@@ -76,10 +76,7 @@ fn module_source_utf8_decode_next_strict(bytes : Bytes, i : Int) -> (Int, Int)? 
 fn module_source_decode_utf8(bytes : Bytes) -> String {
   let out = StringBuilder::new()
   let mut i = 0
-  for {
-    if i >= bytes.length() {
-      break
-    }
+  while i < bytes.length() {
     match module_source_utf8_decode_next_strict(bytes, i) {
       Some((code, width)) => {
         if code <= 0xFFFF {

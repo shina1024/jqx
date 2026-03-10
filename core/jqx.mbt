@@ -316,18 +316,14 @@ fn sort_strings_lex(input : Array[String]) -> Array[String] {
     let merged = []
     let mut i = 0
     let mut j = 0
-    for {
-      if i < left.length() && j < right.length() {
-        if left[i].compare(right[j]) <= 0 {
-          merged.push(left[i])
-          i += 1
-        } else {
-          merged.push(right[j])
-          j += 1
-        }
-        continue
+    while i < left.length() && j < right.length() {
+      if left[i].compare(right[j]) <= 0 {
+        merged.push(left[i])
+        i += 1
+      } else {
+        merged.push(right[j])
+        j += 1
       }
-      break
     }
     for k in i..<left.length() {
       merged.push(left[k])
@@ -827,11 +823,11 @@ fn ParseContext::lex_nonfinite_number(
   start~ : Int,
 ) -> Token raise ParseError {
   let mut ended_at_separator = false
-  for {
-    match ctx.read_char() {
-      Some(c) if is_ascii_alpha(c) || c is ('0'..='9') => continue
-      Some(c) => {
-        ctx.offset -= c.utf16_len()
+  while ctx.offset < ctx.end_offset {
+    match ctx.peek_char() {
+      Some(c) if is_ascii_alpha(c) || c is ('0'..='9') =>
+        ignore(ctx.read_char())
+      Some(_) => {
         ended_at_separator = true
         break
       }
@@ -1050,15 +1046,16 @@ fn ParseContext::lex_string(ctx : ParseContext) -> String raise ParseError {
   let mut start = ctx.offset
   fn flush(end : Int) {
     if start > 0 && end > start {
-      buf.write_view(try! ctx.input[start:end])
+      buf.write_view(ctx.input.view(start_offset=start, end_offset=end))
     }
   }
 
-  for {
+  let mut closed = false
+  while !closed {
     match ctx.read_char() {
       Some('"') => {
         flush(ctx.offset - 1)
-        break
+        closed = true
       }
       Some('\n' | '\r') => ctx.invalid_char(shift=-1)
       Some('\\') => {
@@ -1098,14 +1095,11 @@ fn[T] ParseContext::invalid_single_quoted_string(
   ctx : ParseContext,
 ) -> T raise ParseError {
   let mut has_closing_quote = false
-  for {
+  while !has_closing_quote && ctx.offset < ctx.end_offset {
     match ctx.read_char() {
-      Some('\'') => {
-        has_closing_quote = true
-        break
-      }
-      Some(_) => continue
-      None => break
+      Some('\'') => has_closing_quote = true
+      Some(_) => ()
+      None => ()
     }
   }
   if has_closing_quote {
@@ -1143,7 +1137,8 @@ fn ParseContext::lex_hex_digits(
   n : Int,
 ) -> Int raise ParseError {
   let mut r = 0
-  for i in 0..<n {
+  let mut digits_read = 0
+  while digits_read < n {
     match ctx.read_char() {
       Some(c) =>
         if c >= 'A' {
@@ -1163,6 +1158,7 @@ fn ParseContext::lex_hex_digits(
         }
       None => raise InvalidEof
     }
+    digits_read += 1
   }
   r
 }
@@ -1172,20 +1168,26 @@ fn ParseContext::lex_decimal_integer(
   ctx : ParseContext,
   start~ : Int,
 ) -> (Double, StringView?) raise ParseError {
-  for {
-    match ctx.read_char() {
-      Some('.') => return ctx.lex_decimal_point(start~)
-      Some('e' | 'E') => return ctx.lex_decimal_exponent(start~)
-      Some(c) => {
-        if c >= '0' && c <= '9' {
-          continue
-        }
-        ctx.offset -= 1
-        return ctx.lex_number_end(start, ctx.offset)
+  while ctx.offset < ctx.end_offset {
+    match ctx.peek_char() {
+      Some('.') => {
+        ignore(ctx.read_char())
+        return ctx.lex_decimal_point(start~)
       }
-      None => return ctx.lex_number_end(start, ctx.offset)
+      Some('e' | 'E') => {
+        ignore(ctx.read_char())
+        return ctx.lex_decimal_exponent(start~)
+      }
+      Some(c) =>
+        if c >= '0' && c <= '9' {
+          ignore(ctx.read_char())
+        } else {
+          return ctx.lex_number_end(start, ctx.offset)
+        }
+      None => break
     }
   }
+  ctx.lex_number_end(start, ctx.offset)
 }
 
 ///|
@@ -1209,19 +1211,22 @@ fn ParseContext::lex_decimal_fraction(
   ctx : ParseContext,
   start~ : Int,
 ) -> (Double, StringView?) raise ParseError {
-  for {
-    match ctx.read_char() {
-      Some('e' | 'E') => return ctx.lex_decimal_exponent(start~)
-      Some(c) => {
-        if c >= '0' && c <= '9' {
-          continue
-        }
-        ctx.offset -= 1
-        return ctx.lex_number_end(start, ctx.offset)
+  while ctx.offset < ctx.end_offset {
+    match ctx.peek_char() {
+      Some('e' | 'E') => {
+        ignore(ctx.read_char())
+        return ctx.lex_decimal_exponent(start~)
       }
-      None => return ctx.lex_number_end(start, ctx.offset)
+      Some(c) =>
+        if c >= '0' && c <= '9' {
+          ignore(ctx.read_char())
+        } else {
+          return ctx.lex_number_end(start, ctx.offset)
+        }
+      None => break
     }
   }
+  ctx.lex_number_end(start, ctx.offset)
 }
 
 ///|
@@ -1264,18 +1269,18 @@ fn ParseContext::lex_decimal_exponent_integer(
   ctx : ParseContext,
   start~ : Int,
 ) -> (Double, StringView?) {
-  for {
-    match ctx.read_char() {
-      Some(c) => {
+  while ctx.offset < ctx.end_offset {
+    match ctx.peek_char() {
+      Some(c) =>
         if c >= '0' && c <= '9' {
-          continue
+          ignore(ctx.read_char())
+        } else {
+          return ctx.lex_number_end(start, ctx.offset)
         }
-        ctx.offset -= 1
-        return ctx.lex_number_end(start, ctx.offset)
-      }
-      None => return ctx.lex_number_end(start, ctx.offset)
+      None => break
     }
   }
+  ctx.lex_number_end(start, ctx.offset)
 }
 
 ///|
@@ -1392,13 +1397,9 @@ fn number_literal_significant_digits(token : StringView) -> Int {
     }
   }
   let mut left_start = start
-  for {
-    if left_start < dot &&
-      token.unsafe_get(left_start).to_int().unsafe_to_char() == '0' {
-      left_start += 1
-    } else {
-      break
-    }
+  while left_start < dot &&
+        token.unsafe_get(left_start).to_int().unsafe_to_char() == '0' {
+    left_start += 1
   }
   let left_digits = if dot > left_start { dot - left_start } else { 0 }
   let mut right_start = end
@@ -1406,13 +1407,9 @@ fn number_literal_significant_digits(token : StringView) -> Int {
     right_start = dot + 1
   }
   let mut right_end = end
-  for {
-    if right_end > right_start &&
-      token.unsafe_get(right_end - 1).to_int().unsafe_to_char() == '0' {
-      right_end -= 1
-    } else {
-      break
-    }
+  while right_end > right_start &&
+        token.unsafe_get(right_end - 1).to_int().unsafe_to_char() == '0' {
+    right_end -= 1
   }
   let right_digits = if right_end > right_start {
     right_end - right_start
@@ -1495,13 +1492,9 @@ fn number_literal_normalized_large_exponent_repr(token : StringView) -> String {
     return token.to_string()
   }
   let mut lead = 0
-  for {
-    if lead < digits_raw.length() &&
-      digits_raw.unsafe_get(lead).to_int().unsafe_to_char() == '0' {
-      lead += 1
-    } else {
-      break
-    }
+  while lead < digits_raw.length() &&
+        digits_raw.unsafe_get(lead).to_int().unsafe_to_char() == '0' {
+    lead += 1
   }
   if lead >= digits_raw.length() {
     return "0E+0"
@@ -1511,13 +1504,9 @@ fn number_literal_normalized_large_exponent_repr(token : StringView) -> String {
     .to_string()
   let mut end = trimmed.length()
   let mut exp_base = exp_value - frac_digits
-  for {
-    if end > 1 && trimmed.unsafe_get(end - 1).to_int().unsafe_to_char() == '0' {
-      end -= 1
-      exp_base += 1
-    } else {
-      break
-    }
+  while end > 1 && trimmed.unsafe_get(end - 1).to_int().unsafe_to_char() == '0' {
+    end -= 1
+    exp_base += 1
   }
   let digits = trimmed.view(start_offset=0, end_offset=end).to_string()
   let exp_final = exp_base + digits.length() - 1

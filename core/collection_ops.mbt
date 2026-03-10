@@ -329,18 +329,14 @@ fn sort_json_array(a : Array[Json]) -> Array[Json] {
     let merged = []
     let mut i = 0
     let mut j = 0
-    for {
-      if i < left.length() && j < right.length() {
-        if compare_json(left[i], right[j]) <= 0 {
-          merged.push(left[i])
-          i += 1
-        } else {
-          merged.push(right[j])
-          j += 1
-        }
-        continue
+    while i < left.length() && j < right.length() {
+      if compare_json(left[i], right[j]) <= 0 {
+        merged.push(left[i])
+        i += 1
+      } else {
+        merged.push(right[j])
+        j += 1
       }
-      break
     }
     for k in i..<left.length() {
       merged.push(left[k])
@@ -451,18 +447,14 @@ fn sort_keyed_pairs(items : Array[(Json, Json)]) -> Array[(Json, Json)] {
     let merged : Array[(Json, Json)] = []
     let mut i = 0
     let mut j = 0
-    for {
-      if i < left.length() && j < right.length() {
-        if compare_json(left[i].0, right[j].0) <= 0 {
-          merged.push(left[i])
-          i += 1
-        } else {
-          merged.push(right[j])
-          j += 1
-        }
-        continue
+    while i < left.length() && j < right.length() {
+      if compare_json(left[i].0, right[j].0) <= 0 {
+        merged.push(left[i])
+        i += 1
+      } else {
+        merged.push(right[j])
+        j += 1
       }
-      break
     }
     for k in i..<left.length() {
       merged.push(left[k])
@@ -493,10 +485,7 @@ fn sort_keyed_pairs(items : Array[(Json, Json)]) -> Array[(Json, Json)] {
 fn bsearch_json_array(a : Array[Json], needle : Json) -> Int {
   let mut lo = 0
   let mut hi = a.length()
-  for {
-    if lo >= hi {
-      break
-    }
+  while lo < hi {
     let mid = (lo + hi) / 2
     let cmp = compare_json(a[mid], needle)
     if cmp < 0 {

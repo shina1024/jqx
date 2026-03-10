@@ -30,12 +30,9 @@ fn offset_from_line_column(input : String, line : Int, column : Int) -> Int {
   let mut offset = 0
   let mut current_line = 1
   let mut current_column = 1
-  for {
+  while offset < input.length() {
     if current_line == line && current_column == column {
       return offset
-    }
-    if offset >= input.length() {
-      break
     }
     let ch = input.unsafe_get(offset).to_int().unsafe_to_char()
     offset += 1

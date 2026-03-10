@@ -73,10 +73,7 @@ fn regex_expand_shorthand_classes(pattern : String) -> String {
   let len = chars.length()
   let buf = StringBuilder::new()
   let mut i = 0
-  for {
-    if i >= len {
-      return buf.to_string()
-    }
+  while i < len {
     let ch = chars[i]
     if ch == '\\' && i + 1 < len {
       match chars[i + 1] {
@@ -96,8 +93,8 @@ fn regex_expand_shorthand_classes(pattern : String) -> String {
     }
     buf.write_char(ch)
     i += 1
-    continue
   }
+  buf.to_string()
 }
 
 ///|
@@ -107,10 +104,7 @@ fn regex_apply_extended_mode(pattern : String) -> String {
   let buf = StringBuilder::new()
   let mut in_char_class = false
   let mut i = 0
-  for {
-    if i >= len {
-      return buf.to_string()
-    }
+  while i < len {
     let ch = chars[i]
     if ch == '\\' {
       buf.write_char(ch)
@@ -135,16 +129,12 @@ fn regex_apply_extended_mode(pattern : String) -> String {
     }
     if !in_char_class && ch == '#' {
       i += 1
-      for {
-        if i >= len {
-          return buf.to_string()
-        }
+      while i < len {
         let c = chars[i]
         if c == '\n' || c == '\r' {
           break
         }
         i += 1
-        continue
       }
       continue
     }
@@ -154,8 +144,8 @@ fn regex_apply_extended_mode(pattern : String) -> String {
     }
     buf.write_char(ch)
     i += 1
-    continue
   }
+  buf.to_string()
 }
 
 ///|
@@ -355,10 +345,7 @@ fn regex_find_top_level_lookahead_match(
 ) -> RegexMatchData? {
   let len = input.length()
   let mut current_start = search_start
-  for {
-    if current_start > len {
-      return None
-    }
+  while current_start <= len {
     match regex.execute(input[:], current_start) {
       None => return None
       Some(result) =>
@@ -383,6 +370,7 @@ fn regex_find_top_level_lookahead_match(
         }
     }
   }
+  None
 }
 
 ///|
@@ -393,10 +381,7 @@ fn regex_find_next_match(
 ) -> RegexMatchData? {
   let len = input.length()
   let mut current_start = search_start
-  for {
-    if current_start > len {
-      return None
-    }
+  while current_start <= len {
     let found = match compiled.matcher {
       Native(regex) => regex_find_native_next_match(regex, input, current_start)
       TopLevelPositiveLookahead(regex) =>
@@ -417,6 +402,7 @@ fn regex_find_next_match(
         }
     }
   }
+  None
 }
 
 ///|
@@ -528,7 +514,7 @@ fn regex_scan_values(
   let len = s.length()
   let has_captures = compiled.group_names.length() > 1
   let out = []
-  for {
+  while search_start <= len {
     match regex_find_next_match(compiled, s, search_start) {
       Some(found) => {
         if has_captures {
@@ -552,6 +538,7 @@ fn regex_scan_values(
       None => return out
     }
   }
+  out
 }
 
 ///|
@@ -565,7 +552,7 @@ fn regex_match_objects(
   let mut search_start = 0
   let len = s.length()
   let out = []
-  for {
+  while search_start <= len {
     match regex_find_next_match(compiled, s, search_start) {
       Some(found) => {
         let captures = []
@@ -600,6 +587,7 @@ fn regex_match_objects(
       None => return out
     }
   }
+  out
 }
 
 ///|
@@ -613,7 +601,7 @@ fn regex_capture_objects(
   let mut search_start = 0
   let len = s.length()
   let out = []
-  for {
+  while search_start <= len {
     match regex_find_next_match(compiled, s, search_start) {
       Some(found) => {
         out.push(
@@ -634,6 +622,7 @@ fn regex_capture_objects(
       None => return out
     }
   }
+  out
 }
 
 ///|
@@ -698,7 +687,7 @@ fn regex_substitute_values(
   let mut search_start = 0
   let mut token_start = 0
   let mut variants : Array[Array[String]] = [[]]
-  for {
+  while search_start <= len {
     match regex_find_next_match(compiled, s, search_start) {
       Some(found) => {
         let prefix = regex_slice_string(s, token_start, found.start)
@@ -776,4 +765,15 @@ fn regex_substitute_values(
       }
     }
   }
+  let suffix = regex_slice_string(s, token_start, len)
+  if suffix.length() > 0 {
+    for variant in variants {
+      variant.push(suffix)
+    }
+  }
+  let out = []
+  for chunks in variants {
+    out.push(regex_join_chunks(chunks))
+  }
+  out
 }

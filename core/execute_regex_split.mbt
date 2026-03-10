@@ -75,13 +75,9 @@ fn split_regex_char_is_escaped(
 ) -> Bool {
   let mut backslashes = 0
   let mut i = index - 1
-  for {
-    if i >= start && chars[i] == '\\' {
-      backslashes = backslashes + 1
-      i = i - 1
-      continue
-    }
-    break
+  while i >= start && chars[i] == '\\' {
+    backslashes = backslashes + 1
+    i = i - 1
   }
   backslashes % 2 == 1
 }
@@ -104,10 +100,7 @@ fn parse_split_regex_pattern(pattern : String) -> SplitRegexPattern {
   }
   let out = []
   let mut i = start
-  for {
-    if i >= end_ {
-      return SplitRegexPattern::{ atoms: out, anchor_start, anchor_end }
-    }
+  while i < end_ {
     let mut ch = chars[i]
     if ch == '\\' && i + 1 < end_ {
       i = i + 1
@@ -138,8 +131,8 @@ fn parse_split_regex_pattern(pattern : String) -> SplitRegexPattern {
     }
     out.push(SplitRegexAtom::{ ch, min_repeat, max_repeat })
     i = i + 1
-    continue
   }
+  SplitRegexPattern::{ atoms: out, anchor_start, anchor_end }
 }
 
 ///|
@@ -158,15 +151,11 @@ fn split_regex_match_end(
   let len = chars.length()
   let mut max_repeat = 0
   let mut cursor = pos
-  for {
-    if cursor < len &&
-      (atom.max_repeat < 0 || max_repeat < atom.max_repeat) &&
-      split_regex_char_matches(chars[cursor], atom.ch, ignore_case) {
-      max_repeat = max_repeat + 1
-      cursor = cursor + 1
-      continue
-    }
-    break
+  while cursor < len &&
+        (atom.max_repeat < 0 || max_repeat < atom.max_repeat) &&
+        split_regex_char_matches(chars[cursor], atom.ch, ignore_case) {
+    max_repeat = max_repeat + 1
+    cursor = cursor + 1
   }
 
   if max_repeat < atom.min_repeat {
@@ -174,24 +163,13 @@ fn split_regex_match_end(
   }
 
   let mut repeat = max_repeat
-  for {
-    if repeat >= atom.min_repeat {
-      let next_pos = pos + repeat
-      match
-        split_regex_match_end(
-          chars,
-          next_pos,
-          atoms,
-          atom_index + 1,
-          ignore_case,
-        ) {
-        Some(end_pos) => return Some(end_pos)
-        None => ()
-      }
-      repeat = repeat - 1
-      continue
+  while repeat >= atom.min_repeat {
+    let next_pos = pos + repeat
+    match
+      split_regex_match_end(chars, next_pos, atoms, atom_index + 1, ignore_case) {
+      Some(end_pos) => return Some(end_pos)
+      None => repeat = repeat - 1
     }
-    break
   }
   None
 }
@@ -211,10 +189,7 @@ fn split_regex_find_next(
     return None
   }
   let mut pos = if anchor_start { 0 } else { start }
-  for {
-    if pos > len {
-      return None
-    }
+  while pos <= len {
     match split_regex_match_end(chars, pos, atoms, 0, ignore_case) {
       Some(end_pos) =>
         if anchor_end && end_pos != len {
@@ -243,6 +218,7 @@ fn split_regex_find_next(
         }
     }
   }
+  None
 }
 
 ///|
@@ -263,7 +239,7 @@ fn split_string_regex_tokens(
   let mut token_start = 0
   let mut search_start = 0
 
-  for {
+  while search_start <= len {
     match
       split_regex_find_next(
         chars, search_start, atoms, ignore_case, skip_empty_match, anchor_start,
@@ -290,4 +266,5 @@ fn split_string_regex_tokens(
       }
     }
   }
+  out
 }

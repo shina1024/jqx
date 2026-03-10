@@ -117,12 +117,8 @@ fn setpath_on_input(
             }
           } else {
             let out = a.copy()
-            for {
-              if out.length() <= i {
-                out.push(Json::null())
-              } else {
-                break
-              }
+            while out.length() <= i {
+              out.push(Json::null())
             }
             out[i] = setpath_on_input(out[i], rest, value)
             Json::array(out)
@@ -146,12 +142,8 @@ fn setpath_on_input(
             raise TypeError("Out of bounds negative array index")
           } else {
             let out = []
-            for {
-              if out.length() <= i {
-                out.push(Json::null())
-              } else {
-                break
-              }
+            while out.length() <= i {
+              out.push(Json::null())
             }
             out[i] = setpath_on_input(out[i], rest, value)
             Json::array(out)

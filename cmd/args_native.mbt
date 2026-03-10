@@ -20,10 +20,7 @@ fn utf8_decode_bytes_lossy_prefix(bytes : Bytes, len : Int) -> String {
   }
   let buf = StringBuilder::new()
   let mut i = 0
-  for {
-    if i >= ints.length() {
-      break
-    }
+  while i < ints.length() {
     match utf8_decode_next_strict(ints, i) {
       Some((code, width)) => {
         buf.write_char(code.unsafe_to_char())

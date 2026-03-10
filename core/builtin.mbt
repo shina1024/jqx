@@ -2,13 +2,9 @@
 fn builtin_ltrim_ascii_ws(s : String) -> String {
   let mut start = 0
   let end = s.length()
-  for {
-    if start < end &&
-      builtin_is_trim_ws(s.unsafe_get(start).to_int().unsafe_to_char()) {
-      start += 1
-    } else {
-      break
-    }
+  while start < end &&
+        builtin_is_trim_ws(s.unsafe_get(start).to_int().unsafe_to_char()) {
+    start += 1
   }
   s.view(start_offset=start, end_offset=end).to_string()
 }
@@ -17,13 +13,9 @@ fn builtin_ltrim_ascii_ws(s : String) -> String {
 fn builtin_rtrim_ascii_ws(s : String) -> String {
   let start = 0
   let mut end = s.length()
-  for {
-    if end > start &&
-      builtin_is_trim_ws(s.unsafe_get(end - 1).to_int().unsafe_to_char()) {
-      end -= 1
-    } else {
-      break
-    }
+  while end > start &&
+        builtin_is_trim_ws(s.unsafe_get(end - 1).to_int().unsafe_to_char()) {
+    end -= 1
   }
   s.view(start_offset=start, end_offset=end).to_string()
 }
@@ -407,10 +399,7 @@ fn utf8_decode_next_strict(bytes : Array[Int], i : Int) -> (Int, Int)? {
 fn utf8_decode_bytes_strict(bytes : Array[Int]) -> String? {
   let buf = StringBuilder::new()
   let mut i = 0
-  for {
-    if i >= bytes.length() {
-      break
-    }
+  while i < bytes.length() {
     match utf8_decode_next_strict(bytes, i) {
       Some((code, width)) => {
         buf.write_char(code.unsafe_to_char())
@@ -426,10 +415,7 @@ fn utf8_decode_bytes_strict(bytes : Array[Int]) -> String? {
 fn utf8_decode_bytes_lossy(bytes : Array[Int]) -> String {
   let buf = StringBuilder::new()
   let mut i = 0
-  for {
-    if i >= bytes.length() {
-      break
-    }
+  while i < bytes.length() {
     match utf8_decode_next_strict(bytes, i) {
       Some((code, width)) => {
         buf.write_char(code.unsafe_to_char())
@@ -488,10 +474,7 @@ fn format_uri_encode(input : String) -> String {
 fn format_uri_decode(input : String) -> String? {
   let bytes = []
   let mut i = 0
-  for {
-    if i >= input.length() {
-      break
-    }
+  while i < input.length() {
     let ch = input.unsafe_get(i).to_int().unsafe_to_char()
     if ch == '%' {
       guard i + 2 < input.length() else { return None }
@@ -535,10 +518,7 @@ fn format_base64_encode(input : String) -> String {
   let alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
   let buf = StringBuilder::new()
   let mut i = 0
-  for {
-    if i >= bytes.length() {
-      break
-    }
+  while i < bytes.length() {
     let b0 = bytes[i]
     let has_b1 = i + 1 < bytes.length()
     let has_b2 = i + 2 < bytes.length()
@@ -582,12 +562,8 @@ fn format_base64_decode(
   let out = []
   let mut len = chars.length()
   // jq accepts lax trailing '=' padding, including the degenerate "=" case.
-  for {
-    if len > 0 && chars[len - 1] == '=' {
-      len -= 1
-    } else {
-      break
-    }
+  while len > 0 && chars[len - 1] == '=' {
+    len -= 1
   }
   let full_groups = len / 4
   for g in 0..<full_groups {
