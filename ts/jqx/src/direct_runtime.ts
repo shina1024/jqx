@@ -293,9 +293,52 @@ function compileDirectQuery(query: DirectQueryInput): JqxResult<unknown, JqxRunt
   }
 }
 
-export class CompiledFilter {
+function runCompiledJsonTextInternal(
+  filter: CompiledFilter,
+  input: string,
+): JqxResult<string[], JqxRuntimeError> {
+  try {
+    return fromMoonBitResult<string[], string[]>(
+      moonbit.run_compiled_json_text(unwrapCompiledFilter(filter), input),
+      (value) => value,
+      "run_compiled_json_text",
+    );
+  } catch (error) {
+    return {
+      ok: false,
+      error: toBackendRuntimeError(error, "run_compiled_json_text failed"),
+    };
+  }
+}
+
+function runCompiledInternal(
+  filter: CompiledFilter,
+  input: Json,
+): JqxResult<Json[], JqxRuntimeError> {
+  const encoded = encodeRuntimeInput(input);
+  if (!encoded.ok) {
+    return encoded;
+  }
+  const runtimeOut = runCompiledJsonTextInternal(filter, encoded.value);
+  if (!runtimeOut.ok) {
+    return runtimeOut;
+  }
+  return decodeRuntimeOutputs(runtimeOut.value);
+}
+
+export class CompiledFilter<Filter extends string = string> {
   constructor(raw: unknown) {
     compiledFilterRaw.set(this, raw);
+  }
+
+  run<Input extends Json>(input: Input): JqxResult<InferJqOutput<Input, Filter, "json">[], JqxRuntimeError>;
+  run(input: Json): JqxResult<Json[], JqxRuntimeError>;
+  run(input: Json): JqxResult<Json[], JqxRuntimeError> {
+    return runCompiledInternal(this, input);
+  }
+
+  runJsonText(input: string): JqxResult<string[], JqxRuntimeError> {
+    return runCompiledJsonTextInternal(this, input);
   }
 }
 
@@ -309,9 +352,8 @@ function unwrapCompiledFilter(filter: CompiledFilter): unknown {
 
 export interface JqxDirectRuntime extends JqxRuntime {
   runJsonText(filter: string, input: string): JqxResult<string[], JqxRuntimeError>;
+  compile<Filter extends string>(filter: Filter): JqxResult<CompiledFilter<Filter>, JqxRuntimeError>;
   compile(filter: string): JqxResult<CompiledFilter, JqxRuntimeError>;
-  runCompiled(filter: CompiledFilter, input: Json): JqxResult<Json[], JqxRuntimeError>;
-  runCompiledJsonText(filter: CompiledFilter, input: string): JqxResult<string[], JqxRuntimeError>;
   parseJson(input: string): JqxResult<Json, JqxRuntimeError>;
   isValidJson(input: string): boolean;
 }
@@ -345,45 +387,18 @@ export function run(filter: string, input: Json): JqxResult<Json[], JqxRuntimeEr
   return decodeRuntimeOutputs(runtimeOut.value);
 }
 
-export function compile(filter: string): JqxResult<CompiledFilter, JqxRuntimeError> {
-  return fromMoonBitResult<unknown, CompiledFilter>(
+export function compile<Filter extends string>(
+  filter: Filter,
+): JqxResult<CompiledFilter<Filter>, JqxRuntimeError>;
+export function compile(filter: string): JqxResult<CompiledFilter, JqxRuntimeError>;
+export function compile<Filter extends string>(
+  filter: Filter,
+): JqxResult<CompiledFilter<Filter>, JqxRuntimeError> {
+  return fromMoonBitResult<unknown, CompiledFilter<Filter>>(
     moonbit.try_compile(filter),
-    (value) => new CompiledFilter(value),
+    (value) => new CompiledFilter<Filter>(value),
     "compile",
   );
-}
-
-export function runCompiledJsonText(
-  filter: CompiledFilter,
-  input: string,
-): JqxResult<string[], JqxRuntimeError> {
-  try {
-    return fromMoonBitResult<string[], string[]>(
-      moonbit.run_compiled_json_text(unwrapCompiledFilter(filter), input),
-      (value) => value,
-      "run_compiled_json_text",
-    );
-  } catch (error) {
-    return {
-      ok: false,
-      error: toBackendRuntimeError(error, "run_compiled_json_text failed"),
-    };
-  }
-}
-
-export function runCompiled(
-  filter: CompiledFilter,
-  input: Json,
-): JqxResult<Json[], JqxRuntimeError> {
-  const encoded = encodeRuntimeInput(input);
-  if (!encoded.ok) {
-    return encoded;
-  }
-  const runtimeOut = runCompiledJsonText(filter, encoded.value);
-  if (!runtimeOut.ok) {
-    return runtimeOut;
-  }
-  return decodeRuntimeOutputs(runtimeOut.value);
 }
 
 export function parseJson(input: string): JqxResult<Json, JqxRuntimeError> {
@@ -448,8 +463,6 @@ export const runtime: JqxDirectRuntime = {
   run,
   runJsonText,
   compile,
-  runCompiled,
-  runCompiledJsonText,
   parseJson,
   isValidJson,
 };

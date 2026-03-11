@@ -10,8 +10,6 @@ import {
   queryJsonText,
   queryRuntime,
   run,
-  runCompiled,
-  runCompiledJsonText,
   runJsonText,
   runtime,
   toAst,
@@ -27,17 +25,17 @@ test("run stringifies input and parses outputs", () => {
   assert.deepEqual(result, { ok: true, value: [1] });
 });
 
-test("compile returns an opaque compiled filter that runCompiled can execute", () => {
+test("compile returns an opaque compiled filter with run methods", () => {
   const compiled = compile(".items[]");
   assert.equal(compiled.ok, true);
   if (!compiled.ok) {
     return;
   }
 
-  const runtimeText = runCompiledJsonText(compiled.value, '{"items":[1,2,3]}');
+  const runtimeText = compiled.value.runJsonText('{"items":[1,2,3]}');
   assert.deepEqual(runtimeText, { ok: true, value: ["1", "2", "3"] });
 
-  const runtimeValue = runCompiled(compiled.value, { items: [1, 2, 3] });
+  const runtimeValue = compiled.value.run({ items: [1, 2, 3] });
   assert.deepEqual(runtimeValue, { ok: true, value: [1, 2, 3] });
 });
 

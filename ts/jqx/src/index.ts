@@ -70,8 +70,6 @@ export {
   queryJsonText,
   queryRuntime,
   run,
-  runCompiled,
-  runCompiledJsonText,
   runJsonText,
   runtime,
 } from "./direct_runtime.js";

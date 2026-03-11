@@ -5,7 +5,7 @@ Direct-use JS/TS runtime for `jqx`, plus typed query helpers and schema-adapter 
 ## Exports
 
 - `@shina1024/jqx`
-  - direct runtime: `run`, `runJsonText`, `compile`, `runCompiled`, `runCompiledJsonText`
+  - direct runtime: `run`, `runJsonText`, `compile`
   - JSON helpers: `parseJson`, `isValidJson`
   - query lane: `query`, `queryJsonText`
   - adapter-ready runtime objects: `runtime`, `queryRuntime`
@@ -37,13 +37,16 @@ Use the value lane when native JS values are convenient, and the JSON text lane 
 ## Compiled Filters
 
 ```ts
-import { compile, runCompiled } from "@shina1024/jqx";
+import { compile } from "@shina1024/jqx";
 
 const compiled = compile(".items[]");
 if (compiled.ok) {
-  const result = runCompiled(compiled.value, { items: [1, 2, 3] });
+  const result = compiled.value.run({ items: [1, 2, 3] });
+  const compat = compiled.value.runJsonText('{"items":[1,2,3]}');
 }
 ```
+
+Compiled filters expose `.run(...)` for JSON values and `.runJsonText(...)` for the compatibility lane.
 
 ## Query DSL
 

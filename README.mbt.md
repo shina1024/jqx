@@ -40,15 +40,15 @@ Compiled execution:
 
 ```mbt check
 ///|
-test "moonbit compile and run_compiled" {
+test "moonbit compile and run through a compiled filter" {
   let filter = compile(".items[]") catch { err => fail(err.to_string()) }
   let input : Json = { "items": [1.0, 2.0, 3.0] }
-  let outputs = run_compiled(filter, input) catch {
-    err => fail(err.to_string())
-  }
+  let outputs = filter.run(input) catch { err => fail(err.to_string()) }
   assert_eq(outputs.map(v => v.stringify()), ["1", "2", "3"])
 }
 ```
+
+Compiled filters expose `run(...)` for the value lane and `run_json_text(...)` for the compatibility lane.
 
 Compatibility lane:
 
@@ -117,11 +117,11 @@ const compat = runJsonText(".", "9007199254740993");
 Compiled / query example:
 
 ```ts
-import { compile, field, query, runCompiled } from "@shina1024/jqx";
+import { compile, field, query } from "@shina1024/jqx";
 
 const compiled = compile(".items[]");
 if (compiled.ok) {
-  const out = runCompiled(compiled.value, { items: [1, 2, 3] });
+  const out = compiled.value.run({ items: [1, 2, 3] });
 }
 
 const selected = query(field("user"), { user: { name: "alice" } });

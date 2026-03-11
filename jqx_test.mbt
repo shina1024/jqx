@@ -22,16 +22,20 @@ test "run roundtrips standard Json values without exposing core types" {
 }
 
 ///|
-test "compile and run_compiled use public Json surface" {
+test "compile returns a filter with run methods on public Json surface" {
   let filter = compile(".foo + 1") catch {
     err => fail("compile failed: " + err.to_string())
   }
   let input : Json = { "foo": 41.0 }
-  let values = run_compiled(filter, input) catch {
-    err => fail("run_compiled failed: " + err.to_string())
+  let values = filter.run(input) catch {
+    err => fail("compiled run failed: " + err.to_string())
   }
   assert_eq(values.length(), 1)
   assert_eq(values[0].stringify(), "42")
+  let text_values = filter.run_json_text("{\"foo\":41}") catch {
+    err => fail("compiled run_json_text failed: " + err.to_string())
+  }
+  assert_eq(text_values, ["42"])
 }
 
 ///|
@@ -74,12 +78,12 @@ test "compile raises public CompileError" {
 }
 
 ///|
-test "run_compiled raises public RuntimeError with Json payloads" {
+test "compiled filter run raises public RuntimeError with Json payloads" {
   let filter = compile("error({\"code\":1})") catch {
     err => fail("compile failed: " + err.to_string())
   }
   let input : Json = null
-  guard (try? run_compiled(filter, input)) is Err(Thrown(value)) else {
+  guard (try? filter.run(input)) is Err(Thrown(value)) else {
     fail("expected public thrown eval error")
   }
   assert_eq(value.stringify(), "{\"code\":1}")

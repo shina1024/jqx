@@ -22,8 +22,10 @@ This repository targets jq-compatible behavior.
   - compatibility lane: accept and return JSON text (`StringView` / `String`) when jq-style fidelity matters
 - Canonical public names:
   - MoonBit packages use `lower_snake` for values/functions
-  - MoonBit public package: `parse_json`, `is_valid_json`, `compile`, `run`, `run_compiled`, `run_json_text`, `run_compiled_json_text`
-  - JS/TS direct runtime methods: `parseJson`, `isValidJson`, `compile`, `run`, `runCompiled`, `runJsonText`, `runCompiledJsonText`, `query`, `queryJsonText`
+  - MoonBit public package: `parse_json`, `is_valid_json`, `compile`, `run`, `run_json_text`
+  - MoonBit compiled-filter methods: `CompiledFilter::run`, `CompiledFilter::run_json_text`
+  - JS/TS direct runtime functions: `parseJson`, `isValidJson`, `compile`, `run`, `runJsonText`, `query`, `queryJsonText`
+  - JS/TS compiled-filter methods: `CompiledFilter.run`, `CompiledFilter.runJsonText`
   - npm public surfaces:
     - `@shina1024/jqx`: direct-use runtime and typed query DSL
     - `@shina1024/jqx/bind`: runtime binding helpers for custom backends

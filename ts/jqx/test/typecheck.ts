@@ -22,8 +22,6 @@ import {
   QUERY_AST_DOCUMENT_FORMAT,
   QUERY_AST_DOCUMENT_VERSION,
   run,
-  runCompiled,
-  runCompiledJsonText,
   runJsonText,
   runtime,
   runtimeErrorToMessage,
@@ -82,14 +80,11 @@ expectTypeOf(directParseOut).toMatchTypeOf<JqxResult<Json, JqxRuntimeError>>();
 expectTypeOf(isValidJson('{"user":{"name":"a"}}')).toEqualTypeOf<boolean>();
 
 const compiled = compile(".user.name");
-expectTypeOf(compiled).toMatchTypeOf<JqxResult<CompiledFilter, JqxRuntimeError>>();
+expectTypeOf(compiled).toMatchTypeOf<JqxResult<CompiledFilter<".user.name">, JqxRuntimeError>>();
 if (compiled.ok) {
-  const directCompiledOut = runCompiled(compiled.value, { user: { name: "a" } });
-  expectTypeOf(directCompiledOut).toMatchTypeOf<JqxResult<Json[], JqxRuntimeError>>();
-  const directCompiledJsonTextOut = runCompiledJsonText(
-    compiled.value,
-    '{"user":{"name":"a"}}',
-  );
+  const directCompiledOut = compiled.value.run({ user: { name: "a" } });
+  expectTypeOf(directCompiledOut).toMatchTypeOf<JqxResult<string[], JqxRuntimeError>>();
+  const directCompiledJsonTextOut = compiled.value.runJsonText('{"user":{"name":"a"}}');
   expectTypeOf(directCompiledJsonTextOut).toMatchTypeOf<JqxResult<string[], JqxRuntimeError>>();
 }
 
