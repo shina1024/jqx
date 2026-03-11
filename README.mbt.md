@@ -135,9 +135,3 @@ const result = await adapter.filter({
   outputSchema: z.string(),
 });
 ```
-
-## For Contributors
-
-Development docs:
-- `AGENTS.md`
-- `agent-todo.md`
