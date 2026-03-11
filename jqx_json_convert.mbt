@@ -1,6 +1,6 @@
 ///|
 /// Convert a standard MoonBit `Json` value into jqx's internal core `Value`.
-pub fn to_core_value(input : Json) -> @core.Value {
+fn to_core_value(input : Json) -> @core.Value {
   match input {
     Null => @core.Value::null()
     True => @core.Value::boolean(true)
@@ -20,7 +20,7 @@ pub fn to_core_value(input : Json) -> @core.Value {
 
 ///|
 /// Convert jqx's internal core `Value` into standard MoonBit `Json`.
-pub fn from_core_value(input : @core.Value) -> Json {
+fn from_core_value(input : @core.Value) -> Json {
   match input {
     @core.JNull => null
     @core.JTrue => Json::boolean(true)

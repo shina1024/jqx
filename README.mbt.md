@@ -6,7 +6,7 @@ A jq-compatible executable and JS/TS library written in MoonBit.
 
 - CLI executable: `jqx` (download from GitHub Releases)
 - npm package: `@shina1024/jqx`
-- mooncakes.io package: planned
+- MoonBit package on `mooncakes.io`: planned
 
 ```bash
 npm install @shina1024/jqx
@@ -18,6 +18,48 @@ Optional validator packages:
 npm install zod
 # or: npm install yup
 # or: npm install valibot
+```
+
+## MoonBit Quick Start
+
+MoonBit users should use the top-level `shina1024/jqx` package API.
+
+Value lane example:
+
+```mbt check
+///|
+test "moonbit run on standard Json" {
+  let input : Json = { "foo": 41.0 }
+  let outputs = run(".foo + 1", input) catch { err => fail(err.to_string()) }
+  assert_eq(outputs.length(), 1)
+  assert_eq(outputs[0].stringify(), "42")
+}
+```
+
+Compiled execution:
+
+```mbt check
+///|
+test "moonbit compile and run_compiled" {
+  let filter = compile(".items[]") catch { err => fail(err.to_string()) }
+  let input : Json = { "items": [1.0, 2.0, 3.0] }
+  let outputs = run_compiled(filter, input) catch {
+    err => fail(err.to_string())
+  }
+  assert_eq(outputs.map(v => v.stringify()), ["1", "2", "3"])
+}
+```
+
+Compatibility lane:
+
+```mbt check
+///|
+test "moonbit run_text preserves output text" {
+  let outputs = run_text(".", "9007199254740993") catch {
+    err => fail(err.to_string())
+  }
+  assert_eq(outputs, ["9007199254740993"])
+}
 ```
 
 ## CLI Quick Start

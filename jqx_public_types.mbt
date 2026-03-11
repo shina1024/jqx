@@ -9,7 +9,7 @@ pub type EvalError = @core.EvalError
 
 ///|
 pub struct CompiledFilter {
-  filter : @core.Filter
+  priv filter : @core.Filter
 }
 
 ///|

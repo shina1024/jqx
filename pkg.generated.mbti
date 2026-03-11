@@ -8,15 +8,7 @@ import {
 // Values
 pub fn compile(StringView) -> CompiledFilter raise @core.FilterError
 
-pub fn eval(CompiledFilter, Json) -> Array[Json] raise @core.EvalError
-
-pub fn execute(CompiledFilter, Json) -> Array[Json] raise @core.EvalError
-
-pub fn from_core_value(@core.Value) -> Json
-
 pub fn parse(StringView, max_nesting_depth? : Int) -> Json raise @core.ParseError
-
-pub fn parse_filter(StringView) -> CompiledFilter raise @core.FilterError
 
 pub fn run(StringView, Json) -> Array[Json] raise JqxError
 
@@ -25,8 +17,6 @@ pub fn run_compiled(CompiledFilter, Json) -> Array[Json] raise @core.EvalError
 pub fn run_compiled_text(CompiledFilter, StringView, max_nesting_depth? : Int) -> Array[String] raise JqxError
 
 pub fn run_text(StringView, StringView, max_nesting_depth? : Int) -> Array[String] raise JqxError
-
-pub fn to_core_value(Json) -> @core.Value
 
 pub fn valid(StringView) -> Bool
 
@@ -41,7 +31,7 @@ pub impl Show for JqxError
 
 // Types and methods
 pub struct CompiledFilter {
-  filter : @core.Filter
+  // private fields
 }
 
 // Type aliases
