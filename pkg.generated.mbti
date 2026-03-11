@@ -1,18 +1,14 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "shina1024/jqx"
 
-import {
-  "shina1024/jqx/core",
-}
-
 // Values
-pub fn compile(StringView) -> CompiledFilter raise @core.FilterError
+pub fn compile(StringView) -> CompiledFilter raise FilterError
 
-pub fn parse(StringView, max_nesting_depth? : Int) -> Json raise @core.ParseError
+pub fn parse(StringView, max_nesting_depth? : Int) -> Json raise ParseError
 
 pub fn run(StringView, Json) -> Array[Json] raise JqxError
 
-pub fn run_compiled(CompiledFilter, Json) -> Array[Json] raise @core.EvalError
+pub fn run_compiled(CompiledFilter, Json) -> Array[Json] raise EvalError
 
 pub fn run_compiled_text(CompiledFilter, StringView, max_nesting_depth? : Int) -> Array[String] raise JqxError
 
@@ -21,25 +17,59 @@ pub fn run_text(StringView, StringView, max_nesting_depth? : Int) -> Array[Strin
 pub fn valid(StringView) -> Bool
 
 // Errors
+pub suberror EvalError {
+  TypeError(String)
+  Thrown(Json)
+  UnknownFunction(String)
+  UnknownVariable(String)
+  BreakSignal(String, Array[Json])
+  Partial(Array[Json], Json, String)
+}
+pub impl Eq for EvalError
+pub impl Show for EvalError
+
+pub suberror FilterError {
+  InvalidChar(Position, Char)
+  InvalidEof
+  InvalidNumber(Position, String)
+  Diagnostics(Array[String])
+}
+pub impl Eq for FilterError
+pub impl Show for FilterError
+
 pub suberror JqxError {
-  Parse(@core.ParseError)
-  Filter(@core.FilterError)
-  Eval(@core.EvalError)
+  Parse(ParseError)
+  Filter(FilterError)
+  Eval(EvalError)
 }
 pub impl Eq for JqxError
 pub impl Show for JqxError
+
+pub suberror ParseError {
+  InvalidChar(Position, Char)
+  InvalidEof
+  DepthLimitExceeded
+  InvalidNumericLiteral(Position)
+  InvalidNumericLiteralAtEof(Position)
+  InvalidStringLiteral(Position)
+  InvalidStringLiteralAtEof(Position)
+}
+pub impl Eq for ParseError
+pub impl Show for ParseError
 
 // Types and methods
 pub struct CompiledFilter {
   // private fields
 }
 
+pub struct Position {
+  line : Int
+  column : Int
+}
+pub impl Eq for Position
+pub impl Show for Position
+
 // Type aliases
-pub using @core {type EvalError}
-
-pub using @core {type FilterError}
-
-pub using @core {type ParseError}
 
 // Traits
 

@@ -7,12 +7,18 @@ pub fn parse(
   input : StringView,
   max_nesting_depth? : Int = 1024,
 ) -> Json raise ParseError {
-  from_core_value(@core.parse(input, max_nesting_depth~))
+  let parsed = @core.parse(input, max_nesting_depth~) catch {
+    err => raise parse_error_from_core(err)
+  }
+  from_core_value(parsed)
 }
 
 ///|
 pub fn compile(input : StringView) -> CompiledFilter raise FilterError {
-  { filter: @core.compile(input) }
+  let filter = @core.compile(input) catch {
+    err => raise filter_error_from_core(err)
+  }
+  { filter, }
 }
 
 ///|
@@ -20,7 +26,10 @@ fn execute_compiled(
   filter : CompiledFilter,
   input : Json,
 ) -> Array[Json] raise EvalError {
-  @core.execute(filter.filter, to_core_value(input)).map(from_core_value)
+  let values = @core.execute(filter.filter, to_core_value(input)) catch {
+    err => raise eval_error_from_core(err)
+  }
+  values.map(from_core_value)
 }
 
 ///|

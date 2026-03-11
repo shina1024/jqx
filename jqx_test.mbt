@@ -58,3 +58,29 @@ test "run_text wraps parse errors in JqxError" {
     fail("expected wrapped parse error")
   }
 }
+
+///|
+test "parse raises public ParseError" {
+  guard (try? parse("{")) is Err(InvalidEof) else {
+    fail("expected public parse invalid eof")
+  }
+}
+
+///|
+test "compile raises public FilterError" {
+  guard (try? compile("%")) is Err(Diagnostics(lines)) && lines.length() > 0 else {
+    fail("expected public filter diagnostics")
+  }
+}
+
+///|
+test "run_compiled raises public EvalError with Json payloads" {
+  let filter = compile("error({\"code\":1})") catch {
+    err => fail("compile failed: " + err.to_string())
+  }
+  let input : Json = null
+  guard (try? run_compiled(filter, input)) is Err(Thrown(value)) else {
+    fail("expected public thrown eval error")
+  }
+  assert_eq(value.stringify(), "{\"code\":1}")
+}
