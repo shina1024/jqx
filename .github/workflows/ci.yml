@@ -42,6 +42,8 @@ jobs:
       - name: Setup pnpm (latest)
         if: runner.os == 'Linux'
         uses: pnpm/action-setup@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           version: latest
 
@@ -150,7 +152,7 @@ jobs:
 
       - name: Upload Coverage Report (Linux)
         if: runner.os == 'Linux' && always() && hashFiles('uncovered.log') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: moon-coverage-uncovered-log
           path: uncovered.log
