@@ -54,8 +54,8 @@ Compatibility lane:
 
 ```mbt check
 ///|
-test "moonbit run_text preserves output text" {
-  let outputs = run_text(".", "9007199254740993") catch {
+test "moonbit run_json_text preserves output text" {
+  let outputs = run_json_text(".", "9007199254740993") catch {
     err => fail(err.to_string())
   }
   assert_eq(outputs, ["9007199254740993"])
@@ -99,17 +99,17 @@ jqx -e ".ok" '{"ok": false}'
 ## npm Quick Start
 
 Entry points:
-- `import { createJqx, createQueryJqx } from "@shina1024/jqx"`
+- `import { createRuntime, createQueryRuntime } from "@shina1024/jqx"`
 - `import { createAdapter } from "@shina1024/jqx/zod"`
 - `import { createAdapter } from "@shina1024/jqx/yup"`
 - `import { createAdapter } from "@shina1024/jqx/valibot"`
 
-Runtime binding example (`createJqx`):
+Runtime binding example (`createRuntime`):
 
 ```ts
-import { createJqx } from "@shina1024/jqx";
+import { createRuntime } from "@shina1024/jqx";
 
-const jqx = createJqx({
+const jqx = createRuntime({
   async runJsonText(filter, input) {
     return { ok: true as const, value: [input] };
   },
@@ -118,12 +118,12 @@ const jqx = createJqx({
 const out = await jqx.run(".", { x: 1 });
 ```
 
-Query lane example (`createQueryJqx` + `QueryAst`):
+Query lane example (`createQueryRuntime` + `QueryAst`):
 
 ```ts
-import { createQueryJqx, type QueryAst } from "@shina1024/jqx";
+import { createQueryRuntime, type QueryAst } from "@shina1024/jqx";
 
-const jqx = createQueryJqx<QueryAst>({
+const jqx = createQueryRuntime<QueryAst>({
   async runJsonText(filter, input) {
     return { ok: true as const, value: [input] };
   },
@@ -136,16 +136,16 @@ const out = await jqx.query({ kind: "identity" }, { x: 1 });
 ```
 
 Backend runtime contract:
-- `createJqx`: implement `runJsonText(filter: string, input: string)` and return `JqxResult<string[], JqxRuntimeError>`
-- `createQueryJqx`: additionally implement `runQueryJsonText(query: QueryAst, input: string)`
+- `createRuntime`: implement `runJsonText(filter: string, input: string)` and return `JqxResult<string[], JqxRuntimeError>`
+- `createQueryRuntime`: additionally implement `runQueryJsonText(query: QueryAst, input: string)`
 - `runJsonText`/`runQueryJsonText` outputs are JSON texts (`string[]`), one entry per jq output
 
 Error handling guideline:
 
 ```ts
-import { createJqx, runtimeErrorToMessage } from "@shina1024/jqx";
+import { createRuntime, runtimeErrorToMessage } from "@shina1024/jqx";
 
-const jqx = createJqx({
+const jqx = createRuntime({
   async runJsonText(filter, input) {
     return { ok: true as const, value: [input] };
   },

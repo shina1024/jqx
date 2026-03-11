@@ -6,8 +6,8 @@ npm-facing JS/TS entrypoint for `@shina1024/jqx`.
 
 - `@shina1024/jqx`:
   - runtime/result/core types
-  - `createJqx(backend)` (dynamic lane)
-  - `createQueryJqx(backend)` (query lane)
+  - `createRuntime(runtime)` (dynamic lane)
+  - `createQueryRuntime(runtime)` (query lane)
   - Typed DSL combinators (`identity`, `field`, `pipe`, `map`, `select`, ...)
 - `@shina1024/jqx/zod`: re-exports `@shina1024/jqx-zod-adapter`
 - `@shina1024/jqx/yup`: re-exports `@shina1024/jqx-yup-adapter`
@@ -15,16 +15,16 @@ npm-facing JS/TS entrypoint for `@shina1024/jqx`.
 
 ## Factory Choice
 
-- Use `createJqx` when you only need jq-string filters (`run` / `runJsonText`).
-- Use `createQueryJqx` when runtime also supports `runQueryJsonText`.
-- With `createQueryJqx`, Typed DSL `Query` input is accepted when `Q` is `QueryAst`.
+- Use `createRuntime` when you only need jq-string filters (`run` / `runJsonText`).
+- Use `createQueryRuntime` when runtime also supports `runQueryJsonText`.
+- With `createQueryRuntime`, Typed DSL `Query` input is accepted when `Q` is `QueryAst`.
 
 ## Runtime Bridge (`runJsonText -> run`)
 
 ```ts
-import { createJqx } from "@shina1024/jqx";
+import { createRuntime } from "@shina1024/jqx";
 
-const jqx = createJqx({
+const jqx = createRuntime({
   runJsonText(filter, input) {
     // connect to MoonBit-generated JS runtime here
     return { ok: true, value: [input] };
@@ -108,9 +108,9 @@ Compatibility rule:
 ## Query Runtime Bridge (`runQueryJsonText -> query`)
 
 ```ts
-import { createQueryJqx, field, identity, pipe, type QueryAst } from "@shina1024/jqx";
+import { createQueryRuntime, field, identity, pipe, type QueryAst } from "@shina1024/jqx";
 
-const jqx = createQueryJqx({
+const jqx = createQueryRuntime({
   runJsonText(filter: string, input: string) {
     return { ok: true as const, value: [input] };
   },

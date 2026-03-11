@@ -150,20 +150,20 @@ fn json_values_to_strings(values : Array[@core.Value]) -> Array[String] {
 }
 
 ///|
-pub fn parseJson(input : String) -> @core.Value raise @core.ParseError {
+pub fn parse_json(input : String) -> @core.Value raise @core.ParseError {
   @core.parse(input)
 }
 
 ///|
-pub fn tryParseJson(input : String) -> Result[@core.Value, JqxError] {
-  Ok(@core.parse(input)) catch {
-    err => Err(parse_error_to_jqx_error(input, err))
-  }
+pub fn is_valid_json(input : String) -> Bool {
+  @core.valid(input)
 }
 
 ///|
-pub fn safeParseJson(input : String) -> Result[@core.Value, JqxError] {
-  tryParseJson(input)
+pub fn try_parse_json(input : String) -> Result[@core.Value, JqxError] {
+  Ok(@core.parse(input)) catch {
+    err => Err(parse_error_to_jqx_error(input, err))
+  }
 }
 
 ///|
@@ -172,30 +172,10 @@ pub fn compile(input : String) -> @core.Filter raise @core.FilterError {
 }
 
 ///|
-pub fn parseFilter(input : String) -> @core.Filter raise @core.FilterError {
-  compile(input)
-}
-
-///|
-pub fn tryCompile(input : String) -> Result[@core.Filter, JqxError] {
+pub fn try_compile(input : String) -> Result[@core.Filter, JqxError] {
   Ok(@core.compile(input)) catch {
     err => Err(filter_error_to_jqx_error(input, err))
   }
-}
-
-///|
-pub fn tryParseFilter(input : String) -> Result[@core.Filter, JqxError] {
-  tryCompile(input)
-}
-
-///|
-pub fn safeCompile(input : String) -> Result[@core.Filter, JqxError] {
-  tryCompile(input)
-}
-
-///|
-pub fn safeParseFilter(input : String) -> Result[@core.Filter, JqxError] {
-  safeCompile(input)
 }
 
 ///|
@@ -207,7 +187,7 @@ pub fn execute(
 }
 
 ///|
-pub fn tryExecute(
+pub fn try_execute(
   filter : @core.Filter,
   input : @core.Value,
 ) -> Result[Array[@core.Value], JqxError] {
@@ -217,23 +197,15 @@ pub fn tryExecute(
 }
 
 ///|
-pub fn safeExecute(
-  filter : @core.Filter,
-  input : @core.Value,
-) -> Result[Array[@core.Value], JqxError] {
-  tryExecute(filter, input)
-}
-
-///|
 /// Compatibility lane for precompiled filters:
 /// parse input JSON, execute filter, and return JSON text outputs.
-pub fn runCompiled(
+pub fn run_compiled_json_text(
   filter : @core.Filter,
   input : String,
 ) -> Result[Array[String], JqxError] {
-  match tryParseJson(input) {
+  match try_parse_json(input) {
     Ok(value) =>
-      match tryExecute(filter, value) {
+      match try_execute(filter, value) {
         Ok(outputs) => Ok(json_values_to_strings(outputs))
         Err(err) => Err(err)
       }
@@ -243,12 +215,12 @@ pub fn runCompiled(
 
 ///|
 /// Convenience lane for precompiled filters.
-pub fn runCompiledValues(
+pub fn run_compiled_values(
   filter : @core.Filter,
   input : String,
 ) -> Result[Array[@core.Value], JqxError] {
-  match tryParseJson(input) {
-    Ok(value) => tryExecute(filter, value)
+  match try_parse_json(input) {
+    Ok(value) => try_execute(filter, value)
     Err(err) => Err(err)
   }
 }
@@ -256,49 +228,25 @@ pub fn runCompiledValues(
 ///|
 /// Compatibility lane:
 /// returns JSON text so large numbers and repr are preserved.
-pub fn executeToJsonStrings(
+pub fn run_json_text(
   filter : String,
   input : String,
 ) -> Result[Array[String], JqxError] {
-  match tryCompile(filter) {
-    Ok(compiled) => runCompiled(compiled, input)
+  match try_compile(filter) {
+    Ok(compiled) => run_compiled_json_text(compiled, input)
     Err(err) => Err(err)
   }
-}
-
-///|
-/// Compatibility lane alias.
-pub fn run(filter : String, input : String) -> Result[Array[String], JqxError] {
-  executeToJsonStrings(filter, input)
-}
-
-///|
-/// Compatibility lane explicit entrypoint.
-pub fn runCompat(
-  filter : String,
-  input : String,
-) -> Result[Array[String], JqxError] {
-  executeToJsonStrings(filter, input)
 }
 
 ///|
 /// Convenience lane:
 /// returns core Value values (Number uses Double semantics internally).
-pub fn runValues(
+pub fn run_values(
   filter : String,
   input : String,
 ) -> Result[Array[@core.Value], JqxError] {
-  match tryCompile(filter) {
-    Ok(compiled) => runCompiledValues(compiled, input)
+  match try_compile(filter) {
+    Ok(compiled) => run_compiled_values(compiled, input)
     Err(err) => Err(err)
   }
-}
-
-///|
-/// Convenience lane alias.
-pub fn safeRunValues(
-  filter : String,
-  input : String,
-) -> Result[Array[@core.Value], JqxError] {
-  runValues(filter, input)
 }

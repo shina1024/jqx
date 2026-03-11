@@ -20,10 +20,6 @@ pub fn eq(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Q
 
 pub fn execute(@core.Filter, @core.Value) -> Array[@core.Value] raise @core.EvalError
 
-pub fn executeQuery(Query[@core.Value, @core.Value], @core.Value) -> Result[Array[@core.Value], String]
-
-pub fn executeToJsonStrings(String, String) -> Result[Array[String], JqxError]
-
 pub fn fallback(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
 pub fn field(String) -> Query[@core.Value, @core.Value]
@@ -35,6 +31,8 @@ pub fn identity() -> Query[@core.Value, @core.Value]
 pub fn if_else(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
 pub fn index(Int) -> Query[@core.Value, @core.Value]
+
+pub fn is_valid_json(String) -> Bool
 
 pub fn iter() -> Query[@core.Value, @core.Value]
 
@@ -48,45 +46,31 @@ pub fn not_(Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
 pub fn or_(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn parseFilter(String) -> @core.Filter raise @core.FilterError
-
-pub fn parseJson(String) -> @core.Value raise @core.ParseError
+pub fn parse_json(String) -> @core.Value raise @core.ParseError
 
 pub fn pipe(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn run(String, String) -> Result[Array[String], JqxError]
+pub fn query(Query[@core.Value, @core.Value], @core.Value) -> Result[Array[@core.Value], String]
 
-pub fn runCompat(String, String) -> Result[Array[String], JqxError]
+pub fn query_json_text(Query[@core.Value, @core.Value], String) -> Result[Array[String], String]
 
-pub fn runCompiled(@core.Filter, String) -> Result[Array[String], JqxError]
+pub fn run_compiled_json_text(@core.Filter, String) -> Result[Array[String], JqxError]
 
-pub fn runCompiledValues(@core.Filter, String) -> Result[Array[@core.Value], JqxError]
+pub fn run_compiled_values(@core.Filter, String) -> Result[Array[@core.Value], JqxError]
 
-pub fn runQuery(Query[@core.Value, @core.Value], String) -> Result[Array[String], String]
+pub fn run_json_text(String, String) -> Result[Array[String], JqxError]
 
-pub fn runValues(String, String) -> Result[Array[@core.Value], JqxError]
-
-pub fn safeCompile(String) -> Result[@core.Filter, JqxError]
-
-pub fn safeExecute(@core.Filter, @core.Value) -> Result[Array[@core.Value], JqxError]
-
-pub fn safeParseFilter(String) -> Result[@core.Filter, JqxError]
-
-pub fn safeParseJson(String) -> Result[@core.Value, JqxError]
-
-pub fn safeRunValues(String, String) -> Result[Array[@core.Value], JqxError]
+pub fn run_values(String, String) -> Result[Array[@core.Value], JqxError]
 
 pub fn select(Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn tryCompile(String) -> Result[@core.Filter, JqxError]
-
-pub fn tryExecute(@core.Filter, @core.Value) -> Result[Array[@core.Value], JqxError]
-
-pub fn tryParseFilter(String) -> Result[@core.Filter, JqxError]
-
-pub fn tryParseJson(String) -> Result[@core.Value, JqxError]
-
 pub fn try_catch(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
+
+pub fn try_compile(String) -> Result[@core.Filter, JqxError]
+
+pub fn try_execute(@core.Filter, @core.Value) -> Result[Array[@core.Value], JqxError]
+
+pub fn try_parse_json(String) -> Result[@core.Value, JqxError]
 
 // Errors
 
@@ -106,7 +90,7 @@ pub struct Query[I, O] {
   _input : I?
   _output : O?
 }
-pub fn[I, O] Query::toFilter(Self[I, O]) -> @core.Filter
+pub fn[I, O] Query::to_filter(Self[I, O]) -> @core.Filter
 
 // Type aliases
 

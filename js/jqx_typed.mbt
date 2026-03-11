@@ -15,7 +15,7 @@ fn[I, O] query_of_filter(filter : @core.Filter) -> Query[I, O] {
 }
 
 ///|
-pub fn[I, O] Query::toFilter(query : Query[I, O]) -> @core.Filter {
+pub fn[I, O] Query::to_filter(query : Query[I, O]) -> @core.Filter {
   query.filter
 }
 
@@ -173,7 +173,7 @@ pub fn try_catch(
 }
 
 ///|
-pub fn executeQuery(
+pub fn query(
   query : Query[@core.Value, @core.Value],
   input : @core.Value,
 ) -> Result[Array[@core.Value], String] {
@@ -183,7 +183,7 @@ pub fn executeQuery(
 }
 
 ///|
-pub fn runQuery(
+pub fn query_json_text(
   query : Query[@core.Value, @core.Value],
   input : String,
 ) -> Result[Array[String], String] {

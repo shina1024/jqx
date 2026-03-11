@@ -15,7 +15,7 @@ pub impl Show for Position with output(self, logger) {
 }
 
 ///|
-pub suberror ParseError {
+pub suberror JsonParseError {
   InvalidChar(Position, Char)
   InvalidEof
   DepthLimitExceeded
@@ -26,7 +26,7 @@ pub suberror ParseError {
 } derive(Eq)
 
 ///|
-pub impl Show for ParseError with output(self, logger) {
+pub impl Show for JsonParseError with output(self, logger) {
   match self {
     InvalidChar({ line, column }, c) =>
       logger
@@ -71,7 +71,7 @@ pub impl Show for ParseError with output(self, logger) {
 }
 
 ///|
-pub suberror FilterError {
+pub suberror CompileError {
   InvalidChar(Position, Char)
   InvalidEof
   InvalidNumber(Position, String)
@@ -79,7 +79,7 @@ pub suberror FilterError {
 } derive(Eq)
 
 ///|
-pub impl Show for FilterError with output(self, logger) {
+pub impl Show for CompileError with output(self, logger) {
   match self {
     InvalidChar({ line, column }, c) =>
       logger
@@ -109,7 +109,7 @@ pub impl Show for FilterError with output(self, logger) {
 }
 
 ///|
-pub suberror EvalError {
+pub suberror RuntimeError {
   TypeError(String)
   Thrown(Json)
   UnknownFunction(String)
@@ -119,7 +119,7 @@ pub suberror EvalError {
 } derive(Eq)
 
 ///|
-pub impl Show for EvalError with output(self, logger) {
+pub impl Show for RuntimeError with output(self, logger) {
   match self {
     TypeError(msg) => logger.write_string(msg)
     Thrown(value) =>
@@ -141,17 +141,17 @@ pub struct CompiledFilter {
 
 ///|
 pub suberror JqxError {
-  Parse(ParseError)
-  Filter(FilterError)
-  Eval(EvalError)
+  JsonParse(JsonParseError)
+  Compile(CompileError)
+  Runtime(RuntimeError)
 } derive(Eq)
 
 ///|
 pub impl Show for JqxError with output(self, logger) {
   match self {
-    Parse(err) => Show::output(err, logger)
-    Filter(err) => Show::output(err, logger)
-    Eval(err) => Show::output(err, logger)
+    JsonParse(err) => Show::output(err, logger)
+    Compile(err) => Show::output(err, logger)
+    Runtime(err) => Show::output(err, logger)
   }
 }
 
@@ -161,7 +161,7 @@ fn position_from_core(input : @core.Position) -> Position {
 }
 
 ///|
-fn parse_error_from_core(input : @core.ParseError) -> ParseError {
+fn json_parse_error_from_core(input : @core.ParseError) -> JsonParseError {
   match input {
     @core.InvalidChar(pos, ch) => InvalidChar(position_from_core(pos), ch)
     @core.InvalidEof => InvalidEof
@@ -178,7 +178,7 @@ fn parse_error_from_core(input : @core.ParseError) -> ParseError {
 }
 
 ///|
-fn filter_error_from_core(input : @core.FilterError) -> FilterError {
+fn compile_error_from_core(input : @core.FilterError) -> CompileError {
   match input {
     @core.InvalidChar(pos, ch) => InvalidChar(position_from_core(pos), ch)
     @core.InvalidEof => InvalidEof
@@ -188,7 +188,7 @@ fn filter_error_from_core(input : @core.FilterError) -> FilterError {
 }
 
 ///|
-fn eval_error_from_core(input : @core.EvalError) -> EvalError {
+fn runtime_error_from_core(input : @core.EvalError) -> RuntimeError {
   match input {
     @core.TypeError(msg) => TypeError(msg)
     @core.Thrown(value) => Thrown(from_core_value(value))

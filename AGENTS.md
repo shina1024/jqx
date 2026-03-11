@@ -20,6 +20,12 @@ This repository targets jq-compatible behavior.
 - Public MoonBit APIs should expose two lanes:
   - value lane: accept and return standard `Json` for embedding in MoonBit applications
   - compatibility lane: accept and return JSON text (`StringView` / `String`) when jq-style fidelity matters
+- Canonical public names:
+  - MoonBit packages use `lower_snake` for values/functions
+  - MoonBit public package: `parse_json`, `is_valid_json`, `compile`, `run`, `run_compiled`, `run_json_text`, `run_compiled_json_text`
+  - JS/TS runtime methods: `parseJson`, `isValidJson`, `compile`, `run`, `runCompiled`, `runJsonText`, `runCompiledJsonText`
+  - npm runtime factories: `createRuntime`, `createQueryRuntime`
+- Do not keep alias exports for old names once a better canonical name is chosen. Prefer one obvious public spelling per operation.
 - For compiled execution, prefer a public compiled-filter abstraction over asking MoonBit users to depend on `@core.Filter` directly. `@core.Filter` can remain an implementation detail unless a strong reason appears.
 - Do not block MoonBit public package publication on a typed query DSL. First prioritize string-filter execution, compiled execution, JSON conversion, and clear public errors; query DSL can follow later.
 - Do not advertise `mooncakes.io` as an active channel until top-level public APIs and examples are MoonBit-user-facing and no longer tell users to import `core` directly.

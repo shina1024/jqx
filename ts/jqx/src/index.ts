@@ -77,23 +77,23 @@ export {
   toJqxRuntimeError,
 } from "@shina1024/jqx-adapter-core";
 
-export interface JqxBackend {
+export interface JqxJsonTextRuntime {
   runJsonText(filter: string, input: string): MaybePromise<JqxResult<string[], JqxRuntimeError>>;
 }
 
-export interface JqxStreamingBackend extends JqxBackend {
+export interface JqxJsonTextStreamingRuntime extends JqxJsonTextRuntime {
   runJsonTextStream(
     filter: string,
     input: string,
   ): MaybePromise<JqxResult<AsyncIterable<string>, JqxRuntimeError>>;
 }
 
-export interface JqxQueryBackend<Q = QueryAst> extends JqxBackend {
+export interface JqxQueryJsonTextRuntime<Q = QueryAst> extends JqxJsonTextRuntime {
   runQueryJsonText(query: Q, input: string): MaybePromise<JqxResult<string[], JqxRuntimeError>>;
 }
 
-export interface JqxQueryStreamingBackend<Q = QueryAst>
-  extends JqxQueryBackend<Q> {
+export interface JqxQueryJsonTextStreamingRuntime<Q = QueryAst>
+  extends JqxQueryJsonTextRuntime<Q> {
   runQueryJsonTextStream(
     query: Q,
     input: string,
@@ -242,16 +242,16 @@ function decodeRuntimeOutputs(rawValues: string[]): JqxResult<Json[], JqxRuntime
   return { ok: true, value: parsed };
 }
 
-function hasStreamingBackend(
-  backend: JqxBackend & Partial<JqxStreamingBackend>,
-): backend is JqxStreamingBackend {
-  return typeof backend.runJsonTextStream === "function";
+function hasStreamingJsonTextRuntime(
+  runtime: JqxJsonTextRuntime & Partial<JqxJsonTextStreamingRuntime>,
+): runtime is JqxJsonTextStreamingRuntime {
+  return typeof runtime.runJsonTextStream === "function";
 }
 
-function hasTypedStreamingBackend<Q>(
-  backend: JqxQueryBackend<Q> & Partial<JqxQueryStreamingBackend<Q>>,
-): backend is JqxQueryStreamingBackend<Q> {
-  return typeof backend.runQueryJsonTextStream === "function";
+function hasQueryStreamingJsonTextRuntime<Q>(
+  runtime: JqxQueryJsonTextRuntime<Q> & Partial<JqxQueryJsonTextStreamingRuntime<Q>>,
+): runtime is JqxQueryJsonTextStreamingRuntime<Q> {
+  return typeof runtime.runQueryJsonTextStream === "function";
 }
 
 function isTypedDslQuery(value: unknown): value is TypedDslQuery {
@@ -269,10 +269,10 @@ function normalizeQueryInput<Q>(query: QueryInputFor<Q>): Q {
   return query as Q;
 }
 
-function createDynamicClient(backend: JqxBackend & Partial<JqxStreamingBackend>): JqxClient {
+function createDynamicRuntime(runtime: JqxJsonTextRuntime & Partial<JqxJsonTextStreamingRuntime>): JqxClient {
   return {
     async runJsonText(filter, input) {
-      const runtimeOut = await toPromise(backend.runJsonText(filter, input));
+      const runtimeOut = await toPromise(runtime.runJsonText(filter, input));
       return normalizeRuntimeResult(runtimeOut);
     },
     async run(filter, input) {
@@ -280,7 +280,7 @@ function createDynamicClient(backend: JqxBackend & Partial<JqxStreamingBackend>)
       if (!encoded.ok) {
         return encoded;
       }
-      const runtimeOut = await toPromise(backend.runJsonText(filter, encoded.value));
+      const runtimeOut = await toPromise(runtime.runJsonText(filter, encoded.value));
       const normalizedOut = normalizeRuntimeResult(runtimeOut);
       if (!normalizedOut.ok) {
         return normalizedOut;
@@ -288,33 +288,35 @@ function createDynamicClient(backend: JqxBackend & Partial<JqxStreamingBackend>)
       return decodeRuntimeOutputs(normalizedOut.value);
     },
     runJsonTextStream(filter, input) {
-      if (hasStreamingBackend(backend)) {
-        return fromStreamingRuntimeCall(backend.runJsonTextStream(filter, input));
+      if (hasStreamingJsonTextRuntime(runtime)) {
+        return fromStreamingRuntimeCall(runtime.runJsonTextStream(filter, input));
       }
-      return fromArrayRuntimeCall(backend.runJsonText(filter, input));
+      return fromArrayRuntimeCall(runtime.runJsonText(filter, input));
     },
     runStream(filter, input) {
       const encoded = encodeRuntimeInput(input);
       if (!encoded.ok) {
         return singleErrorStream(encoded.error);
       }
-      const rawStream = hasStreamingBackend(backend)
-        ? fromStreamingRuntimeCall(backend.runJsonTextStream(filter, encoded.value))
-        : fromArrayRuntimeCall(backend.runJsonText(filter, encoded.value));
+      const rawStream = hasStreamingJsonTextRuntime(runtime)
+        ? fromStreamingRuntimeCall(runtime.runJsonTextStream(filter, encoded.value))
+        : fromArrayRuntimeCall(runtime.runJsonText(filter, encoded.value));
       return decodeRawResultStream(rawStream);
     },
   };
 }
 
-function createTypedClient<Q>(
-  backend: JqxQueryBackend<Q> & Partial<JqxStreamingBackend> & Partial<JqxQueryStreamingBackend<Q>>,
+function createQueryRuntimeFromJsonText<Q>(
+  runtime: JqxQueryJsonTextRuntime<Q> &
+    Partial<JqxJsonTextStreamingRuntime> &
+    Partial<JqxQueryJsonTextStreamingRuntime<Q>>,
 ): JqxQueryClient<Q> {
-  const client = createDynamicClient(backend);
-  const queryCore: JqxQueryClient<Q> = {
-    ...client,
+  const baseRuntime = createDynamicRuntime(runtime);
+  const queryRuntime: JqxQueryClient<Q> = {
+    ...baseRuntime,
     queryJsonText(query: QueryInputFor<Q>, input: string) {
       const normalized = normalizeQueryInput(query);
-      return toPromise(backend.runQueryJsonText(normalized, input)).then(normalizeRuntimeResult);
+      return toPromise(runtime.runQueryJsonText(normalized, input)).then(normalizeRuntimeResult);
     },
     async query(query: QueryInputFor<Q>, input: Json) {
       const normalized = normalizeQueryInput(query);
@@ -322,7 +324,7 @@ function createTypedClient<Q>(
       if (!encoded.ok) {
         return encoded;
       }
-      const runtimeOut = await toPromise(backend.runQueryJsonText(normalized, encoded.value));
+      const runtimeOut = await toPromise(runtime.runQueryJsonText(normalized, encoded.value));
       const normalizedOut = normalizeRuntimeResult(runtimeOut);
       if (!normalizedOut.ok) {
         return normalizedOut;
@@ -331,10 +333,10 @@ function createTypedClient<Q>(
     },
     queryJsonTextStream(query: QueryInputFor<Q>, input: string) {
       const normalized = normalizeQueryInput(query);
-      if (hasTypedStreamingBackend(backend)) {
-        return fromStreamingRuntimeCall(backend.runQueryJsonTextStream(normalized, input));
+      if (hasQueryStreamingJsonTextRuntime(runtime)) {
+        return fromStreamingRuntimeCall(runtime.runQueryJsonTextStream(normalized, input));
       }
-      return fromArrayRuntimeCall(backend.runQueryJsonText(normalized, input));
+      return fromArrayRuntimeCall(runtime.runQueryJsonText(normalized, input));
     },
     queryStream(query: QueryInputFor<Q>, input: Json) {
       const normalized = normalizeQueryInput(query);
@@ -342,21 +344,25 @@ function createTypedClient<Q>(
       if (!encoded.ok) {
         return singleErrorStream<Json>(encoded.error);
       }
-      const rawStream = hasTypedStreamingBackend(backend)
-        ? fromStreamingRuntimeCall(backend.runQueryJsonTextStream(normalized, encoded.value))
-        : fromArrayRuntimeCall(backend.runQueryJsonText(normalized, encoded.value));
+      const rawStream = hasQueryStreamingJsonTextRuntime(runtime)
+        ? fromStreamingRuntimeCall(runtime.runQueryJsonTextStream(normalized, encoded.value))
+        : fromArrayRuntimeCall(runtime.runQueryJsonText(normalized, encoded.value));
       return decodeRawResultStream(rawStream);
     },
   };
-  return queryCore;
+  return queryRuntime;
 }
 
-export function createJqx(backend: JqxBackend & Partial<JqxStreamingBackend>): JqxClient {
-  return createDynamicClient(backend);
+export function createRuntime(
+  runtime: JqxJsonTextRuntime & Partial<JqxJsonTextStreamingRuntime>,
+): JqxClient {
+  return createDynamicRuntime(runtime);
 }
 
-export function createQueryJqx<Q>(
-  backend: JqxQueryBackend<Q> & Partial<JqxStreamingBackend> & Partial<JqxQueryStreamingBackend<Q>>,
+export function createQueryRuntime<Q>(
+  runtime: JqxQueryJsonTextRuntime<Q> &
+    Partial<JqxJsonTextStreamingRuntime> &
+    Partial<JqxQueryJsonTextStreamingRuntime<Q>>,
 ): JqxQueryClient<Q> {
-  return createTypedClient(backend);
+  return createQueryRuntimeFromJsonText(runtime);
 }

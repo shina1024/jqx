@@ -1,8 +1,8 @@
 import { expectTypeOf } from "expect-type";
 
 import {
-  createJqx,
-  createQueryJqx,
+  createQueryRuntime,
+  createRuntime,
   exportQueryAstDocument,
   exportTypedQueryDocument,
   field,
@@ -25,12 +25,12 @@ import {
 } from "../src/index.js";
 import type {
   InferTypedQueryOutput,
-  JqxBackend,
+  JqxJsonTextRuntime,
   JqxBackendRuntimeError,
   JqxError,
   Json,
   JqxResult,
-  JqxQueryBackend,
+  JqxQueryJsonTextRuntime,
   JqxRuntimeError,
   QueryAstDocument,
   QueryAstImportResult,
@@ -57,8 +57,8 @@ expectTypeOf<InferTypedQueryOutput<InputData, typeof selectedQuery>>().toEqualTy
   v: number;
 }>();
 
-declare const backend: JqxBackend;
-const jqx = createJqx(backend);
+declare const runtime: JqxJsonTextRuntime;
+const jqx = createRuntime(runtime);
 const runOut = jqx.run(".", { user: { name: "a" } });
 expectTypeOf(runOut).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeError>>>();
 const runJsonTextOut = jqx.runJsonText(".", '{"user":{"name":"a"}}');
@@ -70,8 +70,8 @@ expectTypeOf(runJsonTextStreamOut).toEqualTypeOf<AsyncIterable<JqxResult<string,
 // @ts-expect-error `undefined` is not a JSON value.
 jqx.run(".", { user: undefined });
 
-declare const queryBackend: JqxQueryBackend<QueryAst>;
-const queryJqx = createQueryJqx(queryBackend);
+declare const queryRuntime: JqxQueryJsonTextRuntime<QueryAst>;
+const queryJqx = createQueryRuntime(queryRuntime);
 const ast = toAst(nameQuery);
 const queryOut = queryJqx.query(ast, { user: { name: "a" } });
 expectTypeOf(queryOut).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeError>>>();
@@ -89,8 +89,8 @@ expectTypeOf(queryJsonTextStreamOut).toEqualTypeOf<AsyncIterable<JqxResult<strin
 queryJqx.query(ast, { user: undefined });
 
 type CustomQuery = { kind: "custom"; key: string };
-declare const customBackend: JqxQueryBackend<CustomQuery>;
-const customJqx = createQueryJqx(customBackend);
+declare const customRuntime: JqxQueryJsonTextRuntime<CustomQuery>;
+const customJqx = createQueryRuntime(customRuntime);
 const customTypedOut = customJqx.query(
   { kind: "custom", key: "user.name" },
   { user: { name: "a" } },
@@ -99,8 +99,8 @@ expectTypeOf(customTypedOut).toEqualTypeOf<Promise<JqxResult<Json[], JqxRuntimeE
 // @ts-expect-error Typed DSL query input is only available when query type is QueryAst.
 customJqx.query(nameQuery, { user: { name: "a" } });
 
-const dynamicFromQuery = createJqx(customBackend);
-// @ts-expect-error query is only available on createQueryJqx.
+const dynamicFromQuery = createRuntime(customRuntime);
+// @ts-expect-error query is only available on createQueryRuntime.
 dynamicFromQuery.query({ kind: "custom", key: "user.name" }, { user: { name: "a" } });
 
 const normalizedRuntimeError = toJqxRuntimeError("boom");

@@ -3,8 +3,8 @@
 
 ///|
 test "top-level parse returns standard Json" {
-  let parsed = parse("{\"a\":1,\"b\":[true,null,\"x\"]}") catch {
-    err => fail("parse failed: " + err.to_string())
+  let parsed = parse_json("{\"a\":1,\"b\":[true,null,\"x\"]}") catch {
+    err => fail("parse_json failed: " + err.to_string())
   }
   assert_eq(parsed.stringify(), "{\"a\":1,\"b\":[true,null,\"x\"]}")
 }
@@ -45,36 +45,36 @@ test "run convenience lane executes filter strings on Json" {
 }
 
 ///|
-test "run_text compatibility lane preserves json text outputs" {
-  let values = run_text(".", "9007199254740993") catch {
-    err => fail("run_text failed: " + err.to_string())
+test "run_json_text compatibility lane preserves json text outputs" {
+  let values = run_json_text(".", "9007199254740993") catch {
+    err => fail("run_json_text failed: " + err.to_string())
   }
   assert_eq(values, ["9007199254740993"])
 }
 
 ///|
-test "run_text wraps parse errors in JqxError" {
-  guard (try? run_text(".", "{")) is Err(Parse(_)) else {
+test "run_json_text wraps parse errors in JqxError" {
+  guard (try? run_json_text(".", "{")) is Err(JsonParse(_)) else {
     fail("expected wrapped parse error")
   }
 }
 
 ///|
-test "parse raises public ParseError" {
-  guard (try? parse("{")) is Err(InvalidEof) else {
-    fail("expected public parse invalid eof")
+test "parse_json raises public JsonParseError" {
+  guard (try? parse_json("{")) is Err(InvalidEof) else {
+    fail("expected public json parse invalid eof")
   }
 }
 
 ///|
-test "compile raises public FilterError" {
+test "compile raises public CompileError" {
   guard (try? compile("%")) is Err(Diagnostics(lines)) && lines.length() > 0 else {
-    fail("expected public filter diagnostics")
+    fail("expected public compile diagnostics")
   }
 }
 
 ///|
-test "run_compiled raises public EvalError with Json payloads" {
+test "run_compiled raises public RuntimeError with Json payloads" {
   let filter = compile("error({\"code\":1})") catch {
     err => fail("compile failed: " + err.to_string())
   }

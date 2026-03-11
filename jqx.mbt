@@ -3,20 +3,20 @@
 /// This surface may change before 1.0 while it is reshaped for MoonBit users.
 
 ///|
-pub fn parse(
+pub fn parse_json(
   input : StringView,
   max_nesting_depth? : Int = 1024,
-) -> Json raise ParseError {
+) -> Json raise JsonParseError {
   let parsed = @core.parse(input, max_nesting_depth~) catch {
-    err => raise parse_error_from_core(err)
+    err => raise json_parse_error_from_core(err)
   }
   from_core_value(parsed)
 }
 
 ///|
-pub fn compile(input : StringView) -> CompiledFilter raise FilterError {
+pub fn compile(input : StringView) -> CompiledFilter raise CompileError {
   let filter = @core.compile(input) catch {
-    err => raise filter_error_from_core(err)
+    err => raise compile_error_from_core(err)
   }
   { filter, }
 }
@@ -25,23 +25,23 @@ pub fn compile(input : StringView) -> CompiledFilter raise FilterError {
 fn execute_compiled(
   filter : CompiledFilter,
   input : Json,
-) -> Array[Json] raise EvalError {
+) -> Array[Json] raise RuntimeError {
   let values = @core.execute(filter.filter, to_core_value(input)) catch {
-    err => raise eval_error_from_core(err)
+    err => raise runtime_error_from_core(err)
   }
   values.map(from_core_value)
 }
 
 ///|
-pub fn valid(input : StringView) -> Bool {
+pub fn is_valid_json(input : StringView) -> Bool {
   @core.valid(input)
 }
 
 ///|
 pub fn run(filter : StringView, input : Json) -> Array[Json] raise JqxError {
-  let compiled = compile(filter) catch { err => raise Filter(err) }
+  let compiled = compile(filter) catch { err => raise Compile(err) }
   run_compiled(compiled, input) catch {
-    err => raise Eval(err)
+    err => raise Runtime(err)
   }
 }
 
@@ -49,7 +49,7 @@ pub fn run(filter : StringView, input : Json) -> Array[Json] raise JqxError {
 pub fn run_compiled(
   filter : CompiledFilter,
   input : Json,
-) -> Array[Json] raise EvalError {
+) -> Array[Json] raise RuntimeError {
   execute_compiled(filter, input)
 }
 
@@ -63,24 +63,24 @@ fn json_values_to_strings(values : Array[Json]) -> Array[String] {
 }
 
 ///|
-pub fn run_text(
+pub fn run_json_text(
   filter : StringView,
   input : StringView,
   max_nesting_depth? : Int = 1024,
 ) -> Array[String] raise JqxError {
-  let compiled = compile(filter) catch { err => raise Filter(err) }
-  run_compiled_text(compiled, input, max_nesting_depth~)
+  let compiled = compile(filter) catch { err => raise Compile(err) }
+  run_compiled_json_text(compiled, input, max_nesting_depth~)
 }
 
 ///|
-pub fn run_compiled_text(
+pub fn run_compiled_json_text(
   filter : CompiledFilter,
   input : StringView,
   max_nesting_depth? : Int = 1024,
 ) -> Array[String] raise JqxError {
-  let parsed = parse(input, max_nesting_depth~) catch {
-    err => raise Parse(err)
+  let parsed = parse_json(input, max_nesting_depth~) catch {
+    err => raise JsonParse(err)
   }
-  let outputs = run_compiled(filter, parsed) catch { err => raise Eval(err) }
+  let outputs = run_compiled(filter, parsed) catch { err => raise Runtime(err) }
   json_values_to_strings(outputs)
 }

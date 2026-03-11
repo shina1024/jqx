@@ -1,109 +1,93 @@
 ///|
-test "js executeToJsonStrings success" {
-  let out = executeToJsonStrings(".foo", "{\"foo\": 1}")
+test "js run_json_text success" {
+  let out = run_json_text(".foo", "{\"foo\": 1}")
   guard out is Ok(values) else { fail("expected Ok") }
   assert_eq(values, ["1"])
 }
 
 ///|
-test "js executeToJsonStrings parse error" {
-  let out = executeToJsonStrings(".foo", "{")
+test "js run_json_text parse error" {
+  let out = run_json_text(".foo", "{")
   guard out is Err(err) else { fail("expected Err") }
   assert_eq(err.code, "parse_invalid_eof")
 }
 
 ///|
-test "js parseJson + compile + execute" {
-  let json = parseJson("{\"a\": 2}")
+test "js parse_json + compile + execute" {
+  let json = parse_json("{\"a\": 2}")
   let filter = compile(".a")
   let out = execute(filter, json)
   assert_eq(out.length(), 1)
   assert_eq(out[0].to_json_string(), "2")
+  assert_eq(is_valid_json("{\"a\": 2}"), true)
+  assert_eq(is_valid_json("{"), false)
 }
 
 ///|
-test "js parseJson preserves large integer repr in output" {
-  let out = executeToJsonStrings(".", "9007199254740993")
+test "js parse_json preserves large integer repr in output" {
+  let out = run_json_text(".", "9007199254740993")
   guard out is Ok(values) else { fail("expected Ok") }
   assert_eq(values, ["9007199254740993"])
 }
 
 ///|
-test "js tryParseJson returns Err on invalid input" {
-  let out = tryParseJson("{")
+test "js try_parse_json returns Err on invalid input" {
+  let out = try_parse_json("{")
   guard out is Err(err) else { fail("expected Err") }
   assert_eq(err.code, "parse_invalid_eof")
 }
 
 ///|
-test "js safeParseJson alias" {
-  let out = safeParseJson("{")
-  guard out is Err(err) else { fail("expected Err") }
-  assert_eq(err.code, "parse_invalid_eof")
-}
-
-///|
-test "js tryCompile and tryExecute" {
-  let parsed_filter = tryCompile(".x")
+test "js try_compile and try_execute" {
+  let parsed_filter = try_compile(".x")
   guard parsed_filter is Ok(filter) else { fail("expected Ok filter") }
-  let parsed_json = tryParseJson("{\"x\": 7}")
+  let parsed_json = try_parse_json("{\"x\": 7}")
   guard parsed_json is Ok(input) else { fail("expected Ok json") }
-  let out = tryExecute(filter, input)
+  let out = try_execute(filter, input)
   guard out is Ok(values) else { fail("expected Ok execute") }
   assert_eq(values.length(), 1)
   assert_eq(values[0].to_json_string(), "7")
 }
 
 ///|
-test "js run aliases executeToJsonStrings" {
-  let out = run(".[]", "[1,2]")
-  guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values, ["1", "2"])
-}
-
-///|
-test "js execute and parseFilter alias" {
+test "js execute direct filter" {
   let filter = compile(".foo")
-  let input = parseJson("{\"foo\": 5}")
+  let input = parse_json("{\"foo\": 5}")
   let out = execute(filter, input)
   assert_eq(out.length(), 1)
   assert_eq(out[0].to_json_string(), "5")
-  let safe_out = safeExecute(filter, input)
-  guard safe_out is Ok(values) else { fail("expected Ok") }
+  let execute_out = try_execute(filter, input)
+  guard execute_out is Ok(values) else { fail("expected Ok") }
   assert_eq(values.length(), 1)
   assert_eq(values[0].to_json_string(), "5")
-  let filter_alias = parseFilter(".foo")
-  let alias_out = execute(filter_alias, input)
-  assert_eq(alias_out.length(), 1)
-  assert_eq(alias_out[0].to_json_string(), "5")
 }
 
 ///|
-test "js runCompat preserves large-number repr output" {
-  let out = runCompat(".", "1e309")
+test "js run_json_text preserves large-number repr output" {
+  let out = run_json_text(".", "1e309")
   guard out is Ok(values) else { fail("expected Ok") }
   assert_eq(values, ["1e309"])
 }
 
 ///|
-test "js runValues convenience lane" {
-  let out = runValues(".foo + 1", "{\"foo\": 41}")
+test "js run_values convenience lane" {
+  let out = run_values(".foo + 1", "{\"foo\": 41}")
   guard out is Ok(values) else { fail("expected Ok") }
   assert_eq(values.length(), 1)
   assert_eq(values[0].to_json_string(), "42")
-  let safe_out = safeRunValues(".foo", "{\"foo\": 9}")
-  guard safe_out is Ok(safe_values) else { fail("expected Ok") }
-  assert_eq(safe_values.length(), 1)
-  assert_eq(safe_values[0].to_json_string(), "9")
+  let out2 = run_values(".foo", "{\"foo\": 9}")
+  guard out2 is Ok(values2) else { fail("expected Ok") }
+  assert_eq(values2.length(), 1)
+  assert_eq(values2[0].to_json_string(), "9")
 }
 
 ///|
-test "js runCompiled and runCompiledValues" {
+test "js run_compiled_json_text and run_compiled_values" {
   let compiled = compile(".foo")
-  let out = runCompiled(compiled, "{\"foo\": 3}")
+  let out = run_compiled_json_text(compiled, "{\"foo\": 3}")
   guard out is Ok(values) else { fail("expected Ok") }
   assert_eq(values, ["3"])
-  let out_values = runCompiledValues(compiled, "{\"foo\": 4}")
+  let out_values = run_compiled_values(compiled, "{\"foo\": 4}")
   guard out_values is Ok(values2) else { fail("expected Ok") }
   assert_eq(values2.length(), 1)
   assert_eq(values2[0].to_json_string(), "4")
@@ -111,7 +95,7 @@ test "js runCompiled and runCompiledValues" {
 
 ///|
 test "js structured error with position" {
-  let out = tryCompile(".['x']")
+  let out = try_compile(".['x']")
   guard out is Err(err) else { fail("expected Err") }
   assert_eq(err.code, "filter_invalid_char")
   assert_eq(err.line, 1)
@@ -122,8 +106,8 @@ test "js structured error with position" {
 ///|
 test "js structured runtime error" {
   let filter = compile(".foo + 1")
-  let input = parseJson("{\"foo\":\"x\"}")
-  let out = tryExecute(filter, input)
+  let input = parse_json("{\"foo\":\"x\"}")
+  let out = try_execute(filter, input)
   guard out is Err(err) else { fail("expected Err") }
   assert_eq(err.code, "eval_type_error")
   assert_eq(err.line, -1)
