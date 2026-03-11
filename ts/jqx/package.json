@@ -2,6 +2,23 @@
   "name": "@shina1024/jqx",
   "version": "0.1.0",
   "description": "npm entrypoint for jqx JS/TS runtime and schema adapters",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shina1024/jqx.git",
+    "directory": "ts/jqx"
+  },
+  "homepage": "https://github.com/shina1024/jqx/tree/main/ts/jqx",
+  "bugs": {
+    "url": "https://github.com/shina1024/jqx/issues"
+  },
+  "keywords": [
+    "jq",
+    "json",
+    "filter",
+    "query",
+    "typescript",
+    "schema"
+  ],
   "license": "Apache-2.0",
   "files": [
     "dist",

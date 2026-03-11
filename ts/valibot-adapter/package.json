@@ -2,6 +2,22 @@
   "name": "@shina1024/jqx-valibot-adapter",
   "version": "0.1.0",
   "description": "Valibot adapter utilities for jqx JS/TS runtime",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shina1024/jqx.git",
+    "directory": "ts/valibot-adapter"
+  },
+  "homepage": "https://github.com/shina1024/jqx/tree/main/ts/valibot-adapter",
+  "bugs": {
+    "url": "https://github.com/shina1024/jqx/issues"
+  },
+  "keywords": [
+    "jq",
+    "typescript",
+    "valibot",
+    "schema",
+    "adapter"
+  ],
   "license": "Apache-2.0",
   "files": [
     "dist",

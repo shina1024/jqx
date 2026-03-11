@@ -2,6 +2,22 @@
   "name": "@shina1024/jqx-adapter-core",
   "version": "0.1.0",
   "description": "Shared runtime and inference utilities for jqx TS adapters",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shina1024/jqx.git",
+    "directory": "ts/adapter-core"
+  },
+  "homepage": "https://github.com/shina1024/jqx/tree/main/ts/adapter-core",
+  "bugs": {
+    "url": "https://github.com/shina1024/jqx/issues"
+  },
+  "keywords": [
+    "jq",
+    "typescript",
+    "adapter",
+    "runtime",
+    "schema"
+  ],
   "license": "Apache-2.0",
   "files": [
     "dist",

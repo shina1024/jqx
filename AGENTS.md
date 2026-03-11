@@ -10,8 +10,32 @@ This repository targets jq-compatible behavior.
 - Temporary compatibility exceptions must be explicit and removable.
 - Preserve the shared JSON value model across CLI/JS/TS, including object key input/update order.
 
+## MoonBit Public API
+
+- `shina1024/jqx` top-level package is intended to become the primary MoonBit public API and the basis for `mooncakes.io` publication.
+- Before `1.0`, prioritize a coherent long-term public API over preserving the current thin wrapper or early cross-surface API shapes. Breaking changes are acceptable when they reduce long-term API debt.
+- Keep `shina1024/jqx/core` as the lower-level jq-compatible engine. It may keep internal `Json` / `Filter` representations needed for jq semantics, evaluation internals, and numeric repr preservation.
+- Do not use `@core.Json` as the primary MoonBit user boundary. MoonBit-facing APIs should prefer `moonbitlang/core/json.Json` (`@json.Json`).
+- Add explicit conversion helpers between `@json.Json` and `@core.Json`. Treat conversion through `@json.Json` as the convenience lane; jq-specific numeric repr fidelity is preserved by text-based compatibility lanes, not by `@json.Json` round-trips.
+- Public MoonBit APIs should expose two lanes:
+  - value lane: accept and return `@json.Json` for embedding in MoonBit applications
+  - compatibility lane: accept and return JSON text (`StringView` / `String`) when jq-style fidelity matters
+- For compiled execution, prefer a public compiled-filter abstraction over asking MoonBit users to depend on `@core.Filter` directly. `@core.Filter` can remain an implementation detail unless a strong reason appears.
+- Do not block MoonBit public package publication on a typed query DSL. First prioritize string-filter execution, compiled execution, JSON conversion, and clear public errors; query DSL can follow later.
+- Do not advertise `mooncakes.io` as an active channel until top-level public APIs and examples are MoonBit-user-facing and no longer tell users to import `core` directly.
+
 ## Internal Layout
 
+- Surface split:
+  - `shina1024/jqx`: top-level public package for MoonBit users
+  - `shina1024/jqx/core`: jq-compatible engine package
+  - `shina1024/jqx/cmd`: native CLI package
+  - `shina1024/jqx/js`: JS-target-facing MoonBit package used by JS/TS bindings
+  - `ts/*`: npm packaging and adapter workspace; canonical JS/TS user-facing package names live here, not in the MoonBit package path
+- Naming judgment:
+  - `core` is appropriate for the lower-level engine package
+  - `cmd` is appropriate for the CLI package
+  - `js` is acceptable as a repo-internal package name, but it is not the canonical end-user JS/TS package surface; keep that distinction clear in docs
 - Parser responsibilities: `parser_cursor`, `parser_atom`, `parser_expr`, `parser_lowering`
 - Evaluator responsibilities: `execute`, `json_ops`, `path_ops`, `collection_ops`
 - Builtin dispatch responsibilities: `builtin_path`, `builtin_string`, `builtin_collection`, `builtin_numeric`, `builtin_stream`

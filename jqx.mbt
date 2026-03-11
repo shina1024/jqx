@@ -1,6 +1,6 @@
 ///|
-/// Thin wrapper that forwards to the core package.
-/// Prefer importing `shina1024/jqx/core` directly for stable APIs.
+/// Top-level MoonBit public API.
+/// This surface may change before 1.0 while it is reshaped for MoonBit users.
 
 ///|
 pub fn parse(

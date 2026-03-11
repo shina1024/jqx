@@ -2,6 +2,22 @@
   "name": "@shina1024/jqx-yup-adapter",
   "version": "0.1.0",
   "description": "Yup adapter utilities for jqx JS/TS runtime",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shina1024/jqx.git",
+    "directory": "ts/yup-adapter"
+  },
+  "homepage": "https://github.com/shina1024/jqx/tree/main/ts/yup-adapter",
+  "bugs": {
+    "url": "https://github.com/shina1024/jqx/issues"
+  },
+  "keywords": [
+    "jq",
+    "typescript",
+    "yup",
+    "schema",
+    "adapter"
+  ],
   "license": "Apache-2.0",
   "files": [
     "dist",
