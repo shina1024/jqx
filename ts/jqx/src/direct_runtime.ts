@@ -1,4 +1,4 @@
-import * as rawMoonbit from "../../../target/js/release/build/js/js.js";
+import { moonbitRuntime } from "./moonbit_runtime.js";
 
 import { toAst as toQueryAst } from "@shina1024/jqx-adapter-core";
 
@@ -53,11 +53,13 @@ type MoonBitExports = {
   query_json_text(query: unknown, input: string): MoonBitRuntimeResult<string[], unknown>;
 };
 
-function normalizeMoonBitModule(module: typeof rawMoonbit): MoonBitExports {
+function normalizeMoonBitModule(
+  module: Record<string, unknown> & { default?: Record<string, unknown> },
+): MoonBitExports {
   const normalized = (
     "run_json_text" in module
       ? module
-      : (module as typeof rawMoonbit & { default?: unknown }).default
+      : module.default
   ) as MoonBitExports | undefined;
   if (normalized === undefined) {
     throw new TypeError("Failed to load MoonBit JS runtime");
@@ -65,7 +67,7 @@ function normalizeMoonBitModule(module: typeof rawMoonbit): MoonBitExports {
   return normalized;
 }
 
-const moonbit = normalizeMoonBitModule(rawMoonbit);
+const moonbit = normalizeMoonBitModule(moonbitRuntime);
 
 function isTypedDslQuery(value: unknown): value is TypedDslQuery {
   if (typeof value !== "object" || value === null || !("ast" in value)) {
