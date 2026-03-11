@@ -23,8 +23,11 @@ This repository targets jq-compatible behavior.
 - Canonical public names:
   - MoonBit packages use `lower_snake` for values/functions
   - MoonBit public package: `parse_json`, `is_valid_json`, `compile`, `run`, `run_compiled`, `run_json_text`, `run_compiled_json_text`
-  - JS/TS runtime methods: `parseJson`, `isValidJson`, `compile`, `run`, `runCompiled`, `runJsonText`, `runCompiledJsonText`
-  - npm runtime factories: `createRuntime`, `createQueryRuntime`
+  - JS/TS direct runtime methods: `parseJson`, `isValidJson`, `compile`, `run`, `runCompiled`, `runJsonText`, `runCompiledJsonText`, `query`, `queryJsonText`
+  - npm public surfaces:
+    - `@shina1024/jqx`: direct-use runtime and typed query DSL
+    - `@shina1024/jqx/bind`: runtime binding helpers for custom backends
+  - npm binding helpers: `bindRuntime`, `bindQueryRuntime`
 - Do not keep alias exports for old names once a better canonical name is chosen. Prefer one obvious public spelling per operation.
 - For compiled execution, prefer a public compiled-filter abstraction over asking MoonBit users to depend on `@core.Filter` directly. `@core.Filter` can remain an implementation detail unless a strong reason appears.
 - Do not block MoonBit public package publication on a typed query DSL. First prioritize string-filter execution, compiled execution, JSON conversion, and clear public errors; query DSL can follow later.
@@ -37,6 +40,7 @@ This repository targets jq-compatible behavior.
   - `shina1024/jqx/core`: jq-compatible engine package
   - `shina1024/jqx/cmd`: native CLI package
   - `shina1024/jqx/js`: JS-target-facing MoonBit package used by JS/TS bindings
+  - `ts/jqx`: npm public surface; main entrypoint is direct-use runtime, `/bind` subpath is advanced backend integration
   - `ts/*`: npm packaging and adapter workspace; canonical JS/TS user-facing package names live here, not in the MoonBit package path
 - Naming judgment:
   - `core` is appropriate for the lower-level engine package

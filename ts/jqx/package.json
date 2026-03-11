@@ -34,6 +34,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./bind": {
+      "types": "./dist/bind.d.ts",
+      "import": "./dist/bind.js",
+      "require": "./dist/bind.cjs"
+    },
     "./zod": {
       "types": "./dist/zod.d.ts",
       "import": "./dist/zod.js",
@@ -54,13 +59,14 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup src/index.ts src/zod.ts src/yup.ts src/valibot.ts --format esm,cjs --dts --clean",
+    "build:moon-runtime": "moon build --target js --release --manifest-path ../../moon.mod.json ../../js",
+    "build": "pnpm build:moon-runtime && tsup src/index.ts src/bind.ts src/zod.ts src/yup.ts src/valibot.ts --format esm,cjs --dts --clean",
     "format": "oxfmt .",
     "format:check": "oxfmt . --check",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test test/**/*.test.ts"
+    "typecheck": "pnpm build:moon-runtime && tsc -p tsconfig.json --noEmit",
+    "test": "pnpm build:moon-runtime && node --import tsx --test test/**/*.test.ts"
   },
   "dependencies": {
     "@shina1024/jqx-adapter-core": "^0.1.0",

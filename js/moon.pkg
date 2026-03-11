@@ -1,3 +1,46 @@
 import {
   "shina1024/jqx/core" @core,
 }
+
+options(
+  link: {
+    "js": {
+      "exports": [
+        "parse_json",
+        "is_valid_json",
+        "try_parse_json",
+        "compile",
+        "try_compile",
+        "execute",
+        "try_execute",
+        "run_json_text",
+        "run_values",
+        "run_compiled_json_text",
+        "run_compiled_values",
+        "query",
+        "query_json_text",
+        "identity",
+        "field",
+        "index",
+        "pipe",
+        "map",
+        "literal",
+        "iter",
+        "comma",
+        "call",
+        "select",
+        "eq",
+        "lt",
+        "gt",
+        "and_",
+        "or_",
+        "not_",
+        "add",
+        "if_else",
+        "fallback",
+        "try_catch",
+      ],
+      "format": "esm",
+    },
+  },
+)

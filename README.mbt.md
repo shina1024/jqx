@@ -99,59 +99,60 @@ jqx -e ".ok" '{"ok": false}'
 ## npm Quick Start
 
 Entry points:
-- `import { createRuntime, createQueryRuntime } from "@shina1024/jqx"`
+- `import { run, runJsonText, compile, query } from "@shina1024/jqx"`
+- `import { bindRuntime, bindQueryRuntime } from "@shina1024/jqx/bind"`
 - `import { createAdapter } from "@shina1024/jqx/zod"`
 - `import { createAdapter } from "@shina1024/jqx/yup"`
 - `import { createAdapter } from "@shina1024/jqx/valibot"`
 
-Runtime binding example (`createRuntime`):
+Direct-use runtime example:
 
 ```ts
-import { createRuntime } from "@shina1024/jqx";
+import { run, runJsonText } from "@shina1024/jqx";
 
-const jqx = createRuntime({
+const values = run(".foo", { foo: 1 });
+const compat = runJsonText(".", "9007199254740993");
+```
+
+Compiled / query example:
+
+```ts
+import { compile, field, query, runCompiled } from "@shina1024/jqx";
+
+const compiled = compile(".items[]");
+if (compiled.ok) {
+  const out = runCompiled(compiled.value, { items: [1, 2, 3] });
+}
+
+const selected = query(field("user"), { user: { name: "alice" } });
+```
+
+Binding example (`@shina1024/jqx/bind`):
+
+```ts
+import { bindRuntime, type JqxJsonTextRuntime } from "@shina1024/jqx/bind";
+
+const backend: JqxJsonTextRuntime = {
   async runJsonText(filter, input) {
     return { ok: true as const, value: [input] };
   },
-});
+};
 
+const jqx = bindRuntime(backend);
 const out = await jqx.run(".", { x: 1 });
 ```
 
-Query lane example (`createQueryRuntime` + `QueryAst`):
-
-```ts
-import { createQueryRuntime, type QueryAst } from "@shina1024/jqx";
-
-const jqx = createQueryRuntime<QueryAst>({
-  async runJsonText(filter, input) {
-    return { ok: true as const, value: [input] };
-  },
-  async runQueryJsonText(query, input) {
-    return { ok: true as const, value: [input] };
-  },
-});
-
-const out = await jqx.query({ kind: "identity" }, { x: 1 });
-```
-
 Backend runtime contract:
-- `createRuntime`: implement `runJsonText(filter: string, input: string)` and return `JqxResult<string[], JqxRuntimeError>`
-- `createQueryRuntime`: additionally implement `runQueryJsonText(query: QueryAst, input: string)`
+- `bindRuntime`: implement `runJsonText(filter: string, input: string)` and return `JqxResult<string[], JqxRuntimeError>`
+- `bindQueryRuntime`: additionally implement `runQueryJsonText(query: QueryAst, input: string)`
 - `runJsonText`/`runQueryJsonText` outputs are JSON texts (`string[]`), one entry per jq output
 
 Error handling guideline:
 
 ```ts
-import { createRuntime, runtimeErrorToMessage } from "@shina1024/jqx";
+import { run, runtimeErrorToMessage } from "@shina1024/jqx";
 
-const jqx = createRuntime({
-  async runJsonText(filter, input) {
-    return { ok: true as const, value: [input] };
-  },
-});
-
-const result = await jqx.run(".foo", { foo: 1 });
+const result = run(".foo", { foo: 1 });
 if (!result.ok) {
   console.error(runtimeErrorToMessage(result.error));
 }
@@ -161,13 +162,8 @@ Schema adapter example (Zod):
 
 ```ts
 import { z } from "zod";
-import { createAdapter, type JqxRuntime } from "@shina1024/jqx/zod";
-
-const runtime: JqxRuntime = {
-  async run(filter, input) {
-    return { ok: true as const, value: ["alice", "bob"] };
-  },
-};
+import { runtime } from "@shina1024/jqx";
+import { createAdapter } from "@shina1024/jqx/zod";
 
 const adapter = createAdapter(runtime);
 const result = await adapter.filter({

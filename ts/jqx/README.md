@@ -1,64 +1,101 @@
 # @shina1024/jqx
 
-npm-facing JS/TS entrypoint for `@shina1024/jqx`.
+Direct-use JS/TS runtime for `jqx`, plus typed query helpers and schema-adapter entrypoints.
 
 ## Exports
 
-- `@shina1024/jqx`:
-  - runtime/result/core types
-  - `createRuntime(runtime)` (dynamic lane)
-  - `createQueryRuntime(runtime)` (query lane)
-  - Typed DSL combinators (`identity`, `field`, `pipe`, `map`, `select`, ...)
-- `@shina1024/jqx/zod`: re-exports `@shina1024/jqx-zod-adapter`
-- `@shina1024/jqx/yup`: re-exports `@shina1024/jqx-yup-adapter`
-- `@shina1024/jqx/valibot`: re-exports `@shina1024/jqx-valibot-adapter`
+- `@shina1024/jqx`
+  - direct runtime: `run`, `runJsonText`, `compile`, `runCompiled`, `runCompiledJsonText`
+  - JSON helpers: `parseJson`, `isValidJson`
+  - query lane: `query`, `queryJsonText`
+  - adapter-ready runtime objects: `runtime`, `queryRuntime`
+  - typed DSL/query helpers: `identity`, `field`, `pipe`, `map`, `select`, `toAst`, ...
+- `@shina1024/jqx/bind`
+  - `bindRuntime`
+  - `bindQueryRuntime`
+  - binding-specific runtime/client types
+- `@shina1024/jqx/zod`
+- `@shina1024/jqx/yup`
+- `@shina1024/jqx/valibot`
 
-## Factory Choice
+## Direct Runtime
 
-- Use `createRuntime` when you only need jq-string filters (`run` / `runJsonText`).
-- Use `createQueryRuntime` when runtime also supports `runQueryJsonText`.
-- With `createQueryRuntime`, Typed DSL `Query` input is accepted when `Q` is `QueryAst`.
-
-## Runtime Bridge (`runJsonText -> run`)
+`@shina1024/jqx` is the main end-user surface. It bundles the MoonBit runtime and runs synchronously.
 
 ```ts
-import { createRuntime } from "@shina1024/jqx";
+import { run, runJsonText } from "@shina1024/jqx";
 
-const jqx = createRuntime({
-  runJsonText(filter, input) {
-    // connect to MoonBit-generated JS runtime here
-    return { ok: true, value: [input] };
+const values = run(".foo", { foo: 1 });
+// { ok: true, value: [1] }
+
+const compat = runJsonText(".", "9007199254740993");
+// { ok: true, value: ["9007199254740993"] }
+```
+
+Use the value lane when native JS values are convenient, and the JSON text lane when jq-style text fidelity matters.
+
+## Compiled Filters
+
+```ts
+import { compile, runCompiled } from "@shina1024/jqx";
+
+const compiled = compile(".items[]");
+if (compiled.ok) {
+  const result = runCompiled(compiled.value, { items: [1, 2, 3] });
+}
+```
+
+## Query DSL
+
+```ts
+import { field, query } from "@shina1024/jqx";
+
+const result = query(field("user"), { user: { name: "alice" } });
+// { ok: true, value: [{ name: "alice" }] }
+```
+
+`query` accepts either a typed DSL `Query` or a plain `QueryAst`. `queryJsonText` is the compatibility lane equivalent.
+
+## Schema Adapters
+
+The main package exports `runtime` and `queryRuntime`, so adapters can consume the built-in runtime directly.
+
+```ts
+import { z } from "zod";
+import { runtime } from "@shina1024/jqx";
+import { createAdapter } from "@shina1024/jqx/zod";
+
+const adapter = createAdapter(runtime);
+
+const result = await adapter.filter({
+  filter: ".users[].name",
+  input: { users: [{ name: "alice" }, { name: "bob" }] },
+  inputSchema: z.object({ users: z.array(z.object({ name: z.string() })) }),
+  outputSchema: z.string(),
+});
+```
+
+## Binding API
+
+Use `@shina1024/jqx/bind` only when you need to connect a custom backend, such as a remote worker, RPC service, or a separately managed MoonBit runtime.
+
+```ts
+import { bindRuntime } from "@shina1024/jqx/bind";
+
+const jqx = bindRuntime({
+  async runJsonText(filter, input) {
+    return { ok: true as const, value: [input] };
   },
 });
 
-const out = await jqx.run(".", { x: 1 }); // Json[] output
-// `run` / `query` inputs are Json values.
+const result = await jqx.run(".", { x: 1 });
 ```
 
-## Streaming Lane (`AsyncIterable`)
+Use `bindQueryRuntime` when the backend also implements `runQueryJsonText`.
 
-All client factories expose stream methods:
+## Error Model
 
-- `runJsonTextStream(filter, input): AsyncIterable<JqxResult<string, JqxRuntimeError>>`
-- `runStream(filter, input): AsyncIterable<JqxResult<Json, JqxRuntimeError>>`
-- `queryJsonTextStream(query, input): AsyncIterable<JqxResult<string, JqxRuntimeError>>` (query backend)
-- `queryStream(query, input): AsyncIterable<JqxResult<Json, JqxRuntimeError>>` (query backend)
-
-Backend contract (optional):
-
-- `runJsonTextStream(filter, input) -> JqxResult<AsyncIterable<string>, JqxRuntimeError>`
-- `runQueryJsonTextStream(query, input) -> JqxResult<AsyncIterable<string>, JqxRuntimeError>`
-
-If backend stream methods are absent, client falls back to `runJsonText` / `runQueryJsonText` and emits each array element as stream items.
-
-Error behavior:
-
-- backend/runtime failure: emits one `{ ok: false, error }` item and ends
-- `runStream` / `queryStream` output JSON parse failure: emits `{ kind: "output_parse", index, ... }` and ends
-
-## Runtime Error Model
-
-`run` / `query` / `runJsonText` / `queryJsonText` return `JqxRuntimeError` as a discriminated union:
+Runtime operations return `JqxRuntimeError`:
 
 - `{ kind: "backend_runtime", message, details? }`
 - `{ kind: "input_stringify", message }`
@@ -69,62 +106,6 @@ Helpers:
 - `runtimeErrorToMessage(error)`
 - `isJqxRuntimeError(value)`
 - `toJqxRuntimeError(value)`
-
-## Typed DSL (compile-time inference)
-
-```ts
-import { field, identity, pipe } from "@shina1024/jqx";
-
-type Input = { user: { name: string } };
-const q = pipe(identity<Input>(), pipe(field("user"), field("name")));
-// q: Query<Input, string>
-```
-
-## QueryAst Interop
-
-External interchange uses a versioned document envelope:
-
-```json
-{
-  "format": "jqx-query-ast",
-  "version": 1,
-  "ast": { "kind": "field", "name": "user" }
-}
-```
-
-Helpers:
-
-- `exportQueryAstDocument(ast)`
-- `exportTypedQueryDocument(query)`
-- `importQueryAstDocument(value)`
-- `parseQueryAstDocument(text)`
-- `stringifyQueryAstDocument(ast)`
-
-Compatibility rule:
-
-- importer accepts only the document envelope (`format/version/ast`)
-- unknown `version` is rejected as `unsupported_version`
-
-## Query Runtime Bridge (`runQueryJsonText -> query`)
-
-```ts
-import { createQueryRuntime, field, identity, pipe, type QueryAst } from "@shina1024/jqx";
-
-const jqx = createQueryRuntime({
-  runJsonText(filter: string, input: string) {
-    return { ok: true as const, value: [input] };
-  },
-  runQueryJsonText(query: QueryAst, input: string) {
-    // connect to a runtime lane that accepts QueryAst
-    return { ok: true as const, value: [input] };
-  },
-});
-
-const q = pipe(identity<{ user: { name: string } }>(), pipe(field("user"), field("name")));
-const out = await jqx.query(q, { user: { name: "alice" } });
-// passing QueryAst is also supported: jqx.query({ kind: "identity" }, input)
-// Typed DSL query input is available when backend query type is QueryAst.
-```
 
 ## Scripts
 
