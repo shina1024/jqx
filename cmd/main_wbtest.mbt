@@ -394,7 +394,59 @@ test "parse json value end reports structured and string eof errors" {
 }
 
 ///|
+test "parse json value end handles escaped quotes" {
+  let structured = "{\"a\":\"b\\\"c\"}"
+  let string_value = "\"a\\\"b\""
+  assert_eq(parse_json_value_end(structured, 0), structured.length())
+  assert_eq(parse_json_value_end(string_value, 0), string_value.length())
+}
+
+///|
 test "parse raw lines handles empty and no-trailing-newline" {
   assert_eq(parse_raw_lines(""), [])
   assert_eq(parse_raw_lines("last"), [@lib.Value::string("last")])
+}
+
+///|
+test "render error lines skips empties and falls back on blank input" {
+  assert_eq(render_error_lines("line1\n\nline2\n"), [
+    "jqx: error: line1", "jqx: error: line2",
+  ])
+  assert_eq(render_error_lines(""), ["jqx: error: "])
+}
+
+///|
+test "cli reads stdin only for parsed stdin input" {
+  assert_eq(cli_reads_stdin(["jqx"]), false)
+  assert_eq(cli_reads_stdin(["jqx", "."]), true)
+  assert_eq(cli_reads_stdin(["jqx", ".", "1"]), false)
+  assert_eq(cli_reads_stdin(["jqx", "-n", "."]), false)
+  assert_eq(cli_reads_stdin(["jqx", "-L"]), false)
+}
+
+///|
+test "configure module search paths accepts explicit paths" {
+  configure_module_search_paths({
+    raw: false,
+    raw_input: false,
+    no_input: false,
+    exit_status: false,
+    slurp: false,
+    module_search_paths: ["third_party/jq-tests/tests/modules"],
+    filter: ".",
+    input: None,
+  })
+  @lib.clear_module_search_paths()
+}
+
+///|
+test "format error message falls back for malformed locations" {
+  assert_eq(
+    format_error_message("Invalid number abc at line x, column 14"),
+    "jqx: error: Invalid number abc at line x, column 14",
+  )
+  assert_eq(
+    format_error_message("Invalid number abc at line 3"),
+    "jqx: error: Invalid number abc at line 3",
+  )
 }
