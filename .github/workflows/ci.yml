@@ -45,8 +45,6 @@ jobs:
         with:
           node-version: lts/*
           check-latest: true
-          cache: pnpm
-          cache-dependency-path: ts/*/pnpm-lock.yaml
 
       - name: Setup pnpm (latest)
         if: runner.os == 'Linux'
