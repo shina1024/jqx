@@ -6,9 +6,6 @@ on:
       - main
   pull_request:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   test:
     name: Test (${{ matrix.os }})
@@ -42,12 +39,6 @@ jobs:
       - name: MoonBit Version
         run: moon version --all
 
-      - name: Setup pnpm (latest)
-        if: runner.os == 'Linux'
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
-
       - name: Setup Node (Linux)
         if: runner.os == 'Linux'
         uses: actions/setup-node@v5
@@ -56,6 +47,13 @@ jobs:
           check-latest: true
           cache: pnpm
           cache-dependency-path: ts/*/pnpm-lock.yaml
+
+      - name: Setup pnpm (latest)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
 
       - name: Install jq (Linux)
         if: runner.os == 'Linux'
