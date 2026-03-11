@@ -23,7 +23,7 @@ fn usage_lines() -> Array[String] {
 fn append_output_lines(
   lines : Array[String],
   raw : Bool,
-  outputs : Array[@lib.Json],
+  outputs : Array[@lib.Value],
 ) -> Unit {
   for value in outputs {
     lines.push(format_output(raw, value))
@@ -32,8 +32,8 @@ fn append_output_lines(
 
 ///|
 fn append_json_output_values(
-  outputs : Array[@lib.Json],
-  values : Array[@lib.Json],
+  outputs : Array[@lib.Value],
+  values : Array[@lib.Value],
 ) -> Unit {
   for value in values {
     outputs.push(value)
@@ -194,12 +194,12 @@ fn format_error_message(msg : String) -> String {
 }
 
 ///|
-fn compute_exit_status(outputs : Array[@lib.Json]) -> Int {
+fn compute_exit_status(outputs : Array[@lib.Value]) -> Int {
   if outputs.length() == 0 {
     return 4
   }
   match outputs[outputs.length() - 1] {
-    @lib.Json::JFalse | @lib.Json::JNull => 1
+    @lib.Value::JFalse | @lib.Value::JNull => 1
     _ => 0
   }
 }

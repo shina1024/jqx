@@ -3,9 +3,9 @@
 
 ///|
 test "parse primitives" {
-  assert_eq(try? parse("null"), Ok(Json::null()))
-  assert_eq(try? parse("true"), Ok(Json::boolean(true)))
-  assert_eq(try? parse("false"), Ok(Json::boolean(false)))
+  assert_eq(try? parse("null"), Ok(Value::null()))
+  assert_eq(try? parse("true"), Ok(Value::boolean(true)))
+  assert_eq(try? parse("false"), Ok(Value::boolean(false)))
 }
 
 ///|
@@ -14,11 +14,11 @@ test "parse numbers and arrays" {
   assert_eq(
     json,
     Ok(
-      Json::array([
-        Json::number(1.0),
-        Json::number(-2.0),
-        Json::number(3.5),
-        Json::number(100.0),
+      Value::array([
+        Value::number(1.0),
+        Value::number(-2.0),
+        Value::number(3.5),
+        Value::number(100.0),
       ]),
     ),
   )
@@ -61,7 +61,10 @@ test "parse non-finite number tokens" {
 ///|
 test "parse large integer keeps repr" {
   let json = try? parse("9007199254740993")
-  assert_eq(json, Ok(Json::number(9007199254740992.0, repr="9007199254740993")))
+  assert_eq(
+    json,
+    Ok(Value::number(9007199254740992.0, repr="9007199254740993")),
+  )
 }
 
 ///|
@@ -70,9 +73,9 @@ test "parse object" {
   assert_eq(
     json,
     Ok(
-      Json::object({
-        "a": Json::number(1.0),
-        "b": Json::array([Json::boolean(true), Json::boolean(false)]),
+      Value::object({
+        "a": Value::number(1.0),
+        "b": Value::array([Value::boolean(true), Value::boolean(false)]),
       }),
     ),
   )
@@ -81,13 +84,13 @@ test "parse object" {
 ///|
 test "parse string escapes" {
   let json = try? parse("\"\\n\\t\\\"\"")
-  assert_eq(json, Ok(Json::string("\n\t\"")))
+  assert_eq(json, Ok(Value::string("\n\t\"")))
 }
 
 ///|
 test "parse whitespace" {
   let json = try? parse(" \n\t[1, 2]\r ")
-  assert_eq(json, Ok(Json::array([Json::number(1.0), Json::number(2.0)])))
+  assert_eq(json, Ok(Value::array([Value::number(1.0), Value::number(2.0)])))
 }
 
 ///|

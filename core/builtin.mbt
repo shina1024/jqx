@@ -76,14 +76,14 @@ fn builtin_utf8_byte_length(s : String) -> Int {
 }
 
 ///|
-fn builtin_to_boolean(input : Json) -> Json raise EvalError {
+fn builtin_to_boolean(input : Value) -> Value raise EvalError {
   match input {
     JTrue | JFalse => input
     String(s) =>
       if s == "true" {
-        Json::boolean(true)
+        Value::boolean(true)
       } else if s == "false" {
-        Json::boolean(false)
+        Value::boolean(false)
       } else {
         raise TypeError(
           json_type_with_value(input) + " cannot be parsed as a boolean",
@@ -113,7 +113,7 @@ fn builtin_is_negative_zero(n : Double) -> Bool {
 }
 
 ///|
-fn format_filter_input_string(input : Json) -> String {
+fn format_filter_input_string(input : Value) -> String {
   match input {
     String(s) => s
     _ => input.to_json_string()
@@ -152,13 +152,13 @@ fn format_filter_string_preview(s : String) -> String {
 
 ///|
 fn format_filter_string_type_with_value(s : String) -> String {
-  "string (" + Json::string(s).to_json_string() + ")"
+  "string (" + Value::string(s).to_json_string() + ")"
 }
 
 ///|
 fn format_filter_string_type_with_preview(s : String) -> String {
   let preview = format_filter_string_preview(s)
-  let quoted = Json::string(preview).to_json_string()
+  let quoted = Value::string(preview).to_json_string()
   if preview == s {
     "string (" + quoted + ")"
   } else {
@@ -224,7 +224,7 @@ fn format_csv_field_string(input : String) -> String {
 }
 
 ///|
-fn format_csv_scalar(value : Json) -> String raise EvalError {
+fn format_csv_scalar(value : Value) -> String raise EvalError {
   match value {
     JNull => ""
     String(s) => format_csv_field_string(s)
@@ -254,7 +254,7 @@ fn format_tsv_escape(input : String) -> String {
 }
 
 ///|
-fn format_tsv_scalar(value : Json) -> String raise EvalError {
+fn format_tsv_scalar(value : Value) -> String raise EvalError {
   match value {
     JNull => ""
     String(s) => format_tsv_escape(s)
@@ -265,7 +265,7 @@ fn format_tsv_scalar(value : Json) -> String raise EvalError {
 }
 
 ///|
-fn format_csv_row(input : Json) -> String raise EvalError {
+fn format_csv_row(input : Value) -> String raise EvalError {
   match input {
     Array(items) => {
       let buf = StringBuilder::new()
@@ -282,7 +282,7 @@ fn format_csv_row(input : Json) -> String raise EvalError {
 }
 
 ///|
-fn format_tsv_row(input : Json) -> String raise EvalError {
+fn format_tsv_row(input : Value) -> String raise EvalError {
   match input {
     Array(items) => {
       let buf = StringBuilder::new()
@@ -642,7 +642,7 @@ fn format_base64_decode(
 }
 
 ///|
-fn builtin_list() -> Array[Json] {
+fn builtin_list() -> Array[Value] {
   let names = [
     "@base64/0", "@base64d/0", "@csv/0", "@html/0", "@json/0", "@sh/0", "@text/0",
     "@tsv/0", "@uri/0", "@urid/0", "abs/0", "add/0", "all/0", "any/0", "ascii_downcase/0",
@@ -663,54 +663,54 @@ fn builtin_list() -> Array[Json] {
   ]
   let out = []
   for name in names {
-    out.push(Json::string(name))
+    out.push(Value::string(name))
   }
   out
 }
 
 ///|
-fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
+fn builtin_call0(name : String, input : Value) -> Array[Value] raise EvalError {
   match name {
-    "have_decnum" => [Json::boolean(false)]
+    "have_decnum" => [Value::boolean(false)]
     "modulemeta" =>
       match input {
         String(name) => raise TypeError("module not found: " + name)
         _ =>
           [
-            Json::object_from_entries([
-              ("deps", Json::array([])),
-              ("defs", Json::object(Map::new())),
+            Value::object_from_entries([
+              ("deps", Value::array([])),
+              ("defs", Value::object(Map::new())),
             ]),
           ]
       }
-    "env" => [Json::object(Map::new())]
-    "builtins" => [Json::array(builtin_list())]
+    "env" => [Value::object(Map::new())]
+    "builtins" => [Value::array(builtin_list())]
     "now" => [json_number_value(@env.now().to_double() / 1000.0)]
     "gmtime" => [gmtime_json(input)]
     "localtime" => [gmtime_json(input)]
     "mktime" => [mktime_json(input)]
-    "nan" => [Json::number(@double.infinity - @double.infinity)]
-    "infinite" => [Json::number(@double.infinity)]
+    "nan" => [Value::number(@double.infinity - @double.infinity)]
+    "infinite" => [Value::number(@double.infinity)]
     "isnan" =>
       match input {
-        Number(n, _) => [Json::boolean(n != n)]
-        _ => [Json::boolean(false)]
+        Number(n, _) => [Value::boolean(n != n)]
+        _ => [Value::boolean(false)]
       }
     "isfinite" =>
       match input {
         Number(n, _) =>
           [
-            Json::boolean(
+            Value::boolean(
               n == n && n != @double.infinity && n != @double.neg_infinity,
             ),
           ]
-        _ => [Json::boolean(false)]
+        _ => [Value::boolean(false)]
       }
     "isinfinite" =>
       match input {
         Number(n, _) =>
-          [Json::boolean(n == @double.infinity || n == @double.neg_infinity)]
-        _ => [Json::boolean(false)]
+          [Value::boolean(n == @double.infinity || n == @double.neg_infinity)]
+        _ => [Value::boolean(false)]
       }
     "toboolean" => [builtin_to_boolean(input)]
     "floor" =>
@@ -771,7 +771,7 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
       }
     "utf8bytelength" =>
       match input {
-        String(s) => [Json::number(builtin_utf8_byte_length(s).to_double())]
+        String(s) => [Value::number(builtin_utf8_byte_length(s).to_double())]
         _ =>
           raise TypeError(
             json_type_with_value(input) + " only strings have UTF-8 byte length",
@@ -788,7 +788,7 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
               Some(s) =>
                 if s.has_prefix("-") {
                   [
-                    Json::number(
+                    Value::number(
                       -n,
                       repr=s
                         .view(start_offset=1, end_offset=s.length())
@@ -801,9 +801,9 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
               None => [json_number_value(-n)]
             }
           } else if builtin_is_negative_zero(n) || repr == Some("-0") {
-            [Json::number(-0.0, repr="-0")]
+            [Value::number(-0.0, repr="-0")]
           } else {
-            [Json::number(n, repr?)]
+            [Value::number(n, repr?)]
           }
         JNull | JTrue | JFalse =>
           raise TypeError(json_type_with_value(input) + " cannot be negated")
@@ -816,52 +816,52 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
       }
     "trim" =>
       match input {
-        String(s) => [Json::string(builtin_trim_ascii_ws(s))]
+        String(s) => [Value::string(builtin_trim_ascii_ws(s))]
         _ => raise TypeError("trim input must be a string")
       }
-    "debug" => [input, Json::array([Json::string("DEBUG:"), input])]
+    "debug" => [input, Value::array([Value::string("DEBUG:"), input])]
     "input" => raise TypeError("break")
     "ltrim" =>
       match input {
-        String(s) => [Json::string(builtin_ltrim_ascii_ws(s))]
+        String(s) => [Value::string(builtin_ltrim_ascii_ws(s))]
         _ => raise TypeError("trim input must be a string")
       }
     "rtrim" =>
       match input {
-        String(s) => [Json::string(builtin_rtrim_ascii_ws(s))]
+        String(s) => [Value::string(builtin_rtrim_ascii_ws(s))]
         _ => raise TypeError("trim input must be a string")
       }
     "length" =>
       match input {
-        Array(a) => [Json::number(a.length().to_double())]
-        Object(o) => [Json::number(o.length().to_double())]
-        String(s) => [Json::number(s.length().to_double())]
-        JNull => [Json::number(0.0)]
+        Array(a) => [Value::number(a.length().to_double())]
+        Object(o) => [Value::number(o.length().to_double())]
+        String(s) => [Value::number(s.length().to_double())]
+        JNull => [Value::number(0.0)]
         Number(n, _) =>
           if n < 0.0 {
-            [Json::number(-n)]
+            [Value::number(-n)]
           } else {
-            [Json::number(n)]
+            [Value::number(n)]
           }
         _ =>
           raise TypeError("Cannot get length of " + json_type_with_value(input))
       }
-    "type" => [Json::string(json_type_name(input))]
+    "type" => [Value::string(json_type_name(input))]
     "keys" =>
       match input {
         Object(o) => {
           let out = []
           for k in object_keys_lex_sorted(o) {
-            out.push(Json::string(k))
+            out.push(Value::string(k))
           }
-          [Json::array(out)]
+          [Value::array(out)]
         }
         Array(a) => {
           let out = []
           for i in 0..<a.length() {
-            out.push(Json::number(i.to_double()))
+            out.push(Value::number(i.to_double()))
           }
-          [Json::array(out)]
+          [Value::array(out)]
         }
         _ => raise TypeError(json_type_with_value(input) + " has no keys")
       }
@@ -870,16 +870,16 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
         Object(o) => {
           let out = []
           for k in object_keys_sorted(o) {
-            out.push(Json::string(k))
+            out.push(Value::string(k))
           }
-          [Json::array(out)]
+          [Value::array(out)]
         }
         Array(a) => {
           let out = []
           for i in 0..<a.length() {
-            out.push(Json::number(i.to_double()))
+            out.push(Value::number(i.to_double()))
           }
-          [Json::array(out)]
+          [Value::array(out)]
         }
         _ => raise TypeError(json_type_with_value(input) + " has no keys")
       }
@@ -932,14 +932,14 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
     "add" =>
       match input {
         Array(a) => {
-          let mut acc = Json::null()
+          let mut acc = Value::null()
           for v in a {
             acc = json_add_pair(acc, v)
           }
           [acc]
         }
         Object(o) => {
-          let mut acc = Json::null()
+          let mut acc = Value::null()
           for kv in object_entries_sorted(o) {
             acc = json_add_pair(acc, kv.1)
           }
@@ -951,22 +951,22 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
     "tostring" =>
       match input {
         String(_) => [input]
-        Number(n, _) => [Json::string(Json::number(n).to_json_string())]
-        _ => [Json::string(input.to_json_string())]
+        Number(n, _) => [Value::string(Value::number(n).to_json_string())]
+        _ => [Value::string(input.to_json_string())]
       }
-    "@text" => [Json::string(format_filter_input_string(input))]
-    "@json" => [Json::string(input.to_json_string())]
-    "@csv" => [Json::string(format_csv_row(input))]
-    "@tsv" => [Json::string(format_tsv_row(input))]
+    "@text" => [Value::string(format_filter_input_string(input))]
+    "@json" => [Value::string(input.to_json_string())]
+    "@csv" => [Value::string(format_csv_row(input))]
+    "@tsv" => [Value::string(format_tsv_row(input))]
     "@html" =>
-      [Json::string(format_html_escape(format_filter_input_string(input)))]
-    "@sh" => [Json::string(format_sh_quote(format_filter_input_string(input)))]
+      [Value::string(format_html_escape(format_filter_input_string(input)))]
+    "@sh" => [Value::string(format_sh_quote(format_filter_input_string(input)))]
     "@uri" =>
-      [Json::string(format_uri_encode(format_filter_input_string(input)))]
+      [Value::string(format_uri_encode(format_filter_input_string(input)))]
     "@urid" => {
       let s = format_filter_input_string(input)
       match format_uri_decode(s) {
-        Some(decoded) => [Json::string(decoded)]
+        Some(decoded) => [Value::string(decoded)]
         None =>
           raise TypeError(
             format_filter_string_type_with_value(s) +
@@ -975,11 +975,11 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
       }
     }
     "@base64" =>
-      [Json::string(format_base64_encode(format_filter_input_string(input)))]
+      [Value::string(format_base64_encode(format_filter_input_string(input)))]
     "@base64d" => {
       let s = format_filter_input_string(input)
       match format_base64_decode(s) {
-        Ok(bytes) => [Json::string(utf8_decode_bytes_lossy(bytes))]
+        Ok(bytes) => [Value::string(utf8_decode_bytes_lossy(bytes))]
         Err(InvalidData) =>
           raise TypeError(
             format_filter_string_type_with_preview(s) +
@@ -994,10 +994,10 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
     }
     "tojson" =>
       match input {
-        Number(n, _) => [Json::string(Json::number(n).to_json_string())]
-        _ => [Json::string(input.to_json_string())]
+        Number(n, _) => [Value::string(Value::number(n).to_json_string())]
+        _ => [Value::string(input.to_json_string())]
       }
-    "tostream" => [Json::array([Json::array([]), input])]
+    "tostream" => [Value::array([Value::array([]), input])]
     "tonumber" =>
       match input {
         Number(_, _) => [input]
@@ -1043,8 +1043,8 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
             json_type_with_value(input) + " only strings can be parsed",
           )
       }
-    "first" => [nth_on_input(input, Json::number(0.0))]
-    "last" => [nth_on_input(input, Json::number(-1.0))]
+    "first" => [nth_on_input(input, Value::number(0.0))]
+    "last" => [nth_on_input(input, Value::number(-1.0))]
     "any" => {
       let values = collection_values(input)
       let mut ok = false
@@ -1054,7 +1054,7 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
           break
         }
       }
-      [Json::boolean(ok)]
+      [Value::boolean(ok)]
     }
     "all" => {
       let values = collection_values(input)
@@ -1065,7 +1065,7 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
           break
         }
       }
-      [Json::boolean(ok)]
+      [Value::boolean(ok)]
     }
     "flatten" => [flatten_default(input)]
     "combinations" =>
@@ -1088,7 +1088,7 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
     "from_entries" => [from_entries_json(input)]
     "sort" =>
       match input {
-        Array(a) => [Json::array(sort_json_array(a))]
+        Array(a) => [Value::array(sort_json_array(a))]
         _ =>
           raise TypeError(
             json_type_with_value(input) +
@@ -1119,7 +1119,7 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
       }
     "unique" =>
       match input {
-        Array(a) => [Json::array(unique_sorted_json_array(sort_json_array(a)))]
+        Array(a) => [Value::array(unique_sorted_json_array(sort_json_array(a)))]
         _ =>
           raise TypeError(
             json_type_with_value(input) +
@@ -1128,22 +1128,22 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
       }
     "explode" =>
       match input {
-        String(s) => [Json::array(explode_string(s))]
+        String(s) => [Value::array(explode_string(s))]
         _ => raise TypeError("explode input must be a string")
       }
     "ascii_upcase" =>
       match input {
-        String(s) => [Json::string(ascii_upcase_string(s))]
+        String(s) => [Value::string(ascii_upcase_string(s))]
         _ => raise TypeError("ascii_upcase input must be a string")
       }
     "ascii_downcase" =>
       match input {
-        String(s) => [Json::string(ascii_downcase_string(s))]
+        String(s) => [Value::string(ascii_downcase_string(s))]
         _ => raise TypeError("ascii_downcase input must be a string")
       }
     "implode" =>
       match input {
-        Array(a) => [Json::string(implode_array(a))]
+        Array(a) => [Value::string(implode_array(a))]
         _ => raise TypeError("implode input must be an array")
       }
     "fromdate" =>
@@ -1165,24 +1165,24 @@ fn builtin_call0(name : String, input : Json) -> Array[Json] raise EvalError {
           for i in 0..<a.length() {
             out.push(a[a.length() - 1 - i])
           }
-          [Json::array(out)]
+          [Value::array(out)]
         }
-        JNull => [Json::array([])]
+        JNull => [Value::array([])]
         Number(n, _) =>
           if n == 0.0 {
-            [Json::array([])]
+            [Value::array([])]
           } else {
             raise TypeError("Cannot index number with number")
           }
         String(s) =>
           if s.length() == 0 {
-            [Json::array([])]
+            [Value::array([])]
           } else {
             raise TypeError("Cannot index string with number")
           }
         Object(o) =>
           if o.length() == 0 {
-            [Json::array([])]
+            [Value::array([])]
           } else {
             raise TypeError("Cannot index object with number")
           }

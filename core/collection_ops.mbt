@@ -1,5 +1,5 @@
 ///|
-fn collection_values(input : Json) -> Array[Json] raise EvalError {
+fn collection_values(input : Value) -> Array[Value] raise EvalError {
   match input {
     Array(a) => a
     Object(o) => {
@@ -14,7 +14,7 @@ fn collection_values(input : Json) -> Array[Json] raise EvalError {
 }
 
 ///|
-fn flatten_array_full(a : Array[Json]) -> Array[Json] {
+fn flatten_array_full(a : Array[Value]) -> Array[Value] {
   let out = []
   for v in a {
     match v {
@@ -29,7 +29,7 @@ fn flatten_array_full(a : Array[Json]) -> Array[Json] {
 }
 
 ///|
-fn flatten_array_depth(a : Array[Json], depth : Int) -> Array[Json] {
+fn flatten_array_depth(a : Array[Value], depth : Int) -> Array[Value] {
   if depth <= 0 {
     return a
   }
@@ -53,15 +53,15 @@ fn flatten_array_depth(a : Array[Json], depth : Int) -> Array[Json] {
 }
 
 ///|
-fn flatten_default(input : Json) -> Json raise EvalError {
+fn flatten_default(input : Value) -> Value raise EvalError {
   match input {
-    Array(a) => Json::array(flatten_array_full(a))
+    Array(a) => Value::array(flatten_array_full(a))
     _ => raise TypeError("Cannot iterate over " + json_type_with_value(input))
   }
 }
 
 ///|
-fn flatten_with_depth(input : Json, depth : Json) -> Json raise EvalError {
+fn flatten_with_depth(input : Value, depth : Value) -> Value raise EvalError {
   match input {
     Array(a) =>
       match depth {
@@ -69,14 +69,14 @@ fn flatten_with_depth(input : Json, depth : Json) -> Json raise EvalError {
           if n != n || n == @double.neg_infinity || n < 0.0 {
             raise TypeError("flatten depth must not be negative")
           } else if n == @double.infinity {
-            Json::array(flatten_array_full(a))
+            Value::array(flatten_array_full(a))
           } else {
             let d = n.to_int()
             if d.to_double() == n {
-              Json::array(flatten_array_depth(a, d))
+              Value::array(flatten_array_depth(a, d))
             } else {
               // jq behavior: non-integer positive depths flatten fully.
-              Json::array(flatten_array_full(a))
+              Value::array(flatten_array_full(a))
             }
           }
         String(_) =>
@@ -90,7 +90,7 @@ fn flatten_with_depth(input : Json, depth : Json) -> Json raise EvalError {
 }
 
 ///|
-fn transpose_row_length(row : Json) -> Int raise EvalError {
+fn transpose_row_length(row : Value) -> Int raise EvalError {
   match row {
     Array(a) => a.length()
     Object(o) => o.length()
@@ -103,16 +103,16 @@ fn transpose_row_length(row : Json) -> Int raise EvalError {
 }
 
 ///|
-fn transpose_row_index(row : Json, i : Int) -> Json raise EvalError {
+fn transpose_row_index(row : Value, i : Int) -> Value raise EvalError {
   match row {
-    Array(a) => if i >= 0 && i < a.length() { a[i] } else { Json::null() }
-    JNull => Json::null()
-    _ => index_type_error(row, Json::number(i.to_double()))
+    Array(a) => if i >= 0 && i < a.length() { a[i] } else { Value::null() }
+    JNull => Value::null()
+    _ => index_type_error(row, Value::number(i.to_double()))
   }
 }
 
 ///|
-fn transpose_json(input : Json) -> Json raise EvalError {
+fn transpose_json(input : Value) -> Value raise EvalError {
   match input {
     Array(rows) => {
       let mut max_len = 0
@@ -128,47 +128,47 @@ fn transpose_json(input : Json) -> Json raise EvalError {
         for row in rows {
           col.push(transpose_row_index(row, i))
         }
-        out.push(Json::array(col))
+        out.push(Value::array(col))
       }
-      Json::array(out)
+      Value::array(out)
     }
     _ => raise TypeError("Cannot iterate over " + json_type_with_value(input))
   }
 }
 
 ///|
-fn to_entries_json(input : Json) -> Json raise EvalError {
+fn to_entries_json(input : Value) -> Value raise EvalError {
   match input {
     Object(o) => {
       let out = []
       for kv in object_entries_sorted(o) {
         out.push(
-          Json::object_from_entries([
-            ("key", Json::string(kv.0)),
+          Value::object_from_entries([
+            ("key", Value::string(kv.0)),
             ("value", kv.1),
           ]),
         )
       }
-      Json::array(out)
+      Value::array(out)
     }
     Array(a) => {
       let out = []
       for i in 0..<a.length() {
         out.push(
-          Json::object_from_entries([
-            ("key", Json::number(i.to_double())),
+          Value::object_from_entries([
+            ("key", Value::number(i.to_double())),
             ("value", a[i]),
           ]),
         )
       }
-      Json::array(out)
+      Value::array(out)
     }
     _ => raise TypeError(json_type_with_value(input) + " has no keys")
   }
 }
 
 ///|
-fn entry_key_value(entry : Json) -> (Json, Json) raise EvalError {
+fn entry_key_value(entry : Value) -> (Value, Value) raise EvalError {
   match entry {
     Object(o) => {
       let key = match o.get("key") {
@@ -182,7 +182,7 @@ fn entry_key_value(entry : Json) -> (Json, Json) raise EvalError {
                 None =>
                   match o.get("Name") {
                     Some(v) => v
-                    None => Json::null()
+                    None => Value::null()
                   }
               }
           }
@@ -192,17 +192,17 @@ fn entry_key_value(entry : Json) -> (Json, Json) raise EvalError {
         None =>
           match o.get("Value") {
             Some(v) => v
-            None => Json::null()
+            None => Value::null()
           }
       }
       (key, value)
     }
-    _ => index_type_error(entry, Json::string("key"))
+    _ => index_type_error(entry, Value::string("key"))
   }
 }
 
 ///|
-fn from_entries_json(input : Json) -> Json raise EvalError {
+fn from_entries_json(input : Value) -> Value raise EvalError {
   match input {
     Array(a) => {
       let out = Map::new()
@@ -222,14 +222,14 @@ fn from_entries_json(input : Json) -> Json raise EvalError {
             )
         }
       }
-      Json::object_with_order(out, out_order)
+      Value::object_with_order(out, out_order)
     }
     _ => raise TypeError("Cannot iterate over " + json_type_with_value(input))
   }
 }
 
 ///|
-fn json_sort_rank(j : Json) -> Int {
+fn json_sort_rank(j : Value) -> Int {
   match j {
     JNull => 0
     JFalse => 1
@@ -260,7 +260,7 @@ fn compare_string_arrays(a : Array[String], b : Array[String]) -> Int {
 }
 
 ///|
-fn compare_json(a : Json, b : Json) -> Int {
+fn compare_json(a : Value, b : Value) -> Int {
   let ra = json_sort_rank(a)
   let rb = json_sort_rank(b)
   if ra < rb {
@@ -306,11 +306,11 @@ fn compare_json(a : Json, b : Json) -> Int {
       for key in kx {
         let vx = match x.get(key) {
           Some(v) => v
-          None => Json::null()
+          None => Value::null()
         }
         let vy = match y.get(key) {
           Some(v) => v
-          None => Json::null()
+          None => Value::null()
         }
         let c = compare_json(vx, vy)
         if c != 0 {
@@ -324,8 +324,11 @@ fn compare_json(a : Json, b : Json) -> Int {
 }
 
 ///|
-fn sort_json_array(a : Array[Json]) -> Array[Json] {
-  fn merge_sorted_json(left : Array[Json], right : Array[Json]) -> Array[Json] {
+fn sort_json_array(a : Array[Value]) -> Array[Value] {
+  fn merge_sorted_json(
+    left : Array[Value],
+    right : Array[Value],
+  ) -> Array[Value] {
     let merged = []
     let mut i = 0
     let mut j = 0
@@ -364,9 +367,9 @@ fn sort_json_array(a : Array[Json]) -> Array[Json] {
 }
 
 ///|
-fn min_json_array(a : Array[Json]) -> Json {
+fn min_json_array(a : Array[Value]) -> Value {
   if a.length() == 0 {
-    return Json::null()
+    return Value::null()
   }
   let mut best = a[0]
   for i in 1..<a.length() {
@@ -378,9 +381,9 @@ fn min_json_array(a : Array[Json]) -> Json {
 }
 
 ///|
-fn max_json_array(a : Array[Json]) -> Json {
+fn max_json_array(a : Array[Value]) -> Value {
   if a.length() == 0 {
-    return Json::null()
+    return Value::null()
   }
   let mut best = a[0]
   for i in 1..<a.length() {
@@ -393,16 +396,16 @@ fn max_json_array(a : Array[Json]) -> Json {
 
 ///|
 fn minmax_by_json_array(
-  a : Array[Json],
+  a : Array[Value],
   key_filter : Filter,
-  env : Map[String, Json],
+  env : Map[String, Value],
   choose_max~ : Bool,
-) -> Json raise EvalError {
+) -> Value raise EvalError {
   if a.length() == 0 {
-    return Json::null()
+    return Value::null()
   }
-  fn key_for(value : Json) -> Json raise EvalError {
-    Json::array(execute_with_env(key_filter, value, env))
+  fn key_for(value : Value) -> Value raise EvalError {
+    Value::array(execute_with_env(key_filter, value, env))
   }
   let mut best_value = a[0]
   let mut best_key = key_for(best_value)
@@ -424,9 +427,9 @@ fn minmax_by_json_array(
 }
 
 ///|
-fn unique_sorted_json_array(a : Array[Json]) -> Array[Json] {
+fn unique_sorted_json_array(a : Array[Value]) -> Array[Value] {
   let out = []
-  let mut prev = Json::null()
+  let mut prev = Value::null()
   let mut has_prev = false
   for v in a {
     if !has_prev || compare_json(prev, v) != 0 {
@@ -439,12 +442,12 @@ fn unique_sorted_json_array(a : Array[Json]) -> Array[Json] {
 }
 
 ///|
-fn sort_keyed_pairs(items : Array[(Json, Json)]) -> Array[(Json, Json)] {
+fn sort_keyed_pairs(items : Array[(Value, Value)]) -> Array[(Value, Value)] {
   fn merge_sorted_pairs(
-    left : Array[(Json, Json)],
-    right : Array[(Json, Json)],
-  ) -> Array[(Json, Json)] {
-    let merged : Array[(Json, Json)] = []
+    left : Array[(Value, Value)],
+    right : Array[(Value, Value)],
+  ) -> Array[(Value, Value)] {
+    let merged : Array[(Value, Value)] = []
     let mut i = 0
     let mut j = 0
     while i < left.length() && j < right.length() {
@@ -470,8 +473,8 @@ fn sort_keyed_pairs(items : Array[(Json, Json)]) -> Array[(Json, Json)] {
     return items.copy()
   }
   let mid = n / 2
-  let left : Array[(Json, Json)] = []
-  let right : Array[(Json, Json)] = []
+  let left : Array[(Value, Value)] = []
+  let right : Array[(Value, Value)] = []
   for i in 0..<mid {
     left.push(items[i])
   }
@@ -482,7 +485,7 @@ fn sort_keyed_pairs(items : Array[(Json, Json)]) -> Array[(Json, Json)] {
 }
 
 ///|
-fn bsearch_json_array(a : Array[Json], needle : Json) -> Int {
+fn bsearch_json_array(a : Array[Value], needle : Value) -> Int {
   let mut lo = 0
   let mut hi = a.length()
   while lo < hi {
@@ -533,7 +536,7 @@ fn find_string_indices(haystack : String, pattern : String) -> Array[Int] {
 }
 
 ///|
-fn find_array_indices(haystack : Array[Json], pattern : Json) -> Array[Int] {
+fn find_array_indices(haystack : Array[Value], pattern : Value) -> Array[Int] {
   match pattern {
     Array(needle) => {
       let n = needle.length()

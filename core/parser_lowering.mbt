@@ -99,7 +99,7 @@ fn lower_with_null_defaults_for_patterns(
   let mut out = body
   for i in 0..<vars.length() {
     let idx = vars.length() - 1 - i
-    out = Filter::as_(Filter::literal(Json::null()), vars[idx], out)
+    out = Filter::as_(Filter::literal(Value::null()), vars[idx], out)
   }
   out
 }
@@ -110,7 +110,7 @@ fn as_pattern_key_access(base : Filter, key : Filter) -> Filter {
 }
 
 ///|
-fn filter_constant_json_for_diagnostics(filter : Filter) -> Json? {
+fn filter_constant_json_for_diagnostics(filter : Filter) -> Value? {
   match filter {
     Literal(v) => Some(v)
     Add(left, right) =>
@@ -119,12 +119,12 @@ fn filter_constant_json_for_diagnostics(filter : Filter) -> Json? {
           filter_constant_json_for_diagnostics(left),
           filter_constant_json_for_diagnostics(right),
         ) {
-        (Some(String(a)), Some(String(b))) => Some(Json::string(a + b))
+        (Some(String(a)), Some(String(b))) => Some(Value::string(a + b))
         _ => None
       }
     Array(items) =>
       if items.length() == 0 {
-        Some(Json::array([]))
+        Some(Value::array([]))
       } else {
         None
       }
@@ -136,7 +136,7 @@ fn filter_constant_json_for_diagnostics(filter : Filter) -> Json? {
           None => return None
         }
       }
-      Some(Json::object(out))
+      Some(Value::object(out))
     }
     _ => None
   }
@@ -148,7 +148,7 @@ fn object_key_diagnostic_prefix_from_filter(filter : Filter) -> String? {
     Literal(Number(n, repr)) =>
       Some(
         "Cannot use number (" +
-        Json::number(n, repr?).to_json_string() +
+        Value::number(n, repr?).to_json_string() +
         ") as object key",
       )
     Literal(JTrue) => Some("Cannot use boolean (true) as object key")
@@ -247,7 +247,7 @@ fn FilterCursor::parse_as_pattern(
             Some('$') => {
               ctx.read_char() |> ignore
               let name = ctx.parse_identifier()
-              key = Filter::literal(Json::string(name))
+              key = Filter::literal(Value::string(name))
               bindings.push(AsPattern::Var(name))
               ctx.skip_ws()
               if ctx.peek_char() is Some(':') {
@@ -257,7 +257,7 @@ fn FilterCursor::parse_as_pattern(
             }
             Some('\"') => {
               let name = ctx.parse_string_literal()
-              key = Filter::literal(Json::string(name))
+              key = Filter::literal(Value::string(name))
               ctx.skip_ws()
               ctx.expect_char(':')
               bindings.push(ctx.parse_as_pattern())
@@ -281,7 +281,7 @@ fn FilterCursor::parse_as_pattern(
             }
             Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') => {
               let name = ctx.parse_identifier()
-              key = Filter::literal(Json::string(name))
+              key = Filter::literal(Value::string(name))
               ctx.skip_ws()
               if ctx.peek_char() is Some(':') {
                 ctx.read_char() |> ignore
@@ -372,16 +372,16 @@ fn FilterCursor::lower_as_pattern_with_source(
 }
 
 ///|
-fn update_path_segment(filter : Filter) -> Json? {
+fn update_path_segment(filter : Filter) -> Value? {
   match filter {
-    Field(name) => Some(Json::string(name))
-    Index(i) => Some(Json::number(i.to_double()))
+    Field(name) => Some(Value::string(name))
+    Index(i) => Some(Value::number(i.to_double()))
     _ => None
   }
 }
 
 ///|
-fn update_path_from_filter(filter : Filter) -> Array[Json]? {
+fn update_path_from_filter(filter : Filter) -> Array[Value]? {
   match filter {
     Identity => Some([])
     Pipe(left, right) =>
@@ -402,7 +402,7 @@ fn update_path_from_filter(filter : Filter) -> Array[Json]? {
 }
 
 ///|
-fn update_static_slice_target(filter : Filter) -> (Array[Json], Int?, Int?)? {
+fn update_static_slice_target(filter : Filter) -> (Array[Value], Int?, Int?)? {
   match filter {
     Pipe(base, Slice(start, end)) =>
       match update_path_from_filter(base) {
@@ -416,8 +416,8 @@ fn update_static_slice_target(filter : Filter) -> (Array[Json], Int?, Int?)? {
 ///|
 fn update_slice_bound_filter(index : Int?) -> Filter {
   match index {
-    Some(v) => Filter::literal(Json::number(v.to_double()))
-    None => Filter::literal(Json::null())
+    Some(v) => Filter::literal(Value::number(v.to_double()))
+    None => Filter::literal(Value::null())
   }
 }
 
@@ -538,7 +538,7 @@ fn FilterCursor::lower_dynamic_slice_update_assignment(
     Update => {
       let updated_slice = Filter::if_else(
         Filter::call("isempty", [Filter::pipe(current_slice, right)]),
-        Filter::literal(Json::array([])),
+        Filter::literal(Value::array([])),
         Filter::call("first", [Filter::pipe(current_slice, right)]),
       )
       let value_tmp = ctx.fresh_as_tmp()
@@ -618,8 +618,8 @@ fn FilterCursor::lower_update_assignment(
       let value_var = Filter::var_(value_tmp)
       let start_arg = update_slice_bound_filter(start)
       let end_arg = update_slice_bound_filter(end)
-      let base_for_getpath = Filter::literal(Json::array(base_path.copy()))
-      let base_for_setpath = Filter::literal(Json::array(base_path))
+      let base_for_getpath = Filter::literal(Value::array(base_path.copy()))
+      let base_for_setpath = Filter::literal(Value::array(base_path))
       let base_value = if base_path.length() == 0 {
         input_var
       } else {
@@ -634,7 +634,7 @@ fn FilterCursor::lower_update_assignment(
           let rhs_values = Filter::pipe(current_slice, right)
           Filter::if_else(
             Filter::call("isempty", [rhs_values]),
-            Filter::literal(Json::array([])),
+            Filter::literal(Value::array([])),
             Filter::call("first", [Filter::pipe(current_slice, right)]),
           )
         }
@@ -672,7 +672,7 @@ fn FilterCursor::lower_update_assignment(
   match update_path_from_filter(left) {
     Some(path) => {
       let current_value = Filter::call("getpath", [
-        Filter::literal(Json::array(path.copy())),
+        Filter::literal(Value::array(path.copy())),
       ])
       match op {
         Update => {
@@ -682,18 +682,18 @@ fn FilterCursor::lower_update_assignment(
             Filter::pipe(current_value, right),
           ])
           let set_expr = Filter::call("setpath", [
-            Filter::literal(Json::array(path.copy())),
+            Filter::literal(Value::array(path.copy())),
             set_value,
           ])
           let del_expr = Filter::call("delpaths", [
-            Filter::literal(Json::array([Json::array(path)])),
+            Filter::literal(Value::array([Value::array(path)])),
           ])
           Filter::if_else(is_empty, del_expr, set_expr)
         }
         _ => {
           let updated_value = lower_update_assign_op(op, current_value, right)
           Filter::call("setpath", [
-            Filter::literal(Json::array(path)),
+            Filter::literal(Value::array(path)),
             updated_value,
           ])
         }
@@ -1187,7 +1187,7 @@ fn lower_filter_def_call(
   body : Filter,
   params : Array[String],
   args : Array[Filter],
-  captured_env : Map[String, Json],
+  captured_env : Map[String, Value],
 ) -> Filter {
   let mut out = lower_filter_param_refs(body, params, args)
   let value_param_names = []
@@ -1828,7 +1828,7 @@ fn FilterCursor::parse_scoped(
     Some(module_name) => {
       ctx.offset = ctx.end_offset
       return Filter::call("error", [
-        Filter::literal(Json::string("module not found: " + module_name)),
+        Filter::literal(Value::string("module not found: " + module_name)),
       ])
     }
     None => ()

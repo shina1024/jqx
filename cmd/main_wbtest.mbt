@@ -4,12 +4,12 @@
 ///|
 test "compute exit status" {
   assert_eq(compute_exit_status([]), 4)
-  assert_eq(compute_exit_status([@lib.Json::null()]), 1)
-  assert_eq(compute_exit_status([@lib.Json::boolean(false)]), 1)
-  assert_eq(compute_exit_status([@lib.Json::boolean(true)]), 0)
-  assert_eq(compute_exit_status([@lib.Json::number(1.0)]), 0)
+  assert_eq(compute_exit_status([@lib.Value::null()]), 1)
+  assert_eq(compute_exit_status([@lib.Value::boolean(false)]), 1)
+  assert_eq(compute_exit_status([@lib.Value::boolean(true)]), 0)
+  assert_eq(compute_exit_status([@lib.Value::number(1.0)]), 0)
   assert_eq(
-    compute_exit_status([@lib.Json::number(1.0), @lib.Json::boolean(false)]),
+    compute_exit_status([@lib.Value::number(1.0), @lib.Value::boolean(false)]),
     1,
   )
 }
@@ -27,7 +27,7 @@ test "parse cli inputs json basic" {
     input: Some("{\"a\":1}"),
   }
   let parsed = parse_cli_inputs(cfg, "")
-  assert_eq(parsed, [@lib.Json::object({ "a": @lib.Json::number(1.0) })])
+  assert_eq(parsed, [@lib.Value::object({ "a": @lib.Value::number(1.0) })])
 }
 
 ///|
@@ -43,7 +43,7 @@ test "parse cli inputs json stream accepts leading bom" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "\u{FEFF}\"byte order mark\"")
-  assert_eq(parsed, [@lib.Json::string("byte order mark")])
+  assert_eq(parsed, [@lib.Value::string("byte order mark")])
 }
 
 ///|
@@ -60,9 +60,9 @@ test "parse cli inputs json stream ndjson" {
   }
   let parsed = parse_cli_inputs(cfg, "1\n2\n3\n")
   assert_eq(parsed, [
-    @lib.Json::number(1.0),
-    @lib.Json::number(2.0),
-    @lib.Json::number(3.0),
+    @lib.Value::number(1.0),
+    @lib.Value::number(2.0),
+    @lib.Value::number(3.0),
   ])
 }
 
@@ -79,7 +79,7 @@ test "parse cli inputs json stream whitespace separated" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "1 2")
-  assert_eq(parsed, [@lib.Json::number(1.0), @lib.Json::number(2.0)])
+  assert_eq(parsed, [@lib.Value::number(1.0), @lib.Value::number(2.0)])
 }
 
 ///|
@@ -96,9 +96,9 @@ test "parse cli inputs json stream adjacent structured values" {
   }
   let parsed = parse_cli_inputs(cfg, "{}[]\"x\"")
   assert_eq(parsed, [
-    @lib.Json::object({}),
-    @lib.Json::array([]),
-    @lib.Json::string("x"),
+    @lib.Value::object({}),
+    @lib.Value::array([]),
+    @lib.Value::string("x"),
   ])
 }
 
@@ -149,7 +149,7 @@ test "parse cli inputs json slurp single" {
   }
   let parsed = parse_cli_inputs(cfg, "")
   assert_eq(parsed, [
-    @lib.Json::array([@lib.Json::object({ "a": @lib.Json::number(1.0) })]),
+    @lib.Value::array([@lib.Value::object({ "a": @lib.Value::number(1.0) })]),
   ])
 }
 
@@ -167,10 +167,10 @@ test "parse cli inputs json slurp ndjson" {
   }
   let parsed = parse_cli_inputs(cfg, "1\n2\n3\n")
   assert_eq(parsed, [
-    @lib.Json::array([
-      @lib.Json::number(1.0),
-      @lib.Json::number(2.0),
-      @lib.Json::number(3.0),
+    @lib.Value::array([
+      @lib.Value::number(1.0),
+      @lib.Value::number(2.0),
+      @lib.Value::number(3.0),
     ]),
   ])
 }
@@ -189,7 +189,7 @@ test "parse cli inputs json slurp whitespace separated" {
   }
   let parsed = parse_cli_inputs(cfg, "1 2")
   assert_eq(parsed, [
-    @lib.Json::array([@lib.Json::number(1.0), @lib.Json::number(2.0)]),
+    @lib.Value::array([@lib.Value::number(1.0), @lib.Value::number(2.0)]),
   ])
 }
 
@@ -206,7 +206,7 @@ test "parse cli inputs json slurp empty" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, " \n\t\r ")
-  assert_eq(parsed, [@lib.Json::array([])])
+  assert_eq(parsed, [@lib.Value::array([])])
 }
 
 ///|
@@ -222,7 +222,7 @@ test "parse cli inputs no-input with slurp" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "1\n2\n")
-  assert_eq(parsed, [@lib.Json::null()])
+  assert_eq(parsed, [@lib.Value::null()])
 }
 
 ///|
@@ -238,7 +238,7 @@ test "parse cli inputs raw lines" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "a\nb\n")
-  assert_eq(parsed, [@lib.Json::string("a"), @lib.Json::string("b")])
+  assert_eq(parsed, [@lib.Value::string("a"), @lib.Value::string("b")])
 }
 
 ///|
@@ -255,9 +255,9 @@ test "parse cli inputs raw lines keep empty records" {
   }
   let parsed = parse_cli_inputs(cfg, "a\n\nb\n")
   assert_eq(parsed, [
-    @lib.Json::string("a"),
-    @lib.Json::string(""),
-    @lib.Json::string("b"),
+    @lib.Value::string("a"),
+    @lib.Value::string(""),
+    @lib.Value::string("b"),
   ])
 }
 
@@ -274,7 +274,7 @@ test "parse cli inputs raw lines trim crlf" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "a\r\nb\r\n")
-  assert_eq(parsed, [@lib.Json::string("a"), @lib.Json::string("b")])
+  assert_eq(parsed, [@lib.Value::string("a"), @lib.Value::string("b")])
 }
 
 ///|
@@ -290,7 +290,7 @@ test "parse cli inputs raw slurp" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "a\nb\n")
-  assert_eq(parsed, [@lib.Json::string("a\nb\n")])
+  assert_eq(parsed, [@lib.Value::string("a\nb\n")])
 }
 
 ///|
@@ -306,7 +306,7 @@ test "parse cli inputs raw no-input takes precedence" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "a\n")
-  assert_eq(parsed, [@lib.Json::null()])
+  assert_eq(parsed, [@lib.Value::null()])
 }
 
 ///|
@@ -396,5 +396,5 @@ test "parse json value end reports structured and string eof errors" {
 ///|
 test "parse raw lines handles empty and no-trailing-newline" {
   assert_eq(parse_raw_lines(""), [])
-  assert_eq(parse_raw_lines("last"), [@lib.Json::string("last")])
+  assert_eq(parse_raw_lines("last"), [@lib.Value::string("last")])
 }

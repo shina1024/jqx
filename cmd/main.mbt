@@ -2,9 +2,9 @@
 fn parse_cli_inputs(
   cfg : CliArgs,
   stdin_text : String,
-) -> Array[@lib.Json] raise @lib.ParseError {
+) -> Array[@lib.Value] raise @lib.ParseError {
   if cfg.no_input {
-    [@lib.Json::null()]
+    [@lib.Value::null()]
   } else {
     let text = match cfg.input {
       Some(v) => v
@@ -12,7 +12,7 @@ fn parse_cli_inputs(
     }
     if cfg.raw_input {
       if cfg.slurp {
-        [@lib.Json::string(text)]
+        [@lib.Value::string(text)]
       } else {
         parse_raw_lines(text)
       }
@@ -26,23 +26,23 @@ fn parse_cli_inputs(
 fn parse_json_inputs(
   text : String,
   slurp : Bool,
-) -> Array[@lib.Json] raise @lib.ParseError {
+) -> Array[@lib.Value] raise @lib.ParseError {
   if slurp {
-    [@lib.Json::array(parse_slurp_values(text))]
+    [@lib.Value::array(parse_slurp_values(text))]
   } else {
     parse_json_stream_values(text)
   }
 }
 
 ///|
-fn parse_slurp_values(text : String) -> Array[@lib.Json] raise @lib.ParseError {
+fn parse_slurp_values(text : String) -> Array[@lib.Value] raise @lib.ParseError {
   parse_json_stream_values(text)
 }
 
 ///|
 fn parse_json_stream_values(
   text : String,
-) -> Array[@lib.Json] raise @lib.ParseError {
+) -> Array[@lib.Value] raise @lib.ParseError {
   let values = []
   let mut start = 0
   let len = text.length()
@@ -171,7 +171,7 @@ fn parse_json_piece(
   text : String,
   start_offset : Int,
   end_ : Int,
-) -> @lib.Json raise @lib.ParseError {
+) -> @lib.Value raise @lib.ParseError {
   @lib.parse(text.view(start_offset~, end_offset=end_).to_string())
 }
 
@@ -190,7 +190,7 @@ fn raise_parse_error_end_from_offset(
 }
 
 ///|
-fn parse_raw_lines(text : String) -> Array[@lib.Json] {
+fn parse_raw_lines(text : String) -> Array[@lib.Value] {
   if text.length() == 0 {
     return []
   }
@@ -199,13 +199,13 @@ fn parse_raw_lines(text : String) -> Array[@lib.Json] {
   for i in 0..<text.length() {
     if text.unsafe_get(i) == '\n' {
       let line = text.view(start_offset=start, end_offset=i).to_string()
-      values.push(@lib.Json::string(trim_single_trailing_cr(line)))
+      values.push(@lib.Value::string(trim_single_trailing_cr(line)))
       start = i + 1
     }
   }
   if start < text.length() {
     let line = text.view(start_offset=start).to_string()
-    values.push(@lib.Json::string(trim_single_trailing_cr(line)))
+    values.push(@lib.Value::string(trim_single_trailing_cr(line)))
   }
   values
 }

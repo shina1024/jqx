@@ -6,53 +6,53 @@ import {
 }
 
 // Values
-pub fn add(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+pub fn add(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn and_(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+pub fn and_(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn call(String, Array[Query[@core.Json, @core.Json]]) -> Query[@core.Json, @core.Json]
+pub fn call(String, Array[Query[@core.Value, @core.Value]]) -> Query[@core.Value, @core.Value]
 
-pub fn comma(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+pub fn comma(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
 pub fn compile(String) -> @core.Filter raise @core.FilterError
 
-pub fn eq(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+pub fn eq(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn execute(@core.Filter, @core.Json) -> Array[@core.Json] raise @core.EvalError
+pub fn execute(@core.Filter, @core.Value) -> Array[@core.Value] raise @core.EvalError
 
-pub fn executeQuery(Query[@core.Json, @core.Json], @core.Json) -> Result[Array[@core.Json], String]
+pub fn executeQuery(Query[@core.Value, @core.Value], @core.Value) -> Result[Array[@core.Value], String]
 
 pub fn executeToJsonStrings(String, String) -> Result[Array[String], JqxError]
 
-pub fn fallback(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+pub fn fallback(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn field(String) -> Query[@core.Json, @core.Json]
+pub fn field(String) -> Query[@core.Value, @core.Value]
 
-pub fn gt(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+pub fn gt(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn identity() -> Query[@core.Json, @core.Json]
+pub fn identity() -> Query[@core.Value, @core.Value]
 
-pub fn if_else(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+pub fn if_else(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn index(Int) -> Query[@core.Json, @core.Json]
+pub fn index(Int) -> Query[@core.Value, @core.Value]
 
-pub fn iter() -> Query[@core.Json, @core.Json]
+pub fn iter() -> Query[@core.Value, @core.Value]
 
-pub fn literal(@core.Json) -> Query[@core.Json, @core.Json]
+pub fn literal(@core.Value) -> Query[@core.Value, @core.Value]
 
-pub fn lt(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+pub fn lt(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn map(Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+pub fn map(Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn not_(Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+pub fn not_(Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn or_(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+pub fn or_(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
 pub fn parseFilter(String) -> @core.Filter raise @core.FilterError
 
-pub fn parseJson(String) -> @core.Json raise @core.ParseError
+pub fn parseJson(String) -> @core.Value raise @core.ParseError
 
-pub fn pipe(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+pub fn pipe(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
 pub fn run(String, String) -> Result[Array[String], JqxError]
 
@@ -60,33 +60,33 @@ pub fn runCompat(String, String) -> Result[Array[String], JqxError]
 
 pub fn runCompiled(@core.Filter, String) -> Result[Array[String], JqxError]
 
-pub fn runCompiledValues(@core.Filter, String) -> Result[Array[@core.Json], JqxError]
+pub fn runCompiledValues(@core.Filter, String) -> Result[Array[@core.Value], JqxError]
 
-pub fn runQuery(Query[@core.Json, @core.Json], String) -> Result[Array[String], String]
+pub fn runQuery(Query[@core.Value, @core.Value], String) -> Result[Array[String], String]
 
-pub fn runValues(String, String) -> Result[Array[@core.Json], JqxError]
+pub fn runValues(String, String) -> Result[Array[@core.Value], JqxError]
 
 pub fn safeCompile(String) -> Result[@core.Filter, JqxError]
 
-pub fn safeExecute(@core.Filter, @core.Json) -> Result[Array[@core.Json], JqxError]
+pub fn safeExecute(@core.Filter, @core.Value) -> Result[Array[@core.Value], JqxError]
 
 pub fn safeParseFilter(String) -> Result[@core.Filter, JqxError]
 
-pub fn safeParseJson(String) -> Result[@core.Json, JqxError]
+pub fn safeParseJson(String) -> Result[@core.Value, JqxError]
 
-pub fn safeRunValues(String, String) -> Result[Array[@core.Json], JqxError]
+pub fn safeRunValues(String, String) -> Result[Array[@core.Value], JqxError]
 
-pub fn select(Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+pub fn select(Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
 pub fn tryCompile(String) -> Result[@core.Filter, JqxError]
 
-pub fn tryExecute(@core.Filter, @core.Json) -> Result[Array[@core.Json], JqxError]
+pub fn tryExecute(@core.Filter, @core.Value) -> Result[Array[@core.Value], JqxError]
 
 pub fn tryParseFilter(String) -> Result[@core.Filter, JqxError]
 
-pub fn tryParseJson(String) -> Result[@core.Json, JqxError]
+pub fn tryParseJson(String) -> Result[@core.Value, JqxError]
 
-pub fn try_catch(Query[@core.Json, @core.Json], Query[@core.Json, @core.Json]) -> Query[@core.Json, @core.Json]
+pub fn try_catch(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
 // Errors
 

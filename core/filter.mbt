@@ -27,7 +27,7 @@ pub enum Filter {
   Iter
   IterOpt
   Recurse
-  Literal(Json)
+  Literal(Value)
   Array(Array[Filter])
   Object(Array[(String, Filter)])
   Builtin(String)
@@ -118,7 +118,7 @@ pub fn Filter::recurse() -> Filter {
 }
 
 ///|
-pub fn Filter::literal(value : Json) -> Filter {
+pub fn Filter::literal(value : Value) -> Filter {
   Literal(value)
 }
 

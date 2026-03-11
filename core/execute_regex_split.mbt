@@ -226,7 +226,7 @@ fn split_string_regex_tokens(
   s : String,
   pattern : String,
   flags : String,
-) -> Array[Json] {
+) -> Array[Value] {
   let chars = string_to_chars(s)
   let parsed = parse_split_regex_pattern(pattern)
   let atoms = parsed.atoms
@@ -247,7 +247,7 @@ fn split_string_regex_tokens(
       ) {
       Some((match_start, match_end)) => {
         out.push(
-          Json::string(chars_slice_to_string(chars, token_start, match_start)),
+          Value::string(chars_slice_to_string(chars, token_start, match_start)),
         )
         token_start = match_end
         if match_end > search_start {
@@ -255,13 +255,15 @@ fn split_string_regex_tokens(
         } else if match_start < len {
           search_start = match_start + 1
         } else {
-          out.push(Json::string(chars_slice_to_string(chars, token_start, len)))
+          out.push(
+            Value::string(chars_slice_to_string(chars, token_start, len)),
+          )
           return out
         }
         continue
       }
       None => {
-        out.push(Json::string(chars_slice_to_string(chars, token_start, len)))
+        out.push(Value::string(chars_slice_to_string(chars, token_start, len)))
         return out
       }
     }

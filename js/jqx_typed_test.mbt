@@ -1,6 +1,6 @@
 ///|
 test "typed identity query" {
-  let q : Query[@core.Json, @core.Json] = identity()
+  let q : Query[@core.Value, @core.Value] = identity()
   let out = runQuery(q, "{\"a\":1}")
   guard out is Ok(values) else { fail("expected Ok") }
   assert_eq(values, ["{\"a\":1}"])
@@ -48,7 +48,7 @@ test "typed select + iter query" {
   let q = pipe(
     iter(),
     pipe(
-      select(eq(field("kind"), literal(@core.Json::string("ok")))),
+      select(eq(field("kind"), literal(@core.Value::string("ok")))),
       field("v"),
     ),
   )
@@ -59,7 +59,7 @@ test "typed select + iter query" {
 
 ///|
 test "typed add query" {
-  let q = add(field("x"), literal(@core.Json::number(1.0)))
+  let q = add(field("x"), literal(@core.Value::number(1.0)))
   let out = runQuery(q, "{\"x\":41}")
   guard out is Ok(values) else { fail("expected Ok") }
   assert_eq(values, ["42"])
@@ -75,7 +75,7 @@ test "typed fallback query" {
 
 ///|
 test "typed try_catch query" {
-  let q = try_catch(field("x"), literal(@core.Json::string("err")))
+  let q = try_catch(field("x"), literal(@core.Value::string("err")))
   let out = runQuery(q, "1")
   guard out is Ok(values) else { fail("expected Ok") }
   assert_eq(values, ["\"err\""])
@@ -83,7 +83,7 @@ test "typed try_catch query" {
 
 ///|
 test "typed generic call query" {
-  let q = call("contains", [literal(@core.Json::string("ab"))])
+  let q = call("contains", [literal(@core.Value::string("ab"))])
   let out = runQuery(q, "\"abc\"")
   guard out is Ok(values) else { fail("expected Ok") }
   assert_eq(values, ["true"])
@@ -91,7 +91,10 @@ test "typed generic call query" {
 
 ///|
 test "typed comparison + select query" {
-  let q = pipe(iter(), select(gt(field("v"), literal(@core.Json::number(1.0)))))
+  let q = pipe(
+    iter(),
+    select(gt(field("v"), literal(@core.Value::number(1.0)))),
+  )
   let out = runQuery(q, "[{\"v\":1},{\"v\":2},{\"v\":3}]")
   guard out is Ok(values) else { fail("expected Ok") }
   assert_eq(values, ["{\"v\":2}", "{\"v\":3}"])
@@ -100,8 +103,8 @@ test "typed comparison + select query" {
 ///|
 test "typed boolean combinator query" {
   let cond = and_(
-    gt(field("v"), literal(@core.Json::number(1.0))),
-    not_(eq(field("kind"), literal(@core.Json::string("skip")))),
+    gt(field("v"), literal(@core.Value::number(1.0))),
+    not_(eq(field("kind"), literal(@core.Value::string("skip")))),
   )
   let q = pipe(iter(), pipe(select(cond), field("v")))
   let out = runQuery(
@@ -116,9 +119,9 @@ test "typed if_else query" {
   let q = pipe(
     iter(),
     if_else(
-      lt(field("v"), literal(@core.Json::number(2.0))),
-      literal(@core.Json::string("small")),
-      literal(@core.Json::string("large")),
+      lt(field("v"), literal(@core.Value::number(2.0))),
+      literal(@core.Value::string("small")),
+      literal(@core.Value::string("large")),
     ),
   )
   let out = runQuery(q, "[{\"v\":1},{\"v\":3}]")

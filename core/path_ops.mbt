@@ -1,5 +1,5 @@
 ///|
-fn getpath_on_input(input : Json, path : Json) -> Json raise EvalError {
+fn getpath_on_input(input : Value, path : Value) -> Value raise EvalError {
   match path {
     Array(parts) => {
       let mut current = input
@@ -11,7 +11,7 @@ fn getpath_on_input(input : Json, path : Json) -> Json raise EvalError {
               String(name) =>
                 match o.get(name) {
                   Some(v) => v
-                  None => Json::null()
+                  None => Value::null()
                 }
               _ => index_type_error(cur, key)
             }
@@ -19,21 +19,21 @@ fn getpath_on_input(input : Json, path : Json) -> Json raise EvalError {
             match key {
               Number(n, _) =>
                 if n != n || n == @double.infinity || n == @double.neg_infinity {
-                  Json::null()
+                  Value::null()
                 } else {
                   let i = n.to_int()
                   let idx = if i < 0 { a.length() + i } else { i }
                   if idx >= 0 && idx < a.length() {
                     a[idx]
                   } else {
-                    Json::null()
+                    Value::null()
                   }
                 }
               _ => index_type_error(cur, key)
             }
           JNull =>
             match key {
-              Number(_, _) | String(_) | Object(_) => Json::null()
+              Number(_, _) | String(_) | Object(_) => Value::null()
               _ => index_type_error(cur, key)
             }
           _ => index_type_error(cur, key)
@@ -46,7 +46,7 @@ fn getpath_on_input(input : Json, path : Json) -> Json raise EvalError {
 }
 
 ///|
-fn normalize_setpath_arg(path : Json) -> Array[Json] raise EvalError {
+fn normalize_setpath_arg(path : Value) -> Array[Value] raise EvalError {
   match path {
     Array(parts) => parts
     _ => raise TypeError("Path must be specified as an array")
@@ -80,10 +80,10 @@ fn parse_setpath_array_index(n : Double) -> Int raise EvalError {
 
 ///|
 fn setpath_on_input(
-  input : Json,
-  path : Array[Json],
-  value : Json,
-) -> Json raise EvalError {
+  input : Value,
+  path : Array[Value],
+  value : Value,
+) -> Value raise EvalError {
   if path.length() == 0 {
     return value
   }
@@ -95,7 +95,7 @@ fn setpath_on_input(
         String(name) => {
           let child = match o.get(name) {
             Some(v) => v
-            None => Json::null()
+            None => Value::null()
           }
           let updated = setpath_on_input(child, rest, value)
           Object(o.set(name, updated))
@@ -113,15 +113,15 @@ fn setpath_on_input(
             } else {
               let out = a.copy()
               out[idx] = setpath_on_input(out[idx], rest, value)
-              Json::array(out)
+              Value::array(out)
             }
           } else {
             let out = a.copy()
             while out.length() <= i {
-              out.push(Json::null())
+              out.push(Value::null())
             }
             out[i] = setpath_on_input(out[i], rest, value)
-            Json::array(out)
+            Value::array(out)
           }
         }
         Object(_) =>
@@ -133,8 +133,8 @@ fn setpath_on_input(
     JNull =>
       match key {
         String(name) => {
-          let updated = setpath_on_input(Json::null(), rest, value)
-          Json::object_from_entries([(name, updated)])
+          let updated = setpath_on_input(Value::null(), rest, value)
+          Value::object_from_entries([(name, updated)])
         }
         Number(n, _) => {
           let i = parse_setpath_array_index(n)
@@ -143,10 +143,10 @@ fn setpath_on_input(
           } else {
             let out = []
             while out.length() <= i {
-              out.push(Json::null())
+              out.push(Value::null())
             }
             out[i] = setpath_on_input(out[i], rest, value)
-            Json::array(out)
+            Value::array(out)
           }
         }
         _ => index_type_error(input, key)
@@ -156,7 +156,7 @@ fn setpath_on_input(
 }
 
 ///|
-fn path_tail(path : Array[Json]) -> Array[Json] {
+fn path_tail(path : Array[Value]) -> Array[Value] {
   let out = []
   for i in 1..<path.length() {
     out.push(path[i])
@@ -166,9 +166,9 @@ fn path_tail(path : Array[Json]) -> Array[Json] {
 
 ///|
 fn add_object_path_group(
-  groups : Map[String, Array[Array[Json]]],
+  groups : Map[String, Array[Array[Value]]],
   key : String,
-  rest : Array[Json],
+  rest : Array[Value],
 ) -> Unit {
   match groups.get(key) {
     Some(paths) => {
@@ -182,9 +182,9 @@ fn add_object_path_group(
 
 ///|
 fn add_array_path_group(
-  groups : Map[Int, Array[Array[Json]]],
+  groups : Map[Int, Array[Array[Value]]],
   key : Int,
-  rest : Array[Json],
+  rest : Array[Value],
 ) -> Unit {
   match groups.get(key) {
     Some(paths) => {
@@ -197,7 +197,7 @@ fn add_array_path_group(
 }
 
 ///|
-fn has_empty_path(paths : Array[Array[Json]]) -> Bool {
+fn has_empty_path(paths : Array[Array[Value]]) -> Bool {
   for p in paths {
     if p.length() == 0 {
       return true
@@ -207,7 +207,7 @@ fn has_empty_path(paths : Array[Array[Json]]) -> Bool {
 }
 
 ///|
-fn normalize_delpaths_arg(paths : Json) -> Array[Array[Json]] raise EvalError {
+fn normalize_delpaths_arg(paths : Value) -> Array[Array[Value]] raise EvalError {
   match paths {
     Array(path_list) => {
       let out = []
@@ -228,14 +228,14 @@ fn normalize_delpaths_arg(paths : Json) -> Array[Array[Json]] raise EvalError {
 
 ///|
 fn delpaths_on_input(
-  input : Json,
-  paths : Array[Array[Json]],
-) -> Json raise EvalError {
+  input : Value,
+  paths : Array[Array[Value]],
+) -> Value raise EvalError {
   if has_empty_path(paths) {
-    return Json::null()
+    return Value::null()
   }
   match input {
-    JNull => Json::null()
+    JNull => Value::null()
     Object(o) => {
       let groups = Map::new()
       for path in paths {
@@ -271,7 +271,7 @@ fn delpaths_on_input(
           }
         }
       }
-      Json::object_with_order(out, out_order)
+      Value::object_with_order(out, out_order)
     }
     Array(a) => {
       let groups = Map::new()
@@ -309,7 +309,7 @@ fn delpaths_on_input(
           None => out.push(a[i])
         }
       }
-      Json::array(out)
+      Value::array(out)
     }
     _ => raise TypeError("Cannot delete fields from " + json_type_name(input))
   }
@@ -317,13 +317,13 @@ fn delpaths_on_input(
 
 ///|
 fn collect_paths(
-  input : Json,
-  prefix : Array[Json],
+  input : Value,
+  prefix : Array[Value],
   predicate : Filter?,
-  env : Map[String, Json],
-) -> Array[Json] raise EvalError {
+  env : Map[String, Value],
+) -> Array[Value] raise EvalError {
   let out = []
-  fn include_node(v : Json) -> Bool raise EvalError {
+  fn include_node(v : Value) -> Bool raise EvalError {
     match predicate {
       Some(pred) => execute_to_bool(pred, v, env)
       None => true
@@ -336,9 +336,9 @@ fn collect_paths(
         let key = kv.0
         let value = kv.1
         let p = prefix.copy()
-        p.push(Json::string(key))
+        p.push(Value::string(key))
         if include_node(value) {
-          out.push(Json::array(p))
+          out.push(Value::array(p))
         }
         for child in collect_paths(value, p, predicate, env) {
           out.push(child)
@@ -348,9 +348,9 @@ fn collect_paths(
       for i in 0..<a.length() {
         let value = a[i]
         let p = prefix.copy()
-        p.push(Json::number(i.to_double()))
+        p.push(Value::number(i.to_double()))
         if include_node(value) {
-          out.push(Json::array(p))
+          out.push(Value::array(p))
         }
         for child in collect_paths(value, p, predicate, env) {
           out.push(child)
@@ -363,29 +363,29 @@ fn collect_paths(
 
 ///|
 priv struct PathEvalState {
-  value : Json
-  path : Array[Json]
+  value : Value
+  path : Array[Value]
   valid : Bool
 }
 
 ///|
 fn path_eval_state(
-  value : Json,
-  path : Array[Json],
+  value : Value,
+  path : Array[Value],
   valid : Bool,
 ) -> PathEvalState {
   PathEvalState::{ value, path, valid }
 }
 
 ///|
-fn path_with_segment(path : Array[Json], segment : Json) -> Array[Json] {
+fn path_with_segment(path : Array[Value], segment : Value) -> Array[Value] {
   let out = path.copy()
   out.push(segment)
   out
 }
 
 ///|
-fn path_invalid_access_message(segment : String, value : Json) -> String {
+fn path_invalid_access_message(segment : String, value : Value) -> String {
   "Invalid path expression near attempt to access element " +
   segment +
   " of " +
@@ -393,7 +393,7 @@ fn path_invalid_access_message(segment : String, value : Json) -> String {
 }
 
 ///|
-fn path_invalid_iter_message(value : Json) -> String {
+fn path_invalid_iter_message(value : Value) -> String {
   "Invalid path expression near attempt to iterate through " +
   value.to_json_string()
 }
@@ -402,7 +402,7 @@ fn path_invalid_iter_message(value : Json) -> String {
 fn path_fallback_states(
   filter : Filter,
   state : PathEvalState,
-  env : Map[String, Json],
+  env : Map[String, Value],
 ) -> Array[PathEvalState] raise EvalError {
   let values = execute_with_env(filter, state.value, env)
   let out = []
@@ -421,24 +421,24 @@ fn path_field_state(
   if !state.valid {
     raise TypeError(
       path_invalid_access_message(
-        Json::string(name).to_json_string(),
+        Value::string(name).to_json_string(),
         state.value,
       ),
     )
   }
-  let next_path = path_with_segment(state.path, Json::string(name))
+  let next_path = path_with_segment(state.path, Value::string(name))
   match state.value {
     Object(o) =>
       match o.get(name) {
         Some(v) => [path_eval_state(v, next_path, true)]
-        None => [path_eval_state(Json::null(), next_path, true)]
+        None => [path_eval_state(Value::null(), next_path, true)]
       }
-    JNull => [path_eval_state(Json::null(), next_path, true)]
+    JNull => [path_eval_state(Value::null(), next_path, true)]
     _ =>
       if optional {
         []
       } else {
-        index_type_error(state.value, Json::string(name))
+        index_type_error(state.value, Value::string(name))
       }
   }
 }
@@ -452,22 +452,25 @@ fn path_index_state(
   if !state.valid {
     raise TypeError(path_invalid_access_message(index.to_string(), state.value))
   }
-  let next_path = path_with_segment(state.path, Json::number(index.to_double()))
+  let next_path = path_with_segment(
+    state.path,
+    Value::number(index.to_double()),
+  )
   match state.value {
     Array(a) => {
       let resolved = if index < 0 { a.length() + index } else { index }
       if resolved >= 0 && resolved < a.length() {
         [path_eval_state(a[resolved], next_path, true)]
       } else {
-        [path_eval_state(Json::null(), next_path, true)]
+        [path_eval_state(Value::null(), next_path, true)]
       }
     }
-    JNull => [path_eval_state(Json::null(), next_path, true)]
+    JNull => [path_eval_state(Value::null(), next_path, true)]
     _ =>
       if optional {
         []
       } else {
-        index_type_error(state.value, Json::number(index.to_double()))
+        index_type_error(state.value, Value::number(index.to_double()))
       }
   }
 }
@@ -496,7 +499,7 @@ fn path_slice_state(
         for i in lo..<hi {
           let next_path = path_with_segment(
             state.path,
-            Json::number(i.to_double()),
+            Value::number(i.to_double()),
           )
           out.push(path_eval_state(a[i], next_path, true))
         }
@@ -529,7 +532,7 @@ fn path_iter_state(
       for i in 0..<a.length() {
         let next_path = path_with_segment(
           state.path,
-          Json::number(i.to_double()),
+          Value::number(i.to_double()),
         )
         out.push(path_eval_state(a[i], next_path, true))
       }
@@ -538,7 +541,7 @@ fn path_iter_state(
     Object(o) => {
       let out = []
       for kv in object_entries_sorted(o) {
-        let next_path = path_with_segment(state.path, Json::string(kv.0))
+        let next_path = path_with_segment(state.path, Value::string(kv.0))
         out.push(path_eval_state(kv.1, next_path, true))
       }
       out
@@ -556,8 +559,8 @@ fn path_iter_state(
 
 ///|
 fn append_recurse_path_states(
-  value : Json,
-  path : Array[Json],
+  value : Value,
+  path : Array[Value],
   out : Array[PathEvalState],
 ) -> Unit {
   out.push(path_eval_state(value, path, true))
@@ -566,7 +569,7 @@ fn append_recurse_path_states(
       for kv in object_entries_sorted(o) {
         append_recurse_path_states(
           kv.1,
-          path_with_segment(path, Json::string(kv.0)),
+          path_with_segment(path, Value::string(kv.0)),
           out,
         )
       }
@@ -574,7 +577,7 @@ fn append_recurse_path_states(
       for i in 0..<a.length() {
         append_recurse_path_states(
           a[i],
-          path_with_segment(path, Json::number(i.to_double())),
+          path_with_segment(path, Value::number(i.to_double())),
           out,
         )
       }
@@ -585,14 +588,14 @@ fn append_recurse_path_states(
 ///|
 fn path_getpath_step(
   state : PathEvalState,
-  segment : Json,
+  segment : Value,
 ) -> Array[PathEvalState] raise EvalError {
   match segment {
     String(name) => path_field_state(state, name, false)
     Number(n, _) =>
       if n != n || n == @double.infinity || n == @double.neg_infinity {
-        let next_path = path_with_segment(state.path, Json::number(n))
-        [path_eval_state(Json::null(), next_path, true)]
+        let next_path = path_with_segment(state.path, Value::number(n))
+        [path_eval_state(Value::null(), next_path, true)]
       } else {
         path_index_state(state, n.to_int(), false)
       }
@@ -603,7 +606,7 @@ fn path_getpath_step(
 ///|
 fn path_getpath_states(
   state : PathEvalState,
-  path : Json,
+  path : Value,
 ) -> Array[PathEvalState] raise EvalError {
   match path {
     Array(parts) => {
@@ -627,7 +630,7 @@ fn path_getpath_states(
 fn path_as_value_states(
   value : Filter,
   state : PathEvalState,
-  env : Map[String, Json],
+  env : Map[String, Value],
   bindings : Map[String, PathEvalState],
 ) -> Array[PathEvalState] raise EvalError {
   try path_filter_state_with_bindings(value, state, env, bindings) catch {
@@ -670,13 +673,13 @@ fn path_binding_restore_temp(
 ///|
 priv struct PathDefEnvBinding {
   name : String
-  previous : Json?
+  previous : Value?
 }
 
 ///|
 fn path_bind_runtime_def_env(
-  env : Map[String, Json],
-  def_env : Map[String, Json],
+  env : Map[String, Value],
+  def_env : Map[String, Value],
 ) -> Array[PathDefEnvBinding] {
   let saved = []
   for binding in def_env {
@@ -690,7 +693,7 @@ fn path_bind_runtime_def_env(
 
 ///|
 fn path_restore_runtime_def_env(
-  env : Map[String, Json],
+  env : Map[String, Value],
   saved : Array[PathDefEnvBinding],
 ) -> Unit {
   for i in 0..<saved.length() {
@@ -704,7 +707,7 @@ fn path_restore_runtime_def_env(
 fn path_eval_runtime_def_no_args(
   def_ : RuntimeDef,
   state : PathEvalState,
-  env : Map[String, Json],
+  env : Map[String, Value],
   bindings : Map[String, PathEvalState],
 ) -> Array[PathEvalState] raise EvalError {
   let prev_defs = runtime_def_state.current
@@ -729,7 +732,7 @@ fn path_eval_runtime_def_no_args(
 fn path_filter_state_with_bindings(
   filter : Filter,
   state : PathEvalState,
-  env : Map[String, Json],
+  env : Map[String, Value],
   bindings : Map[String, PathEvalState],
 ) -> Array[PathEvalState] raise EvalError {
   match filter {
@@ -850,7 +853,7 @@ fn path_filter_state_with_bindings(
 fn path_filter_state(
   filter : Filter,
   state : PathEvalState,
-  env : Map[String, Json],
+  env : Map[String, Value],
 ) -> Array[PathEvalState] raise EvalError {
   path_filter_state_with_bindings(filter, state, env, Map::new())
 }
@@ -858,9 +861,9 @@ fn path_filter_state(
 ///|
 fn path_expression(
   filter : Filter,
-  input : Json,
-  env : Map[String, Json],
-) -> Array[Json] raise EvalError {
+  input : Value,
+  env : Map[String, Value],
+) -> Array[Value] raise EvalError {
   let states = path_filter_state(filter, path_eval_state(input, [], true), env)
   let out = []
   for state in states {
@@ -869,7 +872,7 @@ fn path_expression(
         "Invalid path expression with result " + state.value.to_json_string(),
       )
     }
-    out.push(Json::array(state.path))
+    out.push(Value::array(state.path))
   }
   out
 }

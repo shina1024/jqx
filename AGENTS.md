@@ -15,10 +15,10 @@ This repository targets jq-compatible behavior.
 - `shina1024/jqx` top-level package is intended to become the primary MoonBit public API and the basis for `mooncakes.io` publication.
 - Before `1.0`, prioritize a coherent long-term public API over preserving the current thin wrapper or early cross-surface API shapes. Breaking changes are acceptable when they reduce long-term API debt.
 - Keep `shina1024/jqx/core` as the lower-level jq-compatible engine. It may keep internal `Json` / `Filter` representations needed for jq semantics, evaluation internals, and numeric repr preservation.
-- Do not use `@core.Json` as the primary MoonBit user boundary. MoonBit-facing APIs should prefer `moonbitlang/core/json.Json` (`@json.Json`).
-- Add explicit conversion helpers between `@json.Json` and `@core.Json`. Treat conversion through `@json.Json` as the convenience lane; jq-specific numeric repr fidelity is preserved by text-based compatibility lanes, not by `@json.Json` round-trips.
+- Do not use `@core.Value` as the primary MoonBit user boundary. MoonBit-facing APIs should prefer the standard `Json` type from `moonbitlang/core/json`.
+- Add explicit conversion helpers between standard `Json` and `@core.Value`. Treat conversion through standard `Json` as the convenience lane; jq-specific numeric repr fidelity is preserved by text-based compatibility lanes, not by `Json` round-trips.
 - Public MoonBit APIs should expose two lanes:
-  - value lane: accept and return `@json.Json` for embedding in MoonBit applications
+  - value lane: accept and return standard `Json` for embedding in MoonBit applications
   - compatibility lane: accept and return JSON text (`StringView` / `String`) when jq-style fidelity matters
 - For compiled execution, prefer a public compiled-filter abstraction over asking MoonBit users to depend on `@core.Filter` directly. `@core.Filter` can remain an implementation detail unless a strong reason appears.
 - Do not block MoonBit public package publication on a typed query DSL. First prioritize string-filter execution, compiled execution, JSON conversion, and clear public errors; query DSL can follow later.

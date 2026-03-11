@@ -1,5 +1,5 @@
 ///|
-fn call_require_number(name : String, value : Json) -> Double raise EvalError {
+fn call_require_number(name : String, value : Value) -> Double raise EvalError {
   match value {
     Number(n, _) => n
     _ => raise TypeError(name + "() requires numeric arguments")
@@ -8,7 +8,7 @@ fn call_require_number(name : String, value : Json) -> Double raise EvalError {
 
 ///|
 fn append_range_outputs(
-  out : Array[Json],
+  out : Array[Value],
   start : Double,
   end : Double,
   step : Double,
@@ -216,7 +216,7 @@ fn epoch_seconds_to_datetime_components(
 
 ///|
 fn datetime_component_number_required(
-  a : Array[Json],
+  a : Array[Value],
   index : Int,
   fn_name : String,
 ) -> Double raise EvalError {
@@ -231,7 +231,7 @@ fn datetime_component_number_required(
 
 ///|
 fn datetime_component_number_default(
-  a : Array[Json],
+  a : Array[Value],
   index : Int,
   default_ : Double,
   fn_name : String,
@@ -247,7 +247,7 @@ fn datetime_component_number_default(
 
 ///|
 fn datetime_component_int_required(
-  a : Array[Json],
+  a : Array[Value],
   index : Int,
   fn_name : String,
 ) -> Int raise EvalError {
@@ -256,7 +256,7 @@ fn datetime_component_int_required(
 
 ///|
 fn datetime_component_int_default(
-  a : Array[Json],
+  a : Array[Value],
   index : Int,
   default_ : Int,
   fn_name : String,
@@ -268,7 +268,7 @@ fn datetime_component_int_default(
 
 ///|
 fn parse_datetime_array_input(
-  input : Json,
+  input : Value,
   fn_name : String,
 ) -> (Int, Int, Int, Int, Int, Double) raise EvalError {
   match input {
@@ -306,7 +306,7 @@ fn parse_datetime_array_input(
 
 ///|
 fn datetime_input_to_format_components(
-  input : Json,
+  input : Value,
   fn_name : String,
 ) -> (Int, Int, Int, Int, Int, Double, Int, Int) raise EvalError {
   match input {
@@ -350,8 +350,8 @@ fn datetime_components_to_json_array(
   second : Double,
   day_of_week : Int,
   day_of_year : Int,
-) -> Json {
-  Json::array([
+) -> Value {
+  Value::array([
     json_number_value(year.to_double()),
     json_number_value((month - 1).to_double()),
     json_number_value(day.to_double()),
@@ -484,7 +484,7 @@ fn strptime_utc_fixed_format(
 }
 
 ///|
-fn gmtime_json(input : Json) -> Json raise EvalError {
+fn gmtime_json(input : Value) -> Value raise EvalError {
   match input {
     Number(seconds, _) => {
       let (year, month, day, hour, minute, second, day_of_week, day_of_year) = epoch_seconds_to_datetime_components(
@@ -499,7 +499,7 @@ fn gmtime_json(input : Json) -> Json raise EvalError {
 }
 
 ///|
-fn mktime_json(input : Json) -> Json raise EvalError {
+fn mktime_json(input : Value) -> Value raise EvalError {
   let (year, month, day, hour, minute, second) = parse_datetime_array_input(
     input, "mktime",
   )
@@ -512,9 +512,9 @@ fn mktime_json(input : Json) -> Json raise EvalError {
 fn builtin_call_numeric(
   name : String,
   args : Array[Filter],
-  input : Json,
-  env : Map[String, Json],
-) -> Array[Json]? raise EvalError {
+  input : Value,
+  env : Map[String, Value],
+) -> Array[Value]? raise EvalError {
   match name {
     "__neg" =>
       if args.length() != 1 {
@@ -568,7 +568,7 @@ fn builtin_call_numeric(
               let formatted = format_datetime_with_strftime_pattern(
                 pattern, year, month, day, hour, minute, second, day_of_week, day_of_year,
               )
-              out.push(Json::string(formatted))
+              out.push(Value::string(formatted))
             }
             _ => raise TypeError("strftime/1 requires a string format")
           }
@@ -590,7 +590,7 @@ fn builtin_call_numeric(
               let formatted = format_datetime_with_strftime_pattern(
                 pattern, year, month, day, hour, minute, second, day_of_week, day_of_year,
               )
-              out.push(Json::string(formatted))
+              out.push(Value::string(formatted))
             }
             _ => raise TypeError("strflocaltime/1 requires a string format")
           }
@@ -658,14 +658,14 @@ fn builtin_call_numeric(
       if args.length() != 0 {
         raise UnknownFunction("env")
       } else {
-        Some([Json::object(Map::new())])
+        Some([Value::object(Map::new())])
       }
     "range" =>
       if args.length() == 0 || args.length() > 3 {
         raise UnknownFunction("range")
       } else {
         let starts = if args.length() == 1 {
-          [Json::number(0.0)]
+          [Value::number(0.0)]
         } else {
           execute_with_env(args[0], input, env)
         }
@@ -677,7 +677,7 @@ fn builtin_call_numeric(
         let steps = if args.length() >= 3 {
           execute_with_env(args[2], input, env)
         } else {
-          [Json::number(1.0)]
+          [Value::number(1.0)]
         }
         let out = []
         for start_value in starts {

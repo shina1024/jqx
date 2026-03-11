@@ -141,7 +141,7 @@ fn eval_error_to_jqx_error(err : @core.EvalError) -> JqxError {
 }
 
 ///|
-fn json_values_to_strings(values : Array[@core.Json]) -> Array[String] {
+fn json_values_to_strings(values : Array[@core.Value]) -> Array[String] {
   let out = []
   for value in values {
     out.push(value.to_json_string())
@@ -150,19 +150,19 @@ fn json_values_to_strings(values : Array[@core.Json]) -> Array[String] {
 }
 
 ///|
-pub fn parseJson(input : String) -> @core.Json raise @core.ParseError {
+pub fn parseJson(input : String) -> @core.Value raise @core.ParseError {
   @core.parse(input)
 }
 
 ///|
-pub fn tryParseJson(input : String) -> Result[@core.Json, JqxError] {
+pub fn tryParseJson(input : String) -> Result[@core.Value, JqxError] {
   Ok(@core.parse(input)) catch {
     err => Err(parse_error_to_jqx_error(input, err))
   }
 }
 
 ///|
-pub fn safeParseJson(input : String) -> Result[@core.Json, JqxError] {
+pub fn safeParseJson(input : String) -> Result[@core.Value, JqxError] {
   tryParseJson(input)
 }
 
@@ -201,16 +201,16 @@ pub fn safeParseFilter(input : String) -> Result[@core.Filter, JqxError] {
 ///|
 pub fn execute(
   filter : @core.Filter,
-  input : @core.Json,
-) -> Array[@core.Json] raise @core.EvalError {
+  input : @core.Value,
+) -> Array[@core.Value] raise @core.EvalError {
   @core.execute(filter, input)
 }
 
 ///|
 pub fn tryExecute(
   filter : @core.Filter,
-  input : @core.Json,
-) -> Result[Array[@core.Json], JqxError] {
+  input : @core.Value,
+) -> Result[Array[@core.Value], JqxError] {
   Ok(@core.execute(filter, input)) catch {
     err => Err(eval_error_to_jqx_error(err))
   }
@@ -219,8 +219,8 @@ pub fn tryExecute(
 ///|
 pub fn safeExecute(
   filter : @core.Filter,
-  input : @core.Json,
-) -> Result[Array[@core.Json], JqxError] {
+  input : @core.Value,
+) -> Result[Array[@core.Value], JqxError] {
   tryExecute(filter, input)
 }
 
@@ -246,7 +246,7 @@ pub fn runCompiled(
 pub fn runCompiledValues(
   filter : @core.Filter,
   input : String,
-) -> Result[Array[@core.Json], JqxError] {
+) -> Result[Array[@core.Value], JqxError] {
   match tryParseJson(input) {
     Ok(value) => tryExecute(filter, value)
     Err(err) => Err(err)
@@ -283,11 +283,11 @@ pub fn runCompat(
 
 ///|
 /// Convenience lane:
-/// returns core Json values (Number uses Double semantics internally).
+/// returns core Value values (Number uses Double semantics internally).
 pub fn runValues(
   filter : String,
   input : String,
-) -> Result[Array[@core.Json], JqxError] {
+) -> Result[Array[@core.Value], JqxError] {
   match tryCompile(filter) {
     Ok(compiled) => runCompiledValues(compiled, input)
     Err(err) => Err(err)
@@ -299,6 +299,6 @@ pub fn runValues(
 pub fn safeRunValues(
   filter : String,
   input : String,
-) -> Result[Array[@core.Json], JqxError] {
+) -> Result[Array[@core.Value], JqxError] {
   runValues(filter, input)
 }

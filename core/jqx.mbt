@@ -1,24 +1,24 @@
 ///|
-pub enum Json {
+pub enum Value {
   JNull
   JTrue
   JFalse
   Number(Double, String?)
   String(String)
-  Array(Array[Json])
+  Array(Array[Value])
   Object(JsonObject)
 }
 
 ///|
 struct JsonObject {
-  map : Map[String, Json]
+  map : Map[String, Value]
   key_order : Array[String]
   lex_key_order : Array[String]
 }
 
 ///|
 fn object_keys_in_order(
-  map : Map[String, Json],
+  map : Map[String, Value],
   key_order : Array[String],
 ) -> Array[String] {
   let out = []
@@ -42,7 +42,7 @@ fn object_keys_in_order(
 
 ///|
 fn json_object_make(
-  map : Map[String, Json],
+  map : Map[String, Value],
   key_order : Array[String],
 ) -> JsonObject {
   let normalized_key_order = object_keys_in_order(map, key_order)
@@ -54,20 +54,20 @@ fn json_object_make(
 }
 
 ///|
-fn JsonObject::from_map(map : Map[String, Json]) -> JsonObject {
+fn JsonObject::from_map(map : Map[String, Value]) -> JsonObject {
   json_object_make(map, Array::from_iter(map.keys()))
 }
 
 ///|
 fn JsonObject::with_order(
-  map : Map[String, Json],
+  map : Map[String, Value],
   key_order : Array[String],
 ) -> JsonObject {
   json_object_make(map, key_order)
 }
 
 ///|
-fn JsonObject::get(self : JsonObject, key : String) -> Json? {
+fn JsonObject::get(self : JsonObject, key : String) -> Value? {
   self.map.get(key)
 }
 
@@ -87,17 +87,21 @@ fn JsonObject::keys(self : JsonObject) -> Array[String] {
 }
 
 ///|
-fn JsonObject::iter(self : JsonObject) -> Array[(String, Json)] {
+pub fn JsonObject::iter(self : JsonObject) -> Array[(String, Value)] {
   object_entries_sorted(self)
 }
 
 ///|
-fn JsonObject::to_map(self : JsonObject) -> Map[String, Json] {
+fn JsonObject::to_map(self : JsonObject) -> Map[String, Value] {
   self.map
 }
 
 ///|
-fn JsonObject::set(self : JsonObject, key : String, value : Json) -> JsonObject {
+fn JsonObject::set(
+  self : JsonObject,
+  key : String,
+  value : Value,
+) -> JsonObject {
   let next_map = self.map.copy()
   let next_order = self.key_order.copy()
   if !next_map.contains(key) {
@@ -108,7 +112,7 @@ fn JsonObject::set(self : JsonObject, key : String, value : Json) -> JsonObject 
 }
 
 ///|
-fn json_equal(a : Json, b : Json) -> Bool {
+fn json_equal(a : Value, b : Value) -> Bool {
   match (a, b) {
     (JNull, JNull) => true
     (JTrue, JTrue) => true
@@ -143,22 +147,22 @@ fn json_equal(a : Json, b : Json) -> Bool {
 }
 
 ///|
-pub impl Eq for Json with equal(self, other) {
+pub impl Eq for Value with equal(self, other) {
   json_equal(self, other)
 }
 
 ///|
-pub impl Eq for Json with not_equal(self, other) {
+pub impl Eq for Value with not_equal(self, other) {
   !json_equal(self, other)
 }
 
 ///|
-pub fn Json::null() -> Json {
+pub fn Value::null() -> Value {
   JNull
 }
 
 ///|
-pub fn Json::boolean(b : Bool) -> Json {
+pub fn Value::boolean(b : Bool) -> Value {
   if b {
     JTrue
   } else {
@@ -167,35 +171,35 @@ pub fn Json::boolean(b : Bool) -> Json {
 }
 
 ///|
-pub fn Json::number(n : Double, repr? : String) -> Json {
+pub fn Value::number(n : Double, repr? : String) -> Value {
   Number(n, repr)
 }
 
 ///|
-pub fn Json::string(s : String) -> Json {
+pub fn Value::string(s : String) -> Value {
   String(s)
 }
 
 ///|
-pub fn Json::array(a : Array[Json]) -> Json {
+pub fn Value::array(a : Array[Value]) -> Value {
   Array(a)
 }
 
 ///|
-pub fn Json::object(o : Map[String, Json]) -> Json {
+pub fn Value::object(o : Map[String, Value]) -> Value {
   Object(JsonObject::from_map(o))
 }
 
 ///|
-fn Json::object_with_order(
-  o : Map[String, Json],
+fn Value::object_with_order(
+  o : Map[String, Value],
   key_order : Array[String],
-) -> Json {
+) -> Value {
   Object(JsonObject::with_order(o, key_order))
 }
 
 ///|
-fn Json::object_from_entries(entries : Array[(String, Json)]) -> Json {
+pub fn Value::object_from_entries(entries : Array[(String, Value)]) -> Value {
   let map = Map::new()
   let key_order = []
   for kv in entries {
@@ -206,7 +210,7 @@ fn Json::object_from_entries(entries : Array[(String, Json)]) -> Json {
     }
     map[key] = value
   }
-  Json::object_with_order(map, key_order)
+  Value::object_with_order(map, key_order)
 }
 
 ///|
@@ -356,7 +360,7 @@ fn object_keys_lex_sorted(o : JsonObject) -> Array[String] {
 }
 
 ///|
-fn object_entries_sorted(o : JsonObject) -> Array[(String, Json)] {
+fn object_entries_sorted(o : JsonObject) -> Array[(String, Value)] {
   let out = []
   for key in o.key_order {
     match o.get(key) {
@@ -430,7 +434,7 @@ pub impl Show for ParseError with output(self, logger) {
 }
 
 ///|
-pub impl Show for Json with output(self, logger) {
+pub impl Show for Value with output(self, logger) {
   match self {
     JNull => logger.write_string("Null")
     JTrue => logger.write_string("True")
@@ -495,8 +499,8 @@ fn format_finite_number_without_repr(n : Double) -> String {
 }
 
 ///|
-/// Encode Json as a compact JSON string (jq-style output).
-pub fn Json::to_json_string(self : Json) -> String {
+/// Encode Value as a compact JSON string (jq-style output).
+pub fn Value::to_json_string(self : Value) -> String {
   let buf = StringBuilder::new()
   let max_depth = 256
   fn write_escaped(s : String) {
@@ -534,7 +538,7 @@ pub fn Json::to_json_string(self : Json) -> String {
     buf.write_char('"')
   }
 
-  fn write_value(j : Json, depth : Int) {
+  fn write_value(j : Value, depth : Int) {
     if depth > max_depth {
       buf.write_string("<skipped: too deep>")
       return
@@ -644,7 +648,7 @@ pub fn valid(input : StringView) -> Bool {
 pub fn parse(
   input : StringView,
   max_nesting_depth? : Int = 1024,
-) -> Json raise ParseError {
+) -> Value raise ParseError {
   let ctx = ParseContext::make(input, max_nesting_depth)
   let val = ctx.parse_value()
   ctx.lex_skip_whitespace()
@@ -656,7 +660,7 @@ pub fn parse(
 }
 
 ///|
-fn ParseContext::parse_value(ctx : ParseContext) -> Json raise ParseError {
+fn ParseContext::parse_value(ctx : ParseContext) -> Value raise ParseError {
   let tok = ctx.lex_value(allow_rbracket=false)
   ctx.parse_value2(tok)
 }
@@ -665,13 +669,13 @@ fn ParseContext::parse_value(ctx : ParseContext) -> Json raise ParseError {
 fn ParseContext::parse_value2(
   ctx : ParseContext,
   tok : Token,
-) -> Json raise ParseError {
+) -> Value raise ParseError {
   match tok {
-    Null => Json::null()
-    True => Json::boolean(true)
-    False => Json::boolean(false)
-    Number(n, repr) => Json::number(n, repr?)
-    String(s) => Json::string(s)
+    Null => Value::null()
+    True => Value::boolean(true)
+    False => Value::boolean(false)
+    Number(n, repr) => Value::number(n, repr?)
+    String(s) => Value::string(s)
     LBrace => ctx.parse_object()
     LBracket => ctx.parse_array()
     RBracket | RBrace | Comma => abort("unreachable")
@@ -679,7 +683,7 @@ fn ParseContext::parse_value2(
 }
 
 ///|
-fn ParseContext::parse_object(ctx : ParseContext) -> Json raise ParseError {
+fn ParseContext::parse_object(ctx : ParseContext) -> Value raise ParseError {
   if ctx.remaining_available_depth <= 0 {
     raise DepthLimitExceeded
   }
@@ -689,7 +693,7 @@ fn ParseContext::parse_object(ctx : ParseContext) -> Json raise ParseError {
   loop ctx.lex_property_name() {
     RBrace => {
       ctx.remaining_available_depth += 1
-      Json::object_with_order(map, key_order)
+      Value::object_with_order(map, key_order)
     }
     String(name) => {
       ctx.lex_after_property_name()
@@ -701,7 +705,7 @@ fn ParseContext::parse_object(ctx : ParseContext) -> Json raise ParseError {
         Comma => continue ctx.lex_property_name2()
         RBrace => {
           ctx.remaining_available_depth += 1
-          Json::object_with_order(map, key_order)
+          Value::object_with_order(map, key_order)
         }
         _ => abort("unreachable")
       }
@@ -711,7 +715,7 @@ fn ParseContext::parse_object(ctx : ParseContext) -> Json raise ParseError {
 }
 
 ///|
-fn ParseContext::parse_array(ctx : ParseContext) -> Json raise ParseError {
+fn ParseContext::parse_array(ctx : ParseContext) -> Value raise ParseError {
   if ctx.remaining_available_depth <= 0 {
     raise DepthLimitExceeded
   }
@@ -720,7 +724,7 @@ fn ParseContext::parse_array(ctx : ParseContext) -> Json raise ParseError {
   loop ctx.lex_value(allow_rbracket=true) {
     RBracket => {
       ctx.remaining_available_depth += 1
-      Json::array(vec)
+      Value::array(vec)
     }
     tok => {
       vec.push(ctx.parse_value2(tok))
@@ -729,7 +733,7 @@ fn ParseContext::parse_array(ctx : ParseContext) -> Json raise ParseError {
         Comma => continue ctx.lex_value(allow_rbracket=false)
         RBracket => {
           ctx.remaining_available_depth += 1
-          Json::array(vec)
+          Value::array(vec)
         }
         _ => abort("unreachable")
       }

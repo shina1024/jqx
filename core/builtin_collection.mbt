@@ -1,5 +1,5 @@
 ///|
-fn index_object_key(value : Json) -> String {
+fn index_object_key(value : Value) -> String {
   match value {
     String(s) => s
     _ => value.to_json_string()
@@ -7,17 +7,17 @@ fn index_object_key(value : Json) -> String {
 }
 
 ///|
-fn by_key_from_values(values : Array[Json]) -> Json {
-  Json::array(values)
+fn by_key_from_values(values : Array[Value]) -> Value {
+  Value::array(values)
 }
 
 ///|
 fn builtin_call_collection(
   name : String,
   args : Array[Filter],
-  input : Json,
-  env : Map[String, Json],
-) -> Array[Json]? raise EvalError {
+  input : Value,
+  env : Map[String, Value],
+) -> Array[Value]? raise EvalError {
   match name {
     "contains" =>
       if args.length() != 1 {
@@ -27,7 +27,7 @@ fn builtin_call_collection(
         let needles = execute_with_env(target, input, env)
         let out = []
         for needle in needles {
-          out.push(Json::boolean(contains_checked(input, needle)))
+          out.push(Value::boolean(contains_checked(input, needle)))
         }
         Some(out)
       }
@@ -39,7 +39,7 @@ fn builtin_call_collection(
         let haystacks = execute_with_env(target, input, env)
         let out = []
         for haystack in haystacks {
-          out.push(Json::boolean(contains_checked(haystack, input)))
+          out.push(Value::boolean(contains_checked(haystack, input)))
         }
         Some(out)
       }
@@ -51,7 +51,7 @@ fn builtin_call_collection(
         let keys = execute_with_env(key_filter, input, env)
         let out = []
         for key in keys {
-          out.push(Json::boolean(has_key(input, key)))
+          out.push(Value::boolean(has_key(input, key)))
         }
         Some(out)
       }
@@ -63,7 +63,7 @@ fn builtin_call_collection(
         let collections = execute_with_env(collection_filter, input, env)
         let out = []
         for collection in collections {
-          out.push(Json::boolean(has_key(collection, input)))
+          out.push(Value::boolean(has_key(collection, input)))
         }
         Some(out)
       }
@@ -77,7 +77,7 @@ fn builtin_call_collection(
             break
           }
         }
-        Some([Json::boolean(found)])
+        Some([Value::boolean(found)])
       } else if args.length() == 2 {
         let haystack = execute_with_env(args[0], input, env)
         let needles = execute_with_env(args[1], input, env)
@@ -93,7 +93,7 @@ fn builtin_call_collection(
             break
           }
         }
-        Some([Json::boolean(found)])
+        Some([Value::boolean(found)])
       } else {
         raise UnknownFunction("IN")
       }
@@ -114,7 +114,7 @@ fn builtin_call_collection(
             out[object_key] = value
           }
         }
-        Some([Json::object_with_order(out, out_order)])
+        Some([Value::object_with_order(out, out_order)])
       }
     "JOIN" =>
       if args.length() != 2 {
@@ -137,12 +137,12 @@ fn builtin_call_collection(
                   let object_key = index_object_key(key)
                   let value = match index_obj.get(object_key) {
                     Some(v) => v
-                    None => Json::null()
+                    None => Value::null()
                   }
-                  joined.push(Json::array([row, value]))
+                  joined.push(Value::array([row, value]))
                 }
               }
-              out.push(Json::array(joined))
+              out.push(Value::array(joined))
             }
             _ => raise TypeError("JOIN/2 index must be an object")
           }
@@ -167,7 +167,7 @@ fn builtin_call_collection(
             for kv in sorted {
               out.push(kv.1)
             }
-            Some([Json::array(out)])
+            Some([Value::array(out)])
           }
           _ =>
             raise TypeError(
@@ -190,13 +190,13 @@ fn builtin_call_collection(
             }
             let sorted = sort_keyed_pairs(keyed)
             let groups = []
-            let mut current : Array[Json] = []
-            let mut current_key = Json::null()
+            let mut current : Array[Value] = []
+            let mut current_key = Value::null()
             let mut has_current = false
             for kv in sorted {
               if !has_current || compare_json(current_key, kv.0) != 0 {
                 if has_current {
-                  groups.push(Json::array(current))
+                  groups.push(Value::array(current))
                 }
                 current = []
                 current_key = kv.0
@@ -205,9 +205,9 @@ fn builtin_call_collection(
               current.push(kv.1)
             }
             if has_current {
-              groups.push(Json::array(current))
+              groups.push(Value::array(current))
             }
-            Some([Json::array(groups)])
+            Some([Value::array(groups)])
           }
           _ =>
             raise TypeError(
@@ -256,7 +256,7 @@ fn builtin_call_collection(
             }
             let sorted = sort_keyed_pairs(keyed)
             let out = []
-            let mut prev_key = Json::null()
+            let mut prev_key = Value::null()
             let mut has_prev = false
             for kv in sorted {
               if !has_prev || compare_json(prev_key, kv.0) != 0 {
@@ -265,7 +265,7 @@ fn builtin_call_collection(
                 has_prev = true
               }
             }
-            Some([Json::array(out)])
+            Some([Value::array(out)])
           }
           _ =>
             raise TypeError(
@@ -282,7 +282,7 @@ fn builtin_call_collection(
         for needle in needles {
           match input {
             Array(a) =>
-              out.push(Json::number(bsearch_json_array(a, needle).to_double()))
+              out.push(Value::number(bsearch_json_array(a, needle).to_double()))
             _ =>
               raise TypeError(
                 json_type_with_value(input) + " cannot be searched from",

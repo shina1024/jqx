@@ -10,18 +10,18 @@ test "execute import/include filesystem module resolution" {
       parse_filter("import \"a\" as foo; foo::a"),
       must_parse("null"),
     ),
-    [Json::string("a")],
+    [Value::string("a")],
   )
   assert_eq(
     must_execute(
       parse_filter("import \"b\" as bar; [bar::a, bar::b]"),
       must_parse("null"),
     ),
-    [Json::array([Json::string("b"), Json::string("c")])],
+    [Value::array([Value::string("b"), Value::string("c")])],
   )
   assert_eq(
     must_execute(parse_filter("include \"shadow1\"; e"), must_parse("null")),
-    [Json::number(2.0)],
+    [Value::number(2.0)],
   )
 
   clear_module_search_paths()

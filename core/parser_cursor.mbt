@@ -385,7 +385,7 @@ fn FilterCursor::parse_string_expr(
   fn flush_text() {
     let s = text.to_string()
     if s.length() > 0 {
-      parts.push(Filter::literal(Json::string(s)))
+      parts.push(Filter::literal(Value::string(s)))
       text = StringBuilder::new()
     }
   }
@@ -439,7 +439,7 @@ fn FilterCursor::parse_string_expr(
   }
 
   if parts.length() == 0 {
-    return Filter::literal(Json::string(""))
+    return Filter::literal(Value::string(""))
   }
   let mut out = parts[0]
   for i in 1..<parts.length() {
@@ -468,7 +468,7 @@ fn FilterCursor::parse_format_string_expr(
   fn flush_text() {
     let s = text.to_string()
     if s.length() > 0 {
-      parts.push(Filter::literal(Json::string(s)))
+      parts.push(Filter::literal(Value::string(s)))
       text = StringBuilder::new()
     }
   }
@@ -520,7 +520,7 @@ fn FilterCursor::parse_format_string_expr(
   }
 
   if parts.length() == 0 {
-    return Filter::literal(Json::string(""))
+    return Filter::literal(Value::string(""))
   }
   let mut out = parts[0]
   for i in 1..<parts.length() {
@@ -572,7 +572,7 @@ fn FilterCursor::parse_hex_digits(
 ///|
 fn FilterCursor::parse_number_literal(
   ctx : FilterCursor,
-) -> Json raise FilterError {
+) -> Value raise FilterError {
   ctx.skip_ws()
   let start = ctx.offset
   match ctx.read_char() {
@@ -609,9 +609,9 @@ fn FilterCursor::parse_number_literal(
   match parsed {
     Ok(Number(n, repr)) =>
       if starts_with_dot {
-        Json::number(n)
+        Value::number(n)
       } else {
-        Json::number(n, repr?)
+        Value::number(n, repr?)
       }
     Ok(_) =>
       raise InvalidNumber(filter_offset_to_position(ctx.input, start), s_str)

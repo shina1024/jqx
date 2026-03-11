@@ -13,7 +13,7 @@ fn call_regex_flag_supported(flag : Char) -> Bool {
 ///|
 fn call_parse_regex_flags(
   name : String,
-  value : Json,
+  value : Value,
 ) -> String raise EvalError {
   call_parse_regex_flags_with_options(name, value)
 }
@@ -21,7 +21,7 @@ fn call_parse_regex_flags(
 ///|
 fn call_parse_regex_flags_with_options(
   name : String,
-  value : Json,
+  value : Value,
   append_global? : Bool = false,
 ) -> String raise EvalError {
   let base = match value {
@@ -50,7 +50,7 @@ priv struct RegexPatternInput {
 
 ///|
 fn parse_regex_pattern_input(
-  value : Json,
+  value : Value,
   allow_array : Bool,
 ) -> RegexPatternInput raise EvalError {
   match value {
@@ -89,9 +89,9 @@ fn parse_regex_pattern_input(
 fn builtin_call_string(
   name : String,
   args : Array[Filter],
-  input : Json,
-  env : Map[String, Json],
-) -> Array[Json]? raise EvalError {
+  input : Value,
+  env : Map[String, Value],
+) -> Array[Value]? raise EvalError {
   match name {
     "startswith" =>
       if args.length() != 1 {
@@ -102,7 +102,7 @@ fn builtin_call_string(
         let out = []
         for needle in needles {
           match (input, needle) {
-            (String(h), String(n)) => out.push(Json::boolean(h.has_prefix(n)))
+            (String(h), String(n)) => out.push(Value::boolean(h.has_prefix(n)))
             _ => raise TypeError("startswith() requires string inputs")
           }
         }
@@ -117,7 +117,7 @@ fn builtin_call_string(
         let out = []
         for needle in needles {
           match (input, needle) {
-            (String(h), String(n)) => out.push(Json::boolean(h.has_suffix(n)))
+            (String(h), String(n)) => out.push(Value::boolean(h.has_suffix(n)))
             _ => raise TypeError("endswith() requires string inputs")
           }
         }
@@ -134,10 +134,10 @@ fn builtin_call_string(
             (String(h), String(n)) =>
               if h.has_prefix(n) {
                 out.push(
-                  Json::string(h.view(start_offset=n.length()).to_string()),
+                  Value::string(h.view(start_offset=n.length()).to_string()),
                 )
               } else {
-                out.push(Json::string(h))
+                out.push(Value::string(h))
               }
             _ => raise TypeError("startswith() requires string inputs")
           }
@@ -154,7 +154,7 @@ fn builtin_call_string(
           match (input, needle) {
             (String(h), String(n)) =>
               if n.length() == 0 {
-                out.push(Json::string(""))
+                out.push(Value::string(""))
               } else {
                 let mut trimmed = h
                 if trimmed.has_prefix(n) {
@@ -168,7 +168,7 @@ fn builtin_call_string(
                     )
                     .to_string()
                 }
-                out.push(Json::string(trimmed))
+                out.push(Value::string(trimmed))
               }
             _ => raise TypeError("startswith() requires string inputs")
           }
@@ -185,17 +185,17 @@ fn builtin_call_string(
           match (input, needle) {
             (String(h), String(n)) =>
               if n.length() == 0 {
-                out.push(Json::string(""))
+                out.push(Value::string(""))
               } else if h.has_suffix(n) {
                 out.push(
-                  Json::string(
+                  Value::string(
                     h
                     .view(start_offset=0, end_offset=h.length() - n.length())
                     .to_string(),
                   ),
                 )
               } else {
-                out.push(Json::string(h))
+                out.push(Value::string(h))
               }
             _ => raise TypeError("endswith() requires string inputs")
           }
@@ -227,7 +227,7 @@ fn builtin_call_string(
         let out = []
         for sep in seps {
           match (input, sep) {
-            (String(s), String(d)) => out.push(Json::array(split_string(s, d)))
+            (String(s), String(d)) => out.push(Value::array(split_string(s, d)))
             _ => raise TypeError("split input and separator must be strings")
           }
         }
@@ -248,7 +248,7 @@ fn builtin_call_string(
                 match input {
                   String(s) =>
                     out.push(
-                      Json::array(split_string_regex_tokens(s, pattern, flags)),
+                      Value::array(split_string_regex_tokens(s, pattern, flags)),
                     )
                   _ =>
                     raise TypeError("split input and separator must be strings")
@@ -267,7 +267,7 @@ fn builtin_call_string(
         let flag_values = if args.length() == 2 {
           execute_with_env(args[1], input, env)
         } else {
-          [Json::null()]
+          [Value::null()]
         }
         let out = []
         for pattern_value in patterns {
@@ -314,14 +314,14 @@ fn builtin_call_string(
           let flag_values = if args.length() == 2 {
             explicit_flag_values
           } else {
-            [Json::string(pattern_input.inline_flags)]
+            [Value::string(pattern_input.inline_flags)]
           }
           for flag_value in flag_values {
             let flags = call_parse_regex_flags("test", flag_value)
             match input {
               String(s) =>
                 out.push(
-                  Json::boolean(
+                  Value::boolean(
                     regex_has_match(s, pattern_input.pattern, flags),
                   ),
                 )
@@ -354,7 +354,7 @@ fn builtin_call_string(
           let flag_values = if args.length() == 2 {
             explicit_flag_values
           } else {
-            [Json::string(pattern_input.inline_flags)]
+            [Value::string(pattern_input.inline_flags)]
           }
           for flag_value in flag_values {
             let flags = call_parse_regex_flags("scan", flag_value)
@@ -393,7 +393,7 @@ fn builtin_call_string(
           let flag_values = if args.length() == 2 {
             explicit_flag_values
           } else {
-            [Json::string(pattern_input.inline_flags)]
+            [Value::string(pattern_input.inline_flags)]
           }
           for flag_value in flag_values {
             let flags = call_parse_regex_flags("match", flag_value)
@@ -436,7 +436,7 @@ fn builtin_call_string(
           let flag_values = if args.length() == 2 {
             explicit_flag_values
           } else {
-            [Json::string(pattern_input.inline_flags)]
+            [Value::string(pattern_input.inline_flags)]
           }
           for flag_value in flag_values {
             let flags = call_parse_regex_flags("capture", flag_value)
@@ -468,7 +468,7 @@ fn builtin_call_string(
         let flag_values = if args.length() == 3 {
           execute_with_env(args[2], input, env)
         } else {
-          [Json::null()]
+          [Value::null()]
         }
         let out = []
         for pattern_value in patterns {
@@ -488,7 +488,7 @@ fn builtin_call_string(
                     global~,
                     "sub replacement must be a string",
                   ) {
-                  out.push(Json::string(replaced))
+                  out.push(Value::string(replaced))
                 }
               _ =>
                 raise TypeError(
@@ -508,7 +508,7 @@ fn builtin_call_string(
         let flag_values = if args.length() == 3 {
           execute_with_env(args[2], input, env)
         } else {
-          [Json::null()]
+          [Value::null()]
         }
         let out = []
         for pattern_value in patterns {
@@ -532,7 +532,7 @@ fn builtin_call_string(
                     global~,
                     "gsub replacement must be a string",
                   ) {
-                  out.push(Json::string(replaced))
+                  out.push(Value::string(replaced))
                 }
               _ =>
                 raise TypeError(
@@ -563,9 +563,9 @@ fn builtin_call_string(
             _ => index_type_error(input, needle)
           }
           if indices.length() == 0 {
-            out.push(Json::null())
+            out.push(Value::null())
           } else {
-            out.push(Json::number(indices[0].to_double()))
+            out.push(Value::number(indices[0].to_double()))
           }
         }
         Some(out)
@@ -587,9 +587,9 @@ fn builtin_call_string(
             _ => index_type_error(input, needle)
           }
           if indices.length() == 0 {
-            out.push(Json::null())
+            out.push(Value::null())
           } else {
-            out.push(Json::number(indices[indices.length() - 1].to_double()))
+            out.push(Value::number(indices[indices.length() - 1].to_double()))
           }
         }
         Some(out)
@@ -612,9 +612,9 @@ fn builtin_call_string(
           }
           let arr = []
           for i in indices {
-            arr.push(Json::number(i.to_double()))
+            arr.push(Value::number(i.to_double()))
           }
-          out.push(Json::array(arr))
+          out.push(Value::array(arr))
         }
         Some(out)
       }

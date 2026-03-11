@@ -140,7 +140,7 @@ fn slice_end_index_from_filter(filter : Filter) -> Int? {
 fn slice_endpoint_filter(expr : Filter?) -> Filter {
   match expr {
     Some(v) => v
-    None => Filter::literal(Json::null())
+    None => Filter::literal(Value::null())
   }
 }
 
@@ -581,7 +581,7 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
     Some('\"') => ctx.parse_string_expr()
     Some('t') =>
       if ctx.try_keyword("true") {
-        Filter::literal(Json::boolean(true))
+        Filter::literal(Value::boolean(true))
       } else if ctx.try_keyword("try") {
         // jq's `try` binds only to the next unary expression unless grouped.
         let inner = ctx.parse_unary()
@@ -597,7 +597,7 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
       }
     Some('f') =>
       if ctx.try_keyword("false") {
-        Filter::literal(Json::boolean(false))
+        Filter::literal(Value::boolean(false))
       } else if ctx.try_keyword("foreach") {
         parse_reduce_like(true)
       } else {
@@ -605,7 +605,7 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
       }
     Some('n') =>
       if ctx.try_keyword("null") {
-        Filter::literal(Json::null())
+        Filter::literal(Value::null())
       } else if ctx.try_keyword("not") {
         Filter::not(parse_not_operand_or_identity())
       } else {
@@ -771,7 +771,7 @@ fn FilterCursor::lower_object_item_filter(
   }
   let path = Filter::Array([key_var])
   let set_expr = Filter::pipe(
-    Filter::literal(Json::object(Map::new())),
+    Filter::literal(Value::object(Map::new())),
     Filter::call("setpath", [path, value_on_input]),
   )
   Filter::as_(
@@ -820,10 +820,10 @@ fn FilterCursor::parse_object_literal(
       Some('$') => {
         ctx.read_char() |> ignore
         let name = ctx.parse_identifier()
-        (Filter::literal(Json::string(name)), Some(name))
+        (Filter::literal(Value::string(name)), Some(name))
       }
       Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') =>
-        (Filter::literal(Json::string(ctx.parse_identifier())), None)
+        (Filter::literal(Value::string(ctx.parse_identifier())), None)
       Some(c) if c is ('0'..='9' | '-') => {
         let suffix = filter_position_suffix(ctx.input, ctx.offset)
         ctx.raise_diagnostic([
@@ -874,7 +874,7 @@ fn FilterCursor::parse_object_literal(
           for kv in static_items {
             dynamic_items.push(
               ctx.lower_object_item_filter(
-                Filter::literal(Json::string(kv.0)),
+                Filter::literal(Value::string(kv.0)),
                 kv.1,
                 false,
               ),

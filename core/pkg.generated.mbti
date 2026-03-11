@@ -10,13 +10,13 @@ pub fn compile(StringView) -> Filter raise FilterError
 
 pub fn eval_error_message(EvalError) -> String
 
-pub fn eval_error_outputs(EvalError) -> Array[Json]
+pub fn eval_error_outputs(EvalError) -> Array[Value]
 
-pub fn execute(Filter, Json) -> Array[Json] raise EvalError
+pub fn execute(Filter, Value) -> Array[Value] raise EvalError
 
-pub fn execute_for_cli(Filter, Json) -> (Array[Json], String?)
+pub fn execute_for_cli(Filter, Value) -> (Array[Value], String?)
 
-pub fn parse(StringView, max_nesting_depth? : Int) -> Json raise ParseError
+pub fn parse(StringView, max_nesting_depth? : Int) -> Value raise ParseError
 
 pub fn parse_filter(StringView) -> Filter raise FilterError
 
@@ -31,11 +31,11 @@ pub fn validate_filter_compile_diagnostics(Filter, StringView) -> Unit raise Fil
 // Errors
 pub suberror EvalError {
   TypeError(String)
-  Thrown(Json)
+  Thrown(Value)
   UnknownFunction(String)
   UnknownVariable(String)
-  BreakSignal(String, Array[Json])
-  Partial(Array[Json], Json, String)
+  BreakSignal(String, Array[Value])
+  Partial(Array[Value], Value, String)
 }
 pub impl Eq for EvalError
 pub impl Show for EvalError
@@ -76,7 +76,7 @@ pub enum Filter {
   Iter
   IterOpt
   Recurse
-  Literal(Json)
+  Literal(Value)
   Array(Array[Filter])
   Object(Array[(String, Filter)])
   Builtin(String)
@@ -130,7 +130,7 @@ pub fn Filter::index_opt(Int) -> Self
 pub fn Filter::iter() -> Self
 pub fn Filter::iter_opt() -> Self
 pub fn Filter::label(String, Self) -> Self
-pub fn Filter::literal(Json) -> Self
+pub fn Filter::literal(Value) -> Self
 pub fn Filter::lt(Self, Self) -> Self
 pub fn Filter::lte(Self, Self) -> Self
 pub fn Filter::mod_(Self, Self) -> Self
@@ -151,32 +151,34 @@ pub fn Filter::var_(String) -> Self
 pub impl Eq for Filter
 pub impl Show for Filter
 
-pub enum Json {
-  JNull
-  JTrue
-  JFalse
-  Number(Double, String?)
-  String(String)
-  Array(Array[Json])
-  Object(JsonObject)
-}
-pub fn Json::array(Array[Self]) -> Self
-pub fn Json::boolean(Bool) -> Self
-pub fn Json::null() -> Self
-pub fn Json::number(Double, repr? : String) -> Self
-pub fn Json::object(Map[String, Self]) -> Self
-pub fn Json::string(String) -> Self
-pub fn Json::to_json_string(Self) -> String
-pub impl Eq for Json
-pub impl Show for Json
-
 type JsonObject
+pub fn JsonObject::iter(Self) -> Array[(String, Value)]
 
 pub struct Position {
   line : Int
   column : Int
 }
 pub impl Eq for Position
+
+pub enum Value {
+  JNull
+  JTrue
+  JFalse
+  Number(Double, String?)
+  String(String)
+  Array(Array[Value])
+  Object(JsonObject)
+}
+pub fn Value::array(Array[Self]) -> Self
+pub fn Value::boolean(Bool) -> Self
+pub fn Value::null() -> Self
+pub fn Value::number(Double, repr? : String) -> Self
+pub fn Value::object(Map[String, Self]) -> Self
+pub fn Value::object_from_entries(Array[(String, Self)]) -> Self
+pub fn Value::string(String) -> Self
+pub fn Value::to_json_string(Self) -> String
+pub impl Eq for Value
+pub impl Show for Value
 
 // Type aliases
 

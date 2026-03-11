@@ -410,10 +410,10 @@ fn regex_group_value_or_null(
   s : String,
   result : @regex_engine.MatchResult,
   index : Int,
-) -> Json {
+) -> Value {
   match result.group(index) {
-    Some((start, end_)) => Json::string(regex_slice_string(s, start, end_))
-    None => Json::null()
+    Some((start, end_)) => Value::string(regex_slice_string(s, start, end_))
+    None => Value::null()
   }
 }
 
@@ -423,33 +423,33 @@ fn regex_capture_entry(
   result : @regex_engine.MatchResult,
   group_names : ReadOnlyArray[String?],
   index : Int,
-) -> Json {
+) -> Value {
   let name_json = match group_names.get(index) {
-    Some(Some(name)) => Json::string(name)
-    _ => Json::null()
+    Some(Some(name)) => Value::string(name)
+    _ => Value::null()
   }
   match result.group(index) {
     Some((start, end_)) =>
       if start == end_ {
-        Json::object_from_entries([
-          ("offset", Json::number(start.to_double())),
-          ("string", Json::string("")),
-          ("length", Json::number(0.0)),
+        Value::object_from_entries([
+          ("offset", Value::number(start.to_double())),
+          ("string", Value::string("")),
+          ("length", Value::number(0.0)),
           ("name", name_json),
         ])
       } else {
-        Json::object_from_entries([
-          ("offset", Json::number(start.to_double())),
-          ("length", Json::number((end_ - start).to_double())),
-          ("string", Json::string(regex_slice_string(s, start, end_))),
+        Value::object_from_entries([
+          ("offset", Value::number(start.to_double())),
+          ("length", Value::number((end_ - start).to_double())),
+          ("string", Value::string(regex_slice_string(s, start, end_))),
           ("name", name_json),
         ])
       }
     None =>
-      Json::object_from_entries([
-        ("offset", Json::number(-1.0)),
-        ("string", Json::null()),
-        ("length", Json::number(0.0)),
+      Value::object_from_entries([
+        ("offset", Value::number(-1.0)),
+        ("string", Value::null()),
+        ("length", Value::number(0.0)),
         ("name", name_json),
       ])
   }
@@ -460,7 +460,7 @@ fn regex_named_capture_object(
   s : String,
   result : @regex_engine.MatchResult,
   group_names : ReadOnlyArray[String?],
-) -> Json {
+) -> Value {
   let out = Map::new()
   for i in 1..<group_names.length() {
     match group_names[i] {
@@ -468,7 +468,7 @@ fn regex_named_capture_object(
       None => ()
     }
   }
-  Json::object(out)
+  Value::object(out)
 }
 
 ///|
@@ -508,7 +508,7 @@ fn regex_scan_values(
   s : String,
   pattern : String,
   flags : String,
-) -> Array[Json] raise EvalError {
+) -> Array[Value] raise EvalError {
   let compiled = regex_compile_pattern(pattern, flags)
   let mut search_start = 0
   let len = s.length()
@@ -522,9 +522,11 @@ fn regex_scan_values(
           for i in 1..<compiled.group_names.length() {
             groups.push(regex_group_value_or_null(s, found.result, i))
           }
-          out.push(Json::array(groups))
+          out.push(Value::array(groups))
         } else {
-          out.push(Json::string(regex_slice_string(s, found.start, found.end_)))
+          out.push(
+            Value::string(regex_slice_string(s, found.start, found.end_)),
+          )
         }
         match
           regex_next_search_start(search_start, found.start, found.end_, len) {
@@ -546,7 +548,7 @@ fn regex_match_objects(
   s : String,
   pattern : String,
   flags : String,
-) -> Array[Json] raise EvalError {
+) -> Array[Value] raise EvalError {
   let compiled = regex_compile_pattern(pattern, flags)
   let global = split_regex_flag_enabled(flags, 'g')
   let mut search_start = 0
@@ -562,14 +564,14 @@ fn regex_match_objects(
           )
         }
         out.push(
-          Json::object_from_entries([
-            ("offset", Json::number(found.start.to_double())),
-            ("length", Json::number((found.end_ - found.start).to_double())),
+          Value::object_from_entries([
+            ("offset", Value::number(found.start.to_double())),
+            ("length", Value::number((found.end_ - found.start).to_double())),
             (
               "string",
-              Json::string(regex_slice_string(s, found.start, found.end_)),
+              Value::string(regex_slice_string(s, found.start, found.end_)),
             ),
-            ("captures", Json::array(captures)),
+            ("captures", Value::array(captures)),
           ]),
         )
         if !global {
@@ -595,7 +597,7 @@ fn regex_capture_objects(
   s : String,
   pattern : String,
   flags : String,
-) -> Array[Json] raise EvalError {
+) -> Array[Value] raise EvalError {
   let compiled = regex_compile_pattern(pattern, flags)
   let global = split_regex_flag_enabled(flags, 'g')
   let mut search_start = 0
@@ -678,7 +680,7 @@ fn regex_substitute_values(
   pattern : String,
   replacement_filter : Filter,
   flags : String,
-  env : Map[String, Json],
+  env : Map[String, Value],
   global~ : Bool,
   replacement_error : String,
 ) -> Array[String] raise EvalError {

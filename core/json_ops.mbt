@@ -1,5 +1,5 @@
 ///|
-fn json_type_name(j : Json) -> String {
+fn json_type_name(j : Value) -> String {
   match j {
     JNull => "null"
     JTrue | JFalse => "boolean"
@@ -11,7 +11,7 @@ fn json_type_name(j : Json) -> String {
 }
 
 ///|
-fn json_type_with_value(j : Json) -> String {
+fn json_type_with_value(j : Value) -> String {
   json_type_name(j) + " (" + j.to_json_string() + ")"
 }
 
@@ -35,7 +35,7 @@ fn json_value_preview(s : String) -> String {
 }
 
 ///|
-fn json_type_with_value_preview(j : Json) -> String {
+fn json_type_with_value_preview(j : Value) -> String {
   match j {
     Object(_) | Array(_) =>
       json_type_name(j) + " (" + json_value_preview(j.to_json_string()) + ")"
@@ -44,12 +44,15 @@ fn json_type_with_value_preview(j : Json) -> String {
 }
 
 ///|
-fn json_number_value(n : Double) -> Json {
-  Json::number(n)
+fn json_number_value(n : Double) -> Value {
+  Value::number(n)
 }
 
 ///|
-fn[T] contains_type_error(haystack : Json, needle : Json) -> T raise EvalError {
+fn[T] contains_type_error(
+  haystack : Value,
+  needle : Value,
+) -> T raise EvalError {
   raise TypeError(
     json_type_with_value(haystack) +
     " and " +
@@ -59,7 +62,7 @@ fn[T] contains_type_error(haystack : Json, needle : Json) -> T raise EvalError {
 }
 
 ///|
-fn contains_match(haystack : Json, needle : Json) -> Bool {
+fn contains_match(haystack : Value, needle : Value) -> Bool {
   match (haystack, needle) {
     (JNull, JNull) => true
     (JTrue, JTrue) => true
@@ -100,7 +103,7 @@ fn contains_match(haystack : Json, needle : Json) -> Bool {
 }
 
 ///|
-fn contains_checked(haystack : Json, needle : Json) -> Bool raise EvalError {
+fn contains_checked(haystack : Value, needle : Value) -> Bool raise EvalError {
   match (haystack, needle) {
     (JTrue, JFalse) | (JFalse, JTrue) => contains_type_error(haystack, needle)
     (JNull, JNull)
@@ -115,7 +118,7 @@ fn contains_checked(haystack : Json, needle : Json) -> Bool raise EvalError {
 }
 
 ///|
-fn has_key(collection : Json, key : Json) -> Bool raise EvalError {
+fn has_key(collection : Value, key : Value) -> Bool raise EvalError {
   match collection {
     JNull => false
     Object(o) =>
@@ -160,7 +163,7 @@ fn has_key(collection : Json, key : Json) -> Bool raise EvalError {
 }
 
 ///|
-fn[T] index_type_error(input : Json, key : Json) -> T raise EvalError {
+fn[T] index_type_error(input : Value, key : Value) -> T raise EvalError {
   let key_desc = match key {
     String(_) => "string " + key.to_json_string()
     _ => json_type_name(key)
@@ -169,27 +172,27 @@ fn[T] index_type_error(input : Json, key : Json) -> T raise EvalError {
 }
 
 ///|
-fn nth_on_input(input : Json, key : Json) -> Json raise EvalError {
+fn nth_on_input(input : Value, key : Value) -> Value raise EvalError {
   match input {
     Array(a) =>
       match key {
         Number(n, _) =>
           if n != n || n == @double.infinity || n == @double.neg_infinity {
-            Json::null()
+            Value::null()
           } else {
             let i = n.to_int()
             let idx = if i < 0 { a.length() + i } else { i }
             if idx >= 0 && idx < a.length() {
               a[idx]
             } else {
-              Json::null()
+              Value::null()
             }
           }
         _ => index_type_error(input, key)
       }
     JNull =>
       match key {
-        Number(_, _) | String(_) => Json::null()
+        Number(_, _) | String(_) => Value::null()
         _ => index_type_error(input, key)
       }
     _ => index_type_error(input, key)
@@ -197,7 +200,7 @@ fn nth_on_input(input : Json, key : Json) -> Json raise EvalError {
 }
 
 ///|
-fn is_truthy(j : Json) -> Bool {
+fn is_truthy(j : Value) -> Bool {
   match j {
     JNull => false
     JFalse => false
@@ -208,8 +211,8 @@ fn is_truthy(j : Json) -> Bool {
 ///|
 fn execute_to_bool(
   filter : Filter,
-  input : Json,
-  env : Map[String, Json],
+  input : Value,
+  env : Map[String, Value],
 ) -> Bool raise EvalError {
   let results = execute_with_env(filter, input, env)
   for v in results {
@@ -235,9 +238,9 @@ fn execute_compare(
   op : String,
   left : Filter,
   right : Filter,
-  input : Json,
-  env : Map[String, Json],
-) -> Array[Json] raise EvalError {
+  input : Value,
+  env : Map[String, Value],
+) -> Array[Value] raise EvalError {
   let l = execute_with_env(left, input, env)
   let r = execute_with_env(right, input, env)
   let out = []
@@ -253,9 +256,9 @@ fn execute_compare(
             ">" => x > y
             _ => x >= y
           }
-          out.push(Json::boolean(ok))
+          out.push(Value::boolean(ok))
         }
-        _ => out.push(Json::boolean(compare_ok(op, compare_json(a, b))))
+        _ => out.push(Value::boolean(compare_ok(op, compare_json(a, b))))
       }
     }
   }
@@ -263,7 +266,7 @@ fn execute_compare(
 }
 
 ///|
-fn arith_operand_desc(op : String, value : Json) -> String {
+fn arith_operand_desc(op : String, value : Value) -> String {
   match (op, value) {
     ("-", String(s)) => format_filter_string_type_with_preview(s)
     (_, Object(_) | Array(_)) => json_type_with_value_preview(value)
@@ -272,7 +275,7 @@ fn arith_operand_desc(op : String, value : Json) -> String {
 }
 
 ///|
-fn arith_type_error_message(op : String, left : Json, right : Json) -> String {
+fn arith_type_error_message(op : String, left : Value, right : Value) -> String {
   let l = arith_operand_desc(op, left)
   let r = arith_operand_desc(op, right)
   match op {
@@ -289,9 +292,9 @@ fn execute_arith(
   op : String,
   left : Filter,
   right : Filter,
-  input : Json,
-  env : Map[String, Json],
-) -> Array[Json] raise EvalError {
+  input : Value,
+  env : Map[String, Value],
+) -> Array[Value] raise EvalError {
   let l = execute_with_env(left, input, env)
   let r = execute_with_env(right, input, env)
   let out = []
@@ -345,7 +348,7 @@ fn execute_arith(
         }
         (String(s), String(sep)) =>
           if op == "/" {
-            out.push(Json::array(split_string(s, sep)))
+            out.push(Value::array(split_string(s, sep)))
           } else {
             raise TypeError(arith_type_error_message(op, a, b))
           }
@@ -382,7 +385,7 @@ fn execute_arith(
                 filtered.push(xv)
               }
             }
-            out.push(Json::array(filtered))
+            out.push(Value::array(filtered))
           } else {
             raise TypeError(arith_type_error_message(op, a, b))
           }
@@ -394,12 +397,12 @@ fn execute_arith(
 }
 
 ///|
-fn multiply_string_number(s : String, n : Double) -> Json raise EvalError {
+fn multiply_string_number(s : String, n : Double) -> Value raise EvalError {
   if n != n || n < 0.0 || n == @double.neg_infinity {
-    return Json::null()
+    return Value::null()
   }
   if s.length() == 0 {
-    return Json::string("")
+    return Value::string("")
   }
   if n == @double.infinity {
     raise TypeError("Repeat string result too long")
@@ -409,7 +412,7 @@ fn multiply_string_number(s : String, n : Double) -> Json raise EvalError {
   }
   let count = n.to_int()
   if count <= 0 {
-    return Json::string("")
+    return Value::string("")
   }
   let max_result_len = 16777216
   if count > max_result_len / s.length() {
@@ -419,7 +422,7 @@ fn multiply_string_number(s : String, n : Double) -> Json raise EvalError {
   for _ in 0..<count {
     buf.write_string(s)
   }
-  Json::string(buf.to_string())
+  Value::string(buf.to_string())
 }
 
 ///|
@@ -446,9 +449,9 @@ fn merge_objects_recursive(left : JsonObject, right : JsonObject) -> JsonObject 
 fn execute_add(
   left : Filter,
   right : Filter,
-  input : Json,
-  env : Map[String, Json],
-) -> Array[Json] raise EvalError {
+  input : Value,
+  env : Map[String, Value],
+) -> Array[Value] raise EvalError {
   let l = execute_with_env(left, input, env)
   let r = execute_with_env(right, input, env)
   let out = []
@@ -463,18 +466,18 @@ fn execute_add(
 }
 
 ///|
-fn json_add_pair(a : Json, b : Json) -> Json raise EvalError {
+fn json_add_pair(a : Value, b : Value) -> Value raise EvalError {
   match (a, b) {
     (JNull, x) => x
     (x, JNull) => x
     (Number(x, _), Number(y, _)) => json_number_value(x + y)
-    (String(x), String(y)) => Json::string(x + y)
+    (String(x), String(y)) => Value::string(x + y)
     (Array(x), Array(y)) => {
       let merged = x.copy()
       for v in y {
         merged.push(v)
       }
-      Json::array(merged)
+      Value::array(merged)
     }
     (Object(x), Object(y)) => {
       let merged = x.to_map().copy()
@@ -485,7 +488,7 @@ fn json_add_pair(a : Json, b : Json) -> Json raise EvalError {
         }
         merged[kv.0] = kv.1
       }
-      Json::object_with_order(merged, merged_order)
+      Value::object_with_order(merged, merged_order)
     }
     _ =>
       raise TypeError(

@@ -1,5 +1,5 @@
 ///|
-/// Minimal jq evaluator (streaming outputs as Array[Json])
+/// Minimal jq evaluator (streaming outputs as Array[Value])
 ///
 /// Supported filters:
 /// - Identity: .
@@ -13,11 +13,11 @@
 ///|
 pub suberror EvalError {
   TypeError(String)
-  Thrown(Json)
+  Thrown(Value)
   UnknownFunction(String)
   UnknownVariable(String)
-  BreakSignal(String, Array[Json])
-  Partial(Array[Json], Json, String)
+  BreakSignal(String, Array[Value])
+  Partial(Array[Value], Value, String)
 } derive(Eq)
 
 ///|
@@ -46,7 +46,7 @@ fn eval_error_to_message(err : EvalError) -> String {
 }
 
 ///|
-fn eval_error_prefix(err : EvalError) -> Array[Json] {
+fn eval_error_prefix(err : EvalError) -> Array[Value] {
   match err {
     BreakSignal(_, values) => values.copy()
     Partial(values, _, _) => values.copy()
@@ -55,17 +55,17 @@ fn eval_error_prefix(err : EvalError) -> Array[Json] {
 }
 
 ///|
-fn eval_error_to_catch_input(err : EvalError) -> Json {
+fn eval_error_to_catch_input(err : EvalError) -> Value {
   match err {
-    BreakSignal(name, _) => Json::string("break $" + name)
+    BreakSignal(name, _) => Value::string("break $" + name)
     Partial(_, catch_input, _) => catch_input
     Thrown(value) => value
-    _ => Json::string(eval_error_to_message(err))
+    _ => Value::string(eval_error_to_message(err))
   }
 }
 
 ///|
-pub fn eval_error_outputs(err : EvalError) -> Array[Json] {
+pub fn eval_error_outputs(err : EvalError) -> Array[Value] {
   eval_error_prefix(err)
 }
 
@@ -75,14 +75,18 @@ pub fn eval_error_message(err : EvalError) -> String {
 }
 
 ///|
-fn append_json_values(out : Array[Json], values : Array[Json]) -> Unit {
+fn append_json_values(out : Array[Value], values : Array[Value]) -> Unit {
   for v in values {
     out.push(v)
   }
 }
 
 ///|
-fn env_bind_temp(env : Map[String, Json], name : String, value : Json) -> Json? {
+fn env_bind_temp(
+  env : Map[String, Value],
+  name : String,
+  value : Value,
+) -> Value? {
   let previous = env.get(name)
   env[name] = value
   previous
@@ -90,9 +94,9 @@ fn env_bind_temp(env : Map[String, Json], name : String, value : Json) -> Json? 
 
 ///|
 fn env_restore_temp(
-  env : Map[String, Json],
+  env : Map[String, Value],
   name : String,
-  previous : Json?,
+  previous : Value?,
 ) -> Unit {
   match previous {
     Some(value) => env[name] = value
@@ -102,7 +106,7 @@ fn env_restore_temp(
 
 ///|
 fn[T] raise_with_prefix(
-  prefix : Array[Json],
+  prefix : Array[Value],
   err : EvalError,
 ) -> T raise EvalError {
   match err {
@@ -135,7 +139,7 @@ fn eval_error_without_prefix(err : EvalError) -> EvalError {
 }
 
 ///|
-fn append_recurse_values(input : Json, out : Array[Json]) -> Unit {
+fn append_recurse_values(input : Value, out : Array[Value]) -> Unit {
   out.push(input)
   match input {
     Object(o) =>
@@ -171,20 +175,20 @@ fn trim_ascii_ws(s : String) -> String {
 }
 
 ///|
-fn fromjson_fallback_token(s : String) -> Json? {
+fn fromjson_fallback_token(s : String) -> Value? {
   let t = ascii_downcase_string(trim_ascii_ws(s))
   match t {
     "nan" | "+nan" | "-nan" =>
-      Some(Json::number(@double.infinity - @double.infinity))
+      Some(Value::number(@double.infinity - @double.infinity))
     "inf" | "+inf" | "infinity" | "+infinity" =>
-      Some(Json::number(@double.infinity))
-    "-inf" | "-infinity" => Some(Json::number(@double.neg_infinity))
+      Some(Value::number(@double.infinity))
+    "-inf" | "-infinity" => Some(Value::number(@double.neg_infinity))
     _ => None
   }
 }
 
 ///|
-fn parse_fromjson_string(s : String) -> Json raise EvalError {
+fn parse_fromjson_string(s : String) -> Value raise EvalError {
   try parse(s) catch {
     err =>
       match fromjson_fallback_token(s) {
@@ -202,7 +206,7 @@ priv struct RuntimeDef {
   name : String
   params : Array[String]
   body : Filter
-  env : Map[String, Json]
+  env : Map[String, Value]
   parent : RuntimeDef?
 }
 
@@ -218,7 +222,7 @@ let runtime_def_state : RuntimeDefState = { current: None }
 priv struct RuntimeFilterClosure {
   name : String
   arg : Filter
-  env : Map[String, Json]
+  env : Map[String, Value]
   defs : RuntimeDef?
   closures : RuntimeFilterClosure?
   parent : RuntimeFilterClosure?
@@ -240,7 +244,7 @@ let runtime_filter_closure_state : RuntimeFilterClosureState = {
 fn append_runtime_defs(
   parent : RuntimeDef?,
   defs : Array[(String, Array[String], Filter)],
-  env : Map[String, Json],
+  env : Map[String, Value],
 ) -> RuntimeDef? {
   let mut out = parent
   for def_ in defs {
@@ -390,7 +394,7 @@ fn filter_param_needs_direct_inline(filter : Filter, name : String) -> Bool {
 }
 
 ///|
-fn clone_runtime_env(env : Map[String, Json]) -> Map[String, Json] {
+fn clone_runtime_env(env : Map[String, Value]) -> Map[String, Value] {
   let out = Map::new()
   for kv in env {
     out[kv.0] = kv.1
@@ -409,7 +413,7 @@ fn fresh_runtime_filter_closure_name() -> String {
 priv struct RuntimeFilterClosureSeed {
   name : String
   arg : Filter
-  env : Map[String, Json]
+  env : Map[String, Value]
   defs : RuntimeDef?
   closures : RuntimeFilterClosure?
 }
@@ -452,8 +456,8 @@ fn find_runtime_filter_closure(
 ///|
 fn execute_runtime_filter_closure(
   closure : RuntimeFilterClosure,
-  input : Json,
-) -> Array[Json] raise EvalError {
+  input : Value,
+) -> Array[Value] raise EvalError {
   let prev_defs = runtime_def_state.current
   let prev_closures = runtime_filter_closure_state.current
   runtime_def_state.current = closure.defs
@@ -479,9 +483,9 @@ fn execute_runtime_filter_closure(
 fn execute_runtime_def_call(
   def_ : RuntimeDef,
   args : Array[Filter],
-  input : Json,
-  env : Map[String, Json],
-) -> Array[Json] raise EvalError {
+  input : Value,
+  env : Map[String, Value],
+) -> Array[Value] raise EvalError {
   let closure_args = []
   let closure_seeds = []
   for i in 0..<def_.params.length() {
@@ -533,7 +537,7 @@ fn execute_runtime_def_call(
 }
 
 ///|
-pub fn execute(filter : Filter, input : Json) -> Array[Json] raise EvalError {
+pub fn execute(filter : Filter, input : Value) -> Array[Value] raise EvalError {
   let env = Map::new()
   let prev_defs = runtime_def_state.current
   let prev_closures = runtime_filter_closure_state.current
@@ -555,7 +559,10 @@ pub fn execute(filter : Filter, input : Json) -> Array[Json] raise EvalError {
 }
 
 ///|
-pub fn execute_for_cli(filter : Filter, input : Json) -> (Array[Json], String?) {
+pub fn execute_for_cli(
+  filter : Filter,
+  input : Value,
+) -> (Array[Value], String?) {
   try (execute(filter, input), None) catch {
     err => (eval_error_outputs(err), Some(eval_error_message(err)))
   } noraise {
@@ -566,9 +573,9 @@ pub fn execute_for_cli(filter : Filter, input : Json) -> (Array[Json], String?) 
 ///|
 fn execute_with_env(
   filter : Filter,
-  input : Json,
-  env : Map[String, Json],
-) -> Array[Json] raise EvalError {
+  input : Value,
+  env : Map[String, Value],
+) -> Array[Value] raise EvalError {
   match filter {
     Identity => [input]
     Scope(defs, body) => {
@@ -597,9 +604,9 @@ fn execute_with_env(
         Object(o) =>
           match o.get(name) {
             Some(v) => [v]
-            None => [Json::null()]
+            None => [Value::null()]
           }
-        JNull => [Json::null()]
+        JNull => [Value::null()]
         _ =>
           raise TypeError(
             "Cannot index " +
@@ -614,9 +621,9 @@ fn execute_with_env(
         Object(o) =>
           match o.get(name) {
             Some(v) => [v]
-            None => [Json::null()]
+            None => [Value::null()]
           }
-        JNull => [Json::null()]
+        JNull => [Value::null()]
         _ => []
       }
     Index(i) =>
@@ -626,10 +633,10 @@ fn execute_with_env(
           if idx >= 0 && idx < a.length() {
             [a[idx]]
           } else {
-            [Json::null()]
+            [Value::null()]
           }
         }
-        JNull => [Json::null()]
+        JNull => [Value::null()]
         _ =>
           raise TypeError(
             "Cannot index " + json_type_name(input) + " with number",
@@ -642,10 +649,10 @@ fn execute_with_env(
           if idx >= 0 && idx < a.length() {
             [a[idx]]
           } else {
-            [Json::null()]
+            [Value::null()]
           }
         }
-        JNull => [Json::null()]
+        JNull => [Value::null()]
         _ => []
       }
     Slice(start, end) => execute_slice(start, end, input, optional=false)
@@ -685,12 +692,12 @@ fn execute_with_env(
         Some(v) => [v]
         None =>
           if name == "ENV" {
-            [Json::object(Map::new())]
+            [Value::object(Map::new())]
           } else if name == "__loc__" {
             [
-              Json::object_from_entries([
-                ("file", Json::string("<top-level>")),
-                ("line", Json::number(1.0)),
+              Value::object_from_entries([
+                ("file", Value::string("<top-level>")),
+                ("line", Value::number(1.0)),
               ]),
             ]
           } else {
@@ -881,7 +888,7 @@ fn execute_with_env(
           out.push(v)
         }
       }
-      [Json::array(out)]
+      [Value::array(out)]
     }
     Object(items) => {
       let mut partials = [(Map::new(), [])]
@@ -915,7 +922,7 @@ fn execute_with_env(
       }
       let out = []
       for partial in partials {
-        out.push(Json::object_with_order(partial.0, partial.1))
+        out.push(Value::object_with_order(partial.0, partial.1))
       }
       out
     }
@@ -949,7 +956,7 @@ fn execute_with_env(
         let b = r[j]
         for i in 0..<l.length() {
           let a = l[i]
-          out.push(Json::boolean(a == b))
+          out.push(Value::boolean(a == b))
         }
       }
       out
@@ -962,7 +969,7 @@ fn execute_with_env(
         let b = r[j]
         for i in 0..<l.length() {
           let a = l[i]
-          out.push(Json::boolean(a != b))
+          out.push(Value::boolean(a != b))
         }
       }
       out
@@ -976,10 +983,10 @@ fn execute_with_env(
       for l in execute_with_env(left, input, env) {
         if is_truthy(l) {
           for r in execute_with_env(right, input, env) {
-            out.push(Json::boolean(is_truthy(r)))
+            out.push(Value::boolean(is_truthy(r)))
           }
         } else {
-          out.push(Json::boolean(false))
+          out.push(Value::boolean(false))
         }
       }
       out
@@ -988,10 +995,10 @@ fn execute_with_env(
       let out = []
       for l in execute_with_env(left, input, env) {
         if is_truthy(l) {
-          out.push(Json::boolean(true))
+          out.push(Value::boolean(true))
         } else {
           for r in execute_with_env(right, input, env) {
-            out.push(Json::boolean(is_truthy(r)))
+            out.push(Value::boolean(is_truthy(r)))
           }
         }
       }
@@ -1000,7 +1007,7 @@ fn execute_with_env(
     Not(inner) => {
       let out = []
       for v in execute_with_env(inner, input, env) {
-        out.push(Json::boolean(!is_truthy(v)))
+        out.push(Value::boolean(!is_truthy(v)))
       }
       out
     }
@@ -1045,16 +1052,16 @@ fn execute_with_env(
 ///|
 fn execute_with_env_prefix(
   filter : Filter,
-  input : Json,
-  env : Map[String, Json],
+  input : Value,
+  env : Map[String, Value],
   max_count : Int,
-) -> Array[Json] raise EvalError {
+) -> Array[Value] raise EvalError {
   if max_count <= 0 {
     return []
   }
 
   let out = []
-  fn collect(current : Filter, value : Json) -> Unit raise EvalError {
+  fn collect(current : Filter, value : Value) -> Unit raise EvalError {
     if out.length() >= max_count {
       return
     }
@@ -1091,8 +1098,8 @@ fn execute_with_env_prefix(
 }
 
 ///|
-fn join_values(a : Array[Json], sep : Json) -> Json raise EvalError {
-  let mut acc = Json::string("")
+fn join_values(a : Array[Value], sep : Value) -> Value raise EvalError {
+  let mut acc = Value::string("")
   for i in 0..<a.length() {
     if i > 0 {
       acc = json_add_pair(acc, sep)
@@ -1103,14 +1110,14 @@ fn join_values(a : Array[Json], sep : Json) -> Json raise EvalError {
 }
 
 ///|
-fn split_string(s : String, sep : String) -> Array[Json] {
+fn split_string(s : String, sep : String) -> Array[Value] {
   if s.length() == 0 {
     return []
   }
   if sep.length() == 0 {
     let out = []
     for ch in s {
-      out.push(Json::string(char_to_string(ch)))
+      out.push(Value::string(char_to_string(ch)))
     }
     return out
   }
@@ -1122,7 +1129,7 @@ fn split_string(s : String, sep : String) -> Array[Json] {
     match rest.find(sep) {
       Some(i) => {
         out.push(
-          Json::string(
+          Value::string(
             s.view(start_offset=start, end_offset=start + i).to_string(),
           ),
         )
@@ -1130,7 +1137,7 @@ fn split_string(s : String, sep : String) -> Array[Json] {
         continue
       }
       None => {
-        out.push(Json::string(s.view(start_offset=start).to_string()))
+        out.push(Value::string(s.view(start_offset=start).to_string()))
         return out
       }
     }
@@ -1146,16 +1153,16 @@ fn char_to_string(ch : Char) -> String {
 }
 
 ///|
-fn explode_string(s : String) -> Array[Json] {
+fn explode_string(s : String) -> Array[Value] {
   let out = []
   for ch in s {
-    out.push(Json::number(ch.to_int().to_double()))
+    out.push(Value::number(ch.to_int().to_double()))
   }
   out
 }
 
 ///|
-fn implode_array(a : Array[Json]) -> String raise EvalError {
+fn implode_array(a : Array[Value]) -> String raise EvalError {
   let buf = StringBuilder::new()
   for v in a {
     match v {
@@ -1218,13 +1225,13 @@ fn ascii_downcase_string(s : String) -> String {
 }
 
 ///|
-fn join_item(v : Json) -> Json {
+fn join_item(v : Value) -> Value {
   match v {
     String(_) => v
-    Number(n, repr) => Json::string(Json::number(n, repr?).to_json_string())
-    JTrue => Json::string("true")
-    JFalse => Json::string("false")
-    JNull => Json::string("")
+    Number(n, repr) => Value::string(Value::number(n, repr?).to_json_string())
+    JTrue => Value::string("true")
+    JFalse => Value::string("false")
+    JNull => Value::string("")
     _ => v
   }
 }
@@ -1253,10 +1260,10 @@ fn normalize_slice_index(i : Int?, len : Int, default : Int) -> Int {
 
 ///|
 fn execute_slice_array(
-  a : Array[Json],
+  a : Array[Value],
   start : Int?,
   end : Int?,
-) -> Array[Json] {
+) -> Array[Value] {
   let len = a.length()
   let lo = normalize_slice_index(start, len, 0)
   let hi = normalize_slice_index(end, len, len)
@@ -1273,11 +1280,11 @@ fn execute_slice_array(
 
 ///|
 fn set_slice_array(
-  a : Array[Json],
+  a : Array[Value],
   start : Int?,
   end : Int?,
-  replacement : Array[Json],
-) -> Array[Json] {
+  replacement : Array[Value],
+) -> Array[Value] {
   let len = a.length()
   let lo = normalize_slice_index(start, len, 0)
   let hi0 = normalize_slice_index(end, len, len)
@@ -1297,11 +1304,11 @@ fn set_slice_array(
 
 ///|
 fn set_slice_on_input(
-  input : Json,
+  input : Value,
   start : Int?,
   end : Int?,
-  value : Json,
-) -> Json raise EvalError {
+  value : Value,
+) -> Value raise EvalError {
   match input {
     Array(a) => {
       let replacement = match value {
@@ -1311,7 +1318,7 @@ fn set_slice_on_input(
             "A slice of an array can only be assigned another array",
           )
       }
-      Json::array(set_slice_array(a, start, end, replacement))
+      Value::array(set_slice_array(a, start, end, replacement))
     }
     JNull => {
       let replacement = match value {
@@ -1321,10 +1328,10 @@ fn set_slice_on_input(
             "A slice of an array can only be assigned another array",
           )
       }
-      Json::array(set_slice_array([], start, end, replacement))
+      Value::array(set_slice_array([], start, end, replacement))
     }
     String(_) => raise TypeError("Cannot update string slices")
-    _ => index_type_error(input, Json::object(Map::new()))
+    _ => index_type_error(input, Value::object(Map::new()))
   }
 }
 
@@ -1344,13 +1351,13 @@ fn execute_slice_string(s : String, start : Int?, end : Int?) -> String {
 fn execute_slice(
   start : Int?,
   end : Int?,
-  input : Json,
+  input : Value,
   optional~ : Bool,
-) -> Array[Json] raise EvalError {
+) -> Array[Value] raise EvalError {
   match input {
-    Array(a) => [Json::array(execute_slice_array(a, start, end))]
-    String(s) => [Json::string(execute_slice_string(s, start, end))]
-    JNull => [Json::null()]
+    Array(a) => [Value::array(execute_slice_array(a, start, end))]
+    String(s) => [Value::string(execute_slice_string(s, start, end))]
+    JNull => [Value::null()]
     _ =>
       if optional {
         []

@@ -1,6 +1,6 @@
 ///|
 fn call_parse_non_negative_count(
-  value : Json,
+  value : Value,
   negative_msg : String,
 ) -> Int? raise EvalError {
   match value {
@@ -22,7 +22,7 @@ fn call_parse_non_negative_count(
 }
 
 ///|
-fn call_parse_nth_index(value : Json) -> Int? raise EvalError {
+fn call_parse_nth_index(value : Value) -> Int? raise EvalError {
   match value {
     Number(n, _) =>
       if n != n || n == @double.neg_infinity || n < 0.0 {
@@ -38,13 +38,13 @@ fn call_parse_nth_index(value : Json) -> Int? raise EvalError {
 
 ///|
 fn append_combinations_recursive(
-  groups : Array[Array[Json]],
+  groups : Array[Array[Value]],
   depth : Int,
-  current : Array[Json],
-  out : Array[Json],
+  current : Array[Value],
+  out : Array[Value],
 ) -> Unit {
   if depth >= groups.length() {
-    out.push(Json::array(current.copy()))
+    out.push(Value::array(current.copy()))
     return
   }
   let group = groups[depth]
@@ -56,7 +56,7 @@ fn append_combinations_recursive(
 }
 
 ///|
-fn combinations_from_groups(groups : Array[Array[Json]]) -> Array[Json] {
+fn combinations_from_groups(groups : Array[Array[Value]]) -> Array[Value] {
   let out = []
   append_combinations_recursive(groups, 0, [], out)
   out
@@ -64,9 +64,9 @@ fn combinations_from_groups(groups : Array[Array[Json]]) -> Array[Json] {
 
 ///|
 fn truncate_stream_token(
-  token : Json,
-  selector : Json,
-) -> Json? raise EvalError {
+  token : Value,
+  selector : Value,
+) -> Value? raise EvalError {
   match token {
     Array(entries) =>
       if entries.length() == 2 {
@@ -79,7 +79,7 @@ fn truncate_stream_token(
               for i in 1..<path.length() {
                 trimmed.push(path[i])
               }
-              Some(Json::array([Json::array(trimmed), entries[1]]))
+              Some(Value::array([Value::array(trimmed), entries[1]]))
             }
           _ => raise TypeError("truncate_stream token path must be an array")
         }
@@ -95,7 +95,7 @@ fn truncate_stream_token(
               for i in 1..<path.length() {
                 trimmed.push(path[i])
               }
-              Some(Json::array([Json::array(trimmed)]))
+              Some(Value::array([Value::array(trimmed)]))
             }
           _ => raise TypeError("truncate_stream token path must be an array")
         }
@@ -107,7 +107,7 @@ fn truncate_stream_token(
 }
 
 ///|
-fn apply_fromstream_token(root : Json, token : Json) -> Json raise EvalError {
+fn apply_fromstream_token(root : Value, token : Value) -> Value raise EvalError {
   match token {
     Array(entries) =>
       if entries.length() == 2 {
@@ -128,7 +128,7 @@ fn apply_fromstream_token(root : Json, token : Json) -> Json raise EvalError {
 }
 
 ///|
-fn[T] raise_error_value(value : Json) -> T raise EvalError {
+fn[T] raise_error_value(value : Value) -> T raise EvalError {
   raise Thrown(value)
 }
 
@@ -136,8 +136,8 @@ fn[T] raise_error_value(value : Json) -> T raise EvalError {
 fn any_with_short_circuit(
   source : Filter,
   cond : Filter,
-  input : Json,
-  env : Map[String, Json],
+  input : Value,
+  env : Map[String, Value],
 ) -> Bool raise EvalError {
   match source {
     Comma(left, right) =>
@@ -164,8 +164,8 @@ fn any_with_short_circuit(
 fn all_with_short_circuit(
   source : Filter,
   cond : Filter,
-  input : Json,
-  env : Map[String, Json],
+  input : Value,
+  env : Map[String, Value],
 ) -> Bool raise EvalError {
   match source {
     Comma(left, right) =>
@@ -191,8 +191,8 @@ fn all_with_short_circuit(
 ///|
 fn filter_has_truthy_output(
   filter : Filter,
-  input : Json,
-  env : Map[String, Json],
+  input : Value,
+  env : Map[String, Value],
 ) -> Bool raise EvalError {
   for value in execute_with_env(filter, input, env) {
     if is_truthy(value) {
@@ -204,11 +204,11 @@ fn filter_has_truthy_output(
 
 ///|
 fn append_while_outputs(
-  value : Json,
+  value : Value,
   cond : Filter,
   update : Filter,
-  env : Map[String, Json],
-  out : Array[Json],
+  env : Map[String, Value],
+  out : Array[Value],
 ) -> Unit raise EvalError {
   for cond_out in execute_with_env(cond, value, env) {
     if is_truthy(cond_out) {
@@ -222,11 +222,11 @@ fn append_while_outputs(
 
 ///|
 fn append_until_outputs(
-  value : Json,
+  value : Value,
   cond : Filter,
   update : Filter,
-  env : Map[String, Json],
-  out : Array[Json],
+  env : Map[String, Value],
+  out : Array[Value],
 ) -> Unit raise EvalError {
   for cond_out in execute_with_env(cond, value, env) {
     if is_truthy(cond_out) {
@@ -241,11 +241,11 @@ fn append_until_outputs(
 
 ///|
 fn append_recurse_outputs(
-  value : Json,
+  value : Value,
   next_filter : Filter,
   cond_filter : Filter?,
-  env : Map[String, Json],
-  out : Array[Json],
+  env : Map[String, Value],
+  out : Array[Value],
 ) -> Unit raise EvalError {
   out.push(value)
   for next in execute_with_env(next_filter, value, env) {
@@ -261,10 +261,10 @@ fn append_recurse_outputs(
 
 ///|
 fn walk_transform(
-  value : Json,
+  value : Value,
   transform : Filter,
-  env : Map[String, Json],
-) -> Array[Json] raise EvalError {
+  env : Map[String, Value],
+) -> Array[Value] raise EvalError {
   let descended = match value {
     Array(items) => {
       let out = []
@@ -276,7 +276,7 @@ fn walk_transform(
           out.push(mapped[0])
         }
       }
-      Json::array(out)
+      Value::array(out)
     }
     Object(obj) => {
       let out = Map::new()
@@ -288,7 +288,7 @@ fn walk_transform(
           out[kv.0] = mapped[0]
         }
       }
-      Json::object_with_order(out, out_order)
+      Value::object_with_order(out, out_order)
     }
     _ => value
   }
@@ -299,9 +299,9 @@ fn walk_transform(
 fn builtin_call_stream(
   name : String,
   args : Array[Filter],
-  input : Json,
-  env : Map[String, Json],
-) -> Array[Json]? raise EvalError {
+  input : Value,
+  env : Map[String, Value],
+) -> Array[Value]? raise EvalError {
   match name {
     "error" =>
       if args.length() == 0 {
@@ -343,7 +343,7 @@ fn builtin_call_stream(
                 out.push(v2)
               }
             }
-            Some([Json::array(out)])
+            Some([Value::array(out)])
           }
           Object(o) => {
             let out = []
@@ -353,7 +353,7 @@ fn builtin_call_stream(
                 out.push(v2)
               }
             }
-            Some([Json::array(out)])
+            Some([Value::array(out)])
           }
           _ =>
             raise TypeError(
@@ -377,7 +377,7 @@ fn builtin_call_stream(
                 out[kv.0] = vals[0]
               }
             }
-            Some([Json::object_with_order(out, out_order)])
+            Some([Value::object_with_order(out, out_order)])
           }
           Array(a) => {
             let out = []
@@ -388,7 +388,7 @@ fn builtin_call_stream(
                 out.push(vals[0])
               }
             }
-            Some([Json::array(out)])
+            Some([Value::array(out)])
           }
           _ =>
             raise TypeError(
@@ -573,10 +573,10 @@ fn builtin_call_stream(
             break
           }
         }
-        Some([Json::boolean(ok)])
+        Some([Value::boolean(ok)])
       } else if args.length() == 2 {
         Some([
-          Json::boolean(any_with_short_circuit(args[0], args[1], input, env)),
+          Value::boolean(any_with_short_circuit(args[0], args[1], input, env)),
         ])
       } else {
         raise UnknownFunction("any")
@@ -597,10 +597,10 @@ fn builtin_call_stream(
             break
           }
         }
-        Some([Json::boolean(ok)])
+        Some([Value::boolean(ok)])
       } else if args.length() == 2 {
         Some([
-          Json::boolean(all_with_short_circuit(args[0], args[1], input, env)),
+          Value::boolean(all_with_short_circuit(args[0], args[1], input, env)),
         ])
       } else {
         raise UnknownFunction("all")
@@ -609,7 +609,7 @@ fn builtin_call_stream(
       if args.length() == 0 {
         raise UnknownFunction("add")
       } else {
-        let mut acc = Json::null()
+        let mut acc = Value::null()
         let mut seen = false
         for arg in args {
           for value in execute_with_env(arg, input, env) {
@@ -628,7 +628,7 @@ fn builtin_call_stream(
         raise UnknownFunction("isempty")
       } else {
         let values = execute_with_env_prefix(args[0], input, env, 1)
-        Some([Json::boolean(values.length() == 0)])
+        Some([Value::boolean(values.length() == 0)])
       }
     "flatten" =>
       if args.length() != 1 {
@@ -653,7 +653,7 @@ fn builtin_call_stream(
                 mapped.push(mapped_entry)
               }
             }
-            Some([from_entries_json(Json::array(mapped))])
+            Some([from_entries_json(Value::array(mapped))])
           }
           _ => abort("unreachable")
         }
@@ -725,7 +725,7 @@ fn builtin_call_stream(
         raise UnknownFunction("fromstream")
       } else {
         let tokens = execute_with_env(args[0], input, env)
-        let mut root = Json::null()
+        let mut root = Value::null()
         for token in tokens {
           root = apply_fromstream_token(root, token)
         }

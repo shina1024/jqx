@@ -20,19 +20,19 @@ pub fn[I, O] Query::toFilter(query : Query[I, O]) -> @core.Filter {
 }
 
 ///|
-pub fn identity() -> Query[@core.Json, @core.Json] {
+pub fn identity() -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::identity())
 }
 
 ///|
-pub fn field(name : String) -> Query[@core.Json, @core.Json] {
+pub fn field(name : String) -> Query[@core.Value, @core.Value] {
   query_of_filter(
     @core.Filter::pipe(@core.Filter::identity(), @core.Filter::field(name)),
   )
 }
 
 ///|
-pub fn index(i : Int) -> Query[@core.Json, @core.Json] {
+pub fn index(i : Int) -> Query[@core.Value, @core.Value] {
   query_of_filter(
     @core.Filter::pipe(@core.Filter::identity(), @core.Filter::index(i)),
   )
@@ -40,117 +40,117 @@ pub fn index(i : Int) -> Query[@core.Json, @core.Json] {
 
 ///|
 pub fn pipe(
-  left : Query[@core.Json, @core.Json],
-  right : Query[@core.Json, @core.Json],
-) -> Query[@core.Json, @core.Json] {
+  left : Query[@core.Value, @core.Value],
+  right : Query[@core.Value, @core.Value],
+) -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::pipe(left.filter, right.filter))
 }
 
 ///|
 pub fn map(
-  inner : Query[@core.Json, @core.Json],
-) -> Query[@core.Json, @core.Json] {
+  inner : Query[@core.Value, @core.Value],
+) -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::call("map", [inner.filter]))
 }
 
 ///|
-/// Additional typed-lane combinators (still Json -> Json focused).
+/// Additional typed-lane combinators (still Value -> Value focused).
 /// These keep typed DSL authoring practical without exposing raw AST builders.
 
 ///|
-pub fn literal(value : @core.Json) -> Query[@core.Json, @core.Json] {
+pub fn literal(value : @core.Value) -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::literal(value))
 }
 
 ///|
-pub fn iter() -> Query[@core.Json, @core.Json] {
+pub fn iter() -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::iter())
 }
 
 ///|
 pub fn comma(
-  left : Query[@core.Json, @core.Json],
-  right : Query[@core.Json, @core.Json],
-) -> Query[@core.Json, @core.Json] {
+  left : Query[@core.Value, @core.Value],
+  right : Query[@core.Value, @core.Value],
+) -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::comma(left.filter, right.filter))
 }
 
 ///|
 pub fn call(
   name : String,
-  args : Array[Query[@core.Json, @core.Json]],
-) -> Query[@core.Json, @core.Json] {
+  args : Array[Query[@core.Value, @core.Value]],
+) -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::call(name, args.map(q => q.filter)))
 }
 
 ///|
 pub fn select(
-  pred : Query[@core.Json, @core.Json],
-) -> Query[@core.Json, @core.Json] {
+  pred : Query[@core.Value, @core.Value],
+) -> Query[@core.Value, @core.Value] {
   call("select", [pred])
 }
 
 ///|
 pub fn eq(
-  left : Query[@core.Json, @core.Json],
-  right : Query[@core.Json, @core.Json],
-) -> Query[@core.Json, @core.Json] {
+  left : Query[@core.Value, @core.Value],
+  right : Query[@core.Value, @core.Value],
+) -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::eq(left.filter, right.filter))
 }
 
 ///|
 pub fn lt(
-  left : Query[@core.Json, @core.Json],
-  right : Query[@core.Json, @core.Json],
-) -> Query[@core.Json, @core.Json] {
+  left : Query[@core.Value, @core.Value],
+  right : Query[@core.Value, @core.Value],
+) -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::lt(left.filter, right.filter))
 }
 
 ///|
 pub fn gt(
-  left : Query[@core.Json, @core.Json],
-  right : Query[@core.Json, @core.Json],
-) -> Query[@core.Json, @core.Json] {
+  left : Query[@core.Value, @core.Value],
+  right : Query[@core.Value, @core.Value],
+) -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::gt(left.filter, right.filter))
 }
 
 ///|
 pub fn and_(
-  left : Query[@core.Json, @core.Json],
-  right : Query[@core.Json, @core.Json],
-) -> Query[@core.Json, @core.Json] {
+  left : Query[@core.Value, @core.Value],
+  right : Query[@core.Value, @core.Value],
+) -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::and_(left.filter, right.filter))
 }
 
 ///|
 pub fn or_(
-  left : Query[@core.Json, @core.Json],
-  right : Query[@core.Json, @core.Json],
-) -> Query[@core.Json, @core.Json] {
+  left : Query[@core.Value, @core.Value],
+  right : Query[@core.Value, @core.Value],
+) -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::or_(left.filter, right.filter))
 }
 
 ///|
 pub fn not_(
-  value : Query[@core.Json, @core.Json],
-) -> Query[@core.Json, @core.Json] {
+  value : Query[@core.Value, @core.Value],
+) -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::not(value.filter))
 }
 
 ///|
 pub fn add(
-  left : Query[@core.Json, @core.Json],
-  right : Query[@core.Json, @core.Json],
-) -> Query[@core.Json, @core.Json] {
+  left : Query[@core.Value, @core.Value],
+  right : Query[@core.Value, @core.Value],
+) -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::add(left.filter, right.filter))
 }
 
 ///|
 pub fn if_else(
-  cond : Query[@core.Json, @core.Json],
-  then_ : Query[@core.Json, @core.Json],
-  else_ : Query[@core.Json, @core.Json],
-) -> Query[@core.Json, @core.Json] {
+  cond : Query[@core.Value, @core.Value],
+  then_ : Query[@core.Value, @core.Value],
+  else_ : Query[@core.Value, @core.Value],
+) -> Query[@core.Value, @core.Value] {
   query_of_filter(
     @core.Filter::if_else(cond.filter, then_.filter, else_.filter),
   )
@@ -158,25 +158,25 @@ pub fn if_else(
 
 ///|
 pub fn fallback(
-  left : Query[@core.Json, @core.Json],
-  right : Query[@core.Json, @core.Json],
-) -> Query[@core.Json, @core.Json] {
+  left : Query[@core.Value, @core.Value],
+  right : Query[@core.Value, @core.Value],
+) -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::fallback(left.filter, right.filter))
 }
 
 ///|
 pub fn try_catch(
-  inner : Query[@core.Json, @core.Json],
-  handler : Query[@core.Json, @core.Json],
-) -> Query[@core.Json, @core.Json] {
+  inner : Query[@core.Value, @core.Value],
+  handler : Query[@core.Value, @core.Value],
+) -> Query[@core.Value, @core.Value] {
   query_of_filter(@core.Filter::try_catch(inner.filter, handler.filter))
 }
 
 ///|
 pub fn executeQuery(
-  query : Query[@core.Json, @core.Json],
-  input : @core.Json,
-) -> Result[Array[@core.Json], String] {
+  query : Query[@core.Value, @core.Value],
+  input : @core.Value,
+) -> Result[Array[@core.Value], String] {
   Ok(@core.execute(query.filter, input)) catch {
     err => Err(err.to_string())
   }
@@ -184,7 +184,7 @@ pub fn executeQuery(
 
 ///|
 pub fn runQuery(
-  query : Query[@core.Json, @core.Json],
+  query : Query[@core.Value, @core.Value],
   input : String,
 ) -> Result[Array[String], String] {
   try {

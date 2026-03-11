@@ -1,6 +1,6 @@
 ///|
 fn call_parse_slice_index(
-  value : Json,
+  value : Value,
   end? : Bool = false,
 ) -> Int? raise EvalError {
   let int_min = -2147483647 - 1
@@ -30,10 +30,10 @@ fn call_parse_slice_index(
 }
 
 ///|
-fn pick_static_path_segments(filter : Filter) -> Array[Json]? {
+fn pick_static_path_segments(filter : Filter) -> Array[Value]? {
   match filter {
-    Builtin("first") => Some([Json::number(0.0)])
-    Builtin("last") => Some([Json::number(-1.0)])
+    Builtin("first") => Some([Value::number(0.0)])
+    Builtin("last") => Some([Value::number(-1.0)])
     Pipe(left, right) =>
       match
         (pick_static_path_segments(left), pick_static_path_segments(right)) {
@@ -54,9 +54,9 @@ fn pick_static_path_segments(filter : Filter) -> Array[Json]? {
 fn builtin_call_path(
   name : String,
   args : Array[Filter],
-  input : Json,
-  env : Map[String, Json],
-) -> Array[Json]? raise EvalError {
+  input : Value,
+  env : Map[String, Value],
+) -> Array[Value]? raise EvalError {
   match name {
     "getpath" =>
       if args.length() != 1 {
@@ -171,7 +171,7 @@ fn builtin_call_path(
           let path_values = try path_expression(arg, input, env) catch {
             err =>
               match pick_static_path_segments(arg) {
-                Some(parts) => [Json::array(parts)]
+                Some(parts) => [Value::array(parts)]
                 None => raise err
               }
           } noraise {
@@ -184,9 +184,9 @@ fn builtin_call_path(
             }
           }
         }
-        let mut out = Json::null()
+        let mut out = Value::null()
         for parts in normalized_paths {
-          let value = getpath_on_input(input, Json::array(parts))
+          let value = getpath_on_input(input, Value::array(parts))
           out = setpath_on_input(out, parts, value)
         }
         Some([out])

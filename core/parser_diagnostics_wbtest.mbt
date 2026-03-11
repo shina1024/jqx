@@ -58,20 +58,20 @@ test "compile first diagnostic respects binding scopes" {
   let reduce_filter = Filter::reduce(
     Filter::iter(),
     "x",
-    Filter::literal(Json::number(0.0)),
+    Filter::literal(Value::number(0.0)),
     Filter::add(Filter::identity(), Filter::var_("x")),
   )
   let foreach_filter = Filter::foreach(
     Filter::iter(),
     "x",
-    Filter::literal(Json::number(0.0)),
+    Filter::literal(Value::number(0.0)),
     Filter::add(Filter::identity(), Filter::var_("x")),
     Filter::var_("x"),
   )
   let as_filter = Filter::as_(
     Filter::identity(),
     "v",
-    Filter::add(Filter::var_("v"), Filter::literal(Json::number(1.0))),
+    Filter::add(Filter::var_("v"), Filter::literal(Value::number(1.0))),
   )
   guard has_no_compile_diagnostic(
     compile_first_diagnostic(reduce_filter, [], []),
