@@ -49,7 +49,8 @@ jobs:
         if: runner.os == 'Linux'
         uses: actions/setup-node@v5
         with:
-          node-version: 24
+          node-version: lts/*
+          check-latest: true
           cache: pnpm
           cache-dependency-path: ts/*/pnpm-lock.yaml
 

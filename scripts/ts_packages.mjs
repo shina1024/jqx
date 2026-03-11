@@ -81,7 +81,9 @@ function runPnpm(packageInfo, args) {
 }
 
 function installArgs(frozenLockfile) {
-  return frozenLockfile ? ["install", "--frozen-lockfile"] : ["install"];
+  return frozenLockfile
+    ? ["install", "--frozen-lockfile"]
+    : ["install", "--no-frozen-lockfile"];
 }
 
 function refreshPackage(packageInfo, frozenLockfile) {
