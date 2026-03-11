@@ -57,6 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
       DRY_RUN: ${{ needs.prepare.outputs.dry_run }}
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -69,8 +70,6 @@ jobs:
 
       - name: Setup pnpm (latest)
         uses: pnpm/action-setup@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           run_install: false
 

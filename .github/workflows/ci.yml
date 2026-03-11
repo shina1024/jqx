@@ -10,6 +10,8 @@ jobs:
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     strategy:
       fail-fast: false
       matrix:
@@ -42,8 +44,6 @@ jobs:
       - name: Setup pnpm (latest)
         if: runner.os == 'Linux'
         uses: pnpm/action-setup@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           version: latest
 
