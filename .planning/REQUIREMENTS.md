@@ -14,10 +14,10 @@
 
 ### Architecture
 
-- [ ] **ARCH-01**: Maintainer can evolve the internal architecture to a clearer shared-core design when that improves semantic consistency across surfaces.
+- [x] **ARCH-01**: Maintainer can evolve the internal architecture to a clearer shared-core design when that improves semantic consistency across surfaces.
 - [ ] **ARCH-02**: Maintainer can change internal or public API structure before versioning when the result reduces long-term API debt and improves overall usability.
-- [ ] **ARCH-03**: User can rely on one shared semantic core, with surface-specific layers limited to I/O, packaging, and ergonomic adaptation rather than semantic divergence.
-- [ ] **ARCH-04**: Maintainer can reorganize package boundaries, module layout, or repository structure before versioning when that better supports the shared core and the three public surfaces.
+- [x] **ARCH-03**: User can rely on one shared semantic core, with surface-specific layers limited to I/O, packaging, and ergonomic adaptation rather than semantic divergence.
+- [x] **ARCH-04**: Maintainer can reorganize package boundaries, module layout, or repository structure before versioning when that better supports the shared core and the three public surfaces.
 
 ### CLI
 
@@ -78,10 +78,10 @@
 | COMP-02 | Phase 1 | Complete |
 | COMP-03 | Phase 1 | Pending |
 | COMP-04 | Phase 1 | Pending |
-| ARCH-01 | Phase 1 | Pending |
+| ARCH-01 | Phase 1 | Complete |
 | ARCH-02 | Phase 2 | Pending |
-| ARCH-03 | Phase 1 | Pending |
-| ARCH-04 | Phase 1 | Pending |
+| ARCH-03 | Phase 1 | Complete |
+| ARCH-04 | Phase 1 | Complete |
 | CLI-01 | Phase 4 | Pending |
 | CLI-02 | Phase 4 | Pending |
 | CLI-03 | Phase 6 | Pending |

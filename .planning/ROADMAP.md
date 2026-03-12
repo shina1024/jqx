@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01: Tighten compatibility corpus coverage and exception tracking against `jq 1.8.1`
-- [ ] 01-02: Refactor runtime boundaries around one shared semantic core
+- [x] 01-02: Refactor runtime boundaries around one shared semantic core
 - [ ] 01-03: Add cross-surface fidelity and ordering checks
 
 ### Phase 2: MoonBit Public API
@@ -121,7 +121,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Shared Core and Compatibility | 1/3 | In Progress | - |
+| 1. Shared Core and Compatibility | 2/3 | In Progress | - |
 | 2. MoonBit Public API | 0/3 | Not started | - |
 | 3. JS/TS Runtime Surface | 0/3 | Not started | - |
 | 4. CLI Workflow Parity | 0/2 | Not started | - |
