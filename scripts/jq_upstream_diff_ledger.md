@@ -1,37 +1,58 @@
-# jq Upstream Diff Ledger
+# jq Compatibility Diff Ledger
 
-- cases: `scripts/jq_compat_cases.upstream.json`
-- failures snapshot: `scripts/jq_upstream_failures.snapshot.json`
+- maintained cases: `scripts/jq_compat_cases.json`
+- upstream cases: `scripts/jq_compat_cases.upstream.json`
+- upstream diff snapshot: `scripts/jq_upstream_failures.snapshot.json`
 - upstream commit (HEAD): `b33a7634ba34ffa7ce7368cc0ebf5ca40b54c7e6`
 - upstream commit (current): `b33a7634ba34ffa7ce7368cc0ebf5ca40b54c7e6`
 
-## Summary
+## Corpus Status
 
-- cases old/new: 843 -> 843
-- cases added/removed/changed: 0 / 0 / 0
-- failures old/new: 0 -> 0
-- failures new/resolved/changed: 0 / 0 / 0
+| Corpus | Total | Passing | Temporary Exceptions | Broken | Stale Exception Metadata |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| maintained | 242 | 242 | 0 | 0 | 0 |
+| upstream | 843 | 843 | 0 | 0 | 0 |
 
-## New Failures
-
-- none
-
-## Resolved Failures
+## Temporary Exceptions
 
 - none
 
-## Failure Behavior Changes
+## Broken Cases
 
 - none
 
-## Case Behavior Changes
+## Stale Exception Metadata
 
 - none
 
-## Added Cases
+## Upstream Drift Summary
+
+- upstream cases old/new: 843 -> 843
+- upstream cases added/removed/changed: 0 / 0 / 0
+- upstream differences old/new: 0 -> 0
+- upstream differences new/resolved/changed: 0 / 0 / 0
+
+## New Upstream Differences
 
 - none
 
-## Removed Cases
+## Resolved Upstream Differences
 
 - none
+
+## Upstream Difference Behavior Changes
+
+- none
+
+## Upstream Case Behavior Changes
+
+- none
+
+## Added Upstream Cases
+
+- none
+
+## Removed Upstream Cases
+
+- none
+

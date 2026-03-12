@@ -170,6 +170,7 @@ total=0
 passed=0
 failed=0
 skipped=0
+temporary=0
 
 while IFS= read -r case_json; do
   total=$((total + 1))
@@ -181,6 +182,10 @@ while IFS= read -r case_json; do
   source_kind="$("${JQ_BIN_RESOLVED}" -r '(.source_kind // "") | tostring' <<<"${case_json}")"
   expect_status="$("${JQ_BIN_RESOLVED}" -r 'if has("expect_status") then (.expect_status | tostring) else "" end' <<<"${case_json}")"
   skip_reason="$("${JQ_BIN_RESOLVED}" -r 'if has("skip_reason") and .skip_reason != null then (.skip_reason | tostring) else "" end' <<<"${case_json}")"
+  compat_status="$("${JQ_BIN_RESOLVED}" -r '(.compat_status // "pass") | tostring' <<<"${case_json}")"
+  compat_ledger_id="$("${JQ_BIN_RESOLVED}" -r 'if has("compat_ledger_id") and .compat_ledger_id != null then (.compat_ledger_id | tostring) else "" end' <<<"${case_json}")"
+  compat_reason="$("${JQ_BIN_RESOLVED}" -r 'if has("compat_reason") and .compat_reason != null then (.compat_reason | tostring) else "" end' <<<"${case_json}")"
+  compat_removal_condition="$("${JQ_BIN_RESOLVED}" -r 'if has("compat_removal_condition") and .compat_removal_condition != null then (.compat_removal_condition | tostring) else "" end' <<<"${case_json}")"
   jqx_use_stdin="$("${JQ_BIN_RESOLVED}" -r '(.jqx_use_stdin // true) | tostring' <<<"${case_json}")"
   name="${name%$'\r'}"
   filter="${filter%$'\r'}"
@@ -190,7 +195,22 @@ while IFS= read -r case_json; do
   source_kind="${source_kind%$'\r'}"
   expect_status="${expect_status%$'\r'}"
   skip_reason="${skip_reason%$'\r'}"
+  compat_status="${compat_status%$'\r'}"
+  compat_ledger_id="${compat_ledger_id%$'\r'}"
+  compat_reason="${compat_reason%$'\r'}"
+  compat_removal_condition="${compat_removal_condition%$'\r'}"
   jqx_use_stdin="${jqx_use_stdin%$'\r'}"
+
+  if [[ "${compat_status}" != "pass" && "${compat_status}" != "temporary_exception" ]]; then
+    echo "invalid compat_status for case ${name}: ${compat_status}" >&2
+    exit 2
+  fi
+  if [[ "${compat_status}" == "temporary_exception" ]]; then
+    if [[ -z "${compat_ledger_id}" || -z "${compat_reason}" || -z "${compat_removal_condition}" ]]; then
+      echo "temporary_exception case ${name} must set compat_ledger_id, compat_reason, and compat_removal_condition" >&2
+      exit 2
+    fi
+  fi
 
   if [[ -n "${skip_reason}" ]]; then
     skipped=$((skipped + 1))
@@ -309,6 +329,22 @@ while IFS= read -r case_json; do
     fi
   fi
 
+  if [[ "${compat_status}" == "temporary_exception" ]]; then
+    if [[ "${ok}" == "true" ]]; then
+      failed=$((failed + 1))
+      printf '[FAIL] %s\n' "${name}"
+      printf '  documented temporary exception no longer reproduces: %s\n' "${compat_ledger_id}"
+      printf '  removal_condition: %s\n' "${compat_removal_condition}"
+      continue
+    fi
+
+    temporary=$((temporary + 1))
+    printf '[TEMP] %s (%s)\n' "${name}" "${compat_ledger_id}"
+    printf '  reason: %s\n' "${compat_reason}"
+    printf '  removal_condition: %s\n' "${compat_removal_condition}"
+    continue
+  fi
+
   if [[ "${ok}" == "true" ]]; then
     passed=$((passed + 1))
     printf '[PASS] %s\n' "${name}"
@@ -325,7 +361,7 @@ while IFS= read -r case_json; do
   fi
 done < <("${JQ_BIN_RESOLVED}" -c '.[]' "${CASES_PATH_FOR_JQ}")
 
-printf '\nSummary: total=%s passed=%s failed=%s skipped=%s\n' "${total}" "${passed}" "${failed}" "${skipped}"
+printf '\nSummary: total=%s passed=%s temporary=%s failed=%s skipped=%s\n' "${total}" "${passed}" "${temporary}" "${failed}" "${skipped}"
 if [[ ${failed} -ne 0 ]]; then
   exit 1
 fi

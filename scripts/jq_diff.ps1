@@ -230,6 +230,15 @@ function Classify-Failure {
   return "output-mismatch"
 }
 
+function Get-CompatStatus {
+  param([psobject]$Case)
+
+  if ($Case.PSObject.Properties.Name -contains "compat_status" -and $null -ne $Case.compat_status) {
+    return ([string]$Case.compat_status).ToLowerInvariant()
+  }
+  return "pass"
+}
+
 function Invoke-NativeCapture {
   param(
     [string]$Exe,
@@ -315,7 +324,8 @@ try {
   $passed = 0
   $failed = 0
   $skipped = 0
-  $failureRecords = @()
+  $temporary = 0
+  $diffRecords = @()
 
   foreach ($case in $cases) {
     $total += 1
@@ -342,6 +352,19 @@ try {
     if ($case.PSObject.Properties.Name -contains "skip_reason" -and $null -ne $case.skip_reason) {
       $skipReason = [string]$case.skip_reason
     }
+    $compatStatus = Get-CompatStatus -Case $case
+    $compatLedgerId = ""
+    if ($case.PSObject.Properties.Name -contains "compat_ledger_id" -and $null -ne $case.compat_ledger_id) {
+      $compatLedgerId = [string]$case.compat_ledger_id
+    }
+    $compatReason = ""
+    if ($case.PSObject.Properties.Name -contains "compat_reason" -and $null -ne $case.compat_reason) {
+      $compatReason = [string]$case.compat_reason
+    }
+    $compatRemovalCondition = ""
+    if ($case.PSObject.Properties.Name -contains "compat_removal_condition" -and $null -ne $case.compat_removal_condition) {
+      $compatRemovalCondition = [string]$case.compat_removal_condition
+    }
     $jqArgs = @()
     if ($case.PSObject.Properties.Name -contains "jq_args" -and $null -ne $case.jq_args) {
       $jqArgs = @($case.jq_args | ForEach-Object { [string]$_ })
@@ -359,6 +382,17 @@ try {
       $skipped += 1
       Write-Host "[SKIP] $name ($skipReason)"
       continue
+    }
+
+    if ($compatStatus -ne "pass" -and $compatStatus -ne "temporary_exception") {
+      throw "invalid compat_status for case ${name}: ${compatStatus}"
+    }
+    if ($compatStatus -eq "temporary_exception" -and (
+      [string]::IsNullOrWhiteSpace($compatLedgerId) -or
+      [string]::IsNullOrWhiteSpace($compatReason) -or
+      [string]::IsNullOrWhiteSpace($compatRemovalCondition)
+    )) {
+      throw "temporary_exception case ${name} must set compat_ledger_id, compat_reason, and compat_removal_condition"
     }
 
     $jqCmd = @("-c") + $jqArgs + @($filter)
@@ -463,16 +497,64 @@ try {
       }
     }
 
-    if ($ok) {
+    if ($compatStatus -eq "temporary_exception") {
+      if ($ok) {
+        $failed += 1
+        $diffRecords += [PSCustomObject]@{
+          name = $name
+          category = "stale-temporary-exception"
+          compat_status = $compatStatus
+          compat_ledger_id = $compatLedgerId
+          compat_reason = $compatReason
+          compat_removal_condition = $compatRemovalCondition
+          jq_status = [string]$jqStatus
+          jqx_status = [string]$jqxStatus
+          jq_out = $jqClass.MergedText
+          jqx_out = $jqxClass.MergedText
+          jq_stdout = $jqStdout
+          jq_stderr = $jqStderr
+          jqx_stdout = $jqxStdout
+          jqx_stderr = $jqxStderr
+        }
+        Write-Host "[FAIL] $name"
+        Write-Host "  documented temporary exception no longer reproduces: $compatLedgerId"
+        Write-Host "  removal_condition: $compatRemovalCondition"
+      } else {
+        $temporary += 1
+        $diffRecords += [PSCustomObject]@{
+          name = $name
+          category = "temporary-exception"
+          compat_status = $compatStatus
+          compat_ledger_id = $compatLedgerId
+          compat_reason = $compatReason
+          compat_removal_condition = $compatRemovalCondition
+          jq_status = [string]$jqStatus
+          jqx_status = [string]$jqxStatus
+          jq_out = $jqClass.MergedText
+          jqx_out = $jqxClass.MergedText
+          jq_stdout = $jqStdout
+          jq_stderr = $jqStderr
+          jqx_stdout = $jqxStdout
+          jqx_stderr = $jqxStderr
+        }
+        Write-Host "[TEMP] $name ($compatLedgerId)"
+        Write-Host "  reason: $compatReason"
+        Write-Host "  removal_condition: $compatRemovalCondition"
+      }
+    } elseif ($ok) {
       $passed += 1
       Write-Host "[PASS] $name"
     } else {
       $failed += 1
       $jqMergedOut = $jqClass.MergedText
       $jqxMergedOut = $jqxClass.MergedText
-      $failureRecords += [PSCustomObject]@{
+      $diffRecords += [PSCustomObject]@{
         name = $name
         category = Classify-Failure -JqStatus $jqStatus -JqxStatus $jqxStatus -JqOut $jqMergedOut -JqxOut $jqxMergedOut
+        compat_status = $compatStatus
+        compat_ledger_id = $compatLedgerId
+        compat_reason = $compatReason
+        compat_removal_condition = $compatRemovalCondition
         jq_status = [string]$jqStatus
         jqx_status = [string]$jqxStatus
         jq_out = $jqMergedOut
@@ -494,7 +576,7 @@ try {
   }
 
   Write-Host ""
-  Write-Host "Summary: total=$total passed=$passed failed=$failed skipped=$skipped"
+  Write-Host "Summary: total=$total passed=$passed temporary=$temporary failed=$failed skipped=$skipped"
   if ($SnapshotPath -ne "") {
     $snapshotFile = if ([System.IO.Path]::IsPathRooted($SnapshotPath)) {
       $SnapshotPath
@@ -505,7 +587,7 @@ try {
     if ($snapshotDir -ne "" -and -not (Test-Path $snapshotDir)) {
       New-Item -ItemType Directory -Path $snapshotDir | Out-Null
     }
-    $snapshotJson = ConvertTo-Json -InputObject @($failureRecords) -Depth 5
+    $snapshotJson = ConvertTo-Json -InputObject @($diffRecords) -Depth 6
     Set-Content -Path $snapshotFile -Encoding UTF8 -Value $snapshotJson
     Write-Host "Wrote snapshot: $snapshotFile"
   }
