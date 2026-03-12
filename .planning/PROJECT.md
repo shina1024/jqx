@@ -35,16 +35,20 @@ A single MoonBit-based core can deliver full `jq` compatibility and publishable 
 
 The primary motivation is to evaluate MoonBit's practical usefulness through a real, moderately sized target with both CLI and library value. `jq` was chosen because it is small enough to be tractable while still demanding meaningful compatibility, runtime behavior, and package design across multiple surfaces.
 
-This repository already has meaningful partial functionality. Project initialization here is not starting from zero; it is defining the target quality bar, package boundaries, and release expectations for turning the existing work into a complete, publishable system.
+This repository already has meaningful partial functionality. Project initialization here is not starting from zero; it is defining the target quality bar and release expectations for turning the existing work into a complete, publishable system. The current repository structure is a starting point, not a fixed contract.
 
 Library-side practicality matters in addition to strict compatibility. The project already includes integrations with `zod`, `yup`, and `valibot`, and similar extensions are acceptable when they remain outside the CLI compatibility surface and do not fracture the shared runtime semantics.
 
-The intended package layout is:
+Architecture and API shape are not locked yet. If a better structure, naming scheme, or usage model is found for either public or internal APIs, it is acceptable to make breaking changes before versioning as long as those changes reduce long-term API debt and improve the consistency of the shared core and package surfaces.
+
+The current package layout direction is:
 - `shina1024/jqx` as the primary MoonBit public package
 - `shina1024/jqx/core` as the lower-level jq-compatible engine
 - `shina1024/jqx/cmd` as the native CLI
 - `shina1024/jqx/js` as the MoonBit JS-target-facing package
 - `ts/jqx` and `ts/*` as the npm public surface and schema-adapter workspace
+
+This layout may change before release if a different package split, module structure, or boundary arrangement better supports the shared-core design, reduces API debt, or makes the three public surfaces more coherent.
 
 ## Constraints
 
@@ -63,6 +67,8 @@ The intended package layout is:
 | The CLI remains strictly `jq`-compatible | CLI compatibility is the clearest external contract and should not be diluted by custom surface-specific features | — Pending |
 | Library surfaces may add practical extensions | Real library utility matters, and adapters such as `zod`, `yup`, and `valibot` support that without changing the CLI contract | — Pending |
 | The MoonBit public boundary uses standard `Json` plus a JSON-text compatibility lane | This keeps MoonBit APIs idiomatic while still supporting jq-style compatibility workflows | — Pending |
+| Architecture and API naming may change before versioning if a better design is found | The project is still pre-versioning, so preserving weak names or structure would only lock in avoidable debt | — Pending |
+| Current package and directory structure may be reorganized before release | The existence of one shared semantic core matters more than preserving the present repository layout | — Pending |
 | Before `1.0`, breaking changes are acceptable when they reduce long-term API debt | Canonical public names and package boundaries should be cleaned up before release rather than preserved as aliases | — Pending |
 
 ---
