@@ -74,40 +74,40 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| COMP-01 | TBD | Pending |
-| COMP-02 | TBD | Pending |
-| COMP-03 | TBD | Pending |
-| COMP-04 | TBD | Pending |
-| ARCH-01 | TBD | Pending |
-| ARCH-02 | TBD | Pending |
-| ARCH-03 | TBD | Pending |
-| ARCH-04 | TBD | Pending |
-| CLI-01 | TBD | Pending |
-| CLI-02 | TBD | Pending |
-| CLI-03 | TBD | Pending |
-| MBT-01 | TBD | Pending |
-| MBT-02 | TBD | Pending |
-| MBT-03 | TBD | Pending |
-| MBT-04 | TBD | Pending |
-| MBT-05 | TBD | Pending |
-| MBT-06 | TBD | Pending |
-| TS-01 | TBD | Pending |
-| TS-02 | TBD | Pending |
-| TS-03 | TBD | Pending |
-| TS-04 | TBD | Pending |
-| TS-05 | TBD | Pending |
-| ADPT-01 | TBD | Pending |
-| ADPT-02 | TBD | Pending |
-| ADPT-03 | TBD | Pending |
-| REL-01 | TBD | Pending |
-| REL-02 | TBD | Pending |
-| REL-03 | TBD | Pending |
+| COMP-01 | Phase 1 | Pending |
+| COMP-02 | Phase 1 | Pending |
+| COMP-03 | Phase 1 | Pending |
+| COMP-04 | Phase 1 | Pending |
+| ARCH-01 | Phase 1 | Pending |
+| ARCH-02 | Phase 2 | Pending |
+| ARCH-03 | Phase 1 | Pending |
+| ARCH-04 | Phase 1 | Pending |
+| CLI-01 | Phase 4 | Pending |
+| CLI-02 | Phase 4 | Pending |
+| CLI-03 | Phase 6 | Pending |
+| MBT-01 | Phase 2 | Pending |
+| MBT-02 | Phase 2 | Pending |
+| MBT-03 | Phase 2 | Pending |
+| MBT-04 | Phase 2 | Pending |
+| MBT-05 | Phase 2 | Pending |
+| MBT-06 | Phase 6 | Pending |
+| TS-01 | Phase 3 | Pending |
+| TS-02 | Phase 3 | Pending |
+| TS-03 | Phase 3 | Pending |
+| TS-04 | Phase 3 | Pending |
+| TS-05 | Phase 3 | Pending |
+| ADPT-01 | Phase 5 | Pending |
+| ADPT-02 | Phase 5 | Pending |
+| ADPT-03 | Phase 5 | Pending |
+| REL-01 | Phase 6 | Pending |
+| REL-02 | Phase 6 | Pending |
+| REL-03 | Phase 6 | Pending |
 
 **Coverage:**
 - v1 requirements: 28 total
-- Mapped to phases: 0
-- Unmapped: 28
+- Mapped to phases: 28
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-12 after architecture flexibility clarification*
+*Last updated: 2026-03-12 after roadmap creation*
