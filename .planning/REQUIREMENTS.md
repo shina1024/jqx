@@ -7,8 +7,8 @@
 
 ### Compatibility
 
-- [ ] **COMP-01**: User can run filters whose results match `jq 1.8.1` for the maintained compatibility corpus.
-- [ ] **COMP-02**: User can identify every known compatibility exception from docs or tests, and each exception is explicit, narrow, and removable.
+- [x] **COMP-01**: User can run filters whose results match `jq 1.8.1` for the maintained compatibility corpus.
+- [x] **COMP-02**: User can identify every known compatibility exception from docs or tests, and each exception is explicit, narrow, and removable.
 - [ ] **COMP-03**: User can preserve JSON-text fidelity, including large-number and raw-output-sensitive cases, through compatibility-lane APIs.
 - [ ] **COMP-04**: User can observe consistent shared JSON semantics, including object key input/update order, across CLI, JS/TS, and MoonBit surfaces.
 
@@ -74,8 +74,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| COMP-01 | Phase 1 | Pending |
-| COMP-02 | Phase 1 | Pending |
+| COMP-01 | Phase 1 | Complete |
+| COMP-02 | Phase 1 | Complete |
 | COMP-03 | Phase 1 | Pending |
 | COMP-04 | Phase 1 | Pending |
 | ARCH-01 | Phase 1 | Pending |
