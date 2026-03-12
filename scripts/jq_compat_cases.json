@@ -2,92 +2,110 @@
   {
     "name": "identity",
     "filter": ".",
-    "input": "{\"foo\":1}"
+    "input": "{\"foo\":1}",
+    "compat_status": "pass"
   },
   {
     "name": "field",
     "filter": ".foo",
-    "input": "{\"foo\":1,\"bar\":2}"
+    "input": "{\"foo\":1,\"bar\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "missing-field",
     "filter": ".missing",
-    "input": "{\"foo\":1}"
+    "input": "{\"foo\":1}",
+    "compat_status": "pass"
   },
   {
     "name": "field-exponent-like-keys",
     "filter": ".e0, .E1, .E-1, .E+1",
-    "input": "{\"e0\": 1, \"E1\": 2, \"E\": 3}"
+    "input": "{\"e0\": 1, \"E1\": 2, \"E\": 3}",
+    "compat_status": "pass"
   },
   {
     "name": "index",
     "filter": ".[1]",
-    "input": "[10,20,30]"
+    "input": "[10,20,30]",
+    "compat_status": "pass"
   },
   {
     "name": "slice",
     "filter": ".[1:3]",
-    "input": "[10,20,30,40]"
+    "input": "[10,20,30,40]",
+    "compat_status": "pass"
   },
   {
     "name": "iter",
     "filter": ".[]",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "pipe-comma",
     "filter": "(.a | .b), .c",
-    "input": "{\"a\":{\"b\":2},\"c\":3}"
+    "input": "{\"a\":{\"b\":2},\"c\":3}",
+    "compat_status": "pass"
   },
   {
     "name": "fallback",
     "filter": "empty // .b",
-    "input": "{\"b\":2}"
+    "input": "{\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "if-then-else",
     "filter": "if .ok then .v else .w end",
-    "input": "{\"ok\":true,\"v\":1,\"w\":2}"
+    "input": "{\"ok\":true,\"v\":1,\"w\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "reduce",
     "filter": "reduce .[] as $x (0; . + $x)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "map",
     "filter": "map(. + 1)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "def-no-arg",
     "filter": "def inc: . + 1; . | inc",
-    "input": "1"
+    "input": "1",
+    "compat_status": "pass"
   },
   {
     "name": "def-params",
     "filter": "def add(a;b): a + b; add(.a; .b)",
-    "input": "{\"a\":1,\"b\":2}"
+    "input": "{\"a\":1,\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "def-nested-local",
     "filter": "def f: . + 1; def g: def g: . + 100; f | g | f; (f | g), g",
-    "input": "3.0"
+    "input": "3.0",
+    "compat_status": "pass"
   },
   {
     "name": "def-overload-arity",
     "filter": "def f: .+1; def g: f; def f: .+100; def f(a):a+.+11; [(g|f(20)), f]",
-    "input": "1"
+    "input": "1",
+    "compat_status": "pass"
   },
   {
     "name": "def-local-in-array",
     "filter": "[[20,10][1,0] as $x | def f: (100,200) as $y | def g: [$x + $y, .]; . + $x | g; f[0] | [f][0][1] | f]",
-    "input": "999999999"
+    "input": "999999999",
+    "compat_status": "pass"
   },
   {
     "name": "def-capture-outer-var",
     "filter": "10 as $x | def f: $x; 20 as $x | f",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "def-forward-reference-error",
@@ -95,7 +113,8 @@
     "input": "1",
     "expect_error": true,
     "expect_error_mode": "strict",
-    "source_kind": "compile_fail"
+    "source_kind": "compile_fail",
+    "compat_status": "pass"
   },
   {
     "name": "def-forward-reference-arity-error",
@@ -103,7 +122,8 @@
     "input": "null",
     "expect_error": true,
     "expect_error_mode": "strict",
-    "source_kind": "compile_fail"
+    "source_kind": "compile_fail",
+    "compat_status": "pass"
   },
   {
     "name": "def-mutual-recursion-error",
@@ -111,1141 +131,1469 @@
     "input": "null",
     "expect_error": true,
     "expect_error_mode": "strict",
-    "source_kind": "compile_fail"
+    "source_kind": "compile_fail",
+    "compat_status": "pass"
   },
   {
     "name": "pow-basic",
     "filter": "pow(2;10)",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "pow-log2-round",
     "filter": "pow(2;8)|log2|round",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "fabs-map",
     "filter": "map(fabs)",
-    "input": "[-0,0,-10,-1.1]"
+    "input": "[-0,0,-10,-1.1]",
+    "compat_status": "pass"
   },
   {
     "name": "contains",
     "filter": "contains([1,3])",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "split",
     "filter": "split(\",\")",
-    "input": "\"a,b,c\""
+    "input": "\"a,b,c\"",
+    "compat_status": "pass"
   },
   {
     "name": "test-basic",
     "filter": "test(\"a\")",
-    "input": "\"abc\""
+    "input": "\"abc\"",
+    "compat_status": "pass"
   },
   {
     "name": "test-flags-ignore-case",
     "filter": "test(\"A\"; \"i\")",
-    "input": "\"abc\""
+    "input": "\"abc\"",
+    "compat_status": "pass"
   },
   {
     "name": "test-flags-ignore-empty-match",
     "filter": "test(\"\"; \"n\")",
-    "input": "\"abc\""
+    "input": "\"abc\"",
+    "compat_status": "pass"
   },
   {
     "name": "scan-basic",
     "filter": "[scan(\"a+\")]",
-    "input": "\"baaaac\""
+    "input": "\"baaaac\"",
+    "compat_status": "pass"
   },
   {
     "name": "scan-ignore-case",
     "filter": "[scan(\"A+\"; \"i\")]",
-    "input": "\"baAaAc\""
+    "input": "\"baAaAc\"",
+    "compat_status": "pass"
   },
   {
     "name": "match-basic",
     "filter": "match(\"a+\")",
-    "input": "\"baaaac\""
+    "input": "\"baaaac\"",
+    "compat_status": "pass"
   },
   {
     "name": "match-global",
     "filter": "[match(\"a\"; \"g\")]",
-    "input": "\"abac\""
+    "input": "\"abac\"",
+    "compat_status": "pass"
   },
   {
     "name": "capture-basic",
     "filter": "capture(\"a+\")",
-    "input": "\"baaaac\""
+    "input": "\"baaaac\"",
+    "compat_status": "pass"
   },
   {
     "name": "sub-basic",
     "filter": "sub(\"a\"; \"X\")",
-    "input": "\"abac\""
+    "input": "\"abac\"",
+    "compat_status": "pass"
   },
   {
     "name": "gsub-basic",
     "filter": "gsub(\"a\"; \"X\")",
-    "input": "\"abac\""
+    "input": "\"abac\"",
+    "compat_status": "pass"
   },
   {
     "name": "gsub-ignore-case",
     "filter": "gsub(\"A\"; \"X\"; \"i\")",
-    "input": "\"abAc\""
+    "input": "\"abAc\"",
+    "compat_status": "pass"
   },
   {
     "name": "join",
     "filter": "join(\"-\")",
-    "input": "[\"a\",\"b\",\"c\"]"
+    "input": "[\"a\",\"b\",\"c\"]",
+    "compat_status": "pass"
   },
   {
     "name": "sort-by",
     "filter": "sort_by(.a) | map(.a)",
-    "input": "[{\"a\":2},{\"a\":1}]"
+    "input": "[{\"a\":2},{\"a\":1}]",
+    "compat_status": "pass"
   },
   {
     "name": "group-by",
     "filter": "group_by(.)",
-    "input": "[3,1,2,1]"
+    "input": "[3,1,2,1]",
+    "compat_status": "pass"
   },
   {
     "name": "unique-by",
     "filter": "unique_by(.)",
-    "input": "[3,1,2,1]"
+    "input": "[3,1,2,1]",
+    "compat_status": "pass"
   },
   {
     "name": "getpath",
     "filter": "getpath([\"a\",1])",
-    "input": "{\"a\":[10,20,30]}"
+    "input": "{\"a\":[10,20,30]}",
+    "compat_status": "pass"
   },
   {
     "name": "setpath",
     "filter": "setpath([\"a\"];2) | .a",
-    "input": "{\"a\":1}"
+    "input": "{\"a\":1}",
+    "compat_status": "pass"
   },
   {
     "name": "delpaths",
     "filter": "delpaths([[\"a\"]]) | .b",
-    "input": "{\"a\":1,\"b\":2}"
+    "input": "{\"a\":1,\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "path-dynamic-key",
     "filter": "path(.a[path(.b)[0]])",
-    "input": "{\"a\":{\"b\":0}}"
+    "input": "{\"a\":{\"b\":0}}",
+    "compat_status": "pass"
   },
   {
     "name": "assign-dynamic-index-large",
     "filter": "reduce range(65540;65536;-1) as $i ([]; .[$i] = $i)|.[65536:]",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "assign-lhs-as",
     "filter": "(.a as $x | .b) = \"b\"",
-    "input": "{\"a\":null,\"b\":null}"
+    "input": "{\"a\":null,\"b\":null}",
+    "compat_status": "pass"
   },
   {
     "name": "assign-bsearch-index",
     "filter": "bsearch(4) as $ix | if $ix < 0 then .[-(1+$ix)] = 4 else . end",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "string-divide-split",
     "filter": "\"a, b,c,d, e\" / \", \"",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "builtins-slash-in",
     "filter": "\"-1\"|IN(builtins[] / \"/\"|.[1])",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "builtins-slash-all",
     "filter": "all(builtins[] / \"/\"; .[1]|tonumber >= 0)",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "tojson-fromjson",
     "filter": "tojson | fromjson | .x | .[1]",
-    "input": "{\"x\":[1,2]}"
+    "input": "{\"x\":[1,2]}",
+    "compat_status": "pass"
   },
   {
     "name": "bsearch",
     "filter": "bsearch(2)",
-    "input": "[1,3,5]"
+    "input": "[1,3,5]",
+    "compat_status": "pass"
   },
   {
     "name": "indices",
     "filter": "indices(\"na\")",
-    "input": "\"banana\""
+    "input": "\"banana\"",
+    "compat_status": "pass"
   },
   {
     "name": "optional-field-on-scalar",
     "filter": ".foo?",
-    "input": "1"
+    "input": "1",
+    "compat_status": "pass"
   },
   {
     "name": "optional-nested-field-array",
     "filter": "[.[]|.foo?.bar?]",
-    "input": "[1,[2],[],{\"foo\":3},{\"foo\":{\"bar\":4}},{}]"
+    "input": "[1,[2],[],{\"foo\":3},{\"foo\":{\"bar\":4}},{}]",
+    "compat_status": "pass"
   },
   {
     "name": "recurse-all-values",
     "filter": "[..]",
-    "input": "[1,[[2]],{\"a\":[1]}]"
+    "input": "[1,[[2]],{\"a\":[1]}]",
+    "compat_status": "pass"
   },
   {
     "name": "try-catch",
     "filter": "try (.a + 1) catch 1",
-    "input": "{\"a\":\"hi\",\"b\":1}"
+    "input": "{\"a\":\"hi\",\"b\":1}",
+    "compat_status": "pass"
   },
   {
     "name": "foreach",
     "filter": "foreach .[] as $x (0; . + $x; .)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "map-values",
     "filter": "map_values(select(. > 1))",
-    "input": "{\"a\":1,\"b\":2}"
+    "input": "{\"a\":1,\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "any-call",
     "filter": "any(. > 2)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "all-call",
     "filter": "all(. > 0)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "any-generator",
     "filter": "any(.[]; . > 2)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "all-generator",
     "filter": "all(.[]; . > 0)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "all-generator-false",
     "filter": "all(.[]; . > 2)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "startswith",
     "filter": "startswith(\"he\")",
-    "input": "\"hello\""
+    "input": "\"hello\"",
+    "compat_status": "pass"
   },
   {
     "name": "endswith",
     "filter": "endswith(\"lo\")",
-    "input": "\"hello\""
+    "input": "\"hello\"",
+    "compat_status": "pass"
   },
   {
     "name": "ltrimstr",
     "filter": "ltrimstr(\"foo\")",
-    "input": "\"foobar\""
+    "input": "\"foobar\"",
+    "compat_status": "pass"
   },
   {
     "name": "rtrimstr",
     "filter": "rtrimstr(\"bar\")",
-    "input": "\"foobar\""
+    "input": "\"foobar\"",
+    "compat_status": "pass"
   },
   {
     "name": "has-object",
     "filter": "has(\"a\")",
-    "input": "{\"a\":1}"
+    "input": "{\"a\":1}",
+    "compat_status": "pass"
   },
   {
     "name": "in-call",
     "filter": "\"a\" | in({\"a\":1})",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "IN-two-args",
     "filter": "IN(range(5;20); range(10))",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "INDEX-call",
     "filter": "INDEX(range(5)|[., \"foo\\(.)\"]; .[0])",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "type",
     "filter": "type",
-    "input": "{\"a\":1}"
+    "input": "{\"a\":1}",
+    "compat_status": "pass"
   },
   {
     "name": "length-null",
     "filter": "length",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "tostring",
     "filter": "tostring",
-    "input": "[1,2]"
+    "input": "[1,2]",
+    "compat_status": "pass"
   },
   {
     "name": "tonumber",
     "filter": "tonumber",
-    "input": "\"1.25\""
+    "input": "\"1.25\"",
+    "compat_status": "pass"
   },
   {
     "name": "flatten-depth",
     "filter": "flatten(1)",
-    "input": "[1,[2],[[3]]]"
+    "input": "[1,[2],[[3]]]",
+    "compat_status": "pass"
   },
   {
     "name": "transpose",
     "filter": "transpose",
-    "input": "[[1,2],[3,4]]"
+    "input": "[[1,2],[3,4]]",
+    "compat_status": "pass"
   },
   {
     "name": "to-entries",
     "filter": "to_entries",
-    "input": "{\"a\":1}"
+    "input": "{\"a\":1}",
+    "compat_status": "pass"
   },
   {
     "name": "from-entries",
     "filter": "from_entries",
-    "input": "[{\"key\":\"a\",\"value\":1}]"
+    "input": "[{\"key\":\"a\",\"value\":1}]",
+    "compat_status": "pass"
   },
   {
     "name": "with-entries",
     "filter": "with_entries({key: (.key + \"_x\"), value: .value})",
-    "input": "{\"a\":1}"
+    "input": "{\"a\":1}",
+    "compat_status": "pass"
   },
   {
     "name": "reverse",
     "filter": "reverse",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "explode",
     "filter": "explode",
-    "input": "\"ab\""
+    "input": "\"ab\"",
+    "compat_status": "pass"
   },
   {
     "name": "implode",
     "filter": "implode",
-    "input": "[97,98]"
+    "input": "[97,98]",
+    "compat_status": "pass"
   },
   {
     "name": "ascii-upcase",
     "filter": "ascii_upcase",
-    "input": "\"AbC_z\""
+    "input": "\"AbC_z\"",
+    "compat_status": "pass"
   },
   {
     "name": "ascii-downcase",
     "filter": "ascii_downcase",
-    "input": "\"AbC_Z\""
+    "input": "\"AbC_Z\"",
+    "compat_status": "pass"
   },
   {
     "name": "first",
     "filter": "first",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "last",
     "filter": "last",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "nth-negative",
     "filter": "nth(-1)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "sort",
     "filter": "sort",
-    "input": "[3,1,2]"
+    "input": "[3,1,2]",
+    "compat_status": "pass"
   },
   {
     "name": "unique",
     "filter": "unique",
-    "input": "[3,1,2,1]"
+    "input": "[3,1,2,1]",
+    "compat_status": "pass"
   },
   {
     "name": "min",
     "filter": "min",
-    "input": "[3,1,2]"
+    "input": "[3,1,2]",
+    "compat_status": "pass"
   },
   {
     "name": "max",
     "filter": "max",
-    "input": "[3,1,2]"
+    "input": "[3,1,2]",
+    "compat_status": "pass"
   },
   {
     "name": "index-string",
     "filter": "index(\"na\")",
-    "input": "\"banana\""
+    "input": "\"banana\"",
+    "compat_status": "pass"
   },
   {
     "name": "rindex-string",
     "filter": "rindex(\"na\")",
-    "input": "\"banana\""
+    "input": "\"banana\"",
+    "compat_status": "pass"
   },
   {
     "name": "keys-array",
     "filter": "keys",
-    "input": "[10,20]"
+    "input": "[10,20]",
+    "compat_status": "pass"
   },
   {
     "name": "keys-unsorted-array",
     "filter": "keys_unsorted",
-    "input": "[10,20]"
+    "input": "[10,20]",
+    "compat_status": "pass"
   },
   {
     "name": "inside",
     "filter": "inside([0,1,2,3])",
-    "input": "[1,2]"
+    "input": "[1,2]",
+    "compat_status": "pass"
   },
   {
     "name": "map-object",
     "filter": "map(. + 1)",
-    "input": "{\"a\":1}"
+    "input": "{\"a\":1}",
+    "compat_status": "pass"
   },
   {
     "name": "arith-literal-plus-nospace",
     "filter": "1+2",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "arith-literal-minus-nospace",
     "filter": "1-2",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "arith-huge-input-plus",
     "filter": ". + 1",
-    "input": "1e309"
+    "input": "1e309",
+    "compat_status": "pass"
   },
   {
     "name": "arith-huge-input-minus-self",
     "filter": ". - .",
-    "input": "1e309"
+    "input": "1e309",
+    "compat_status": "pass"
   },
   {
     "name": "tonumber-huge-string",
     "filter": "tonumber",
-    "input": "\"1E+309\""
+    "input": "\"1E+309\"",
+    "compat_status": "pass"
   },
   {
     "name": "tonumber-infinity-string",
     "filter": "tonumber",
-    "input": "\"Infinity\""
+    "input": "\"Infinity\"",
+    "compat_status": "pass"
   },
   {
     "name": "arith-add-fields",
     "filter": ".a + .b",
-    "input": "{\"a\":2,\"b\":3}"
+    "input": "{\"a\":2,\"b\":3}",
+    "compat_status": "pass"
   },
   {
     "name": "arith-sub-fields",
     "filter": ".a - .b",
-    "input": "{\"a\":5,\"b\":3}"
+    "input": "{\"a\":5,\"b\":3}",
+    "compat_status": "pass"
   },
   {
     "name": "arith-mul-fields",
     "filter": ".a * .b",
-    "input": "{\"a\":4,\"b\":3}"
+    "input": "{\"a\":4,\"b\":3}",
+    "compat_status": "pass"
   },
   {
     "name": "arith-div-fields",
     "filter": ".a / .b",
-    "input": "{\"a\":7.5,\"b\":2.5}"
+    "input": "{\"a\":7.5,\"b\":2.5}",
+    "compat_status": "pass"
   },
   {
     "name": "compare-gte",
     "filter": ".a >= .b",
-    "input": "{\"a\":2,\"b\":2}"
+    "input": "{\"a\":2,\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "logic-and",
     "filter": ".a and .b",
-    "input": "{\"a\":true,\"b\":false}"
+    "input": "{\"a\":true,\"b\":false}",
+    "compat_status": "pass"
   },
   {
     "name": "logic-or",
     "filter": ".a or .b",
-    "input": "{\"a\":false,\"b\":true}"
+    "input": "{\"a\":false,\"b\":true}",
+    "compat_status": "pass"
   },
   {
     "name": "logic-not",
     "filter": "not",
-    "input": "false"
+    "input": "false",
+    "compat_status": "pass"
   },
   {
     "name": "var-binding",
     "filter": ".a as $x | $x + 1",
-    "input": "{\"a\":1}"
+    "input": "{\"a\":1}",
+    "compat_status": "pass"
   },
   {
     "name": "array-literal",
     "filter": "[.a, .b]",
-    "input": "{\"a\":1,\"b\":2}"
+    "input": "{\"a\":1,\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "object-literal",
     "filter": "{x: .a, y: .b}",
-    "input": "{\"a\":1,\"b\":2}"
+    "input": "{\"a\":1,\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "contains-string",
     "filter": "contains(\"ana\")",
-    "input": "\"banana\""
+    "input": "\"banana\"",
+    "compat_status": "pass"
   },
   {
     "name": "has-array-index",
     "filter": "has(1)",
-    "input": "[10,20]"
+    "input": "[10,20]",
+    "compat_status": "pass"
   },
   {
     "name": "in-array",
     "filter": "1 | in([0,1,2])",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "values-null",
     "filter": "values",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "scalars-array",
     "filter": "scalars",
-    "input": "[1]"
+    "input": "[1]",
+    "compat_status": "pass"
   },
   {
     "name": "add-object-values",
     "filter": "add",
-    "input": "{\"a\":1,\"b\":2}"
+    "input": "{\"a\":1,\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "bsearch-found",
     "filter": "bsearch(3)",
-    "input": "[1,3,5]"
+    "input": "[1,3,5]",
+    "compat_status": "pass"
   },
   {
     "name": "getpath-missing",
     "filter": "getpath([\"a\",2])",
-    "input": "{\"a\":[10,20]}"
+    "input": "{\"a\":[10,20]}",
+    "compat_status": "pass"
   },
   {
     "name": "setpath-nested",
     "filter": "setpath([\"a\",1];99)",
-    "input": "{\"a\":[10,20]}"
+    "input": "{\"a\":[10,20]}",
+    "compat_status": "pass"
   },
   {
     "name": "delpaths-multiple",
     "filter": "delpaths([[\"a\"],[\"b\"]])",
-    "input": "{\"a\":1,\"b\":2,\"c\":3}"
+    "input": "{\"a\":1,\"b\":2,\"c\":3}",
+    "compat_status": "pass"
   },
   {
     "name": "type-filter-nulls",
     "filter": ".[] | nulls",
-    "input": "[null,true,1]"
+    "input": "[null,true,1]",
+    "compat_status": "pass"
   },
   {
     "name": "type-filter-booleans",
     "filter": ".[] | booleans",
-    "input": "[null,true,1,false]"
+    "input": "[null,true,1,false]",
+    "compat_status": "pass"
   },
   {
     "name": "type-filter-numbers",
     "filter": ".[] | numbers",
-    "input": "[null,true,1,2.5,\"x\"]"
+    "input": "[null,true,1,2.5,\"x\"]",
+    "compat_status": "pass"
   },
   {
     "name": "type-filter-strings",
     "filter": ".[] | strings",
-    "input": "[null,\"x\",1,\"y\"]"
+    "input": "[null,\"x\",1,\"y\"]",
+    "compat_status": "pass"
   },
   {
     "name": "type-filter-arrays",
     "filter": ".[] | arrays",
-    "input": "[[],{},[1],2]"
+    "input": "[[],{},[1],2]",
+    "compat_status": "pass"
   },
   {
     "name": "type-filter-objects",
     "filter": ".[] | objects",
-    "input": "[[],{}, {\"a\":1},2]"
+    "input": "[[],{}, {\"a\":1},2]",
+    "compat_status": "pass"
   },
   {
     "name": "type-filter-iterables",
     "filter": ".[] | iterables",
-    "input": "[[],{},1,\"x\"]"
+    "input": "[[],{},1,\"x\"]",
+    "compat_status": "pass"
   },
   {
     "name": "type-filter-scalars",
     "filter": ".[] | scalars",
-    "input": "[[],{},1,\"x\",null,true]"
+    "input": "[[],{},1,\"x\",null,true]",
+    "compat_status": "pass"
   },
   {
     "name": "min-by-pipe",
     "filter": "min_by(.a) | .a",
-    "input": "[{\"a\":2},{\"a\":1}]"
+    "input": "[{\"a\":2},{\"a\":1}]",
+    "compat_status": "pass"
   },
   {
     "name": "max-by-pipe",
     "filter": "max_by(.a) | .a",
-    "input": "[{\"a\":2},{\"a\":1}]"
+    "input": "[{\"a\":2},{\"a\":1}]",
+    "compat_status": "pass"
   },
   {
     "name": "flatten-default",
     "filter": "flatten",
-    "input": "[1,[2,[3]]]"
+    "input": "[1,[2,[3]]]",
+    "compat_status": "pass"
   },
   {
     "name": "paths-basic",
     "filter": "paths",
-    "input": "{\"a\":[1],\"b\":2}"
+    "input": "{\"a\":[1],\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "add-array",
     "filter": "add",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "values-array",
     "filter": ".[] | values",
-    "input": "[null,1,false,true]"
+    "input": "[null,1,false,true]",
+    "compat_status": "pass"
   },
   {
     "name": "contains-object",
     "filter": "contains({\"a\":1})",
-    "input": "{\"a\":1,\"b\":2}"
+    "input": "{\"a\":1,\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "inside-object",
     "filter": "inside({\"a\":1,\"b\":2})",
-    "input": "{\"a\":1}"
+    "input": "{\"a\":1}",
+    "compat_status": "pass"
   },
   {
     "name": "index-array",
     "filter": "index(2)",
-    "input": "[1,2,3,2]"
+    "input": "[1,2,3,2]",
+    "compat_status": "pass"
   },
   {
     "name": "rindex-array",
     "filter": "rindex(2)",
-    "input": "[1,2,3,2]"
+    "input": "[1,2,3,2]",
+    "compat_status": "pass"
   },
   {
     "name": "indices-array",
     "filter": "indices(2)",
-    "input": "[1,2,3,2]"
+    "input": "[1,2,3,2]",
+    "compat_status": "pass"
   },
   {
     "name": "keys-object",
     "filter": "keys",
-    "input": "{\"b\":1,\"a\":2}"
+    "input": "{\"b\":1,\"a\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "first-stream",
     "filter": "first(.[])",
-    "input": "[9,8,7]"
+    "input": "[9,8,7]",
+    "compat_status": "pass"
   },
   {
     "name": "last-stream",
     "filter": "last(.[])",
-    "input": "[9,8,7]"
+    "input": "[9,8,7]",
+    "compat_status": "pass"
   },
   {
     "name": "compare-eq",
     "filter": ".a == .b",
-    "input": "{\"a\":[1,2],\"b\":[1,2]}"
+    "input": "{\"a\":[1,2],\"b\":[1,2]}",
+    "compat_status": "pass"
   },
   {
     "name": "compare-neq",
     "filter": ".a != .b",
-    "input": "{\"a\":1,\"b\":2}"
+    "input": "{\"a\":1,\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "compare-lt",
     "filter": ".a < .b",
-    "input": "{\"a\":1,\"b\":2}"
+    "input": "{\"a\":1,\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "compare-lte",
     "filter": ".a <= .b",
-    "input": "{\"a\":1,\"b\":1}"
+    "input": "{\"a\":1,\"b\":1}",
+    "compat_status": "pass"
   },
   {
     "name": "compare-gt",
     "filter": ".a > .b",
-    "input": "{\"a\":3,\"b\":2}"
+    "input": "{\"a\":3,\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "compare-cross-type-rank",
     "filter": ".[] | . >= 0",
-    "input": "[null,1,false,true,0,\"a\"]"
+    "input": "[null,1,false,true,0,\"a\"]",
+    "compat_status": "pass"
   },
   {
     "name": "assign-update-field",
     "filter": ".a |= . + 1",
-    "input": "{\"a\":1,\"b\":2}"
+    "input": "{\"a\":1,\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "assign-add-field",
     "filter": ".a += 4",
-    "input": "{\"a\":1}"
+    "input": "{\"a\":1}",
+    "compat_status": "pass"
   },
   {
     "name": "assign-sub-field",
     "filter": ".a -= 3",
-    "input": "{\"a\":10}"
+    "input": "{\"a\":10}",
+    "compat_status": "pass"
   },
   {
     "name": "assign-mul-index",
     "filter": ".[1] *= 10",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "assign-div-field",
     "filter": ".a /= 2",
-    "input": "{\"a\":9}"
+    "input": "{\"a\":9}",
+    "compat_status": "pass"
   },
   {
     "name": "assign-fallback-field",
     "filter": ".a //= 9",
-    "input": "{\"a\":null}"
+    "input": "{\"a\":null}",
+    "compat_status": "pass"
   },
   {
     "name": "assign-nested-field",
     "filter": ".a.b |= . + 1",
-    "input": "{\"a\":{\"b\":1}}"
+    "input": "{\"a\":{\"b\":1}}",
+    "compat_status": "pass"
   },
   {
     "name": "assign-nested-fallback",
     "filter": ".a.b //= 9",
-    "input": "{\"a\":{}}"
+    "input": "{\"a\":{}}",
+    "compat_status": "pass"
   },
   {
     "name": "assign-update-select-null-input",
     "filter": ".a |= select(. >= 0)",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "assign-update-select-null-field-delete",
     "filter": ".a |= select(. >= 0)",
-    "input": "{\"a\":null}"
+    "input": "{\"a\":null}",
+    "compat_status": "pass"
   },
   {
     "name": "assign-nested-add",
     "filter": ".a.b += 2",
-    "input": "{\"a\":{\"b\":3}}"
+    "input": "{\"a\":{\"b\":3}}",
+    "compat_status": "pass"
   },
   {
     "name": "assign-array-inside-object",
     "filter": ".a[1] *= 10",
-    "input": "{\"a\":[1,2,3]}"
+    "input": "{\"a\":[1,2,3]}",
+    "compat_status": "pass"
   },
   {
     "name": "assign-create-object-path",
     "filter": ".a.b |= . + 1",
-    "input": "{}"
+    "input": "{}",
+    "compat_status": "pass"
   },
   {
     "name": "assign-create-array-path",
     "filter": ".[2] += 5",
-    "input": "[]"
+    "input": "[]",
+    "compat_status": "pass"
   },
   {
     "name": "assign-neg-index",
     "filter": ".[-1] += 1",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "assign-iter-update-inner-index",
     "filter": ".[] |= .[0]",
-    "input": "[[1,2],[3,4]]"
+    "input": "[[1,2],[3,4]]",
+    "compat_status": "pass"
   },
   {
     "name": "assign-iter-add-root-rhs",
     "filter": ".[] += .[0]",
-    "input": "[[1,2],[3,4]]"
+    "input": "[[1,2],[3,4]]",
+    "compat_status": "pass"
   },
   {
     "name": "assign-optional-path-add",
     "filter": "(.[] | .a?) += 1",
-    "input": "[{\"a\":1},{\"b\":2},{\"a\":3}]"
+    "input": "[{\"a\":1},{\"b\":2},{\"a\":3}]",
+    "compat_status": "pass"
   },
   {
     "name": "assign-optional-path-update-empty",
     "filter": "(.[] | .a?) |= empty",
-    "input": "[{\"a\":1},{\"b\":2},{\"a\":3}]"
+    "input": "[{\"a\":1},{\"b\":2},{\"a\":3}]",
+    "compat_status": "pass"
   },
   {
     "name": "assign-select-add",
     "filter": "(.[] | select(.a != null) | .a) += 10",
-    "input": "[{\"a\":1},{\"b\":2},{\"a\":3}]"
+    "input": "[{\"a\":1},{\"b\":2},{\"a\":3}]",
+    "compat_status": "pass"
   },
   {
     "name": "chained-index-field",
     "filter": ".a[1]",
-    "input": "{\"a\":[10,20,30]}"
+    "input": "{\"a\":[10,20,30]}",
+    "compat_status": "pass"
   },
   {
     "name": "chained-slice-field",
     "filter": ".a[1:3]",
-    "input": "{\"a\":[10,20,30,40]}"
+    "input": "{\"a\":[10,20,30,40]}",
+    "compat_status": "pass"
   },
   {
     "name": "map-values-array",
     "filter": "map_values(. + 1)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "select-stream",
     "filter": ".[] | select(. > 1)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "add-strings-array",
     "filter": "add",
-    "input": "[\"a\",\"b\",\"c\"]"
+    "input": "[\"a\",\"b\",\"c\"]",
+    "compat_status": "pass"
   },
   {
     "name": "length-array",
     "filter": "length",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "length-object",
     "filter": "length",
-    "input": "{\"a\":1,\"b\":2}"
+    "input": "{\"a\":1,\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "nth-positive",
     "filter": "nth(1)",
-    "input": "[9,8,7]"
+    "input": "[9,8,7]",
+    "compat_status": "pass"
   },
   {
     "name": "group-by-field",
     "filter": "group_by(.a) | map(length)",
-    "input": "[{\"a\":1},{\"a\":2},{\"a\":1}]"
+    "input": "[{\"a\":1},{\"a\":2},{\"a\":1}]",
+    "compat_status": "pass"
   },
   {
     "name": "unique-by-field",
     "filter": "unique_by(.a) | map(.a)",
-    "input": "[{\"a\":1},{\"a\":2},{\"a\":1}]"
+    "input": "[{\"a\":1},{\"a\":2},{\"a\":1}]",
+    "compat_status": "pass"
   },
   {
     "name": "tojson-object",
     "filter": "tojson",
-    "input": "{\"a\":[1,2]}"
+    "input": "{\"a\":[1,2]}",
+    "compat_status": "pass"
   },
   {
     "name": "fromjson-object",
     "filter": "fromjson",
-    "input": "\"{\\\"a\\\":1}\""
+    "input": "\"{\\\"a\\\":1}\"",
+    "compat_status": "pass"
   },
   {
     "name": "split-empty-sep",
     "filter": "split(\"\")",
-    "input": "\"ab\""
+    "input": "\"ab\"",
+    "compat_status": "pass"
   },
   {
     "name": "join-numbers",
     "filter": "join(\"-\")",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "transpose-ragged",
     "filter": "transpose",
-    "input": "[[1,2],[3]]"
+    "input": "[[1,2],[3]]",
+    "compat_status": "pass"
   },
   {
     "name": "paths-scalars",
     "filter": "paths(scalars)",
-    "input": "{\"a\":[1,{\"b\":2}]}"
+    "input": "{\"a\":[1,{\"b\":2}]}",
+    "compat_status": "pass"
   },
   {
     "name": "map-values-object-inc",
     "filter": "map_values(. + 1)",
-    "input": "{\"a\":1,\"b\":2}"
+    "input": "{\"a\":1,\"b\":2}",
+    "compat_status": "pass"
   },
   {
     "name": "contains-array-false",
     "filter": "contains([4])",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "inside-array-false",
     "filter": "inside([1,2])",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "index-array-missing",
     "filter": "index(9)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "rindex-array-missing",
     "filter": "rindex(9)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "indices-array-empty",
     "filter": "indices(9)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "bsearch-missing",
     "filter": "bsearch(2)",
-    "input": "[1,3,5]"
+    "input": "[1,3,5]",
+    "compat_status": "pass"
   },
   {
     "name": "reduce-empty",
     "filter": "reduce .[] as $x (0; . + $x)",
-    "input": "[]"
+    "input": "[]",
+    "compat_status": "pass"
   },
   {
     "name": "reduce-single",
     "filter": "reduce .[] as $x (0; . + $x)",
-    "input": "[7]"
+    "input": "[7]",
+    "compat_status": "pass"
   },
   {
     "name": "reduce-try-catch",
     "filter": "reduce .[] as $x (0; try (. + $x) catch .)",
-    "input": "[1,2,3]"
+    "input": "[1,2,3]",
+    "compat_status": "pass"
   },
   {
     "name": "foreach-empty",
     "filter": "foreach .[] as $x (0; . + $x; .)",
-    "input": "[]"
+    "input": "[]",
+    "compat_status": "pass"
   },
   {
     "name": "foreach-mixed-sign",
     "filter": "foreach .[] as $x (0; . + $x; .)",
-    "input": "[-1,2,-3]"
+    "input": "[-1,2,-3]",
+    "compat_status": "pass"
   },
   {
     "name": "try-catch-div-zero",
     "filter": "try (.a / .b) catch \"divzero\"",
-    "input": "{\"a\":1,\"b\":0}"
+    "input": "{\"a\":1,\"b\":0}",
+    "compat_status": "pass"
   },
   {
     "name": "try-fallback",
     "filter": "(try .a.b catch empty) // \"fallback\"",
-    "input": "{\"a\":1}"
+    "input": "{\"a\":1}",
+    "compat_status": "pass"
   },
   {
     "name": "try-catch-reduce-scalar",
     "filter": "try (reduce .[] as $x (0; . + $x)) catch \"noiter\"",
-    "input": "1"
+    "input": "1",
+    "compat_status": "pass"
   },
   {
     "name": "arith-mixed",
     "filter": "(.a + .b) * .c - .d / .e",
-    "input": "{\"a\":4,\"b\":2,\"c\":3,\"d\":10,\"e\":5}"
+    "input": "{\"a\":4,\"b\":2,\"c\":3,\"d\":10,\"e\":5}",
+    "compat_status": "pass"
   },
   {
     "name": "err-reverse-string",
     "filter": "reverse",
     "input": "\"abc\"",
-    "expect_error": true
+    "expect_error": true,
+    "compat_status": "pass"
   },
   {
     "name": "err-keys-string",
     "filter": "keys",
     "input": "\"abc\"",
-    "expect_error": true
+    "expect_error": true,
+    "compat_status": "pass"
   },
   {
     "name": "err-contains-array-number",
     "filter": "contains(1)",
     "input": "[1,2]",
-    "expect_error": true
+    "expect_error": true,
+    "compat_status": "pass"
   },
   {
     "name": "err-startswith-number",
     "filter": "startswith(\"a\")",
     "input": "1",
-    "expect_error": true
+    "expect_error": true,
+    "compat_status": "pass"
   },
   {
     "name": "err-join-number",
     "filter": "join(\"-\")",
     "input": "1",
-    "expect_error": true
+    "expect_error": true,
+    "compat_status": "pass"
   },
   {
     "name": "err-getpath-badpath",
     "filter": "getpath(1)",
     "input": "{\"a\":1}",
-    "expect_error": true
+    "expect_error": true,
+    "compat_status": "pass"
   },
   {
     "name": "err-arith-string-plus-number",
     "filter": ".a + 1",
     "input": "{\"a\":\"hi\"}",
-    "expect_error": true
+    "expect_error": true,
+    "compat_status": "pass"
   },
   {
     "name": "err-arith-array-plus-object-full-value",
     "filter": "[1,2,3] + {\"a\":[1,2,3]}",
     "input": "null",
-    "expect_error": true
+    "expect_error": true,
+    "compat_status": "pass"
   },
   {
     "name": "err-arith-array-div-object-full-value",
     "filter": "[1,2,3] / {\"a\":[1,2,3]}",
     "input": "null",
-    "expect_error": true
+    "expect_error": true,
+    "compat_status": "pass"
   },
   {
     "name": "err-division-by-zero",
     "filter": "1 / 0",
     "input": "null",
-    "expect_error": true
+    "expect_error": true,
+    "compat_status": "pass"
   },
   {
     "name": "err-setpath-bad-path",
     "filter": "setpath(\"a\";1)",
     "input": "{}",
     "expect_error": true,
-    "expect_error_mode": "strict"
+    "expect_error_mode": "strict",
+    "compat_status": "pass"
   },
   {
     "name": "err-delpaths-bad-path",
     "filter": "delpaths([1])",
     "input": "{}",
     "expect_error": true,
-    "expect_error_mode": "strict"
+    "expect_error_mode": "strict",
+    "compat_status": "pass"
   },
   {
     "name": "split-regex-null-flags",
     "filter": "split(\", *\"; null)",
-    "input": "\"ab,cd, ef\""
+    "input": "\"ab,cd, ef\"",
+    "compat_status": "pass"
   },
   {
     "name": "splits-empty",
     "filter": "[splits(\"\")]",
-    "input": "\"ab\""
+    "input": "\"ab\"",
+    "compat_status": "pass"
   },
   {
     "name": "splits-regex-ignore-empty",
     "filter": "[splits(\",? *\"; \"n\")]",
-    "input": "\"ab,cd ef,  gh\""
+    "input": "\"ab,cd ef,  gh\"",
+    "compat_status": "pass"
   },
   {
     "name": "combinations-basic",
     "filter": "combinations",
-    "input": "[[1,2],[3,4]]"
+    "input": "[[1,2],[3,4]]",
+    "compat_status": "pass"
   },
   {
     "name": "fromdate-basic",
     "filter": "fromdate",
-    "input": "\"2015-03-05T23:51:47Z\""
+    "input": "\"2015-03-05T23:51:47Z\"",
+    "compat_status": "pass"
   },
   {
     "name": "env-pager-null",
     "filter": "env.PAGER",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "env-var-pager-null",
     "filter": "$ENV.PAGER",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "truncate-stream-basic",
     "filter": "truncate_stream([[0],\"a\"],[[1,0],\"b\"],[[1,0]],[[1]])",
-    "input": "1"
+    "input": "1",
+    "compat_status": "pass"
   },
   {
     "name": "fromstream-truncate",
     "filter": "fromstream(1|truncate_stream([[0],\"a\"],[[1,0],\"b\"],[[1,0]],[[1]]))",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "fromstream-tostream-roundtrip",
     "filter": ". as $dot|fromstream($dot|tostream)|.==$dot",
-    "input": "[0,[1,{\"a\":1},{\"b\":2}]]"
+    "input": "[0,[1,{\"a\":1},{\"b\":2}]]",
+    "compat_status": "pass"
   },
   {
     "name": "as-comma-scope",
     "filter": "[-1 as $x | 1,$x]",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "as-pattern-missing-field-null",
     "filter": "[1, {c:3, d:4}] as [$a, {c:$b, b:$c}] | $a, $b, $c",
-    "input": "null"
+    "input": "null",
+    "compat_status": "pass"
   },
   {
     "name": "as-pattern-fallback-var-defaults",
     "filter": ".[] as [$a] ?// [$b] | if $a != null then error(\"err: \\($a)\") else {$a,$b} end",
-    "input": "[[3]]"
+    "input": "[[3]]",
+    "compat_status": "pass"
   },
   {
     "name": "as-binding-across-comma-calls",
     "filter": "[\"foo\",1] as $p | getpath($p), setpath($p; 20), delpaths([$p])",
-    "input": "{\"bar\":42, \"foo\":[\"a\", \"b\", \"c\", \"d\"]}"
+    "input": "{\"bar\":42, \"foo\":[\"a\", \"b\", \"c\", \"d\"]}",
+    "compat_status": "pass"
   },
   {
     "name": "cli-compact-explicit",
     "filter": ".",
     "input": "{\"a\":1}",
-    "jq_args": ["-c"],
-    "jqx_args": ["-c"]
+    "jq_args": [
+      "-c"
+    ],
+    "jqx_args": [
+      "-c"
+    ],
+    "compat_status": "pass"
   },
   {
     "name": "cli-raw-string-output",
     "filter": ".foo",
     "input": "{\"foo\":\"bar\"}",
-    "jq_args": ["-r"],
-    "jqx_args": ["-r"]
+    "jq_args": [
+      "-r"
+    ],
+    "jqx_args": [
+      "-r"
+    ],
+    "compat_status": "pass"
   },
   {
     "name": "cli-slurp-ndjson",
     "filter": ".",
     "input": "1\n2",
-    "jq_args": ["-s"],
-    "jqx_args": ["-s"]
+    "jq_args": [
+      "-s"
+    ],
+    "jqx_args": [
+      "-s"
+    ],
+    "compat_status": "pass"
   },
   {
     "name": "cli-stream-whitespace-separated",
     "filter": ".",
-    "input": "1 2"
+    "input": "1 2",
+    "compat_status": "pass"
   },
   {
     "name": "cli-stream-adjacent-structured",
     "filter": ".",
-    "input": "{}[]\"x\""
+    "input": "{}[]\"x\"",
+    "compat_status": "pass"
   },
   {
     "name": "cli-slurp-whitespace-separated",
     "filter": ".",
     "input": "1 2",
-    "jq_args": ["-s"],
-    "jqx_args": ["-s"]
+    "jq_args": [
+      "-s"
+    ],
+    "jqx_args": [
+      "-s"
+    ],
+    "compat_status": "pass"
   },
   {
     "name": "cli-raw-lines",
     "filter": ".",
     "input": "a\nb",
-    "jq_args": ["-R"],
-    "jqx_args": ["-R"]
+    "jq_args": [
+      "-R"
+    ],
+    "jqx_args": [
+      "-R"
+    ],
+    "compat_status": "pass"
   },
   {
     "name": "cli-no-input",
     "filter": ".",
     "input": "",
-    "jq_args": ["-n"],
-    "jqx_args": ["-n"],
-    "jqx_use_stdin": true
+    "jq_args": [
+      "-n"
+    ],
+    "jqx_args": [
+      "-n"
+    ],
+    "jqx_use_stdin": true,
+    "compat_status": "pass"
   },
   {
     "name": "cli-no-input-raw-slurp",
     "filter": ".",
     "input": "",
-    "jq_args": ["-n", "-R", "-s"],
-    "jqx_args": ["-n", "-R", "-s"],
-    "jqx_use_stdin": true
+    "jq_args": [
+      "-n",
+      "-R",
+      "-s"
+    ],
+    "jqx_args": [
+      "-n",
+      "-R",
+      "-s"
+    ],
+    "jqx_use_stdin": true,
+    "compat_status": "pass"
+  },
+  {
+    "name": "object-order-merge-updates-existing-key",
+    "filter": ". + {\"a\": 9, \"c\": 3}",
+    "input": "{\"b\":1,\"a\":2}",
+    "compat_status": "pass"
+  },
+  {
+    "name": "object-order-setpath-appends-new-key",
+    "filter": "setpath([\"c\"];3) | setpath([\"a\"];9)",
+    "input": "{\"b\":1,\"a\":2}",
+    "compat_status": "pass"
+  },
+  {
+    "name": "cli-raw-slurp-trailing-newline",
+    "filter": ".",
+    "input": "a\nb\n",
+    "jq_args": [
+      "-R",
+      "-s"
+    ],
+    "jqx_args": [
+      "-R",
+      "-s"
+    ],
+    "compat_status": "pass"
+  },
+  {
+    "name": "cli-exit-status-false",
+    "filter": ".",
+    "input": "false",
+    "jq_args": [
+      "-e"
+    ],
+    "jqx_args": [
+      "-e"
+    ],
+    "expect_status": 1,
+    "compat_status": "temporary_exception",
+    "compat_ledger_id": "cli-e-exit-status",
+    "compat_reason": "jqx CLI does not yet implement jq -e exit semantics for false/null/no-result cases and returns status 0.",
+    "compat_removal_condition": "Remove once cmd exit handling matches jq 1.8.1 for -e on false, null, and empty outputs."
+  },
+  {
+    "name": "cli-exit-status-null",
+    "filter": ".",
+    "input": "null",
+    "jq_args": [
+      "-e"
+    ],
+    "jqx_args": [
+      "-e"
+    ],
+    "expect_status": 1,
+    "compat_status": "temporary_exception",
+    "compat_ledger_id": "cli-e-exit-status",
+    "compat_reason": "jqx CLI does not yet implement jq -e exit semantics for false/null/no-result cases and returns status 0.",
+    "compat_removal_condition": "Remove once cmd exit handling matches jq 1.8.1 for -e on false, null, and empty outputs."
+  },
+  {
+    "name": "cli-exit-status-empty",
+    "filter": "empty",
+    "input": "null",
+    "jq_args": [
+      "-e"
+    ],
+    "jqx_args": [
+      "-e"
+    ],
+    "expect_status": 4,
+    "compat_status": "temporary_exception",
+    "compat_ledger_id": "cli-e-exit-status",
+    "compat_reason": "jqx CLI does not yet implement jq -e exit semantics for false/null/no-result cases and returns status 0.",
+    "compat_removal_condition": "Remove once cmd exit handling matches jq 1.8.1 for -e on false, null, and empty outputs."
   }
 ]
