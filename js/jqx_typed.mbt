@@ -187,15 +187,7 @@ pub fn query_json_text(
   query : Query[@core.Value, @core.Value],
   input : String,
 ) -> Result[Array[String], String] {
-  try {
-    let json = @core.parse(input)
-    let values = @core.execute(query.filter, json)
-    let out = []
-    for v in values {
-      out.push(v.to_json_string())
-    }
-    Ok(out)
-  } catch {
+  Ok(@core.run_compiled_json_text(query.filter, input)) catch {
     err => Err(err.to_string())
   }
 }

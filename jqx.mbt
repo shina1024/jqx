@@ -37,9 +37,8 @@ pub fn is_valid_json(input : StringView) -> Bool {
 
 ///|
 pub fn run(filter : StringView, input : Json) -> Array[Json] raise JqxError {
-  let compiled = compile(filter) catch { err => raise Compile(err) }
-  compiled.run(input) catch {
-    err => raise Runtime(err)
+  @core.run_json(filter, input) catch {
+    err => raise jqx_error_from_core(err)
   }
 }
 
@@ -57,8 +56,9 @@ pub fn run_json_text(
   input : StringView,
   max_nesting_depth? : Int = 1024,
 ) -> Array[String] raise JqxError {
-  let compiled = compile(filter) catch { err => raise Compile(err) }
-  compiled.run_json_text(input, max_nesting_depth~)
+  @core.run_json_text(filter, input, max_nesting_depth~) catch {
+    err => raise jqx_error_from_core(err)
+  }
 }
 
 ///|
@@ -67,11 +67,7 @@ pub fn CompiledFilter::run_json_text(
   input : StringView,
   max_nesting_depth? : Int = 1024,
 ) -> Array[String] raise JqxError {
-  let parsed = @core.parse(input, max_nesting_depth~) catch {
-    err => raise JsonParse(json_parse_error_from_core(err))
+  @core.run_compiled_json_text(self.filter, input, max_nesting_depth~) catch {
+    err => raise jqx_error_from_core(err)
   }
-  let outputs = @core.execute(self.filter, parsed) catch {
-    err => raise Runtime(runtime_error_from_core(err))
-  }
-  @core.values_to_json_text(outputs)
 }

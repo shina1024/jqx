@@ -156,6 +156,15 @@ pub impl Show for JqxError with output(self, logger) {
 }
 
 ///|
+fn jqx_error_from_core(input : @core.RunError) -> JqxError {
+  match input {
+    @core.Parse(err) => JsonParse(json_parse_error_from_core(err))
+    @core.Filter(err) => Compile(compile_error_from_core(err))
+    @core.Eval(err) => Runtime(runtime_error_from_core(err))
+  }
+}
+
+///|
 fn position_from_core(input : @core.Position) -> Position {
   { line: input.line, column: input.column }
 }

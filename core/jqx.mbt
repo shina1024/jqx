@@ -482,6 +482,22 @@ pub impl Show for ParseError with output(self, logger) {
 }
 
 ///|
+pub suberror RunError {
+  Parse(ParseError)
+  Filter(FilterError)
+  Eval(EvalError)
+} derive(Eq)
+
+///|
+pub impl Show for RunError with output(self, logger) {
+  match self {
+    Parse(err) => Show::output(err, logger)
+    Filter(err) => Show::output(err, logger)
+    Eval(err) => Show::output(err, logger)
+  }
+}
+
+///|
 pub impl Show for Value with output(self, logger) {
   match self {
     JNull => logger.write_string("Null")
@@ -706,6 +722,40 @@ pub fn execute_json(
   input : Json,
 ) -> Array[Json] raise EvalError {
   execute(filter, Value::from_json(input)) |> values_to_json
+}
+
+///|
+pub fn run_json(
+  filter : StringView,
+  input : Json,
+) -> Array[Json] raise RunError {
+  let compiled = compile(filter) catch { err => raise Filter(err) }
+  execute_json(compiled, input) catch {
+    err => raise Eval(err)
+  }
+}
+
+///|
+pub fn run_compiled_json_text(
+  filter : Filter,
+  input : StringView,
+  max_nesting_depth? : Int = 1024,
+) -> Array[String] raise RunError {
+  let parsed = parse(input, max_nesting_depth~) catch {
+    err => raise Parse(err)
+  }
+  let outputs = execute(filter, parsed) catch { err => raise Eval(err) }
+  values_to_json_text(outputs)
+}
+
+///|
+pub fn run_json_text(
+  filter : StringView,
+  input : StringView,
+  max_nesting_depth? : Int = 1024,
+) -> Array[String] raise RunError {
+  let compiled = compile(filter) catch { err => raise Filter(err) }
+  run_compiled_json_text(compiled, input, max_nesting_depth~)
 }
 
 ///|
