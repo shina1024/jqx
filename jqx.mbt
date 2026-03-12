@@ -7,10 +7,9 @@ pub fn parse_json(
   input : StringView,
   max_nesting_depth? : Int = 1024,
 ) -> Json raise JsonParseError {
-  let parsed = @core.parse(input, max_nesting_depth~) catch {
+  @core.parse_json(input, max_nesting_depth~) catch {
     err => raise json_parse_error_from_core(err)
   }
-  from_core_value(parsed)
 }
 
 ///|
@@ -26,10 +25,9 @@ fn CompiledFilter::execute(
   self : CompiledFilter,
   input : Json,
 ) -> Array[Json] raise RuntimeError {
-  let values = @core.execute(self.filter, to_core_value(input)) catch {
+  @core.execute_json(self.filter, input) catch {
     err => raise runtime_error_from_core(err)
   }
-  values.map(from_core_value)
 }
 
 ///|
@@ -54,15 +52,6 @@ pub fn CompiledFilter::run(
 }
 
 ///|
-fn json_values_to_strings(values : Array[Json]) -> Array[String] {
-  let out = []
-  for value in values {
-    out.push(value.stringify())
-  }
-  out
-}
-
-///|
 pub fn run_json_text(
   filter : StringView,
   input : StringView,
@@ -78,9 +67,11 @@ pub fn CompiledFilter::run_json_text(
   input : StringView,
   max_nesting_depth? : Int = 1024,
 ) -> Array[String] raise JqxError {
-  let parsed = parse_json(input, max_nesting_depth~) catch {
-    err => raise JsonParse(err)
+  let parsed = @core.parse(input, max_nesting_depth~) catch {
+    err => raise JsonParse(json_parse_error_from_core(err))
   }
-  let outputs = self.run(parsed) catch { err => raise Runtime(err) }
-  json_values_to_strings(outputs)
+  let outputs = @core.execute(self.filter, parsed) catch {
+    err => raise Runtime(runtime_error_from_core(err))
+  }
+  @core.values_to_json_text(outputs)
 }

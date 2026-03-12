@@ -16,9 +16,13 @@ pub fn execute(Filter, Value) -> Array[Value] raise EvalError
 
 pub fn execute_for_cli(Filter, Value) -> (Array[Value], String?)
 
+pub fn execute_json(Filter, Json) -> Array[Json] raise EvalError
+
 pub fn parse(StringView, max_nesting_depth? : Int) -> Value raise ParseError
 
 pub fn parse_filter(StringView) -> Filter raise FilterError
+
+pub fn parse_json(StringView, max_nesting_depth? : Int) -> Json raise ParseError
 
 pub fn register_module_source(String, String) -> Unit
 
@@ -27,6 +31,10 @@ pub fn set_module_search_paths(Array[String]) -> Unit
 pub fn valid(StringView) -> Bool
 
 pub fn validate_filter_compile_diagnostics(Filter, StringView) -> Unit raise FilterError
+
+pub fn values_to_json(Array[Value]) -> Array[Json]
+
+pub fn values_to_json_text(Array[Value]) -> Array[String]
 
 // Errors
 pub suberror EvalError {
@@ -171,11 +179,13 @@ pub enum Value {
 }
 pub fn Value::array(Array[Self]) -> Self
 pub fn Value::boolean(Bool) -> Self
+pub fn Value::from_json(Json) -> Self
 pub fn Value::null() -> Self
 pub fn Value::number(Double, repr? : String) -> Self
 pub fn Value::object(Map[String, Self]) -> Self
 pub fn Value::object_from_entries(Array[(String, Self)]) -> Self
 pub fn Value::string(String) -> Self
+pub fn Value::to_json(Self) -> Json
 pub fn Value::to_json_string(Self) -> String
 pub impl Eq for Value
 pub impl Show for Value

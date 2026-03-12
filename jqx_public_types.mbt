@@ -191,15 +191,15 @@ fn compile_error_from_core(input : @core.FilterError) -> CompileError {
 fn runtime_error_from_core(input : @core.EvalError) -> RuntimeError {
   match input {
     @core.TypeError(msg) => TypeError(msg)
-    @core.Thrown(value) => Thrown(from_core_value(value))
+    @core.Thrown(value) => Thrown(@core.Value::to_json(value))
     @core.UnknownFunction(name) => UnknownFunction(name)
     @core.UnknownVariable(name) => UnknownVariable(name)
     @core.BreakSignal(name, values) =>
-      BreakSignal(name, values.map(from_core_value))
+      BreakSignal(name, @core.values_to_json(values))
     @core.Partial(values, catch_input, message) =>
       Partial(
-        values.map(from_core_value),
-        from_core_value(catch_input),
+        @core.values_to_json(values),
+        @core.Value::to_json(catch_input),
         message,
       )
   }

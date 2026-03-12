@@ -1,5 +1,5 @@
 ///|
-// Source under test: jqx.mbt, jqx_json_convert.mbt, jqx_public_types.mbt
+// Source under test: jqx.mbt, jqx_public_types.mbt
 
 ///|
 test "top-level parse returns standard Json" {

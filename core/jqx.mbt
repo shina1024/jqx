@@ -214,6 +214,54 @@ pub fn Value::object_from_entries(entries : Array[(String, Value)]) -> Value {
 }
 
 ///|
+pub fn Value::from_json(input : Json) -> Value {
+  match input {
+    Null => Value::null()
+    True => Value::boolean(true)
+    False => Value::boolean(false)
+    Number(n, repr~) => Value::number(n, repr?)
+    String(s) => Value::string(s)
+    Array(values) => Value::array(values.map(value => Value::from_json(value)))
+    Object(obj) => {
+      let entries = []
+      for key, value in obj {
+        entries.push((key, Value::from_json(value)))
+      }
+      Value::object_from_entries(entries)
+    }
+  }
+}
+
+///|
+pub fn Value::to_json(self : Value) -> Json {
+  match self {
+    JNull => null
+    JTrue => Json::boolean(true)
+    JFalse => Json::boolean(false)
+    Number(n, repr) => Json::number(n, repr?)
+    String(s) => Json::string(s)
+    Array(values) => Json::array(values.map(value => Value::to_json(value)))
+    Object(obj) => {
+      let out = Map::new()
+      for kv in obj.iter() {
+        out[kv.0] = Value::to_json(kv.1)
+      }
+      Json::object(out)
+    }
+  }
+}
+
+///|
+pub fn values_to_json(values : Array[Value]) -> Array[Json] {
+  values.map(value => Value::to_json(value))
+}
+
+///|
+pub fn values_to_json_text(values : Array[Value]) -> Array[String] {
+  values.map(value => value.to_json_string())
+}
+
+///|
 fn decimal_expand_positive_exponent(raw : String) -> String? {
   let mut exp_index = -1
   for i in 0..<raw.length() {
@@ -642,6 +690,22 @@ pub fn valid(input : StringView) -> Bool {
   } catch {
     _ => return false
   }
+}
+
+///|
+pub fn parse_json(
+  input : StringView,
+  max_nesting_depth? : Int = 1024,
+) -> Json raise ParseError {
+  Value::to_json(parse(input, max_nesting_depth~))
+}
+
+///|
+pub fn execute_json(
+  filter : Filter,
+  input : Json,
+) -> Array[Json] raise EvalError {
+  execute(filter, Value::from_json(input)) |> values_to_json
 }
 
 ///|
