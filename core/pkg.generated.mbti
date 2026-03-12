@@ -28,9 +28,13 @@ pub fn register_module_source(String, String) -> Unit
 
 pub fn run_compiled_json_text(Filter, StringView, max_nesting_depth? : Int) -> Array[String] raise RunError
 
+pub fn run_compiled_values(Filter, StringView, max_nesting_depth? : Int) -> Array[Value] raise RunError
+
 pub fn run_json(StringView, Json) -> Array[Json] raise RunError
 
 pub fn run_json_text(StringView, StringView, max_nesting_depth? : Int) -> Array[String] raise RunError
+
+pub fn run_values(StringView, StringView, max_nesting_depth? : Int) -> Array[Value] raise RunError
 
 pub fn set_module_search_paths(Array[String]) -> Unit
 

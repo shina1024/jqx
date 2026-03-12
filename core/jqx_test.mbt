@@ -105,3 +105,24 @@ test "parse errors" {
     fail("expected InvalidEof for missing closing brace")
   }
 }
+
+///|
+test "core run helpers centralize value and text lanes" {
+  let compiled = compile(".foo") catch {
+    err => fail("compile failed: " + err.to_string())
+  }
+  let compiled_values = run_compiled_values(compiled, "{\"foo\": 4}") catch {
+    err => fail("run_compiled_values failed: " + err.to_string())
+  }
+  assert_eq(compiled_values, [Value::number(4.0)])
+
+  let values = run_values(".foo", "{\"foo\": 9}") catch {
+    err => fail("run_values failed: " + err.to_string())
+  }
+  assert_eq(values, [Value::number(9.0)])
+
+  let text = run_compiled_json_text(compiled, "{\"foo\": 9007199254740993}") catch {
+    err => fail("run_compiled_json_text failed: " + err.to_string())
+  }
+  assert_eq(text, ["9007199254740993"])
+}

@@ -141,15 +141,6 @@ fn eval_error_to_jqx_error(err : @core.EvalError) -> JqxError {
 }
 
 ///|
-fn json_values_to_strings(values : Array[@core.Value]) -> Array[String] {
-  let out = []
-  for value in values {
-    out.push(value.to_json_string())
-  }
-  out
-}
-
-///|
 pub fn parse_json(input : String) -> @core.Value raise @core.ParseError {
   @core.parse(input)
 }
@@ -197,19 +188,28 @@ pub fn try_execute(
 }
 
 ///|
+fn run_error_to_jqx_error(
+  err : @core.RunError,
+  filter_input? : String = "",
+  json_input? : String = "",
+) -> JqxError {
+  match err {
+    @core.Parse(parse_err) => parse_error_to_jqx_error(json_input, parse_err)
+    @core.Filter(filter_err) =>
+      filter_error_to_jqx_error(filter_input, filter_err)
+    @core.Eval(eval_err) => eval_error_to_jqx_error(eval_err)
+  }
+}
+
+///|
 /// Compatibility lane for precompiled filters:
 /// parse input JSON, execute filter, and return JSON text outputs.
 pub fn run_compiled_json_text(
   filter : @core.Filter,
   input : String,
 ) -> Result[Array[String], JqxError] {
-  match try_parse_json(input) {
-    Ok(value) =>
-      match try_execute(filter, value) {
-        Ok(outputs) => Ok(json_values_to_strings(outputs))
-        Err(err) => Err(err)
-      }
-    Err(err) => Err(err)
+  Ok(@core.run_compiled_json_text(filter, input)) catch {
+    err => Err(run_error_to_jqx_error(err, json_input=input))
   }
 }
 
@@ -219,9 +219,8 @@ pub fn run_compiled_values(
   filter : @core.Filter,
   input : String,
 ) -> Result[Array[@core.Value], JqxError] {
-  match try_parse_json(input) {
-    Ok(value) => try_execute(filter, value)
-    Err(err) => Err(err)
+  Ok(@core.run_compiled_values(filter, input)) catch {
+    err => Err(run_error_to_jqx_error(err, json_input=input))
   }
 }
 
@@ -232,9 +231,9 @@ pub fn run_json_text(
   filter : String,
   input : String,
 ) -> Result[Array[String], JqxError] {
-  match try_compile(filter) {
-    Ok(compiled) => run_compiled_json_text(compiled, input)
-    Err(err) => Err(err)
+  Ok(@core.run_json_text(filter, input)) catch {
+    err =>
+      Err(run_error_to_jqx_error(err, filter_input=filter, json_input=input))
   }
 }
 
@@ -245,8 +244,8 @@ pub fn run_values(
   filter : String,
   input : String,
 ) -> Result[Array[@core.Value], JqxError] {
-  match try_compile(filter) {
-    Ok(compiled) => run_compiled_values(compiled, input)
-    Err(err) => Err(err)
+  Ok(@core.run_values(filter, input)) catch {
+    err =>
+      Err(run_error_to_jqx_error(err, filter_input=filter, json_input=input))
   }
 }
