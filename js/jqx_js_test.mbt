@@ -70,6 +70,17 @@ test "js run_json_text preserves large-number repr output" {
 }
 
 ///|
+test "js run_json_text preserves escaped strings and object order" {
+  let out = run_json_text(
+    ". + {\"a\":9,\"c\":3}, .foo", "{\"b\":1,\"a\":2,\"foo\":\"line\\nbreak\"}",
+  )
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values, [
+    "{\"b\":1,\"a\":9,\"foo\":\"line\\nbreak\",\"c\":3}", "\"line\\nbreak\"",
+  ])
+}
+
+///|
 test "js run_values convenience lane" {
   let out = run_values(".foo + 1", "{\"foo\": 41}")
   guard out is Ok(values) else { fail("expected Ok") }
@@ -91,6 +102,31 @@ test "js run_compiled_json_text and run_compiled_values" {
   guard out_values is Ok(values2) else { fail("expected Ok") }
   assert_eq(values2.length(), 1)
   assert_eq(values2[0].to_json_string(), "4")
+}
+
+///|
+test "js compiled lanes preserve ordering and repr-sensitive outputs" {
+  let compiled = compile(". + {\"a\":9,\"c\":3}, .huge, .n")
+  let text_out = run_compiled_json_text(
+    compiled, "{\"b\":1,\"a\":2,\"huge\":9007199254740993,\"n\":1e309}",
+  )
+  guard text_out is Ok(text_values) else { fail("expected Ok") }
+  assert_eq(text_values, [
+    "{\"b\":1,\"a\":9,\"huge\":9007199254740993,\"n\":1e309,\"c\":3}", "9007199254740993",
+    "1e309",
+  ])
+
+  let value_out = run_compiled_values(
+    compiled, "{\"b\":1,\"a\":2,\"huge\":9007199254740993,\"n\":1e309}",
+  )
+  guard value_out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values.length(), 3)
+  assert_eq(
+    values[0].to_json_string(),
+    "{\"b\":1,\"a\":9,\"huge\":9007199254740993,\"n\":1e309,\"c\":3}",
+  )
+  assert_eq(values[1].to_json_string(), "9007199254740993")
+  assert_eq(values[2].to_json_string(), "1e309")
 }
 
 ///|

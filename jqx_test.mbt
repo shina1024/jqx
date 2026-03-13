@@ -49,11 +49,36 @@ test "run convenience lane executes filter strings on Json" {
 }
 
 ///|
+test "run preserves public Json object order across updates" {
+  let input = @json.parse("{\"b\":1,\"a\":2,\"huge\":9007199254740993}") catch {
+    err => fail("std parse failed: " + err.to_string())
+  }
+  let outputs = run(". + {\"a\":9,\"c\":3}", input) catch {
+    err => fail("run failed: " + err.to_string())
+  }
+  assert_eq(outputs.length(), 1)
+  assert_eq(
+    outputs[0].stringify(),
+    "{\"b\":1,\"a\":9,\"huge\":9007199254740993,\"c\":3}",
+  )
+}
+
+///|
 test "run_json_text compatibility lane preserves json text outputs" {
   let values = run_json_text(".", "9007199254740993") catch {
     err => fail("run_json_text failed: " + err.to_string())
   }
   assert_eq(values, ["9007199254740993"])
+}
+
+///|
+test "run_json_text preserves escaped strings and large-number repr" {
+  let values = run_json_text(
+    ".foo, .n, .huge", "{\"foo\":\"line\\nbreak\",\"n\":1e309,\"huge\":9007199254740993}",
+  ) catch {
+    err => fail("run_json_text failed: " + err.to_string())
+  }
+  assert_eq(values, ["\"line\\nbreak\"", "1e309", "9007199254740993"])
 }
 
 ///|
@@ -87,4 +112,19 @@ test "compiled filter run raises public RuntimeError with Json payloads" {
     fail("expected public thrown eval error")
   }
   assert_eq(value.stringify(), "{\"code\":1}")
+}
+
+///|
+test "compiled filter run_json_text preserves order and repr-sensitive outputs" {
+  let filter = compile(". + {\"a\":9,\"c\":3}, .huge") catch {
+    err => fail("compile failed: " + err.to_string())
+  }
+  let outputs = filter.run_json_text(
+    "{\"b\":1,\"a\":2,\"huge\":9007199254740993}",
+  ) catch {
+    err => fail("compiled run_json_text failed: " + err.to_string())
+  }
+  assert_eq(outputs, [
+    "{\"b\":1,\"a\":9,\"huge\":9007199254740993,\"c\":3}", "9007199254740993",
+  ])
 }

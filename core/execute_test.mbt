@@ -3646,3 +3646,24 @@ test "execute utf8bytelength errors" {
     fail("expected utf8bytelength number type error")
   }
 }
+
+///|
+test "execute shared run lanes preserve ordering and repr-sensitive outputs" {
+  assert_eq(
+    must_run_json_text(
+      ". + {\"a\":9,\"c\":3}, .foo", "{\"b\":1,\"a\":2,\"foo\":\"line\\nbreak\"}",
+    ),
+    ["{\"b\":1,\"a\":9,\"foo\":\"line\\nbreak\",\"c\":3}", "\"line\\nbreak\""],
+  )
+
+  let values = must_run_values(
+    ". + {\"a\":9,\"c\":3}, .huge, .n", "{\"b\":1,\"a\":2,\"huge\":9007199254740993,\"n\":1e309}",
+  )
+  assert_eq(values.length(), 3)
+  assert_eq(
+    values[0].to_json_string(),
+    "{\"b\":1,\"a\":9,\"huge\":9007199254740993,\"n\":1e309,\"c\":3}",
+  )
+  assert_eq(values[1].to_json_string(), "9007199254740993")
+  assert_eq(values[2].to_json_string(), "1e309")
+}
