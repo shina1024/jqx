@@ -7,7 +7,7 @@ CASES_PATH="${1:-${SCRIPT_DIR}/jq_exit_cases.json}"
 JQ_BIN="${JQ_BIN:-jq}"
 MOON_BIN="${MOON_BIN:-moon}"
 JQX_BIN="${JQX_BIN:-}"
-JQX_PROFILE="${JQX_PROFILE:-debug}"
+JQX_PROFILE="${JQX_PROFILE:-release}"
 JQX_PROFILE_LOWER="$(printf '%s' "${JQX_PROFILE}" | tr '[:upper:]' '[:lower:]')"
 
 resolve_jq_bin() {

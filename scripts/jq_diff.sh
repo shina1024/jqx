@@ -6,6 +6,10 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 CASES_PATH="${1:-${SCRIPT_DIR}/jq_compat_cases.json}"
 JQ_BIN="${JQ_BIN:-jq}"
 MOON_BIN="${MOON_BIN:-moon}"
+JQX_RUNNER="${JQX_RUNNER:-moon-run}"
+JQX_BIN="${JQX_BIN:-}"
+JQX_PROFILE="${JQX_PROFILE:-release}"
+JQX_PROFILE_LOWER="$(printf '%s' "${JQX_PROFILE}" | tr '[:upper:]' '[:lower:]')"
 
 resolve_jq_bin() {
   if command -v "${JQ_BIN}" >/dev/null 2>&1; then
@@ -47,6 +51,43 @@ resolve_moon_bin() {
     command -v moon.exe
     return 0
   fi
+
+  return 1
+}
+
+resolve_jqx_bin() {
+  if [[ -n "${JQX_BIN}" ]]; then
+    if [[ -x "${JQX_BIN}" ]]; then
+      printf '%s\n' "${JQX_BIN}"
+      return 0
+    fi
+    return 1
+  fi
+
+  local candidates=()
+  if [[ "${JQX_PROFILE_LOWER}" == "release" ]]; then
+    candidates=(
+      "${REPO_ROOT}/_build/native/release/build/cmd/cmd"
+      "${REPO_ROOT}/_build/native/release/build/cmd/cmd.exe"
+      "${REPO_ROOT}/_build/native/debug/build/cmd/cmd"
+      "${REPO_ROOT}/_build/native/debug/build/cmd/cmd.exe"
+    )
+  else
+    candidates=(
+      "${REPO_ROOT}/_build/native/debug/build/cmd/cmd"
+      "${REPO_ROOT}/_build/native/debug/build/cmd/cmd.exe"
+      "${REPO_ROOT}/_build/native/release/build/cmd/cmd"
+      "${REPO_ROOT}/_build/native/release/build/cmd/cmd.exe"
+    )
+  fi
+
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -x "${candidate}" ]]; then
+      printf '%s\n' "${candidate}"
+      return 0
+    fi
+  done
 
   return 1
 }
@@ -129,6 +170,16 @@ MOON_BIN_RESOLVED="$(resolve_moon_bin)" || {
   exit 2
 }
 
+if [[ "${JQX_RUNNER}" != "moon-run" && "${JQX_RUNNER}" != "native" ]]; then
+  echo "invalid JQX_RUNNER: ${JQX_RUNNER} (expected moon-run or native)" >&2
+  exit 2
+fi
+
+if [[ "${JQX_PROFILE_LOWER}" != "debug" && "${JQX_PROFILE_LOWER}" != "release" ]]; then
+  echo "invalid JQX_PROFILE: ${JQX_PROFILE} (expected debug or release)" >&2
+  exit 2
+fi
+
 had_pager=0
 saved_pager=""
 if [[ -n "${PAGER+x}" ]]; then
@@ -161,9 +212,33 @@ if ! "${JQ_BIN_RESOLVED}" -e 'type == "array" and all(.[]; has("name") and has("
 fi
 
 cd "${REPO_ROOT}"
-if ! "${MOON_BIN_RESOLVED}" run --target native cmd -- "." "null" >/dev/null 2>&1; then
-  echo "failed to warm up jqx command via moon run" >&2
-  exit 2
+JQX_BIN_RESOLVED=""
+if [[ "${JQX_RUNNER}" == "native" ]]; then
+  build_cmd=("${MOON_BIN_RESOLVED}" build --target native)
+  if [[ "${JQX_PROFILE_LOWER}" == "release" ]]; then
+    build_cmd+=(--release)
+  fi
+  build_cmd+=(cmd)
+
+  if ! "${build_cmd[@]}" >/dev/null 2>&1; then
+    echo "failed to build native jqx executable" >&2
+    exit 2
+  fi
+
+  JQX_BIN_RESOLVED="$(resolve_jqx_bin)" || {
+    echo "jqx native executable not found under _build/native/{release,debug}/build/cmd" >&2
+    exit 2
+  }
+
+  if ! "${JQX_BIN_RESOLVED}" "." "null" >/dev/null 2>&1; then
+    echo "failed to warm up jqx native executable" >&2
+    exit 2
+  fi
+else
+  if ! "${MOON_BIN_RESOLVED}" run --target native cmd -- "." "null" >/dev/null 2>&1; then
+    echo "failed to warm up jqx command via moon run" >&2
+    exit 2
+  fi
 fi
 
 total=0
@@ -235,7 +310,22 @@ while IFS= read -r case_json; do
     jq_out="$(printf '%s' "${input}" | "${JQ_BIN_RESOLVED}" -c "${filter}" 2>&1)"
   fi
   jq_status=$?
-  if [[ "${jqx_use_stdin}" == "true" ]]; then
+
+  if [[ "${JQX_RUNNER}" == "native" ]]; then
+    if [[ "${jqx_use_stdin}" == "true" ]]; then
+      if [[ ${#jqx_args[@]} -gt 0 ]]; then
+        jqx_out="$(printf '%s' "${input}" | "${JQX_BIN_RESOLVED}" "${jqx_args[@]}" "${filter}" 2>&1)"
+      else
+        jqx_out="$(printf '%s' "${input}" | "${JQX_BIN_RESOLVED}" "${filter}" 2>&1)"
+      fi
+    else
+      if [[ ${#jqx_args[@]} -gt 0 ]]; then
+        jqx_out="$("${JQX_BIN_RESOLVED}" "${jqx_args[@]}" "${filter}" "${input}" 2>&1 </dev/null)"
+      else
+        jqx_out="$("${JQX_BIN_RESOLVED}" "${filter}" "${input}" 2>&1 </dev/null)"
+      fi
+    fi
+  elif [[ "${jqx_use_stdin}" == "true" ]]; then
     if [[ ${#jqx_args[@]} -gt 0 ]]; then
       jqx_out="$(printf '%s' "${input}" | "${MOON_BIN_RESOLVED}" run --target native cmd -- "${jqx_args[@]}" "${filter}" 2>&1)"
     else
