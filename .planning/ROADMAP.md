@@ -12,7 +12,7 @@ This roadmap turns jqx from a partially working prototype into a release-ready s
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Shared Core and Compatibility** - Make one refactorable semantic core match `jq 1.8.1` with explicit exceptions only.
+- [x] **Phase 1: Shared Core and Compatibility** - Make one refactorable semantic core match `jq 1.8.1` with explicit exceptions only.
 - [ ] **Phase 2: MoonBit Public API** - Turn the MoonBit surface into a small canonical runtime API over the shared core.
 - [ ] **Phase 3: JS/TS Runtime Surface** - Ship the canonical npm runtime and binding surface on top of the same semantics.
 - [ ] **Phase 4: CLI Workflow Parity** - Finish end-to-end jq-compatible CLI workflows without turning CLI into an extension surface.
@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01: Tighten compatibility corpus coverage and exception tracking against `jq 1.8.1`
 - [x] 01-02: Refactor runtime boundaries around one shared semantic core
-- [ ] 01-03: Add cross-surface fidelity and ordering checks
+- [x] 01-03: Add cross-surface fidelity and ordering checks
 
 ### Phase 2: MoonBit Public API
 **Goal**: MoonBit users get a small, idiomatic, canonical API for both value-lane and JSON-text execution without leaking internal types.
@@ -121,7 +121,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Shared Core and Compatibility | 2/3 | In Progress | - |
+| 1. Shared Core and Compatibility | 3/3 | Complete | 2026-03-13 |
 | 2. MoonBit Public API | 0/3 | Not started | - |
 | 3. JS/TS Runtime Surface | 0/3 | Not started | - |
 | 4. CLI Workflow Parity | 0/2 | Not started | - |
