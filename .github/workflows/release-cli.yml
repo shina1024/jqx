@@ -85,9 +85,16 @@ jobs:
         env:
           TAG_NAME: ${{ needs.prepare.outputs.tag }}
         run: |
-          moon build --target native cmd
+          moon build --target native --release cmd
+          CLI_BIN="_build/native/release/build/cmd/cmd"
+          CLI_SMOKE="$("${CLI_BIN}" "." "null")"
+          if [ "${CLI_SMOKE}" != "null" ]; then
+            echo "unexpected release smoke output: ${CLI_SMOKE}" >&2
+            exit 1
+          fi
+
           mkdir -p dist
-          cp "_build/native/release/build/cmd/cmd" "dist/jqx"
+          cp "${CLI_BIN}" "dist/jqx"
           chmod +x "dist/jqx"
 
           if [ "${RUNNER_OS}" = "Linux" ]; then
@@ -109,10 +116,16 @@ jobs:
           $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
           if (-not $vs) { throw "Visual Studio with C++ tools not found." }
           $vcvars = Join-Path $vs "VC\\Auxiliary\\Build\\vcvars64.bat"
-          cmd /c "`"$vcvars`" && moon build --target native cmd"
+          cmd /c "`"$vcvars`" && moon build --target native --release cmd"
+
+          $cliBin = "_build/native/release/build/cmd/cmd.exe"
+          $cliSmoke = & $cliBin "." "null"
+          if ($cliSmoke.Trim() -ne "null") {
+            throw "unexpected release smoke output: $cliSmoke"
+          }
 
           New-Item -ItemType Directory -Path dist -Force | Out-Null
-          Copy-Item "_build/native/release/build/cmd/cmd.exe" "dist/jqx.exe"
+          Copy-Item $cliBin "dist/jqx.exe"
           $asset = "jqx-$env:TAG_NAME-windows.zip"
           Compress-Archive -Path "dist/jqx.exe" -DestinationPath $asset -Force
           "ASSET=$asset" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
