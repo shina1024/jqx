@@ -1,0 +1,61 @@
+pre-commit:
+  parallel: false
+  commands:
+    moon_info:
+      run: moon info
+    moon_fmt:
+      run: moon fmt
+      stage_fixed: true
+    ts_jqx_format:
+      glob: "ts/jqx/**"
+      run: pnpm --dir ts/jqx format
+      stage_fixed: true
+    ts_jqx_lint:
+      glob: "ts/jqx/**"
+      run: pnpm --dir ts/jqx lint
+    ts_adapter_core_format:
+      glob: "ts/adapter-core/**"
+      run: pnpm --dir ts/adapter-core format
+      stage_fixed: true
+    ts_adapter_core_lint:
+      glob: "ts/adapter-core/**"
+      run: pnpm --dir ts/adapter-core lint
+    ts_yup_adapter_format:
+      glob: "ts/yup-adapter/**"
+      run: pnpm --dir ts/yup-adapter format
+      stage_fixed: true
+    ts_yup_adapter_lint:
+      glob: "ts/yup-adapter/**"
+      run: pnpm --dir ts/yup-adapter lint
+    ts_valibot_adapter_format:
+      glob: "ts/valibot-adapter/**"
+      run: pnpm --dir ts/valibot-adapter format
+      stage_fixed: true
+    ts_valibot_adapter_lint:
+      glob: "ts/valibot-adapter/**"
+      run: pnpm --dir ts/valibot-adapter lint
+    ts_zod_adapter_format:
+      glob: "ts/zod-adapter/**"
+      run: pnpm --dir ts/zod-adapter format
+      stage_fixed: true
+    ts_zod_adapter_lint:
+      glob: "ts/zod-adapter/**"
+      run: pnpm --dir ts/zod-adapter lint
+
+pre-push:
+  parallel: false
+  commands:
+    moon_check:
+      run: moon check -d
+    moon_test:
+      run: moon test
+    ts_adapter_core_typecheck:
+      run: pnpm --dir ts/adapter-core typecheck
+    ts_zod_adapter_typecheck:
+      run: pnpm --dir ts/zod-adapter typecheck
+    ts_yup_adapter_typecheck:
+      run: pnpm --dir ts/yup-adapter typecheck
+    ts_valibot_adapter_typecheck:
+      run: pnpm --dir ts/valibot-adapter typecheck
+    ts_jqx_typecheck:
+      run: pnpm --dir ts/jqx typecheck

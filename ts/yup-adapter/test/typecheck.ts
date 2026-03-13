@@ -138,7 +138,7 @@ expectTypeOf<
 expectTypeOf<InferredOptions<".user.name", InputData>>().toEqualTypeOf<{
   filter: ".user.name";
   input: InputData;
-  fallback?: "unknown" | undefined;
+  fallback?: "unknown";
 }>();
 
 expectTypeOf<InferJqOutput<InputData, ".user.name">>().toEqualTypeOf<string>();

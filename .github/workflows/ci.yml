@@ -92,7 +92,7 @@ jobs:
           $vcvars = Join-Path $vs "VC\\Auxiliary\\Build\\vcvars64.bat"
           cmd /c "`"$vcvars`" && moon test --target native core && moon test --target native cmd"
 
-      - name: TS Packages (verify)
+      - name: TS Packages (verify + type-aware lint)
         if: runner.os == 'Linux'
         run: bash ./scripts/ts_packages.sh verify --frozen-lockfile
 

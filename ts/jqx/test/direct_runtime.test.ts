@@ -15,17 +15,17 @@ import {
   toAst,
 } from "../src/index.js";
 
-test("runJsonText executes a jq filter on JSON text", () => {
+void test("runJsonText executes a jq filter on JSON text", () => {
   const result = runJsonText(".foo", '{"foo":1}');
   assert.deepEqual(result, { ok: true, value: ["1"] });
 });
 
-test("run stringifies input and parses outputs", () => {
+void test("run stringifies input and parses outputs", () => {
   const result = run(".foo", { foo: 1 });
   assert.deepEqual(result, { ok: true, value: [1] });
 });
 
-test("compile returns an opaque compiled filter with run methods", () => {
+void test("compile returns an opaque compiled filter with run methods", () => {
   const compiled = compile(".items[]");
   assert.equal(compiled.ok, true);
   if (!compiled.ok) {
@@ -39,7 +39,7 @@ test("compile returns an opaque compiled filter with run methods", () => {
   assert.deepEqual(runtimeValue, { ok: true, value: [1, 2, 3] });
 });
 
-test("parseJson and isValidJson use jqx parser semantics", () => {
+void test("parseJson and isValidJson use jqx parser semantics", () => {
   const parsed = parseJson('{"foo":[1,true,null]}');
   assert.deepEqual(parsed, {
     ok: true,
@@ -58,7 +58,7 @@ test("parseJson and isValidJson use jqx parser semantics", () => {
   }
 });
 
-test("compile surfaces structured backend errors for invalid filters", () => {
+void test("compile surfaces structured backend errors for invalid filters", () => {
   const compiled = compile(".[");
   assert.equal(compiled.ok, false);
   if (!compiled.ok) {
@@ -67,7 +67,7 @@ test("compile surfaces structured backend errors for invalid filters", () => {
   }
 });
 
-test("query supports typed DSL and QueryAst inputs", () => {
+void test("query supports typed DSL and QueryAst inputs", () => {
   const dslQuery = field("user");
   const ast = toAst(dslQuery);
 
@@ -84,7 +84,7 @@ test("query supports typed DSL and QueryAst inputs", () => {
   });
 });
 
-test("runtime and queryRuntime expose adapter-friendly objects", () => {
+void test("runtime and queryRuntime expose adapter-friendly objects", () => {
   const runResult = runtime.run(".foo", { foo: 1 });
   assert.deepEqual(runResult, { ok: true, value: [1] });
 

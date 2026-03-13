@@ -60,12 +60,13 @@
   },
   "scripts": {
     "build:moon-runtime": "moon build --target js --release --manifest-path ../../moon.mod.json ../../js",
-    "build": "pnpm build:moon-runtime && tsup src/index.ts src/bind.ts src/zod.ts src/yup.ts src/valibot.ts --format esm,cjs --dts --clean",
+    "build": "pnpm build:moon-runtime && node ../../scripts/ts_package_build.mjs src/index.ts src/bind.ts src/zod.ts src/yup.ts src/valibot.ts",
     "format": "oxfmt .",
     "format:check": "oxfmt . --check",
     "lint": "oxlint .",
+    "lint:typeaware": "pnpm build:moon-runtime && oxlint . --type-aware --type-check",
     "lint:fix": "oxlint . --fix",
-    "typecheck": "pnpm build:moon-runtime && tsc -p tsconfig.json --noEmit",
+    "typecheck": "pnpm build:moon-runtime && tsgo -p tsconfig.json --noEmit",
     "test": "pnpm build:moon-runtime && node --import tsx --test test/**/*.test.ts"
   },
   "dependencies": {
@@ -75,13 +76,14 @@
     "@shina1024/jqx-zod-adapter": "^0.1.0"
   },
   "devDependencies": {
+    "@typescript/native-preview": "7.0.0-dev.20260313.1",
     "@types/node": "^25.4.0",
+    "esbuild": "^0.27.4",
     "expect-type": "^1.3.0",
     "oxfmt": "^0.39.0",
     "oxlint": "^1.54.0",
-    "tsup": "^8.5.1",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "oxlint-tsgolint": "^0.16.0",
+    "tsx": "^4.21.0"
   },
   "pnpm": {
     "overrides": {

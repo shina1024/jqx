@@ -114,8 +114,12 @@ Helpers:
 
 ```bash
 pnpm build
+pnpm format
 pnpm format:check
 pnpm lint
+pnpm lint:typeaware
 pnpm typecheck
 pnpm test
 ```
+
+`pnpm build` bundles ESM/CJS with `esbuild` and emits declarations with `tsgo`. `pnpm typecheck` also uses `tsgo`.

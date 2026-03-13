@@ -59,16 +59,25 @@ function groupEnd() {
 }
 
 function runPnpm(packageInfo, args) {
-  const executable = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+  const executable = "pnpm";
   console.log(`$ ${executable} ${args.join(" ")}`);
-  const result = spawnSync(executable, args, {
+  const sharedOptions = {
     cwd: packageInfo.cwd,
     env: {
       ...process.env,
       CI: process.env.CI ?? "true",
     },
     stdio: "inherit",
-  });
+  };
+  const result =
+    process.platform === "win32"
+      ? spawnSync(process.env.ComSpec ?? "cmd.exe", [
+          "/d",
+          "/s",
+          "/c",
+          `${executable} ${args.join(" ")}`,
+        ], sharedOptions)
+      : spawnSync(executable, args, sharedOptions);
 
   if (result.error) {
     throw result.error;
@@ -99,6 +108,9 @@ function verifyPackage(packageInfo, frozenLockfile) {
 
   runPnpm(packageInfo, installArgs(frozenLockfile));
   runPnpm(packageInfo, ["lint"]);
+  if (typeof packageInfo.scripts["lint:typeaware"] === "string") {
+    runPnpm(packageInfo, ["lint:typeaware"]);
+  }
   runPnpm(packageInfo, ["typecheck"]);
   if (typeof packageInfo.scripts.test === "string") {
     runPnpm(packageInfo, ["test"]);

@@ -10,7 +10,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
-    "esModuleInterop": false,
+    "types": ["node"],
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "test/**/*.ts"]

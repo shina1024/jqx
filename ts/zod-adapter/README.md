@@ -18,10 +18,13 @@ pnpm build
 pnpm format
 pnpm format:check
 pnpm lint
+pnpm lint:typeaware
 pnpm lint:fix
 pnpm typecheck
 pnpm test
 ```
+
+`pnpm build` bundles ESM/CJS with `esbuild` and emits declarations with `tsgo`. `pnpm typecheck` uses `tsgo`.
 
 ## Core APIs
 

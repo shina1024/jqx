@@ -5,18 +5,18 @@ import type { Json, JqxQueryRuntime, JqxRuntime } from "../src/index.js";
 
 type TestResult = { ok: true; value: unknown } | { ok: false; error: unknown };
 
-type FilterOptions<Schema> = {
+type FilterOptions = {
   filter: string;
   input: unknown;
-  inputSchema: Schema;
-  outputSchema: Schema;
+  inputSchema: unknown;
+  outputSchema: unknown;
 };
 
-type QueryOptions<Schema> = {
+type QueryOptions = {
   query: { kind: "Q" };
   input: unknown;
-  inputSchema: Schema;
-  outputSchema: Schema;
+  inputSchema: unknown;
+  outputSchema: unknown;
 };
 
 type InferredOptions = {
@@ -24,29 +24,30 @@ type InferredOptions = {
   input: Json;
 };
 
-type DynamicAdapterLike<Schema> = {
-  filter(options: FilterOptions<Schema>): Promise<TestResult>;
+type DynamicAdapterLike = {
+  filter(options: FilterOptions): Promise<TestResult>;
   infer(options: InferredOptions): Promise<TestResult>;
 };
 
-type QueryAdapterLike<Schema> = DynamicAdapterLike<Schema> & {
-  query(options: QueryOptions<Schema>): Promise<TestResult>;
+type QueryAdapterLike = DynamicAdapterLike & {
+  query(options: QueryOptions): Promise<TestResult>;
 };
 
-type SchemaFactory<Schema> = {
-  userNameInput(): Schema;
-  xNumberInput(): Schema;
-  stringOutput(): Schema;
-  numberOutput(): Schema;
+type SchemaFactory = {
+  userNameInput(this: void): unknown;
+  xNumberInput(this: void): unknown;
+  stringOutput(this: void): unknown;
+  numberOutput(this: void): unknown;
 };
 
-type AdapterContractConfig<Schema> = {
+type AdapterContractConfig = {
   label: string;
-  createDynamicAdapter(runtime: JqxRuntime): DynamicAdapterLike<Schema>;
+  createDynamicAdapter(this: void, runtime: JqxRuntime): DynamicAdapterLike;
   createQueryAdapter(
+    this: void,
     runtime: JqxRuntime & JqxQueryRuntime<{ kind: "Q" }>,
-  ): QueryAdapterLike<Schema>;
-  schemas: SchemaFactory<Schema>;
+  ): QueryAdapterLike;
+  schemas: SchemaFactory;
 };
 
 function expectErrorKind(result: TestResult, expected: string): void {
@@ -58,10 +59,10 @@ function expectErrorKind(result: TestResult, expected: string): void {
   assert.equal(error.kind, expected);
 }
 
-export function registerAdapterContractCases<Schema>(config: AdapterContractConfig<Schema>): void {
-  const { label, createDynamicAdapter, createQueryAdapter, schemas } = config;
+export function registerAdapterContractCases(config: AdapterContractConfig): void {
+  const { label } = config;
 
-  test(`${label}: adapter.filter validates input and output`, async () => {
+  void test(`${label}: adapter.filter validates input and output`, async () => {
     const runtime: JqxRuntime = {
       run(filter, input) {
         assert.equal(filter, ".user.name");
@@ -69,12 +70,12 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
         return { ok: true, value: ["alice"] };
       },
     };
-    const adapter = createDynamicAdapter(runtime);
+    const adapter = config.createDynamicAdapter(runtime);
     const result = await adapter.filter({
       filter: ".user.name",
       input: { user: { name: "alice" } },
-      inputSchema: schemas.userNameInput(),
-      outputSchema: schemas.stringOutput(),
+      inputSchema: config.schemas.userNameInput(),
+      outputSchema: config.schemas.stringOutput(),
     });
     assert.equal(result.ok, true);
     if (result.ok) {
@@ -82,34 +83,34 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
     }
   });
 
-  test(`${label}: adapter.filter returns input_validation error`, async () => {
+  void test(`${label}: adapter.filter returns input_validation error`, async () => {
     const runtime: JqxRuntime = {
       run() {
         return { ok: true, value: [1] };
       },
     };
-    const adapter = createDynamicAdapter(runtime);
+    const adapter = config.createDynamicAdapter(runtime);
     const result = await adapter.filter({
       filter: ".",
       input: { x: 1 },
-      inputSchema: schemas.userNameInput(),
-      outputSchema: schemas.numberOutput(),
+      inputSchema: config.schemas.userNameInput(),
+      outputSchema: config.schemas.numberOutput(),
     });
     expectErrorKind(result, "input_validation");
   });
 
-  test(`${label}: adapter.filter returns runtime error`, async () => {
+  void test(`${label}: adapter.filter returns runtime error`, async () => {
     const runtime: JqxRuntime = {
       run() {
         return { ok: false, error: { kind: "backend_runtime", message: "boom" } };
       },
     };
-    const adapter = createDynamicAdapter(runtime);
+    const adapter = config.createDynamicAdapter(runtime);
     const result = await adapter.filter({
       filter: ".",
       input: { x: 1 },
-      inputSchema: schemas.xNumberInput(),
-      outputSchema: schemas.numberOutput(),
+      inputSchema: config.schemas.xNumberInput(),
+      outputSchema: config.schemas.numberOutput(),
     });
     expectErrorKind(result, "runtime");
     if (!result.ok) {
@@ -118,18 +119,18 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
     }
   });
 
-  test(`${label}: adapter.filter returns output_validation error`, async () => {
+  void test(`${label}: adapter.filter returns output_validation error`, async () => {
     const runtime: JqxRuntime = {
       run() {
         return { ok: true, value: [1] };
       },
     };
-    const adapter = createDynamicAdapter(runtime);
+    const adapter = config.createDynamicAdapter(runtime);
     const result = await adapter.filter({
       filter: ".",
       input: { x: 1 },
-      inputSchema: schemas.xNumberInput(),
-      outputSchema: schemas.stringOutput(),
+      inputSchema: config.schemas.xNumberInput(),
+      outputSchema: config.schemas.stringOutput(),
     });
     expectErrorKind(result, "output_validation");
     if (!result.ok) {
@@ -140,7 +141,7 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
     }
   });
 
-  test(`${label}: adapter.query validates through query runtime`, async () => {
+  void test(`${label}: adapter.query validates through query runtime`, async () => {
     const runtime: JqxRuntime & JqxQueryRuntime<{ kind: "Q" }> = {
       run() {
         return { ok: true, value: [] };
@@ -151,12 +152,12 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
         return { ok: true, value: [7] };
       },
     };
-    const adapter = createQueryAdapter(runtime);
+    const adapter = config.createQueryAdapter(runtime);
     const result = await adapter.query({
       query: { kind: "Q" },
       input: { x: 7 },
-      inputSchema: schemas.xNumberInput(),
-      outputSchema: schemas.numberOutput(),
+      inputSchema: config.schemas.xNumberInput(),
+      outputSchema: config.schemas.numberOutput(),
     });
     assert.equal(result.ok, true);
     if (result.ok) {
@@ -164,7 +165,7 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
     }
   });
 
-  test(`${label}: adapter.infer returns runtime values`, async () => {
+  void test(`${label}: adapter.infer returns runtime values`, async () => {
     const runtime: JqxRuntime = {
       run(filter, input) {
         assert.equal(filter, ".user.name");
@@ -172,7 +173,7 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
         return { ok: true, value: ["alice"] };
       },
     };
-    const adapter = createDynamicAdapter(runtime);
+    const adapter = config.createDynamicAdapter(runtime);
     const result = await adapter.infer({
       filter: ".user.name",
       input: { user: { name: "alice" } },
@@ -183,13 +184,13 @@ export function registerAdapterContractCases<Schema>(config: AdapterContractConf
     }
   });
 
-  test(`${label}: adapter.infer returns runtime error`, async () => {
+  void test(`${label}: adapter.infer returns runtime error`, async () => {
     const runtime: JqxRuntime = {
       run() {
         return { ok: false, error: { kind: "backend_runtime", message: "boom" } };
       },
     };
-    const adapter = createDynamicAdapter(runtime);
+    const adapter = config.createDynamicAdapter(runtime);
     const result = await adapter.infer({
       filter: ".",
       input: { x: 1 },
