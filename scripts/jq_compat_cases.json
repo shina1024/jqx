@@ -1558,11 +1558,9 @@
     "jqx_args": [
       "-e"
     ],
+    "jqx_use_stdin": false,
     "expect_status": 1,
-    "compat_status": "temporary_exception",
-    "compat_ledger_id": "cli-e-exit-status",
-    "compat_reason": "jqx CLI does not yet implement jq -e exit semantics for false/null/no-result cases and returns status 0.",
-    "compat_removal_condition": "Remove once cmd exit handling matches jq 1.8.1 for -e on false, null, and empty outputs."
+    "compat_status": "pass"
   },
   {
     "name": "cli-exit-status-null",
@@ -1574,11 +1572,9 @@
     "jqx_args": [
       "-e"
     ],
+    "jqx_use_stdin": false,
     "expect_status": 1,
-    "compat_status": "temporary_exception",
-    "compat_ledger_id": "cli-e-exit-status",
-    "compat_reason": "jqx CLI does not yet implement jq -e exit semantics for false/null/no-result cases and returns status 0.",
-    "compat_removal_condition": "Remove once cmd exit handling matches jq 1.8.1 for -e on false, null, and empty outputs."
+    "compat_status": "pass"
   },
   {
     "name": "cli-exit-status-empty",
@@ -1590,10 +1586,8 @@
     "jqx_args": [
       "-e"
     ],
+    "jqx_use_stdin": false,
     "expect_status": 4,
-    "compat_status": "temporary_exception",
-    "compat_ledger_id": "cli-e-exit-status",
-    "compat_reason": "jqx CLI does not yet implement jq -e exit semantics for false/null/no-result cases and returns status 0.",
-    "compat_removal_condition": "Remove once cmd exit handling matches jq 1.8.1 for -e on false, null, and empty outputs."
+    "compat_status": "pass"
   }
 ]

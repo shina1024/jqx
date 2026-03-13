@@ -10,14 +10,12 @@
 
 | Corpus | Total | Passing | Temporary Exceptions | Broken | Stale Exception Metadata |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| maintained | 248 | 245 | 3 | 0 | 0 |
+| maintained | 248 | 248 | 0 | 0 | 0 |
 | upstream | 843 | 843 | 0 | 0 | 0 |
 
 ## Temporary Exceptions
 
-- [maintained] cli-exit-status-empty (cli-e-exit-status): jqx CLI does not yet implement jq -e exit semantics for false/null/no-result cases and returns status 0.. Remove when Remove once cmd exit handling matches jq 1.8.1 for -e on false, null, and empty outputs.
-- [maintained] cli-exit-status-false (cli-e-exit-status): jqx CLI does not yet implement jq -e exit semantics for false/null/no-result cases and returns status 0.. Remove when Remove once cmd exit handling matches jq 1.8.1 for -e on false, null, and empty outputs.
-- [maintained] cli-exit-status-null (cli-e-exit-status): jqx CLI does not yet implement jq -e exit semantics for false/null/no-result cases and returns status 0.. Remove when Remove once cmd exit handling matches jq 1.8.1 for -e on false, null, and empty outputs.
+- none
 
 ## Broken Cases
 

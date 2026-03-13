@@ -56,7 +56,7 @@ completed: 2026-03-14
 ## Accomplishments
 
 - Added regression proof for ordering-sensitive updates, escaped string outputs, and large-number text fidelity across the shared core run helpers, the top-level MoonBit API, and the JS wrapper.
-- Extended the shell differential harness so CI can run maintained parity checks against a prebuilt native CLI binary, then switched the native exit harness to release-profile proof by default.
+- Extended the shell differential harness so CI can run maintained parity checks against a prebuilt native CLI binary, switched the shell path to native release proof by default, and then closed the former CLI `-e` temporary exception once the maintained corpus proved parity.
 - Reshaped CI to expose the documented MoonBit gate order on Linux, run top-level MoonBit tests instead of only package-local native suites, and make the CLI release workflow build and smoke-test real release binaries.
 
 ## Task Commits
@@ -82,6 +82,7 @@ Each task was committed atomically:
 
 - Kept the heaviest upstream corpus run in CI rather than trying to force a Windows-local completion path once the shell harness proved too slow in this environment.
 - Preserved the dedicated timezone smoke matrix, but upgraded the Linux/macOS branch of that matrix to use the native release CLI for stronger artifact-level signal.
+- Once native release differential proof showed jq-compatible `-e` exit statuses, promoted the maintained CLI exit-status cases back to `pass` and regenerated the shared ledger instead of carrying stale exception metadata.
 
 ## Deviations from Plan
 
@@ -103,6 +104,7 @@ Each task was committed atomically:
 ## Issues Encountered
 
 - `bash ./scripts/jq_diff.sh scripts/jq_compat_cases.upstream.json` exceeded a 1 hour timeout in this Windows-local environment, even after enabling native release execution. Maintained corpus and native exit proof still passed locally, and the full upstream corpus is delegated to Linux CI.
+- The first Linux CI rerun after the native-proof switch failed only because the maintained corpus still carried stale CLI `-e` temporary-exception metadata even though runtime parity had been achieved; promoting those cases back to `pass` resolved the mismatch.
 - Clearing the stale GSD auto-chain flag modified `.planning/config.json`; that change remains workflow-local and should not be committed as part of this plan.
 
 ## User Setup Required
@@ -112,7 +114,7 @@ None - no external service configuration required.
 ## Next Phase Readiness
 
 - Phase 1 now has an explainable proof surface for MoonBit, JS/TS, and CLI fidelity, so Phase 2 can focus on API design rather than re-litigating shared-core semantics.
-- The remaining known compatibility exception is still limited to the documented CLI `-e` exit-status behavior.
+- The former CLI `-e` temporary exception is now closed in the maintained corpus and shared ledger, so later phases can treat that behavior as regression-protected rather than open compatibility debt.
 
 ## Self-Check: PASSED
 

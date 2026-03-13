@@ -59,7 +59,7 @@
     "access": "public"
   },
   "scripts": {
-    "build:moon-runtime": "moon build --target js --release --manifest-path ../../moon.mod.json ../../js",
+    "build:moon-runtime": "node ../../scripts/moon_exec.mjs build --target js --release --manifest-path ../../moon.mod.json ../../js",
     "build": "pnpm build:moon-runtime && node ../../scripts/ts_package_build.mjs src/index.ts src/bind.ts src/zod.ts src/yup.ts src/valibot.ts",
     "format": "oxfmt .",
     "format:check": "oxfmt . --check",
