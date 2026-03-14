@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-14T05:07:25.485Z"
-last_activity: 2026-03-14 - Completed Plan 03-01 JS/TS root runtime surface
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-03-14T05:16:52.139Z"
+last_activity: 2026-03-14 - Completed Plan 03-02 compiled and bind surface alignment
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 16
-  completed_plans: 7
-  percent: 44
+  completed_plans: 8
+  percent: 50
 ---
 
 # Project State
@@ -26,18 +26,18 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 ## Current Position
 
 Phase: 3 of 6 (JS/TS Runtime Surface)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-03-14 - Completed Plan 03-01 JS/TS root runtime surface
+Last activity: 2026-03-14 - Completed Plan 03-02 compiled and bind surface alignment
 
-Progress: [████░░░░░░] 44%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 29 min
-- Total execution time: 3.4 hours
+- Total plans completed: 8
+- Average duration: 27 min
+- Total execution time: 3.6 hours
 
 **By Phase:**
 
@@ -45,12 +45,12 @@ Progress: [████░░░░░░] 44%
 |-------|-------|-------|----------|
 | 1 | 3 | 152 min | 51 min |
 | 2 | 3 | 30 min | 10 min |
-| 3 | 1 | 25 min | 25 min |
+| 3 | 2 | 35 min | 18 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-01 (25 min), 02-03 (10 min shared), 02-02 (10 min shared), 02-01 (10 min shared), 01-03 (114 min)
+- Last 5 plans: 03-02 (10 min), 03-01 (25 min), 02-03 (10 min shared), 02-02 (10 min shared), 02-01 (10 min shared)
 - Trend: Improving
-- Latest metric: Phase 03 Plan 01 — 25 min across 3 tasks and 5 files
+- Latest metric: Phase 03 Plan 02 — 10 min across 3 tasks and 7 files
 
 ## Accumulated Context
 
@@ -74,6 +74,8 @@ Recent decisions affecting current work:
 - [Phase 02]: The generated MoonBit contract now exposes `RunError`, `JsonTextRunError`, and `CompiledJsonTextRunError` instead of a broad public `JqxError`.
 - [Phase 03]: Root JS/TS exports now lead with canonical direct runtime entrypoints — The main package should read as a direct-use runtime first rather than a mixed utility barrel.
 - [Phase 03]: README and proof keep query and integration helpers as secondary lanes — Query helpers remain on the root package, but the quick start should stay centered on run(filter, input).
+- [Phase 03]: Direct and bound runtimes now share one internal helper path for JSON value-lane conversion and typed-query normalization.
+- [Phase 03]: Compiled filters stay on the direct runtime; `/bind` remains an explicit JSON-text backend integration surface instead of implying a second compiled contract.
 
 ### Pending Todos
 
@@ -87,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T05:07:25.482Z
-Stopped at: Completed 03-01-PLAN.md
-Resume file: .planning/phases/03-js-ts-runtime-surface/03-02-PLAN.md
+Last session: 2026-03-14T05:16:52.139Z
+Stopped at: Completed 03-02-PLAN.md
+Resume file: .planning/phases/03-js-ts-runtime-surface/03-03-PLAN.md

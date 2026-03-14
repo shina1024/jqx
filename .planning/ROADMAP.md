@@ -66,7 +66,7 @@ Plans:
 
 Plans:
 - [x] 03-01: Canonicalize JS/TS runtime exports and direct-use API
-- [ ] 03-02: Align compiled-filter and binding helper surfaces
+- [x] 03-02: Align compiled-filter and binding helper surfaces
 - [ ] 03-03: Verify package output formats and type declarations
 
 ### Phase 4: CLI Workflow Parity
@@ -123,7 +123,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 |-------|----------------|--------|-----------|
 | 1. Shared Core and Compatibility | 3/3 | Complete | 2026-03-13 |
 | 2. MoonBit Public API | 3/3 | Complete | 2026-03-14 |
-| 3. JS/TS Runtime Surface | 1/3 | In Progress | - |
+| 3. JS/TS Runtime Surface | 2/3 | In Progress | - |
 | 4. CLI Workflow Parity | 0/2 | Not started | - |
 | 5. Schema Adapter Packages | 0/2 | Not started | - |
 | 6. Release Readiness and Docs | 0/3 | Not started | - |
