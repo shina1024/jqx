@@ -1,40 +1,40 @@
 # @shina1024/jqx
 
-Direct-use JS/TS runtime for `jqx`, plus typed query helpers and schema-adapter entrypoints.
+Direct-use JS/TS runtime for `jqx`. Start with `run(filter, input)` from `@shina1024/jqx`, and use `@shina1024/jqx/bind` only when you need to connect a custom backend.
 
-## Exports
-
-- `@shina1024/jqx`
-  - direct runtime: `run`, `runJsonText`, `compile`
-  - JSON helpers: `parseJson`, `isValidJson`
-  - query lane: `query`, `queryJsonText`
-  - adapter-ready runtime objects: `runtime`, `queryRuntime`
-  - typed DSL/query helpers: `identity`, `field`, `pipe`, `map`, `select`, `toAst`, ...
-- `@shina1024/jqx/bind`
-  - `bindRuntime`
-  - `bindQueryRuntime`
-  - binding-specific runtime/client types
-- `@shina1024/jqx/zod`
-- `@shina1024/jqx/yup`
-- `@shina1024/jqx/valibot`
-
-## Direct Runtime
+## Quick Start
 
 `@shina1024/jqx` is the main end-user surface. It bundles the MoonBit runtime and runs synchronously.
 
 ```ts
-import { run, runJsonText } from "@shina1024/jqx";
+import { isValidJson, parseJson, run } from "@shina1024/jqx";
 
-const values = run(".foo", { foo: 1 });
-// { ok: true, value: [1] }
+const values = run(".users[].name", {
+  users: [{ name: "alice" }, { name: "bob" }],
+});
+// { ok: true, value: ["alice", "bob"] }
+
+const parsed = parseJson('{"users":[{"name":"alice"}]}');
+// { ok: true, value: { users: [{ name: "alice" }] } }
+
+const valid = isValidJson('{"users":[{"name":"alice"}]}');
+// true
+```
+
+Use the value lane when native JS values are convenient.
+
+## Compatibility Lane
+
+`runJsonText(...)` is the fidelity-sensitive lane when jq-style JSON text matters:
+
+```ts
+import { runJsonText } from "@shina1024/jqx";
 
 const compat = runJsonText(".", "9007199254740993");
 // { ok: true, value: ["9007199254740993"] }
 ```
 
-Use the value lane when native JS values are convenient, and the JSON text lane when jq-style text fidelity matters.
-
-## Compiled Filters
+## Compiled Reuse
 
 ```ts
 import { compile } from "@shina1024/jqx";
@@ -46,9 +46,19 @@ if (compiled.ok) {
 }
 ```
 
-Compiled filters expose `.run(...)` for JSON values and `.runJsonText(...)` for the compatibility lane.
+Compiled filters are the explicit reuse path. They expose `.run(...)` for JSON values and `.runJsonText(...)` for the compatibility lane.
 
-## Query DSL
+## Secondary Root Exports
+
+The root package also keeps a secondary query lane:
+
+- `query(...)` and `queryJsonText(...)`
+- typed DSL and AST helpers such as `field`, `pipe`, `select`, and `toAst`
+- adapter-facing runtime objects: `runtime` and `queryRuntime`
+
+Use those when you need typed query composition or adapter integration, but the normal on-ramp stays `run(filter, input)`.
+
+### Query DSL
 
 ```ts
 import { field, query } from "@shina1024/jqx";
@@ -57,9 +67,9 @@ const result = query(field("user"), { user: { name: "alice" } });
 // { ok: true, value: [{ name: "alice" }] }
 ```
 
-`query` accepts either a typed DSL `Query` or a plain `QueryAst`. `queryJsonText` is the compatibility lane equivalent.
+`query` accepts either a typed DSL `Query` or a plain `QueryAst`. `queryJsonText` is the compatibility-lane equivalent.
 
-## Schema Adapters
+### Adapter Integration
 
 The main package exports `runtime` and `queryRuntime`, so adapters can consume the built-in runtime directly.
 
@@ -95,6 +105,20 @@ const result = await jqx.run(".", { x: 1 });
 ```
 
 Use `bindQueryRuntime` when the backend also implements `runQueryJsonText`.
+
+## Package Entry Points
+
+- `@shina1024/jqx`
+  - canonical direct runtime: `run`, `runJsonText`, `compile`, `parseJson`, `isValidJson`
+  - secondary query lane: `query`, `queryJsonText`, typed DSL and AST helpers
+  - secondary integration helpers: `runtime`, `queryRuntime`
+- `@shina1024/jqx/bind`
+  - `bindRuntime`
+  - `bindQueryRuntime`
+  - binding-specific runtime and client types
+- `@shina1024/jqx/zod`
+- `@shina1024/jqx/yup`
+- `@shina1024/jqx/valibot`
 
 ## Error Model
 
