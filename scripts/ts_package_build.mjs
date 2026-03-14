@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { cpSync, readdirSync, rmSync } from "node:fs";
+import { cpSync, existsSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 
 const entryPoints = process.argv.slice(2);
@@ -14,9 +14,23 @@ if (entryPoints.length === 0) {
 const packageDir = process.cwd();
 const distDir = path.join(packageDir, "dist");
 const binExt = process.platform === "win32" ? ".cmd" : "";
+let repairedInstall = false;
 
 function binPath(name) {
-  return path.join(packageDir, "node_modules", ".bin", `${name}${binExt}`);
+  const candidate = path.join(packageDir, "node_modules", ".bin", `${name}${binExt}`);
+  if (!existsSync(candidate) && !repairedInstall) {
+    repairedInstall = true;
+    console.warn(
+      `[ts-package-build] Missing ${path.basename(candidate)}; running pnpm install --frozen-lockfile to repair local package tools.`,
+    );
+    run("pnpm", ["install", "--frozen-lockfile"]);
+  }
+  if (!existsSync(candidate)) {
+    throw new Error(
+      `Missing ${path.basename(candidate)}. Reinstall package dependencies for this checkout before building package artifacts.`,
+    );
+  }
+  return candidate;
 }
 
 function run(command, args) {
