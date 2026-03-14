@@ -48,6 +48,8 @@ if (compiled.ok) {
 
 Compiled filters are the explicit reuse path. They expose `.run(...)` for JSON values and `.runJsonText(...)` for the compatibility lane.
 
+Compiled filters stay on the synchronous direct runtime. `@shina1024/jqx/bind` remains a JSON-text backend integration surface instead of implying a second compiled-filter transport.
+
 ## Secondary Root Exports
 
 The root package also keeps a secondary query lane:
@@ -103,6 +105,8 @@ const jqx = bindRuntime({
 
 const result = await jqx.run(".", { x: 1 });
 ```
+
+Backends implement `runJsonText(...)` and optionally `runQueryJsonText(...)` or streaming methods. `bindRuntime` and `bindQueryRuntime` lift that JSON-text backend contract into value-lane and streaming helpers; they do not add compiled-filter methods.
 
 Use `bindQueryRuntime` when the backend also implements `runQueryJsonText`.
 
