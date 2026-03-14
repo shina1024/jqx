@@ -107,6 +107,7 @@ function verifyPackage(packageInfo, frozenLockfile) {
   ensureScript(packageInfo, "build");
 
   runPnpm(packageInfo, installArgs(frozenLockfile));
+  runPnpm(packageInfo, ["build"]);
   runPnpm(packageInfo, ["lint"]);
   if (typeof packageInfo.scripts["lint:typeaware"] === "string") {
     runPnpm(packageInfo, ["lint:typeaware"]);
@@ -115,7 +116,6 @@ function verifyPackage(packageInfo, frozenLockfile) {
   if (typeof packageInfo.scripts.test === "string") {
     runPnpm(packageInfo, ["test"]);
   }
-  runPnpm(packageInfo, ["build"]);
 }
 
 function main() {

@@ -152,3 +152,4 @@ pnpm test
 
 `pnpm build` bundles ESM/CJS with `esbuild` and emits declarations with `tsgo`. `pnpm typecheck` also uses `tsgo`.
 The workspace pins `@typescript/native-preview` for `tsgo` and type-aware linting, so TS package verification follows the checked-in native-preview toolchain rather than a separately installed stock `typescript`.
+`pnpm test` and `pnpm typecheck` both build `dist/` first so the package-name smoke tests and declaration fixtures run against the shipped entrypoints instead of source-file shortcuts.
