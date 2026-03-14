@@ -24,7 +24,7 @@ pnpm typecheck
 pnpm test
 ```
 
-`pnpm build` bundles ESM/CJS with `esbuild` and emits declarations with `tsgo`. `pnpm typecheck` uses `tsgo`.
+`pnpm build` bundles ESM/CJS with `rolldown` and emits declarations with `tsgo`. `pnpm typecheck` uses `tsgo`.
 
 ## Core APIs
 

@@ -2,7 +2,9 @@
 
 import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, readdirSync, rmSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const entryPoints = process.argv.slice(2);
 
@@ -15,15 +17,23 @@ const packageDir = process.cwd();
 const distDir = path.join(packageDir, "dist");
 const binExt = process.platform === "win32" ? ".cmd" : "";
 let repairedInstall = false;
+const packageRequire = createRequire(path.join(packageDir, "package.json"));
+
+function repairInstall() {
+  if (repairedInstall) {
+    return;
+  }
+  repairedInstall = true;
+  console.warn(
+    "[ts-package-build] Missing local package tools; running pnpm install --frozen-lockfile to repair package dependencies.",
+  );
+  run("pnpm", ["install", "--frozen-lockfile"]);
+}
 
 function binPath(name) {
   const candidate = path.join(packageDir, "node_modules", ".bin", `${name}${binExt}`);
   if (!existsSync(candidate) && !repairedInstall) {
-    repairedInstall = true;
-    console.warn(
-      `[ts-package-build] Missing ${path.basename(candidate)}; running pnpm install --frozen-lockfile to repair local package tools.`,
-    );
-    run("pnpm", ["install", "--frozen-lockfile"]);
+    repairInstall();
   }
   if (!existsSync(candidate)) {
     throw new Error(
@@ -61,6 +71,27 @@ function run(command, args) {
   }
 }
 
+async function importPackageLocal(specifier) {
+  let resolved;
+  try {
+    resolved = packageRequire.resolve(specifier);
+  } catch {
+    repairInstall();
+    try {
+      resolved = packageRequire.resolve(specifier);
+    } catch {
+      throw new Error(
+        `Missing package dependency "${specifier}". Reinstall package dependencies for this checkout before building package artifacts.`,
+      );
+    }
+  }
+  return import(pathToFileURL(resolved).href);
+}
+
+function isExternalModule(id) {
+  return !id.startsWith(".") && !path.isAbsolute(id);
+}
+
 function syncDcts(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const fullPath = path.join(dir, entry.name);
@@ -76,24 +107,39 @@ function syncDcts(dir) {
 }
 
 try {
+  const { build } = await importPackageLocal("rolldown");
+
   rmSync(distDir, { recursive: true, force: true });
 
-  const sharedArgs = [
-    ...entryPoints,
-    "--bundle",
-    "--platform=node",
-    "--target=es2022",
-    "--packages=external",
-    "--outbase=src",
-    "--outdir=dist",
-  ];
-
-  run(binPath("esbuild"), [...sharedArgs, "--format=esm"]);
-  run(binPath("esbuild"), [
-    ...sharedArgs,
-    "--format=cjs",
-    "--out-extension:.js=.cjs",
+  await build([
+    {
+      cwd: packageDir,
+      input: entryPoints,
+      external: isExternalModule,
+      platform: "node",
+      output: {
+        dir: distDir,
+        format: "esm",
+        exports: "named",
+        entryFileNames: "[name].js",
+        chunkFileNames: "chunks/[name]-[hash].js",
+      },
+    },
+    {
+      cwd: packageDir,
+      input: entryPoints,
+      external: isExternalModule,
+      platform: "node",
+      output: {
+        dir: distDir,
+        format: "cjs",
+        exports: "named",
+        entryFileNames: "[name].cjs",
+        chunkFileNames: "chunks/[name]-[hash].cjs",
+      },
+    },
   ]);
+
   run(binPath("tsgo"), [
     "-p",
     "tsconfig.build.json",

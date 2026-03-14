@@ -19,5 +19,5 @@ pnpm lint:typeaware
 pnpm typecheck
 ```
 
-`pnpm build` bundles ESM/CJS with `esbuild` and emits declarations with `tsgo`. `pnpm typecheck` uses `tsgo`.
+`pnpm build` bundles ESM/CJS with `rolldown` and emits declarations with `tsgo`. `pnpm typecheck` uses `tsgo`.
 The workspace pins `@typescript/native-preview` for `tsgo` and type-aware linting, so adapter package verification follows the checked-in native-preview toolchain rather than a separately installed stock `typescript`.
