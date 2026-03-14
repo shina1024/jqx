@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready
-stopped_at: Phase 1 complete; Phase 2 not yet planned
-last_updated: "2026-03-13T17:19:45.621Z"
-last_activity: 2026-03-13 - Completed Phase 1 verification and advanced focus to Phase 2
+status: planning
+stopped_at: Phase 2 context gathered
+last_updated: "2026-03-14T02:55:13.230Z"
+last_activity: 2026-03-14 - Gathered Phase 2 MoonBit public API context
 progress:
   total_phases: 6
   completed_phases: 1
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 Phase: 2 of 6 (MoonBit Public API)
 Plan: 0 of 3 in current phase
 Status: Ready to plan
-Last activity: 2026-03-13 - Completed Phase 1 verification and advanced focus to Phase 2
+Last activity: 2026-03-14 - Gathered Phase 2 MoonBit public API context
 
 Progress: [██░░░░░░░░] 19%
 
@@ -65,6 +65,10 @@ Recent decisions affecting current work:
 - [Phase 01]: Shared run-lane orchestration now lives in core for `Json`, `Value`, and JSON-text paths, leaving wrappers to adapt I/O and public errors.
 - [Phase 01]: Fidelity-sensitive regressions are now proven at core, top-level MoonBit, JS wrapper, and native CLI differential layers rather than in core-only tests.
 - [Phase 01]: Linux CI is the authoritative full differential proof path; local Windows verification remains useful for MoonBit, TS, and native `-e` smoke runs.
+- [Phase 02]: The MoonBit public API defaults to the standard `Json` value lane, while `run_json_text` remains the formal compatibility lane.
+- [Phase 02]: `run(filter, Json)` is the default public entrypoint; `compile(...).run(...)` is the explicit reuse path.
+- [Phase 02]: `CompiledFilter` stays opaque, and normal MoonBit docs should keep users on `shina1024/jqx` rather than routing them through `core`.
+- [Phase 02]: Broad `JqxError`-style public errors should be replaced by narrower entrypoint-specific composite errors while preserving structured leaf error payloads.
 
 ### Pending Todos
 
@@ -77,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13 17:19 JST
-Stopped at: Completed Phase 1 execution and verification
-Resume file: .planning/ROADMAP.md
+Last session: 2026-03-14 11:55 JST
+Stopped at: Phase 2 context gathered
+Resume file: .planning/phases/02-moonbit-public-api/02-CONTEXT.md
