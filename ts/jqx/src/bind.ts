@@ -1,14 +1,21 @@
-import { toAst as toQueryAst, toJqxRuntimeError } from "@shina1024/jqx-adapter-core";
+import {
+  decodeRuntimeOutputs,
+  encodeRuntimeInput,
+  failRuntimeResult,
+  normalizeRuntimeError,
+  normalizeRuntimeResult,
+  normalizeTypedDslQuery,
+  type TypedDslQuery,
+} from "./runtime_shared.js";
 
 import type {
   Json,
+  MaybePromise,
   JqxResult,
   JqxResultStream,
   JqxRuntime,
   JqxRuntimeError,
-  Query,
   QueryAst,
-  MaybePromise,
 } from "@shina1024/jqx-adapter-core";
 
 export type {
@@ -77,6 +84,7 @@ export {
   toJqxRuntimeError,
 } from "@shina1024/jqx-adapter-core";
 
+// `/bind` deliberately wraps JSON-text backends. Compiled filters stay on the direct runtime.
 export interface JqxJsonTextRuntime {
   runJsonText(filter: string, input: string): MaybePromise<JqxResult<string[], JqxRuntimeError>>;
 }
@@ -107,7 +115,6 @@ export interface JqxClient extends JqxRuntime {
   runJsonTextStream(filter: string, input: string): JqxResultStream<string, JqxRuntimeError>;
 }
 
-type TypedDslQuery = Query<unknown, unknown, QueryAst>;
 type QueryInputFor<Q> = Q extends QueryAst ? Q | TypedDslQuery : Q;
 
 export interface JqxQueryClient<Q = QueryAst> extends JqxClient {
@@ -121,26 +128,13 @@ function toPromise<T>(value: MaybePromise<T>): Promise<T> {
   return Promise.resolve(value);
 }
 
-function normalizeRuntimeResult<T>(
-  result: JqxResult<T, JqxRuntimeError>,
-): JqxResult<T, JqxRuntimeError> {
-  if (result.ok) {
-    return result;
-  }
-  return { ok: false, error: toJqxRuntimeError(result.error) };
-}
-
-function failResult<T>(error: JqxRuntimeError): JqxResult<T, JqxRuntimeError> {
-  return { ok: false, error };
-}
-
 function fromArrayRuntimeCall(
   call: MaybePromise<JqxResult<string[], JqxRuntimeError>>,
 ): JqxResultStream<string, JqxRuntimeError> {
   return (async function* () {
     const runtimeOut = normalizeRuntimeResult(await toPromise(call));
     if (!runtimeOut.ok) {
-      yield failResult<string>(runtimeOut.error);
+      yield failRuntimeResult<string>(runtimeOut.error);
       return;
     }
     for (const value of runtimeOut.value) {
@@ -155,7 +149,7 @@ function fromStreamingRuntimeCall(
   return (async function* () {
     const runtimeOut = normalizeRuntimeResult(await toPromise(call));
     if (!runtimeOut.ok) {
-      yield failResult<string>(runtimeOut.error);
+      yield failRuntimeResult<string>(runtimeOut.error);
       return;
     }
     try {
@@ -163,7 +157,7 @@ function fromStreamingRuntimeCall(
         yield { ok: true, value };
       }
     } catch (error) {
-      yield failResult<string>(toJqxRuntimeError(error));
+      yield failRuntimeResult<string>(normalizeRuntimeError(error, "Stream iteration failed"));
     }
   })();
 }
@@ -181,7 +175,7 @@ function decodeRawResultStream(
       try {
         yield { ok: true, value: JSON.parse(item.value) as Json };
       } catch (error) {
-        yield failResult<Json>({
+        yield failRuntimeResult<Json>({
           kind: "output_parse",
           index,
           message: error instanceof Error ? error.message : "Failed to parse output",
@@ -195,51 +189,8 @@ function decodeRawResultStream(
 
 function singleErrorStream<T>(error: JqxRuntimeError): JqxResultStream<T, JqxRuntimeError> {
   return (async function* () {
-    yield failResult<T>(error);
+    yield failRuntimeResult<T>(error);
   })();
-}
-
-function encodeRuntimeInput(input: Json): JqxResult<string, JqxRuntimeError> {
-  try {
-    const encoded = JSON.stringify(input);
-    if (typeof encoded !== "string") {
-      return {
-        ok: false,
-        error: {
-          kind: "input_stringify",
-          message: "JSON.stringify returned undefined",
-        },
-      };
-    }
-    return { ok: true, value: encoded };
-  } catch (error) {
-    return {
-      ok: false,
-      error: {
-        kind: "input_stringify",
-        message: error instanceof Error ? error.message : "Failed to stringify input",
-      },
-    };
-  }
-}
-
-function decodeRuntimeOutputs(rawValues: string[]): JqxResult<Json[], JqxRuntimeError> {
-  const parsed: Json[] = [];
-  for (const [index, raw] of rawValues.entries()) {
-    try {
-      parsed.push(JSON.parse(raw) as Json);
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          kind: "output_parse",
-          index,
-          message: error instanceof Error ? error.message : "Failed to parse output",
-        },
-      };
-    }
-  }
-  return { ok: true, value: parsed };
 }
 
 function hasStreamingJsonTextRuntime(
@@ -254,19 +205,8 @@ function hasQueryStreamingJsonTextRuntime<Q>(
   return typeof runtime.runQueryJsonTextStream === "function";
 }
 
-function isTypedDslQuery(value: unknown): value is TypedDslQuery {
-  if (typeof value !== "object" || value === null || !("ast" in value)) {
-    return false;
-  }
-  const keys = Object.keys(value as Record<string, unknown>);
-  return keys.length === 1 && keys[0] === "ast";
-}
-
 function normalizeQueryInput<Q>(query: QueryInputFor<Q>): Q {
-  if (isTypedDslQuery(query)) {
-    return toQueryAst(query) as Q;
-  }
-  return query as Q;
+  return normalizeTypedDslQuery(query as Q | TypedDslQuery);
 }
 
 function createDynamicRuntime(runtime: JqxJsonTextRuntime & Partial<JqxJsonTextStreamingRuntime>): JqxClient {
