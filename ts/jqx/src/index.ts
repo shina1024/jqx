@@ -1,3 +1,32 @@
+// Canonical direct-use runtime surface.
+export {
+  compile,
+  isValidJson,
+  parseJson,
+  run,
+  runJsonText,
+} from "./direct_runtime.js";
+
+export {
+  CompiledFilter,
+  runtime,
+} from "./direct_runtime.js";
+
+export type {
+  JqxDirectRuntime,
+} from "./direct_runtime.js";
+
+// Secondary root-package lanes: query helpers and adapter-facing runtime objects.
+export {
+  query,
+  queryJsonText,
+  queryRuntime,
+} from "./direct_runtime.js";
+
+export type {
+  JqxDirectQueryRuntime,
+} from "./direct_runtime.js";
+
 export type {
   InferTypedQueryOutput,
   InferJqOutput,
@@ -24,6 +53,13 @@ export type {
 } from "@shina1024/jqx-adapter-core";
 
 export {
+  isJqxError,
+  isJqxRuntimeError,
+  runtimeErrorToMessage,
+  toJqxRuntimeError,
+} from "@shina1024/jqx-adapter-core";
+
+export {
   add,
   and_,
   call,
@@ -38,8 +74,6 @@ export {
   ifElse,
   importQueryAstDocument,
   index,
-  isJqxError,
-  isJqxRuntimeError,
   isQueryAst,
   iter,
   literal,
@@ -51,25 +85,8 @@ export {
   pipe,
   QUERY_AST_DOCUMENT_FORMAT,
   QUERY_AST_DOCUMENT_VERSION,
-  runtimeErrorToMessage,
   select,
   stringifyQueryAstDocument,
   toAst,
-  toJqxRuntimeError,
   tryCatch,
 } from "@shina1024/jqx-adapter-core";
-
-export {
-  CompiledFilter,
-  type JqxDirectQueryRuntime,
-  type JqxDirectRuntime,
-  compile,
-  isValidJson,
-  parseJson,
-  query,
-  queryJsonText,
-  queryRuntime,
-  run,
-  runJsonText,
-  runtime,
-} from "./direct_runtime.js";

@@ -362,6 +362,7 @@ export interface JqxDirectQueryRuntime extends JqxDirectRuntime, JqxQueryRuntime
   queryJsonText(query: DirectQueryInput, input: string): JqxResult<string[], JqxRuntimeError>;
 }
 
+// Canonical direct-use runtime surface layered over the MoonBit JSON-text lane.
 export function runJsonText(filter: string, input: string): JqxResult<string[], JqxRuntimeError> {
   return fromMoonBitResult<string[], string[]>(
     moonbit.run_json_text(filter, input),
@@ -427,6 +428,15 @@ export function isValidJson(input: string): boolean {
   return moonbit.is_valid_json(input);
 }
 
+export const runtime: JqxDirectRuntime = {
+  run,
+  runJsonText,
+  compile,
+  parseJson,
+  isValidJson,
+};
+
+// Query helpers stay on the root package, but they are a secondary lane beside the direct filter runtime.
 export function queryJsonText(
   query: DirectQueryInput,
   input: string,
@@ -458,14 +468,6 @@ export function query(query: DirectQueryInput, input: Json): JqxResult<Json[], J
   }
   return decodeRuntimeOutputs(runtimeOut.value);
 }
-
-export const runtime: JqxDirectRuntime = {
-  run,
-  runJsonText,
-  compile,
-  parseJson,
-  isValidJson,
-};
 
 const directQuery: JqxDirectQueryRuntime["query"] = query;
 const directQueryJsonText: JqxDirectQueryRuntime["queryJsonText"] = queryJsonText;
