@@ -3,17 +3,25 @@ import { test } from "node:test";
 
 import {
   compile,
-  field,
   isValidJson,
   parseJson,
+  run,
+  runJsonText,
+  field,
   query,
   queryJsonText,
   queryRuntime,
-  run,
-  runJsonText,
   runtime,
   toAst,
 } from "../src/index.js";
+
+void test("root package exposes the canonical direct runtime entrypoints", () => {
+  assert.equal(typeof run, "function");
+  assert.equal(typeof runJsonText, "function");
+  assert.equal(typeof compile, "function");
+  assert.equal(typeof parseJson, "function");
+  assert.equal(typeof isValidJson, "function");
+});
 
 void test("runJsonText executes a jq filter on JSON text", () => {
   const result = runJsonText(".foo", '{"foo":1}');
@@ -67,7 +75,7 @@ void test("compile surfaces structured backend errors for invalid filters", () =
   }
 });
 
-void test("query supports typed DSL and QueryAst inputs", () => {
+void test("query remains available as a secondary root-package lane", () => {
   const dslQuery = field("user");
   const ast = toAst(dslQuery);
 
@@ -84,7 +92,7 @@ void test("query supports typed DSL and QueryAst inputs", () => {
   });
 });
 
-void test("runtime and queryRuntime expose adapter-friendly objects", () => {
+void test("runtime and queryRuntime remain available for adapter integration", () => {
   const runResult = runtime.run(".foo", { foo: 1 });
   assert.deepEqual(runResult, { ok: true, value: [1] });
 
