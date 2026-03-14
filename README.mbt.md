@@ -23,6 +23,7 @@ npm install zod
 ## MoonBit Quick Start
 
 MoonBit users should use the top-level `shina1024/jqx` package API.
+The normal path is standard `Json` via `run(filter, input)`.
 
 Value lane example:
 
@@ -61,6 +62,11 @@ test "moonbit run_json_text preserves output text" {
   assert_eq(outputs, ["9007199254740993"])
 }
 ```
+
+Boundary helpers:
+- `is_valid_json(...)` and `parse_json(...)` are input-boundary helpers, not the main happy path.
+- When jq-style numeric or output fidelity matters, use `run_json_text(...)` or `CompiledFilter::run_json_text(...)` before reaching for any advanced helper.
+- Normal MoonBit usage should stay on `shina1024/jqx`; you should not need `shina1024/jqx/core`, `@core.Value`, or `@core.Filter`.
 
 ## CLI Quick Start
 

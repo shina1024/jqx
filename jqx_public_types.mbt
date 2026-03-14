@@ -140,14 +140,28 @@ pub struct CompiledFilter {
 }
 
 ///|
-pub suberror JqxError {
+pub suberror RunError {
+  Compile(CompileError)
+  Runtime(RuntimeError)
+} derive(Eq)
+
+///|
+pub impl Show for RunError with output(self, logger) {
+  match self {
+    Compile(err) => Show::output(err, logger)
+    Runtime(err) => Show::output(err, logger)
+  }
+}
+
+///|
+pub suberror JsonTextRunError {
   JsonParse(JsonParseError)
   Compile(CompileError)
   Runtime(RuntimeError)
 } derive(Eq)
 
 ///|
-pub impl Show for JqxError with output(self, logger) {
+pub impl Show for JsonTextRunError with output(self, logger) {
   match self {
     JsonParse(err) => Show::output(err, logger)
     Compile(err) => Show::output(err, logger)
@@ -156,11 +170,28 @@ pub impl Show for JqxError with output(self, logger) {
 }
 
 ///|
-fn jqx_error_from_core(input : @core.RunError) -> JqxError {
+pub suberror CompiledJsonTextRunError {
+  JsonParse(JsonParseError)
+  Runtime(RuntimeError)
+} derive(Eq)
+
+///|
+pub impl Show for CompiledJsonTextRunError with output(self, logger) {
+  match self {
+    JsonParse(err) => Show::output(err, logger)
+    Runtime(err) => Show::output(err, logger)
+  }
+}
+
+///|
+fn compiled_json_text_run_error_from_core(
+  input : @core.RunError,
+) -> CompiledJsonTextRunError {
   match input {
     @core.Parse(err) => JsonParse(json_parse_error_from_core(err))
-    @core.Filter(err) => Compile(compile_error_from_core(err))
     @core.Eval(err) => Runtime(runtime_error_from_core(err))
+    @core.Filter(_) =>
+      abort("unreachable: compiled JSON-text run does not recompile filters")
   }
 }
 

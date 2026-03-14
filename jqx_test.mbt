@@ -82,9 +82,33 @@ test "run_json_text preserves escaped strings and large-number repr" {
 }
 
 ///|
-test "run_json_text wraps parse errors in JqxError" {
+test "run raises compile errors through RunError" {
+  guard (try? run("%", null)) is Err(Compile(Diagnostics(lines))) &&
+    lines.length() > 0 else {
+    fail("expected wrapped compile error")
+  }
+}
+
+///|
+test "run raises runtime errors through RunError" {
+  guard (try? run("error({\"code\":1})", null)) is Err(Runtime(Thrown(value))) else {
+    fail("expected wrapped runtime error")
+  }
+  assert_eq(value.stringify(), "{\"code\":1}")
+}
+
+///|
+test "run_json_text raises JsonTextRunError parse errors" {
   guard (try? run_json_text(".", "{")) is Err(JsonParse(_)) else {
     fail("expected wrapped parse error")
+  }
+}
+
+///|
+test "run_json_text raises JsonTextRunError compile errors" {
+  guard (try? run_json_text("%", "{}")) is Err(Compile(Diagnostics(lines))) &&
+    lines.length() > 0 else {
+    fail("expected wrapped compile error")
   }
 }
 
@@ -127,4 +151,14 @@ test "compiled filter run_json_text preserves order and repr-sensitive outputs" 
   assert_eq(outputs, [
     "{\"b\":1,\"a\":9,\"huge\":9007199254740993,\"c\":3}", "9007199254740993",
   ])
+}
+
+///|
+test "compiled filter run_json_text raises CompiledJsonTextRunError parse errors" {
+  let filter = compile(".") catch {
+    err => fail("compile failed: " + err.to_string())
+  }
+  guard (try? filter.run_json_text("{")) is Err(JsonParse(_)) else {
+    fail("expected compiled text parse error")
+  }
 }
