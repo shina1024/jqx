@@ -15,13 +15,13 @@ The strongest recommendation is to front-load compatibility discipline and publi
 
 ### Recommended Stack
 
-The stack should stay close to what the repo is already converging toward: MoonBit as the shared core, jq 1.8.1 as the compatibility oracle, Node 24 LTS for npm verification and release automation, and TypeScript 5.9 for public typings and adapter packages. Keep optional schema integrations in separate TS packages so the runtime package remains runtime-first.
+The stack should stay close to what the repo is already converging toward: MoonBit as the shared core, jq 1.8.1 as the compatibility oracle, Node 24 LTS for npm verification and release automation, and the current `@typescript/native-preview` plus `esbuild`/`tsgo` TS workspace toolchain for package development and typings. Keep optional schema integrations in separate TS packages so the runtime package remains runtime-first.
 
 **Core technologies:**
 - MoonBit: shared parser, compiler, runtime, native CLI, and JS-target build
 - jq 1.8.1: compatibility oracle for semantics and CLI behavior
 - Node 24 LTS: npm packaging, tests, and release verification
-- TypeScript 5.9: stable type surface for npm packages and adapters
+- `@typescript/native-preview` + `tsgo`: current type surface and declaration-emission path for npm packages and adapters
 
 ### Expected Features
 
@@ -79,7 +79,7 @@ Based on research, suggested phase structure:
 ### Phase 3: Surface Packaging Completion
 **Rationale:** Once semantics and APIs are stable, package outputs can be hardened with less churn.
 **Delivers:** Native CLI packaging, npm package outputs, adapter packaging, and documentation alignment.
-**Uses:** Node 24 LTS, TypeScript 5.9, `tsup`, and existing package boundaries.
+**Uses:** Node 24 LTS, `@typescript/native-preview`, `esbuild`, `tsgo`, and existing package boundaries.
 
 ### Phase 4: Release Rehearsal and Publication Prep
 **Rationale:** Publishable means artifact-level confidence, not only passing local tests.
@@ -123,7 +123,7 @@ Phases with standard patterns:
 - https://docs.moonbitlang.com/en/latest/ - current MoonBit docs and package guidance
 - https://docs.moonbitlang.com/en/latest/package/package-manager.html - `moon publish` and package workflow
 - https://nodejs.org/en/about/previous-releases - Node LTS status
-- https://devblogs.microsoft.com/typescript/announcing-typescript-5-9/ - TypeScript 5.9 release
+- `ts/jqx/package.json`, `ts/adapter-core/package.json`, `ts/yup-adapter/package.json`, `ts/zod-adapter/package.json`, `ts/valibot-adapter/package.json` - current TS workspace toolchain pins and scripts
 - https://jqlang.org/manual/ - jq behavior model
 - https://github.com/jqlang/jq/releases/tag/jq-1.8.1 - jq 1.8.1 release target
 
