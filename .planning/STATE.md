@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-03-14T05:16:52.139Z"
-last_activity: 2026-03-14 - Completed Plan 03-02 compiled and bind surface alignment
+status: planning
+stopped_at: Completed Phase 3 JS/TS Runtime Surface
+last_updated: "2026-03-14T06:43:19.5841699Z"
+last_activity: 2026-03-14 - Completed Phase 3 JS/TS Runtime Surface
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 16
-  completed_plans: 8
-  percent: 50
+  completed_plans: 9
+  percent: 56
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** A single MoonBit-based core can deliver full `jq` compatibility and publishable CLI, JS/TS, and MoonBit packages without splitting behavior by surface.
-**Current focus:** Phase 3 - JS/TS Runtime Surface
+**Current focus:** Phase 4 - CLI Workflow Parity
 
 ## Current Position
 
-Phase: 3 of 6 (JS/TS Runtime Surface)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-03-14 - Completed Plan 03-02 compiled and bind surface alignment
+Phase: 4 of 6 (CLI Workflow Parity)
+Plan: 0 of 2 in current phase
+Status: Ready to plan
+Last activity: 2026-03-14 - Completed Phase 3 JS/TS Runtime Surface
 
-Progress: [█████░░░░░] 50%
+Progress: [██████░░░░] 56%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 27 min
-- Total execution time: 3.6 hours
+- Total plans completed: 9
+- Average duration: 25 min
+- Total execution time: 3.8 hours
 
 **By Phase:**
 
@@ -45,12 +45,12 @@ Progress: [█████░░░░░] 50%
 |-------|-------|-------|----------|
 | 1 | 3 | 152 min | 51 min |
 | 2 | 3 | 30 min | 10 min |
-| 3 | 2 | 35 min | 18 min |
+| 3 | 3 | 45 min | 15 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-02 (10 min), 03-01 (25 min), 02-03 (10 min shared), 02-02 (10 min shared), 02-01 (10 min shared)
+- Last 5 plans: 03-03 (10 min), 03-02 (10 min), 03-01 (25 min), 02-03 (10 min shared), 02-02 (10 min shared)
 - Trend: Improving
-- Latest metric: Phase 03 Plan 02 — 10 min across 3 tasks and 7 files
+- Latest metric: Phase 03 Plan 03 — 10 min across 3 tasks and 8 files
 
 ## Accumulated Context
 
@@ -76,6 +76,8 @@ Recent decisions affecting current work:
 - [Phase 03]: README and proof keep query and integration helpers as secondary lanes — Query helpers remain on the root package, but the quick start should stay centered on run(filter, input).
 - [Phase 03]: Direct and bound runtimes now share one internal helper path for JSON value-lane conversion and typed-query normalization.
 - [Phase 03]: Compiled filters stay on the direct runtime; `/bind` remains an explicit JSON-text backend integration surface instead of implying a second compiled contract.
+- [Phase 03]: Package builds now repair missing current-platform tool shims before emitting artifacts so local verification survives cross-OS package reinstalls.
+- [Phase 03]: Package-name smoke tests and declaration fixtures must run against fresh `dist/` artifacts instead of source-file fallbacks.
 
 ### Pending Todos
 
@@ -84,11 +86,10 @@ None yet.
 ### Blockers/Concerns
 
 - Local `bash ./scripts/jq_diff.sh` and `bash ./scripts/jq_upstream_ledger.sh --verify` are still not reliable final authorities in this Windows/WSL-like environment, so full differential proof currently depends on Linux CI.
-- The current Windows `ts/jqx` install needed a `pnpm install --frozen-lockfile` repair to restore `@esbuild/win32-x64` and `*.CMD` shims; Plan 03-03 should harden that path.
 - Decide in a later release-prep phase whether `mooncakes.io` publish stays deferred or becomes part of the first public release.
 
 ## Session Continuity
 
-Last session: 2026-03-14T05:16:52.139Z
-Stopped at: Completed 03-02-PLAN.md
-Resume file: .planning/phases/03-js-ts-runtime-surface/03-03-PLAN.md
+Last session: 2026-03-14T06:43:19.5841699Z
+Stopped at: Completed Phase 3 JS/TS Runtime Surface
+Resume file: None

@@ -39,7 +39,7 @@
 - [x] **TS-01**: JS/TS user can call a small canonical runtime API from `@shina1024/jqx` for parse, validation, compile, and direct execution.
 - [x] **TS-02**: JS/TS user can execute a compiled filter through canonical compiled-filter methods for structured inputs.
 - [x] **TS-03**: JS/TS user can execute a compiled filter through canonical compiled-filter methods for JSON text inputs.
-- [ ] **TS-04**: JS/TS user can import the documented runtime and binding entry points with working ESM, CJS, and type declaration outputs.
+- [x] **TS-04**: JS/TS user can import the documented runtime and binding entry points with working ESM, CJS, and type declaration outputs.
 - [x] **TS-05**: Maintainer can rename or restructure JS/TS public or helper APIs before versioning if the result is clearer and reduces long-term surface debt.
 
 ### Adapters
@@ -94,7 +94,7 @@
 | TS-01 | Phase 3 | Complete |
 | TS-02 | Phase 3 | Complete |
 | TS-03 | Phase 3 | Complete |
-| TS-04 | Phase 3 | Pending |
+| TS-04 | Phase 3 | Complete |
 | TS-05 | Phase 3 | Complete |
 | ADPT-01 | Phase 5 | Pending |
 | ADPT-02 | Phase 5 | Pending |
@@ -110,4 +110,4 @@
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-14 after Phase 3 Plan 02 completion*
+*Last updated: 2026-03-14 after Phase 3 completion*
