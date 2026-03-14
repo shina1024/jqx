@@ -13,7 +13,7 @@ This roadmap turns jqx from a partially working prototype into a release-ready s
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Shared Core and Compatibility** - Make one refactorable semantic core match `jq 1.8.1` with explicit exceptions only.
-- [ ] **Phase 2: MoonBit Public API** - Turn the MoonBit surface into a small canonical runtime API over the shared core.
+- [x] **Phase 2: MoonBit Public API** - Turn the MoonBit surface into a small canonical runtime API over the shared core.
 - [ ] **Phase 3: JS/TS Runtime Surface** - Ship the canonical npm runtime and binding surface on top of the same semantics.
 - [ ] **Phase 4: CLI Workflow Parity** - Finish end-to-end jq-compatible CLI workflows without turning CLI into an extension surface.
 - [ ] **Phase 5: Schema Adapter Packages** - Make Zod, Yup, and Valibot integrations work on the stable JS/TS runtime.
@@ -49,9 +49,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Canonicalize MoonBit runtime entry points and naming
-- [ ] 02-02: Harden compiled-filter methods and lane separation
-- [ ] 02-03: Remove or isolate internal-type leakage from the public boundary
+- [x] 02-01: Canonicalize MoonBit runtime entry points and naming
+- [x] 02-02: Harden compiled-filter methods and lane separation
+- [x] 02-03: Remove or isolate internal-type leakage from the public boundary
 
 ### Phase 3: JS/TS Runtime Surface
 **Goal**: JS/TS users can use a canonical runtime and binding package that stays aligned with the MoonBit and CLI semantics.
@@ -122,7 +122,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Shared Core and Compatibility | 3/3 | Complete | 2026-03-13 |
-| 2. MoonBit Public API | 0/3 | Not started | - |
+| 2. MoonBit Public API | 3/3 | Complete | 2026-03-14 |
 | 3. JS/TS Runtime Surface | 0/3 | Not started | - |
 | 4. CLI Workflow Parity | 0/2 | Not started | - |
 | 5. Schema Adapter Packages | 0/2 | Not started | - |

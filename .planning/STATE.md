@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-14T02:55:13.230Z"
-last_activity: 2026-03-14 - Gathered Phase 2 MoonBit public API context
+stopped_at: Phase 3 ready to plan
+last_updated: "2026-03-14T03:28:35Z"
+last_activity: 2026-03-14 - Completed Phase 2 MoonBit public API
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 16
-  completed_plans: 3
-  percent: 19
+  completed_plans: 6
+  percent: 38
 ---
 
 # Project State
@@ -21,34 +21,35 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** A single MoonBit-based core can deliver full `jq` compatibility and publishable CLI, JS/TS, and MoonBit packages without splitting behavior by surface.
-**Current focus:** Phase 2 - MoonBit Public API
+**Current focus:** Phase 3 - JS/TS Runtime Surface
 
 ## Current Position
 
-Phase: 2 of 6 (MoonBit Public API)
+Phase: 3 of 6 (JS/TS Runtime Surface)
 Plan: 0 of 3 in current phase
 Status: Ready to plan
-Last activity: 2026-03-14 - Gathered Phase 2 MoonBit public API context
+Last activity: 2026-03-14 - Completed Phase 2 MoonBit public API
 
-Progress: [██░░░░░░░░] 19%
+Progress: [████░░░░░░] 38%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 51 min
-- Total execution time: 2.5 hours
+- Total plans completed: 6
+- Average duration: 30 min
+- Total execution time: 3.0 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 | 3 | 152 min | 51 min |
+| 2 | 3 | 30 min | 10 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (114 min), 01-02 (18 min), 01-01 (20 min)
-- Trend: Mixed
-- Latest metric: Phase 01 Plan 03 — 114 min, 3 tasks, 8 files
+- Last 5 plans: 02-03 (10 min shared), 02-02 (10 min shared), 02-01 (10 min shared), 01-03 (114 min), 01-02 (18 min)
+- Trend: Improving
+- Latest metric: Phase 02 Plans 01-03 — 30 min shared implementation across 5 public-surface files
 
 ## Accumulated Context
 
@@ -69,6 +70,7 @@ Recent decisions affecting current work:
 - [Phase 02]: `run(filter, Json)` is the default public entrypoint; `compile(...).run(...)` is the explicit reuse path.
 - [Phase 02]: `CompiledFilter` stays opaque, and normal MoonBit docs should keep users on `shina1024/jqx` rather than routing them through `core`.
 - [Phase 02]: Broad `JqxError`-style public errors should be replaced by narrower entrypoint-specific composite errors while preserving structured leaf error payloads.
+- [Phase 02]: The generated MoonBit contract now exposes `RunError`, `JsonTextRunError`, and `CompiledJsonTextRunError` instead of a broad public `JqxError`.
 
 ### Pending Todos
 
@@ -81,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14 11:55 JST
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-moonbit-public-api/02-CONTEXT.md
+Last session: 2026-03-14 12:28 JST
+Stopped at: Phase 3 ready to plan
+Resume file: .planning/ROADMAP.md

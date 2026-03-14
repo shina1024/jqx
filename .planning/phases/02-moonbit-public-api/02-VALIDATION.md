@@ -1,7 +1,7 @@
 ---
 phase: 2
 slug: moonbit-public-api
-status: draft
+status: complete
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-03-14
@@ -38,15 +38,15 @@ created: 2026-03-14
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 02-01-01 | 01 | 1 | ARCH-02, MBT-01, MBT-05 | public-surface | `moon info && moon check -d` | ✅ | ⬜ pending |
-| 02-01-02 | 01 | 1 | MBT-01 | docs+surface | `moon check -d` | ✅ | ⬜ pending |
-| 02-01-03 | 01 | 1 | MBT-01 | top-level tests | `moon test` | ✅ | ⬜ pending |
-| 02-02-01 | 02 | 2 | MBT-02, MBT-03 | API-shape | `moon check -d` | ✅ | ⬜ pending |
-| 02-02-02 | 02 | 2 | MBT-02, MBT-03 | compiled-lane tests | `moon test` | ✅ | ⬜ pending |
-| 02-02-03 | 02 | 2 | MBT-02, MBT-03 | docs+tests | `moon check -d && moon test` | ✅ | ⬜ pending |
-| 02-03-01 | 03 | 3 | ARCH-02, MBT-04, MBT-05 | error-contract | `moon info && moon check -d && moon test` | ✅ | ⬜ pending |
-| 02-03-02 | 03 | 3 | MBT-04 | boundary-shape | `moon check -d` | ✅ | ⬜ pending |
-| 02-03-03 | 03 | 3 | ARCH-02, MBT-04, MBT-05 | full gate | `moon info && moon fmt --check && moon check -d && moon test` | ✅ | ⬜ pending |
+| 02-01-01 | 01 | 1 | ARCH-02, MBT-01, MBT-05 | public-surface | `moon info && moon check -d` | ✅ | ✅ green |
+| 02-01-02 | 01 | 1 | MBT-01 | docs+surface | `moon check -d` | ✅ | ✅ green |
+| 02-01-03 | 01 | 1 | MBT-01 | top-level tests | `moon test` | ✅ | ✅ green |
+| 02-02-01 | 02 | 2 | MBT-02, MBT-03 | API-shape | `moon check -d` | ✅ | ✅ green |
+| 02-02-02 | 02 | 2 | MBT-02, MBT-03 | compiled-lane tests | `moon test` | ✅ | ✅ green |
+| 02-02-03 | 02 | 2 | MBT-02, MBT-03 | docs+tests | `moon check -d && moon test` | ✅ | ✅ green |
+| 02-03-01 | 03 | 3 | ARCH-02, MBT-04, MBT-05 | error-contract | `moon info && moon check -d && moon test` | ✅ | ✅ green |
+| 02-03-02 | 03 | 3 | MBT-04 | boundary-shape | `moon check -d` | ✅ | ✅ green |
+| 02-03-03 | 03 | 3 | ARCH-02, MBT-04, MBT-05 | full gate | `moon info && moon fmt --check && moon check -d && moon test` | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠ flaky*
 
@@ -82,4 +82,4 @@ Wave 0 is therefore complete for this phase.
 - [x] Feedback latency < 60s
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved

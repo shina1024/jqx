@@ -15,7 +15,7 @@
 ### Architecture
 
 - [x] **ARCH-01**: Maintainer can evolve the internal architecture to a clearer shared-core design when that improves semantic consistency across surfaces.
-- [ ] **ARCH-02**: Maintainer can change internal or public API structure before versioning when the result reduces long-term API debt and improves overall usability.
+- [x] **ARCH-02**: Maintainer can change internal or public API structure before versioning when the result reduces long-term API debt and improves overall usability.
 - [x] **ARCH-03**: User can rely on one shared semantic core, with surface-specific layers limited to I/O, packaging, and ergonomic adaptation rather than semantic divergence.
 - [x] **ARCH-04**: Maintainer can reorganize package boundaries, module layout, or repository structure before versioning when that better supports the shared core and the three public surfaces.
 
@@ -27,11 +27,11 @@
 
 ### MoonBit API
 
-- [ ] **MBT-01**: MoonBit user can call a small canonical top-level runtime API from `shina1024/jqx` for parse, validation, compile, and direct execution.
-- [ ] **MBT-02**: MoonBit user can execute a compiled filter through canonical compiled-filter methods for the value lane.
-- [ ] **MBT-03**: MoonBit user can execute a compiled filter through canonical compiled-filter methods for the JSON-text compatibility lane.
-- [ ] **MBT-04**: MoonBit user can consume the public API without depending on `@core.Value`.
-- [ ] **MBT-05**: Maintainer can rename or restructure MoonBit public APIs before versioning if the result is more idiomatic and clearer for users.
+- [x] **MBT-01**: MoonBit user can call a small canonical top-level runtime API from `shina1024/jqx` for parse, validation, compile, and direct execution.
+- [x] **MBT-02**: MoonBit user can execute a compiled filter through canonical compiled-filter methods for the value lane.
+- [x] **MBT-03**: MoonBit user can execute a compiled filter through canonical compiled-filter methods for the JSON-text compatibility lane.
+- [x] **MBT-04**: MoonBit user can consume the public API without depending on `@core.Value`.
+- [x] **MBT-05**: Maintainer can rename or restructure MoonBit public APIs before versioning if the result is more idiomatic and clearer for users.
 - [ ] **MBT-06**: Maintainer can verify that the MoonBit package is publication-ready for `mooncakes.io`, even if first release defers the actual publish action.
 
 ### JS/TS API
@@ -79,17 +79,17 @@
 | COMP-03 | Phase 1 | Complete |
 | COMP-04 | Phase 1 | Complete |
 | ARCH-01 | Phase 1 | Complete |
-| ARCH-02 | Phase 2 | Pending |
+| ARCH-02 | Phase 2 | Complete |
 | ARCH-03 | Phase 1 | Complete |
 | ARCH-04 | Phase 1 | Complete |
 | CLI-01 | Phase 4 | Pending |
 | CLI-02 | Phase 4 | Pending |
 | CLI-03 | Phase 6 | Pending |
-| MBT-01 | Phase 2 | Pending |
-| MBT-02 | Phase 2 | Pending |
-| MBT-03 | Phase 2 | Pending |
-| MBT-04 | Phase 2 | Pending |
-| MBT-05 | Phase 2 | Pending |
+| MBT-01 | Phase 2 | Complete |
+| MBT-02 | Phase 2 | Complete |
+| MBT-03 | Phase 2 | Complete |
+| MBT-04 | Phase 2 | Complete |
+| MBT-05 | Phase 2 | Complete |
 | MBT-06 | Phase 6 | Pending |
 | TS-01 | Phase 3 | Pending |
 | TS-02 | Phase 3 | Pending |
@@ -110,4 +110,4 @@
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-13 after Phase 1 completion*
+*Last updated: 2026-03-14 after Phase 2 completion*
