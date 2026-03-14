@@ -119,6 +119,8 @@ const runJsonTextStreamOut = jqx.runJsonTextStream(".", '{"user":{"name":"a"}}')
 expectTypeOf(runJsonTextStreamOut).toMatchTypeOf<AsyncIterable<JqxResult<string, JqxRuntimeError>>>();
 // @ts-expect-error `undefined` is not a JSON value.
 void jqx.run(".", { user: undefined });
+// @ts-expect-error Compiled filters stay on the direct runtime, not the `/bind` client.
+void jqx.compile(".user.name");
 
 declare const bindingQueryRuntime: JqxQueryJsonTextRuntime<QueryAst>;
 const queryJqx = bindQueryRuntime(bindingQueryRuntime);
@@ -143,6 +145,8 @@ expectTypeOf(boundQueryJsonTextStreamOut).toMatchTypeOf<
 >();
 // @ts-expect-error `undefined` is not a JSON value.
 void queryJqx.query(ast, { user: undefined });
+// @ts-expect-error Compiled filters stay on the direct runtime, not the `/bind` query client.
+void queryJqx.compile(".user.name");
 
 type CustomQuery = { kind: "custom"; key: string };
 declare const customRuntime: JqxQueryJsonTextRuntime<CustomQuery>;

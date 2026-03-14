@@ -13,6 +13,7 @@ import {
   queryRuntime,
   runtime,
   toAst,
+  type Json,
 } from "../src/index.js";
 
 void test("root package exposes the canonical direct runtime entrypoints", () => {
@@ -31,6 +32,18 @@ void test("runJsonText executes a jq filter on JSON text", () => {
 void test("run stringifies input and parses outputs", () => {
   const result = run(".foo", { foo: 1 });
   assert.deepEqual(result, { ok: true, value: [1] });
+});
+
+void test("run returns input_stringify for unserializable value-lane input", () => {
+  const cyclic: Record<string, unknown> = {};
+  cyclic.self = cyclic;
+
+  const result = run(".", cyclic as Json);
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.error.kind, "input_stringify");
+    assert.equal(typeof result.error.message, "string");
+  }
 });
 
 void test("compile returns an opaque compiled filter with run methods", () => {

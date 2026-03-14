@@ -16,6 +16,7 @@ import {
   type JqxJsonTextRuntime,
   type JqxQueryJsonTextRuntime,
   type JqxRuntimeError,
+  type Json,
   type QueryAst,
 } from "../src/bind.js";
 
@@ -54,6 +55,24 @@ void test("bindRuntime run stringifies input and parses outputs", async () => {
   assert.equal(result.ok, true);
   if (result.ok) {
     assert.deepEqual(result.value, [{ x: 1 }]);
+  }
+});
+
+void test("bindRuntime run returns input_stringify for unserializable value-lane input", async () => {
+  const runtime: JqxJsonTextRuntime = {
+    runJsonText() {
+      assert.fail("runJsonText should not be called when input stringification fails");
+    },
+  };
+  const jqx = bindRuntime(runtime);
+  const cyclic: Record<string, unknown> = {};
+  cyclic.self = cyclic;
+
+  const result = await jqx.run(".", cyclic as Json);
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.error.kind, "input_stringify");
+    assert.equal(typeof result.error.message, "string");
   }
 });
 
