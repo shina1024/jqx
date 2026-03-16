@@ -27,6 +27,25 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: MoonBit Version
+        run: moon version --all
+
+      - name: Install jq
+        run: |
+          JQ_VERSION="1.8.1"
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL "https://github.com/jqlang/jq/releases/download/jq-${JQ_VERSION}/jq-linux-amd64" -o "$HOME/.local/bin/jq"
+          chmod +x "$HOME/.local/bin/jq"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: jq Version
+        run: jq --version
+
       - name: Configure git user
         run: |
           git config user.name "github-actions[bot]"
