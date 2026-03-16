@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install MoonBit (Linux/macOS)
         if: runner.os != 'Windows'
@@ -41,7 +41,7 @@ jobs:
 
       - name: Setup Node (Linux)
         if: runner.os == 'Linux'
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: lts/*
           check-latest: true
@@ -163,7 +163,7 @@ jobs:
 
       - name: Upload Coverage Report (Linux)
         if: runner.os == 'Linux' && always() && hashFiles('uncovered.log') != ''
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: moon-coverage-uncovered-log
           path: uncovered.log
@@ -187,7 +187,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install MoonBit (Linux/macOS)
         if: runner.os != 'Windows'
