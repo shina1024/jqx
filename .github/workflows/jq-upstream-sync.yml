@@ -65,7 +65,9 @@ jobs:
           fi
 
       - name: Create or update pull request
+        id: create_pr
         if: steps.detect.outputs.changed == 'true'
+        continue-on-error: true
         uses: peter-evans/create-pull-request@v7
         with:
           branch: chore/jq-upstream-sync
@@ -82,6 +84,25 @@ jobs:
             scripts/jq_compat_cases.upstream.json
             scripts/jq_upstream_failures.snapshot.json
             scripts/jq_upstream_diff_ledger.md
+
+      - name: Report manual PR fallback
+        if: steps.detect.outputs.changed == 'true' && steps.create_pr.outcome == 'failure'
+        shell: bash
+        run: |
+          if git ls-remote --exit-code origin refs/heads/chore/jq-upstream-sync >/dev/null; then
+            {
+              echo "### Sync jq Upstream Fixtures"
+              echo
+              echo "GitHub Actions is not allowed to create pull requests in this repository."
+              echo "The sync branch was pushed successfully and can be opened manually:"
+              echo
+              echo "- branch: \`chore/jq-upstream-sync\`"
+              echo "- compare URL: ${{ github.server_url }}/${{ github.repository }}/compare/main...chore/jq-upstream-sync?expand=1"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "create-pull-request failed before pushing the sync branch" >&2
+            exit 1
+          fi
 
       - name: No changes
         if: steps.detect.outputs.changed != 'true'
