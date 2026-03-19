@@ -80,7 +80,7 @@
     "@types/node": "^25.4.0",
     "rolldown": "1.0.0-rc.9",
     "expect-type": "^1.3.0",
-    "oxfmt": "^0.39.0",
+    "oxfmt": "^0.41.0",
     "oxlint": "^1.54.0",
     "oxlint-tsgolint": "^0.16.0",
     "tsx": "^4.21.0"
