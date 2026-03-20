@@ -31,6 +31,22 @@ test "parse cli inputs json basic" {
 }
 
 ///|
+test "parse cli inputs direct input overrides stdin" {
+  let cfg = {
+    raw: false,
+    raw_input: false,
+    no_input: false,
+    exit_status: false,
+    slurp: false,
+    module_search_paths: [],
+    filter: ".",
+    input: Some("{\"a\":2}"),
+  }
+  let parsed = parse_cli_inputs(cfg, "{\"a\":1}")
+  assert_eq(parsed, [@lib.Value::object({ "a": @lib.Value::number(2.0) })])
+}
+
+///|
 test "parse cli inputs json stream accepts leading bom" {
   let cfg = {
     raw: false,
@@ -294,6 +310,22 @@ test "parse cli inputs raw slurp" {
 }
 
 ///|
+test "parse cli inputs raw direct input slurp" {
+  let cfg = {
+    raw: false,
+    raw_input: true,
+    no_input: false,
+    exit_status: false,
+    slurp: true,
+    module_search_paths: [],
+    filter: ".",
+    input: Some("a\nb\n"),
+  }
+  let parsed = parse_cli_inputs(cfg, "ignored\n")
+  assert_eq(parsed, [@lib.Value::string("a\nb\n")])
+}
+
+///|
 test "parse cli inputs raw no-input takes precedence" {
   let cfg = {
     raw: false,
@@ -335,6 +367,18 @@ test "run cli prints usage when filter is missing" {
 }
 
 ///|
+test "run cli usage text uses jqx command" {
+  assert_eq(
+    usage_summary_line(),
+    "Usage: jqx [options] \"<filter>\" [\"<json>\"]",
+  )
+  assert_eq(usage_lines(), [
+    "Usage: jqx [options] \"<filter>\" [\"<json>\"]", "Example (stdin): echo '{\"foo\": 1}' | jqx \".foo\"",
+    "Example (arg):   jqx \".foo\" '{\"foo\": 1}'", "Options: -r, -R, -c, -n, -s, -e, -L <dir>",
+  ])
+}
+
+///|
 test "run cli reports arg parse errors with short usage" {
   let result = run_cli(["jqx", "-L"], "")
   assert_eq(result.lines, [
@@ -348,6 +392,14 @@ test "run cli reports arg parse errors with short usage" {
 test "run cli executes stdin input" {
   let result = run_cli(["jqx", ".foo"], "{\"foo\":1}")
   assert_eq(result.lines, ["1"])
+  assert_eq(result.exit_code, None)
+}
+
+///|
+test "run cli raw string output uses raw formatter" {
+  assert_eq(format_output(true, @lib.Value::string("bar")), "bar")
+  let result = run_cli(["jqx", "-r", ".foo", "{\"foo\":\"bar\"}"], "")
+  assert_eq(result.lines, ["bar"])
   assert_eq(result.exit_code, None)
 }
 
