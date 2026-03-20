@@ -18,6 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: CLI Workflow Parity** - Finish end-to-end jq-compatible CLI workflows without turning CLI into an extension surface.
 - [x] **Phase 5: Schema Adapter Packages** - Make Zod, Yup, and Valibot integrations work on the stable JS/TS runtime.
 - [x] **Phase 6: Release Readiness and Docs** - Validate publishable artifacts, MoonBit package readiness, and surface-consistent docs.
+- [ ] **Phase 7: Nyquist Validation Completion** - Close remaining validation-process debt and bring partial phase validations to compliant status.
 
 ## Phase Details
 
@@ -114,10 +115,20 @@ Plans:
 - [x] 06-02: Finalize MoonBit package readiness and publication metadata
 - [x] 06-03: Align docs and examples across all public surfaces
 
+### Phase 7: Nyquist Validation Completion
+**Goal**: Bring the remaining partial VALIDATION artifacts to Nyquist-compliant status so milestone v1.0 can close without validation-process debt.
+**Depends on**: Phase 6
+**Requirements**: None (validation debt closure)
+**Gap Closure**: Closes the `tech_debt` items from `.planning/v1.0-MILESTONE-AUDIT.md` for phases 03, 04, 05, and 06.
+**Plans**: 0 plans
+
+Plans:
+- [ ] TBD (run `$gsd-plan-phase 7` to break down the Nyquist validation closure work)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -127,3 +138,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 4. CLI Workflow Parity | 2/2 | Complete | 2026-03-20 |
 | 5. Schema Adapter Packages | 2/2 | Complete | 2026-03-20 |
 | 6. Release Readiness and Docs | 3/3 | Complete | 2026-03-20 |
+| 7. Nyquist Validation Completion | 0/0 | Not started | - |
