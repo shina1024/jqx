@@ -1,6 +1,6 @@
 # @shina1024/jqx
 
-Direct-use JS/TS runtime for `jqx`. Start with `run(filter, input)` from `@shina1024/jqx`, and use `@shina1024/jqx/bind` only when you need to connect a custom backend.
+Direct-use JS/TS runtime for `jqx`. Start with `run(filter, input)` from `@shina1024/jqx`, and add standalone schema adapters only when you want validator-backed input and output checks.
 
 ## Quick Start
 
@@ -71,24 +71,50 @@ const result = query(field("user"), { user: { name: "alice" } });
 
 `query` accepts either a typed DSL `Query` or a plain `QueryAst`. `queryJsonText` is the compatibility-lane equivalent.
 
-### Adapter Integration
+## Schema Adapters
 
-The main package exports `runtime` and `queryRuntime`, so adapters can consume the built-in runtime directly.
+Schema adapters are separate packages built on the stable `runtime` and `queryRuntime` contract exported by `@shina1024/jqx`. They do not depend on internal runtime details.
+
+Install the runtime plus one adapter package and one validator library:
+
+```bash
+pnpm add @shina1024/jqx @shina1024/jqx-zod-adapter zod
+pnpm add @shina1024/jqx @shina1024/jqx-yup-adapter yup
+pnpm add @shina1024/jqx @shina1024/jqx-valibot-adapter valibot
+```
+
+The canonical adapter packages are:
+
+- `@shina1024/jqx-zod-adapter`
+- `@shina1024/jqx-yup-adapter`
+- `@shina1024/jqx-valibot-adapter`
+
+Example with the Zod adapter:
 
 ```ts
-import { z } from "zod";
 import { runtime } from "@shina1024/jqx";
-import { createAdapter } from "@shina1024/jqx/zod";
+import { createAdapter } from "@shina1024/jqx-zod-adapter";
+import { z } from "zod";
 
 const adapter = createAdapter(runtime);
 
 const result = await adapter.filter({
   filter: ".users[].name",
   input: { users: [{ name: "alice" }, { name: "bob" }] },
-  inputSchema: z.object({ users: z.array(z.object({ name: z.string() })) }),
+  inputSchema: z.object({
+    users: z.array(z.object({ name: z.string() })),
+  }),
   outputSchema: z.string(),
 });
 ```
+
+Each adapter keeps the same top-level jqx error kinds:
+
+- `input_validation`
+- `runtime`
+- `output_validation`
+
+The top-level `message` comes from jqx, while `issues` stays native to the selected validator library.
 
 ## Binding API
 
@@ -120,9 +146,10 @@ Use `bindQueryRuntime` when the backend also implements `runQueryJsonText`.
   - `bindRuntime`
   - `bindQueryRuntime`
   - binding-specific runtime and client types
-- `@shina1024/jqx/zod`
-- `@shina1024/jqx/yup`
-- `@shina1024/jqx/valibot`
+- standalone adapter packages on the stable runtime contract
+  - `@shina1024/jqx-zod-adapter`
+  - `@shina1024/jqx-yup-adapter`
+  - `@shina1024/jqx-valibot-adapter`
 
 ## Error Model
 
