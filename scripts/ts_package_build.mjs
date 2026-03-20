@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, readdirSync, rmSync } from "node:fs";
+import { cpSync, existsSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -107,38 +107,37 @@ function syncDcts(dir) {
 }
 
 try {
-  const { build } = await importPackageLocal("rolldown");
+  const { build } = await importPackageLocal("tsdown");
+  const entries = Object.fromEntries(
+    entryPoints.map((entryPoint) => [
+      path.basename(entryPoint, path.extname(entryPoint)),
+      entryPoint,
+    ]),
+  );
 
-  rmSync(distDir, { recursive: true, force: true });
-
-  await build([
-    {
-      cwd: packageDir,
-      input: entryPoints,
-      external: isExternalModule,
-      platform: "node",
-      output: {
-        dir: distDir,
-        format: "esm",
-        exports: "named",
-        entryFileNames: "[name].js",
-        chunkFileNames: "chunks/[name]-[hash].js",
-      },
+  await build({
+    cwd: packageDir,
+    entry: entries,
+    format: ["es", "cjs"],
+    deps: {
+      neverBundle: isExternalModule,
     },
-    {
-      cwd: packageDir,
-      input: entryPoints,
-      external: isExternalModule,
-      platform: "node",
-      output: {
-        dir: distDir,
-        format: "cjs",
+    platform: "node",
+    outDir: distDir,
+    clean: true,
+    report: false,
+    dts: false,
+    outputOptions(_, format) {
+      return {
+        chunkFileNames:
+          format === "cjs" ? "chunks/[name]-[hash].cjs" : "chunks/[name]-[hash].js",
         exports: "named",
-        entryFileNames: "[name].cjs",
-        chunkFileNames: "chunks/[name]-[hash].cjs",
-      },
+      };
     },
-  ]);
+    outExtensions({ format }) {
+      return { js: format === "cjs" ? ".cjs" : ".js" };
+    },
+  });
 
   run(binPath("tsgo"), [
     "-p",
