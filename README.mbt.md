@@ -1,35 +1,74 @@
 # jqx
 
-A jq-compatible executable, MoonBit package, and JS/TS library written in MoonBit.
+A jq-compatible CLI, MoonBit package, and JS/TS runtime built from one shared MoonBit core.
 
 ## Install
 
-- CLI executable: `jqx` (download from GitHub Releases)
-- MoonBit package: `shina1024/jqx`
-- npm package: `@shina1024/jqx`
+CLI:
+- Download the `jqx` executable from GitHub Releases.
+
+MoonBit:
 
 ```bash
 moon add shina1024/jqx
 ```
 
-The top-level `shina1024/jqx` package is the canonical MoonBit surface. Use `run(...)` for the normal `Json` lane, `compile(...)` when you want to reuse a filter, and `run_json_text(...)` or `CompiledFilter::run_json_text(...)` when jq-style text fidelity matters.
+JS/TS runtime:
 
 ```bash
 npm install @shina1024/jqx
 ```
 
-Optional validator packages:
+Optional standalone adapters:
 
 ```bash
-npm install zod
-# or: npm install yup
-# or: npm install valibot
+npm install @shina1024/jqx-zod-adapter zod
+npm install @shina1024/jqx-yup-adapter yup
+npm install @shina1024/jqx-valibot-adapter valibot
 ```
+
+The root README is the cross-surface entrypoint. Detailed JS/TS runtime and validator-specific adapter guidance lives in the package READMEs under [`ts/jqx/README.md`](ts/jqx/README.md), [`ts/zod-adapter/README.md`](ts/zod-adapter/README.md), [`ts/yup-adapter/README.md`](ts/yup-adapter/README.md), and [`ts/valibot-adapter/README.md`](ts/valibot-adapter/README.md).
+
+## CLI Quick Start
+
+Use the `jqx` executable once it is available from GitHub Releases:
+
+```bash
+# stdin input
+echo '{"foo": 1}' | jqx ".foo"
+
+# direct input argument
+jqx ".foo" '{"foo": 1}'
+```
+
+Common jq-compatible flags:
+
+```bash
+# Raw string output (no JSON quotes)
+jqx -r ".foo" '{"foo":"bar"}'
+
+# Raw input mode (line-based strings)
+jqx -R "." "a\nb"
+
+# Raw input slurp
+jqx -R -s "." "a\nb\n"
+
+# Null input
+jqx -n "."
+
+# Slurp inputs into one array
+jqx -s "." "1"
+
+# jq -e style exit status
+jqx -e ".ok" '{"ok": false}'
+```
+
+The CLI stays on the shared jq-compatible core. Use it when you want the release artifact surface rather than an embedded library API.
 
 ## MoonBit Quick Start
 
 MoonBit users should use the top-level `shina1024/jqx` package API.
-The normal path is standard `Json` via `run(filter, input)`.
+The normal path is standard `Json` via `run(filter, input)`. Reach for `compile(...)` when you want to reuse a filter, and use `run_json_text(...)` when jq-style text fidelity matters.
 
 Value lane example:
 
@@ -75,50 +114,9 @@ Boundary helpers:
 - Normal MoonBit usage should stay on `shina1024/jqx`; you should not need `shina1024/jqx/core`, `@core.Value`, or `@core.Filter`.
 - Release-readiness audit commands: `moon package --list --manifest-path moon.mod.json` should exclude `_bundle_tmp` and `_bundle_wasmgc`, and `moon publish --dry-run --manifest-path moon.mod.json` requires `moon login`.
 
-## CLI Quick Start
+## JS/TS Quick Start
 
-Use the `jqx` executable once it is in your `PATH`:
-
-```bash
-# stdin input
-echo '{"foo": 1}' | jqx ".foo"
-
-# direct input argument
-jqx ".foo" '{"foo": 1}'
-```
-
-Common options:
-
-```bash
-# Raw string output (no JSON quotes)
-jqx -r ".foo" '{"foo":"bar"}'
-
-# Raw input mode (line-based strings)
-jqx -R "." "a\nb"
-
-# Raw input slurp
-jqx -R -s "." "a\nb\n"
-
-# Null input
-jqx -n "."
-
-# Slurp inputs into one array
-jqx -s "." "1"
-
-# jq -e style exit status
-jqx -e ".ok" '{"ok": false}'
-```
-
-## npm Quick Start
-
-Entry points:
-- `import { run, runJsonText, compile, query } from "@shina1024/jqx"`
-- `import { bindRuntime, bindQueryRuntime } from "@shina1024/jqx/bind"`
-- `import { createAdapter } from "@shina1024/jqx/zod"`
-- `import { createAdapter } from "@shina1024/jqx/yup"`
-- `import { createAdapter } from "@shina1024/jqx/valibot"`
-
-Direct-use runtime example:
+Start with the direct runtime from `@shina1024/jqx`:
 
 ```ts
 import { run, runJsonText } from "@shina1024/jqx";
@@ -127,20 +125,19 @@ const values = run(".foo", { foo: 1 });
 const compat = runJsonText(".", "9007199254740993");
 ```
 
-Compiled / query example:
+Reuse a compiled filter when you expect to run the same jq program repeatedly:
 
 ```ts
-import { compile, field, query } from "@shina1024/jqx";
+import { compile } from "@shina1024/jqx";
 
 const compiled = compile(".items[]");
 if (compiled.ok) {
-  const out = compiled.value.run({ items: [1, 2, 3] });
+  const valueLane = compiled.value.run({ items: [1, 2, 3] });
+  const textLane = compiled.value.runJsonText('{"items":[1,2,3]}');
 }
-
-const selected = query(field("user"), { user: { name: "alice" } });
 ```
 
-Binding example (`@shina1024/jqx/bind`):
+`@shina1024/jqx/bind` is the backend-integration lane for custom JSON-text runtimes:
 
 ```ts
 import { bindRuntime, type JqxJsonTextRuntime } from "@shina1024/jqx/bind";
@@ -152,37 +149,47 @@ const backend: JqxJsonTextRuntime = {
 };
 
 const jqx = bindRuntime(backend);
-const out = await jqx.run(".", { x: 1 });
+const result = await jqx.run(".", { x: 1 });
 ```
 
-Backend runtime contract:
-- `bindRuntime`: implement `runJsonText(filter: string, input: string)` and return `JqxResult<string[], JqxRuntimeError>`
-- `bindQueryRuntime`: additionally implement `runQueryJsonText(query: QueryAst, input: string)`
-- `runJsonText`/`runQueryJsonText` outputs are JSON texts (`string[]`), one entry per jq output
+The detailed runtime, query, and binding contracts live in [`ts/jqx/README.md`](ts/jqx/README.md).
 
-Error handling guideline:
+## Schema Adapter Example
 
 ```ts
-import { run, runtimeErrorToMessage } from "@shina1024/jqx";
-
-const result = run(".foo", { foo: 1 });
-if (!result.ok) {
-  console.error(runtimeErrorToMessage(result.error));
-}
-```
-
-Schema adapter example (Zod):
-
-```ts
-import { z } from "zod";
 import { runtime } from "@shina1024/jqx";
-import { createAdapter } from "@shina1024/jqx/zod";
+import { createAdapter } from "@shina1024/jqx-zod-adapter";
+import { z } from "zod";
 
 const adapter = createAdapter(runtime);
+
 const result = await adapter.filter({
   filter: ".users[].name",
   input: { users: [{ name: "alice" }, { name: "bob" }] },
-  inputSchema: z.object({ users: z.array(z.object({ name: z.string() })) }),
+  inputSchema: z.object({
+    users: z.array(z.object({ name: z.string() })),
+  }),
   outputSchema: z.string(),
 });
 ```
+
+Standalone adapter packages are:
+
+- `@shina1024/jqx-zod-adapter`
+- `@shina1024/jqx-yup-adapter`
+- `@shina1024/jqx-valibot-adapter`
+
+Each package keeps `createAdapter(runtime).filter(...)` as the primary on-ramp and owns its validator-specific details in its own README.
+
+## Documentation Ownership
+
+- Root README: cross-surface install story and one quick start per public surface.
+- [`ts/jqx/README.md`](ts/jqx/README.md): detailed JS/TS runtime, compiled-filter, query, and `/bind` documentation.
+- [`ts/zod-adapter/README.md`](ts/zod-adapter/README.md): Zod-specific adapter usage.
+- [`ts/yup-adapter/README.md`](ts/yup-adapter/README.md): Yup-specific adapter usage.
+- [`ts/valibot-adapter/README.md`](ts/valibot-adapter/README.md): Valibot-specific adapter usage.
+
+That split keeps the root docs concise while the package READMEs own the detailed runtime and adapter guidance that changes more often.
+
+When release-audit details change, update the package README that owns the surface first and then keep this root overview consistent with it.
+That prevents the root docs from drifting back into a second source of truth for runtime-specific or validator-specific behavior.
