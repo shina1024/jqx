@@ -89,12 +89,14 @@ jobs:
 
       - name: Differential Native Exit (Linux/macOS)
         if: runner.os != 'Windows'
-        run: bash ./scripts/jq_diff_native.sh
+        env:
+          JQX_PROFILE: release
+        run: bash ./scripts/jq_diff.sh scripts/jq_exit_cases.json
 
       - name: Differential Native Exit (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: ./scripts/jq_diff_native.ps1
+        run: ./scripts/jq_diff.ps1 -CasesPath scripts/jq_exit_cases.json
 
   nightly-status:
     name: Nightly Status

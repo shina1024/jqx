@@ -126,7 +126,7 @@ jobs:
         if: runner.os == 'Linux'
         env:
           JQX_PROFILE: release
-        run: bash ./scripts/jq_diff_native.sh
+        run: bash ./scripts/jq_diff.sh scripts/jq_exit_cases.json
 
       - name: Coverage Analyze (Linux)
         if: runner.os == 'Linux'
