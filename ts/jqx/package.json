@@ -65,9 +65,12 @@
     "format:check": "oxfmt . --check",
     "lint": "oxlint .",
     "lint:typeaware": "pnpm build:moon-runtime && oxlint . --type-aware --type-check",
+    "lint:typeaware:built": "oxlint . --type-aware --type-check",
     "lint:fix": "oxlint . --fix",
     "typecheck": "pnpm build && tsgo -p tsconfig.json --noEmit",
-    "test": "pnpm build && node --import tsx --test test/**/*.test.ts"
+    "typecheck:built": "tsgo -p tsconfig.json --noEmit",
+    "test": "pnpm build && node --import tsx --test test/**/*.test.ts",
+    "test:built": "node --import tsx --test test/**/*.test.ts"
   },
   "dependencies": {
     "@shina1024/jqx-adapter-core": "^0.1.0",

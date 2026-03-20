@@ -91,8 +91,16 @@ function runPnpm(packageInfo, args) {
 
 function installArgs(frozenLockfile) {
   return frozenLockfile
-    ? ["install", "--frozen-lockfile"]
-    : ["install", "--no-frozen-lockfile"];
+    ? ["install", "--frozen-lockfile", "--ignore-scripts"]
+    : ["install", "--no-frozen-lockfile", "--ignore-scripts"];
+}
+
+function preferredScript(packageInfo, scriptName) {
+  const builtScriptName = `${scriptName}:built`;
+  if (typeof packageInfo.scripts[builtScriptName] === "string") {
+    return builtScriptName;
+  }
+  return scriptName;
 }
 
 function refreshPackage(packageInfo, frozenLockfile) {
@@ -110,11 +118,11 @@ function verifyPackage(packageInfo, frozenLockfile) {
   runPnpm(packageInfo, ["build"]);
   runPnpm(packageInfo, ["lint"]);
   if (typeof packageInfo.scripts["lint:typeaware"] === "string") {
-    runPnpm(packageInfo, ["lint:typeaware"]);
+    runPnpm(packageInfo, [preferredScript(packageInfo, "lint:typeaware")]);
   }
-  runPnpm(packageInfo, ["typecheck"]);
+  runPnpm(packageInfo, [preferredScript(packageInfo, "typecheck")]);
   if (typeof packageInfo.scripts.test === "string") {
-    runPnpm(packageInfo, ["test"]);
+    runPnpm(packageInfo, [preferredScript(packageInfo, "test")]);
   }
 }
 
