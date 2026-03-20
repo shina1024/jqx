@@ -12,12 +12,12 @@ A single MoonBit-based core can deliver full `jq` compatibility and publishable 
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] The native CLI now covers the common jq workflows and option set through the shared core, including stdin, direct input, `-r`, `-R`, `-s`, `-n`, `-e`, and `-L`. Validated in Phase 4: CLI Workflow Parity.
 
 ### Active
 
 - [ ] `jq 1.8.1` compatibility is complete, with any exceptions made explicit and removable.
-- [ ] The native CLI is publishable and behaves as a `jq`-compatible surface without CLI-only feature expansion beyond `jq`.
+- [ ] The native CLI is publishable as a release artifact without CLI-only feature expansion beyond `jq`.
 - [ ] The JS/TS package is publishable and provides practical runtime and compiled-filter APIs on top of the shared core.
 - [ ] The MoonBit package is publishable and uses standard `Json` as the public boundary while preserving a JSON-text compatibility lane.
 - [ ] Shared semantics remain aligned across CLI, JS/TS, and MoonBit, including the JSON value model and object key input/update order.
@@ -50,6 +50,12 @@ The current package layout direction is:
 
 This layout may change before release if a different package split, module structure, or boundary arrangement better supports the shared-core design, reduces API debt, or makes the three public surfaces more coherent.
 
+## Current State
+
+Phase 4 is complete. The jqx CLI workflow story is now validated locally through maintained jq differential cases, focused wbtests, native module-path proof, and cross-phase JS/TS regression checks.
+
+Next focus: Phase 5 - Schema Adapter Packages.
+
 ## Constraints
 
 - **Compatibility**: Target `jq 1.8.1` behavior, and make any jq-version-specific exceptions explicit in code, tests, or docs.
@@ -72,4 +78,4 @@ This layout may change before release if a different package split, module struc
 | Before `1.0`, breaking changes are acceptable when they reduce long-term API debt | Canonical public names and package boundaries should be cleaned up before release rather than preserved as aliases | — Pending |
 
 ---
-*Last updated: 2026-03-12 after initialization*
+*Last updated: 2026-03-20 after Phase 4 completion*
