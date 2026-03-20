@@ -120,10 +120,12 @@ Plans:
 **Depends on**: Phase 6
 **Requirements**: None (validation debt closure)
 **Gap Closure**: Closes the `tech_debt` items from `.planning/v1.0-MILESTONE-AUDIT.md` for phases 03, 04, 05, and 06.
-**Plans**: 0 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD (run `$gsd-plan-phase 7` to break down the Nyquist validation closure work)
+- [ ] 07-01: Reconcile JS/TS runtime and adapter validation artifacts
+- [ ] 07-02: Reconcile CLI and release-readiness validation artifacts
+- [ ] 07-03: Re-audit milestone readiness after Nyquist closure
 
 ## Progress
 
@@ -138,4 +140,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 4. CLI Workflow Parity | 2/2 | Complete | 2026-03-20 |
 | 5. Schema Adapter Packages | 2/2 | Complete | 2026-03-20 |
 | 6. Release Readiness and Docs | 3/3 | Complete | 2026-03-20 |
-| 7. Nyquist Validation Completion | 0/0 | Not started | - |
+| 7. Nyquist Validation Completion | 0/3 | Planned | - |

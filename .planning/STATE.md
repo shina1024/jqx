@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 06 complete
-last_updated: "2026-03-20T23:17:24.0559794+09:00"
-last_activity: 2026-03-20 - Completed Phase 6 Release Readiness and Docs
+status: planning
+stopped_at: Phase 07 planned
+last_updated: "2026-03-20T23:45:10.0074100+09:00"
+last_activity: 2026-03-20 - Planned Phase 7 Nyquist Validation Completion
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 6
-  total_plans: 16
+  total_plans: 19
   completed_plans: 16
-  percent: 100
+  percent: 84
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-20)
 
 **Core value:** A single MoonBit-based core can deliver full `jq` compatibility and publishable CLI, JS/TS, and MoonBit packages without splitting behavior by surface.
-**Current focus:** Milestone v1.0 complete
+**Current focus:** Phase 7 planning to close Nyquist validation debt before milestone archival
 
 ## Current Position
 
-Phase: 6 of 6 (Release Readiness and Docs)
-Plan: 3 of 3 in current phase
-Status: Complete
-Last activity: 2026-03-20 - Completed Phase 6 Release Readiness and Docs
+Phase: 7 of 7 (Nyquist Validation Completion)
+Plan: 0 of 3 in current phase
+Status: Planned
+Last activity: 2026-03-20 - Planned Phase 7 Nyquist Validation Completion
 
-Progress: [██████████] 100%
+Progress: [████████░░] 84%
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Progress: [██████████] 100%
 | 4 | 2 | 13 min | 7 min |
 | 5 | 2 | 12 min | 6 min |
 | 6 | 3 | 38 min | 13 min |
+| 7 | 0 | - | - |
 
 **Recent Trend:**
 
@@ -100,6 +101,7 @@ Recent decisions affecting current work:
 - [Phase 06]: CLI `workflow_dispatch` now exposes `dry_run` so maintainers can audit uploaded archives without publishing a GitHub Release.
 - [Phase 06]: MoonBit package readiness now depends on explicit `moon.mod.json` exclusions plus a recorded `moon login` / `moon publish --dry-run` preflight path.
 - [Phase 06]: Root docs now introduce CLI, MoonBit, and JS/TS in that order while package READMEs own the detailed runtime and adapter guidance.
+- [Phase 07 planning]: Validation debt closure is documentation- and evidence-reconciliation work only; satisfied product requirements and finished surface behavior stay out of scope.
 
 ### Pending Todos
 
@@ -109,9 +111,10 @@ None yet.
 
 - Local `bash ./scripts/jq_diff.sh` and `bash ./scripts/jq_upstream_ledger.sh --verify` are still not reliable final authorities in this Windows/WSL-like environment, so full differential proof currently depends on Linux CI.
 - Decide in a later release-prep phase whether `mooncakes.io` publish stays deferred or becomes part of the first public release.
+- Milestone v1.0 archival remains blocked only on closing the remaining Nyquist validation debt for phases 03 through 06.
 
 ## Session Continuity
 
-Last session: 2026-03-20T23:17:24.0559794+09:00
-Stopped at: Phase 06 complete
+Last session: 2026-03-20T23:45:10.0074100+09:00
+Stopped at: Phase 07 planned
 Resume file: None

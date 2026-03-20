@@ -53,7 +53,7 @@ This layout may change before release if a different package split, module struc
 
 Phase 6 is complete. Release workflows now have auditable dry-run proof paths, the MoonBit package is publication-ready as `shina1024/jqx`, and the root/package docs are aligned on canonical public names.
 
-Milestone v1.0 is complete.
+Milestone v1.0 product scope is complete, but Phase 7 is now planned to close the remaining Nyquist validation debt before archival.
 
 ## Constraints
 
@@ -77,4 +77,4 @@ Milestone v1.0 is complete.
 | Before `1.0`, breaking changes are acceptable when they reduce long-term API debt | Canonical public names and package boundaries should be cleaned up before release rather than preserved as aliases | — Pending |
 
 ---
-*Last updated: 2026-03-20 after Phase 6 completion*
+*Last updated: 2026-03-20 after Phase 7 planning*
