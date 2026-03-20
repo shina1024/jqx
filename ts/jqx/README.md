@@ -2,6 +2,14 @@
 
 Direct-use JS/TS runtime for `jqx`. Start with `run(filter, input)` from `@shina1024/jqx`, and add standalone schema adapters only when you want validator-backed input and output checks.
 
+See the repository root README for the CLI and MoonBit quick starts. This package README owns the detailed JS/TS runtime and `@shina1024/jqx/bind` guidance.
+
+## Install
+
+```bash
+pnpm add @shina1024/jqx
+```
+
 ## Quick Start
 
 `@shina1024/jqx` is the main end-user surface. It bundles the MoonBit runtime and runs synchronously.
@@ -136,6 +144,27 @@ Backends implement `runJsonText(...)` and optionally `runQueryJsonText(...)` or 
 
 Use `bindQueryRuntime` when the backend also implements `runQueryJsonText`.
 
+## Choosing a Surface
+
+- Use `run(...)` when you have native JS values and want the shortest path.
+- Use `runJsonText(...)` when jq-style JSON text fidelity matters.
+- Use `compile(...)` when the same jq program will run repeatedly.
+- Use `query(...)` or `queryJsonText(...)` when you are already composing filters through the typed query DSL.
+- Use `bindRuntime` or `bindQueryRuntime` only when the real execution engine lives behind a custom JSON-text transport.
+
+That separation keeps the direct runtime synchronous and easy to embed while still leaving a clear integration lane for backends that cannot expose the in-process MoonBit runtime directly.
+
+## Error Handling Example
+
+```ts
+import { run, runtimeErrorToMessage } from "@shina1024/jqx";
+
+const result = run(".foo", { foo: 1 });
+if (!result.ok) {
+  console.error(runtimeErrorToMessage(result.error));
+}
+```
+
 ## Package Entry Points
 
 - `@shina1024/jqx`
@@ -180,3 +209,10 @@ pnpm test
 `pnpm build` bundles ESM/CJS with `tsdown` and emits declarations with `tsgo`. `pnpm typecheck` also uses `tsgo`.
 The workspace pins `@typescript/native-preview` for `tsgo` and type-aware linting, so TS package verification follows the checked-in native-preview toolchain rather than a separately installed stock `typescript`.
 `pnpm test` and `pnpm typecheck` both build `dist/` first so the package-name smoke tests and declaration fixtures run against the shipped entrypoints instead of source-file shortcuts.
+
+## Related Docs
+
+- Root cross-surface overview: [`../../README.mbt.md`](../../README.mbt.md)
+- Zod adapter: [`../zod-adapter/README.md`](../zod-adapter/README.md)
+- Yup adapter: [`../yup-adapter/README.md`](../yup-adapter/README.md)
+- Valibot adapter: [`../valibot-adapter/README.md`](../valibot-adapter/README.md)

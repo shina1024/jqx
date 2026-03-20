@@ -100,3 +100,8 @@ pnpm test
 ```
 
 `pnpm build` bundles ESM/CJS with `tsdown` and emits declarations with `tsgo`. `pnpm typecheck` uses `tsgo`.
+
+## Related Docs
+
+- Runtime and bind surface: [`../jqx/README.md`](../jqx/README.md)
+- Root cross-surface overview: [`../../README.mbt.md`](../../README.mbt.md)
