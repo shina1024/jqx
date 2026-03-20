@@ -2,16 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-20T04:45:29.559Z"
-last_activity: 2026-03-14 - Completed Phase 3 JS/TS Runtime Surface
+status: executing
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-20T05:35:09.9526766Z"
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
-  percent: 56
+  total_plans: 11
+  completed_plans: 10
 ---
 
 # Project State
@@ -21,24 +19,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** A single MoonBit-based core can deliver full `jq` compatibility and publishable CLI, JS/TS, and MoonBit packages without splitting behavior by surface.
-**Current focus:** Phase 4 - CLI Workflow Parity
+**Current focus:** Phase 04 — cli-workflow-parity
 
 ## Current Position
 
-Phase: 4 of 6 (CLI Workflow Parity)
-Plan: 0 of 2 in current phase
-Status: Ready to plan
-Last activity: 2026-03-14 - Completed Phase 3 JS/TS Runtime Surface
-
-Progress: [██████░░░░] 56%
+Phase: 04 (cli-workflow-parity) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 9
-- Average duration: 25 min
-- Total execution time: 3.8 hours
+- Total plans completed: 10
+- Average duration: 23 min
+- Total execution time: 3.9 hours
 
 **By Phase:**
 
@@ -47,12 +41,13 @@ Progress: [██████░░░░] 56%
 | 1 | 3 | 152 min | 51 min |
 | 2 | 3 | 30 min | 10 min |
 | 3 | 3 | 45 min | 15 min |
+| 4 | 1 | 5 min | 5 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 03-03 (10 min), 03-02 (10 min), 03-01 (25 min), 02-03 (10 min shared), 02-02 (10 min shared)
+- Last 5 plans: 04-01 (5 min), 03-03 (10 min), 03-02 (10 min), 03-01 (25 min), 02-03 (10 min shared)
 - Trend: Improving
-- Latest metric: Phase 03 Plan 03 — 10 min across 3 tasks and 8 files
+- Latest metric: Phase 04 Plan 01 — 5 min across 2 tasks and 3 files
 
 ## Accumulated Context
 
@@ -80,6 +75,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Compiled filters stay on the direct runtime; `/bind` remains an explicit JSON-text backend integration surface instead of implying a second compiled contract.
 - [Phase 03]: Package builds now repair missing current-platform tool shims before emitting artifacts so local verification survives cross-OS package reinstalls.
 - [Phase 03]: Package-name smoke tests and declaration fixtures must run against fresh `dist/` artifacts instead of source-file fallbacks.
+- [Phase 04]: User-facing CLI help and first-step docs now present `jqx` as the canonical command name instead of a contributor-oriented `moon run --target native cmd -- ...` invocation.
+- [Phase 04]: Focused CLI wbtests now pin direct-input precedence, raw direct-input slurp, and jqx usage text while compile and execute remain delegated to the shared core.
 
 ### Pending Todos
 
@@ -92,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T04:45:29.556Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-cli-workflow-parity/04-CONTEXT.md
+Last session: 2026-03-20T05:35:09.9526766Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: .planning/phases/04-cli-workflow-parity/04-02-PLAN.md

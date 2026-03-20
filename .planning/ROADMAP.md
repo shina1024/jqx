@@ -80,7 +80,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: Normalize CLI input and output behavior around the shared core
+- [x] 04-01: Normalize CLI input and output behavior around the shared core
 - [ ] 04-02: Finish common jq option parity and error-path behavior
 
 ### Phase 5: Schema Adapter Packages
@@ -124,6 +124,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Shared Core and Compatibility | 3/3 | Complete | 2026-03-13 |
 | 2. MoonBit Public API | 3/3 | Complete | 2026-03-14 |
 | 3. JS/TS Runtime Surface | 3/3 | Complete | 2026-03-14 |
-| 4. CLI Workflow Parity | 0/2 | Not started | - |
+| 4. CLI Workflow Parity | 1/2 | In progress | - |
 | 5. Schema Adapter Packages | 0/2 | Not started | - |
 | 6. Release Readiness and Docs | 0/3 | Not started | - |
