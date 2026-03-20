@@ -22,7 +22,7 @@
 ### CLI
 
 - [x] **CLI-01**: User can execute jq-compatible filters against JSON from stdin or direct input arguments.
-- [ ] **CLI-02**: User can use the common jq options `-r`, `-R`, `-s`, `-n`, and `-e` with jq-compatible behavior.
+- [x] **CLI-02**: User can use the common jq options `-r`, `-R`, `-s`, `-n`, and `-e` with jq-compatible behavior.
 - [ ] **CLI-03**: User can install and run published CLI artifacts from project releases.
 
 ### MoonBit API
@@ -83,7 +83,7 @@
 | ARCH-03 | Phase 1 | Complete |
 | ARCH-04 | Phase 1 | Complete |
 | CLI-01 | Phase 4 | Complete |
-| CLI-02 | Phase 4 | Pending |
+| CLI-02 | Phase 4 | Complete |
 | CLI-03 | Phase 6 | Pending |
 | MBT-01 | Phase 2 | Complete |
 | MBT-02 | Phase 2 | Complete |
@@ -110,4 +110,4 @@
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-20 after Phase 4 Plan 01 completion*
+*Last updated: 2026-03-20 after Phase 4 completion*

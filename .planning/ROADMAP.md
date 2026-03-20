@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Shared Core and Compatibility** - Make one refactorable semantic core match `jq 1.8.1` with explicit exceptions only.
 - [x] **Phase 2: MoonBit Public API** - Turn the MoonBit surface into a small canonical runtime API over the shared core.
 - [x] **Phase 3: JS/TS Runtime Surface** - Ship the canonical npm runtime and binding surface on top of the same semantics.
-- [ ] **Phase 4: CLI Workflow Parity** - Finish end-to-end jq-compatible CLI workflows without turning CLI into an extension surface.
+- [x] **Phase 4: CLI Workflow Parity** - Finish end-to-end jq-compatible CLI workflows without turning CLI into an extension surface.
 - [ ] **Phase 5: Schema Adapter Packages** - Make Zod, Yup, and Valibot integrations work on the stable JS/TS runtime.
 - [ ] **Phase 6: Release Readiness and Docs** - Validate publishable artifacts, MoonBit package readiness, and surface-consistent docs.
 
@@ -81,7 +81,7 @@ Plans:
 
 Plans:
 - [x] 04-01: Normalize CLI input and output behavior around the shared core
-- [ ] 04-02: Finish common jq option parity and error-path behavior
+- [x] 04-02: Finish common jq option parity and error-path behavior
 
 ### Phase 5: Schema Adapter Packages
 **Goal**: JS/TS users can apply schema adapters on top of the stable runtime surface without coupling adapters to internal runtime details.
@@ -124,6 +124,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Shared Core and Compatibility | 3/3 | Complete | 2026-03-13 |
 | 2. MoonBit Public API | 3/3 | Complete | 2026-03-14 |
 | 3. JS/TS Runtime Surface | 3/3 | Complete | 2026-03-14 |
-| 4. CLI Workflow Parity | 1/2 | In progress | - |
+| 4. CLI Workflow Parity | 2/2 | Complete | 2026-03-20 |
 | 5. Schema Adapter Packages | 0/2 | Not started | - |
 | 6. Release Readiness and Docs | 0/3 | Not started | - |

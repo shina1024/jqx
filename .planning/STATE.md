@@ -2,37 +2,43 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-03-20T05:35:09.9526766Z"
+status: planning
+stopped_at: Completed Phase 4 CLI Workflow Parity
+last_updated: "2026-03-20T14:50:18+09:00"
+last_activity: 2026-03-20 - Completed Phase 4 CLI Workflow Parity
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 11
-  completed_plans: 10
+  completed_phases: 4
+  total_plans: 16
+  completed_plans: 11
+  percent: 67
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-12)
+See: .planning/PROJECT.md (updated 2026-03-20)
 
 **Core value:** A single MoonBit-based core can deliver full `jq` compatibility and publishable CLI, JS/TS, and MoonBit packages without splitting behavior by surface.
-**Current focus:** Phase 04 — cli-workflow-parity
+**Current focus:** Phase 5 - Schema Adapter Packages
 
 ## Current Position
 
-Phase: 04 (cli-workflow-parity) — EXECUTING
-Plan: 2 of 2
+Phase: 5 of 6 (Schema Adapter Packages)
+Plan: 0 of 2 in current phase
+Status: Ready to plan
+Last activity: 2026-03-20 - Completed Phase 4 CLI Workflow Parity
+
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 10
-- Average duration: 23 min
-- Total execution time: 3.9 hours
+- Total plans completed: 11
+- Average duration: 22 min
+- Total execution time: 4.0 hours
 
 **By Phase:**
 
@@ -41,13 +47,13 @@ Plan: 2 of 2
 | 1 | 3 | 152 min | 51 min |
 | 2 | 3 | 30 min | 10 min |
 | 3 | 3 | 45 min | 15 min |
-| 4 | 1 | 5 min | 5 min |
+| 4 | 2 | 13 min | 7 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 04-01 (5 min), 03-03 (10 min), 03-02 (10 min), 03-01 (25 min), 02-03 (10 min shared)
+- Last 5 plans: 04-02 (8 min), 04-01 (5 min), 03-03 (10 min), 03-02 (10 min), 03-01 (25 min)
 - Trend: Improving
-- Latest metric: Phase 04 Plan 01 — 5 min across 2 tasks and 3 files
+- Latest metric: Phase 04 Plan 02 — 8 min across 2 tasks and 3 files
 
 ## Accumulated Context
 
@@ -77,6 +83,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Package-name smoke tests and declaration fixtures must run against fresh `dist/` artifacts instead of source-file fallbacks.
 - [Phase 04]: User-facing CLI help and first-step docs now present `jqx` as the canonical command name instead of a contributor-oriented `moon run --target native cmd -- ...` invocation.
 - [Phase 04]: Focused CLI wbtests now pin direct-input precedence, raw direct-input slurp, and jqx usage text while compile and execute remain delegated to the shared core.
+- [Phase 04]: Maintained jq differential cases now name direct-input raw output, raw slurp, module-path imports, and runtime-error output ordering explicitly.
+- [Phase 04]: Fast wbtests and native wbtests now mirror the maintained CLI parity corpus instead of describing a separate proof story.
 
 ### Pending Todos
 
@@ -89,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T05:35:09.9526766Z
-Stopped at: Completed 04-01-PLAN.md
-Resume file: .planning/phases/04-cli-workflow-parity/04-02-PLAN.md
+Last session: 2026-03-20T14:50:18+09:00
+Stopped at: Completed Phase 4 CLI Workflow Parity
+Resume file: None
