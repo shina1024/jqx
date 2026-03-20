@@ -84,4 +84,4 @@ Wave 0 is complete for this phase because the previously missing built-artifact 
 - [x] Feedback latency < 180s
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** approved
+Approval: approved

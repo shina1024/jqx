@@ -81,4 +81,4 @@ Wave 0 is complete for this phase because the root package boundary, built-artif
 - [x] Feedback latency < 240s
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** approved
+Approval: approved

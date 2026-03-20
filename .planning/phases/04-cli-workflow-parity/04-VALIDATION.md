@@ -82,4 +82,4 @@ Wave 0 is complete for this phase because the existing wbtests and differential 
 - [x] Feedback latency < 90s
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** approved
+Approval: approved

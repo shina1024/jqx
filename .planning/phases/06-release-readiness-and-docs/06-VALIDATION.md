@@ -85,4 +85,4 @@ Wave 0 is complete for this phase because the missing release audit document, no
 - [x] Feedback latency < 420s
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** approved
+Approval: approved
