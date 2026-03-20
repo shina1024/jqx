@@ -57,6 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare
     env:
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
       RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
       DRY_RUN: ${{ needs.prepare.outputs.dry_run }}
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -103,6 +104,92 @@ jobs:
       - name: Verify TS packages
         shell: bash
         run: bash ./scripts/ts_packages.sh verify --frozen-lockfile
+
+      - name: Audit publishable package surfaces
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-audit
+          node <<'NODE'
+          const fs = require("fs");
+          const path = require("path");
+          const { execFileSync } = require("child_process");
+
+          function flattenExports(entry, target, lines, prefix = "") {
+            if (typeof target === "string") {
+              lines.push(`  - \`${entry}${prefix}\`: \`${target}\``);
+              return;
+            }
+
+            if (!target || typeof target !== "object") {
+              lines.push(`  - \`${entry}${prefix}\`: \`${JSON.stringify(target)}\``);
+              return;
+            }
+
+            for (const [condition, nestedTarget] of Object.entries(target)) {
+              flattenExports(entry, nestedTarget, lines, `${prefix}.${condition}`);
+            }
+          }
+
+          const packageDirs = execFileSync("node", ["./scripts/ts_packages.mjs", "list"], {
+            encoding: "utf8",
+          }).trim().split(/\r?\n/).filter(Boolean);
+
+          const lines = [
+            "# npm release audit",
+            "",
+            `- Tag: \`${process.env.RELEASE_TAG}\``,
+            `- Version: \`${process.env.RELEASE_VERSION}\``,
+            `- Dry run: \`${process.env.DRY_RUN}\``,
+            "",
+          ];
+
+          for (const packageDir of packageDirs) {
+            const packageJsonPath = path.join(packageDir, "package.json");
+            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+            const distDir = path.join(packageDir, "dist");
+            const distEntries = fs.existsSync(distDir)
+              ? fs.readdirSync(distDir).sort()
+              : [];
+            const exportsField = packageJson.exports ?? {
+              ".": {
+                import: packageJson.module,
+                require: packageJson.main,
+                types: packageJson.types,
+              },
+            };
+
+            lines.push(`## ${packageJson.name}`);
+            lines.push(`- Directory: \`${packageDir}\``);
+            lines.push(`- Version: \`${packageJson.version}\``);
+            lines.push(
+              `- Dist contents: ${
+                distEntries.length > 0
+                  ? distEntries.map((entry) => `\`dist/${entry}\``).join(", ")
+                  : "_missing dist/_"
+              }`,
+            );
+            lines.push("- Exported runtime entrypoints:");
+            for (const [entrypoint, target] of Object.entries(exportsField)) {
+              flattenExports(entrypoint, target, lines);
+            }
+            lines.push("");
+          }
+
+          fs.writeFileSync(
+            path.join("release-audit", "npm-release-audit.md"),
+            `${lines.join("\n")}\n`,
+          );
+          NODE
+
+          cat release-audit/npm-release-audit.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload npm release audit artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: npm-release-audit-${{ needs.prepare.outputs.tag }}
+          path: release-audit/npm-release-audit.md
+          if-no-files-found: error
 
       - name: Publish to npm (or dry-run)
         shell: bash

@@ -10,6 +10,11 @@ on:
         description: "Tag to release (for example: v0.1.0)"
         required: true
         type: string
+      dry_run:
+        description: "Build and upload artifacts without publishing a GitHub Release"
+        required: false
+        default: false
+        type: boolean
       prerelease:
         description: "Mark release as prerelease"
         required: false
@@ -25,6 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.vars.outputs.tag }}
+      dry_run: ${{ steps.vars.outputs.dry_run }}
       prerelease: ${{ steps.vars.outputs.prerelease }}
     steps:
       - name: Resolve release metadata
@@ -33,13 +39,16 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             TAG="${{ inputs.tag }}"
+            DRY_RUN="${{ inputs.dry_run }}"
             PRERELEASE="${{ inputs.prerelease }}"
           else
             TAG="${GITHUB_REF_NAME}"
+            DRY_RUN="false"
             PRERELEASE="false"
           fi
 
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "dry_run=${DRY_RUN}" >> "$GITHUB_OUTPUT"
           echo "prerelease=${PRERELEASE}" >> "$GITHUB_OUTPUT"
 
   build:
@@ -152,6 +161,7 @@ jobs:
           merge-multiple: true
 
       - name: Publish GitHub Release
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare.outputs.tag }}
