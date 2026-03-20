@@ -2,7 +2,7 @@
 // Source under test: cmd/main_cli.mbt
 
 ///|
-test "run cli applies module search paths" {
+test "run cli native module path parity case" {
   @lib.clear_module_sources()
   @lib.clear_module_search_paths()
   let result = run_cli(

@@ -396,7 +396,7 @@ test "run cli executes stdin input" {
 }
 
 ///|
-test "run cli raw string output uses raw formatter" {
+test "run cli direct input raw string parity case" {
   assert_eq(format_output(true, @lib.Value::string("bar")), "bar")
   let result = run_cli(["jqx", "-r", ".foo", "{\"foo\":\"bar\"}"], "")
   assert_eq(result.lines, ["bar"])
@@ -422,7 +422,7 @@ test "run cli formats compile errors" {
 }
 
 ///|
-test "run cli preserves partial outputs before runtime error" {
+test "run cli runtime error parity corpus case" {
   let result = run_cli(["jqx", ".[] | tonumber", "[1,\"x\"]"], "")
   assert_eq(result.exit_code, Some(5))
   guard result.lines.length() == 2 &&
