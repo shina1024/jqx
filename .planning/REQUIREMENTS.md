@@ -44,9 +44,9 @@
 
 ### Adapters
 
-- [ ] **ADPT-01**: JS/TS user can use the Zod adapter package to validate jqx runtime input and output contracts.
-- [ ] **ADPT-02**: JS/TS user can use the Yup adapter package to validate jqx runtime input and output contracts.
-- [ ] **ADPT-03**: JS/TS user can use the Valibot adapter package to validate jqx runtime input and output contracts.
+- [x] **ADPT-01**: JS/TS user can use the Zod adapter package to validate jqx runtime input and output contracts.
+- [x] **ADPT-02**: JS/TS user can use the Yup adapter package to validate jqx runtime input and output contracts.
+- [x] **ADPT-03**: JS/TS user can use the Valibot adapter package to validate jqx runtime input and output contracts.
 
 ### Release and Docs
 
@@ -96,9 +96,9 @@
 | TS-03 | Phase 3 | Complete |
 | TS-04 | Phase 3 | Complete |
 | TS-05 | Phase 3 | Complete |
-| ADPT-01 | Phase 5 | Pending |
-| ADPT-02 | Phase 5 | Pending |
-| ADPT-03 | Phase 5 | Pending |
+| ADPT-01 | Phase 5 | Complete |
+| ADPT-02 | Phase 5 | Complete |
+| ADPT-03 | Phase 5 | Complete |
 | REL-01 | Phase 6 | Pending |
 | REL-02 | Phase 6 | Pending |
 | REL-03 | Phase 6 | Pending |
@@ -110,4 +110,4 @@
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-20 after Phase 4 completion*
+*Last updated: 2026-03-20 after Phase 05 Plan 01 completion*

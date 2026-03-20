@@ -2,16 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 5 context gathered
-last_updated: "2026-03-20T06:44:51.738Z"
-last_activity: 2026-03-20 - Completed Phase 4 CLI Workflow Parity
+status: executing
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-20T07:19:31.967Z"
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
-  percent: 67
+  total_plans: 13
+  completed_plans: 12
 ---
 
 # Project State
@@ -21,24 +19,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-20)
 
 **Core value:** A single MoonBit-based core can deliver full `jq` compatibility and publishable CLI, JS/TS, and MoonBit packages without splitting behavior by surface.
-**Current focus:** Phase 5 - Schema Adapter Packages
+**Current focus:** Phase 05 — schema-adapter-packages
 
 ## Current Position
 
-Phase: 5 of 6 (Schema Adapter Packages)
-Plan: 0 of 2 in current phase
-Status: Ready to plan
-Last activity: 2026-03-20 - Completed Phase 4 CLI Workflow Parity
-
-Progress: [███████░░░] 67%
+Phase: 05 (schema-adapter-packages) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 11
-- Average duration: 22 min
-- Total execution time: 4.0 hours
+- Total plans completed: 12
+- Average duration: 21 min
+- Total execution time: 4.1 hours
 
 **By Phase:**
 
@@ -48,12 +42,15 @@ Progress: [███████░░░] 67%
 | 2 | 3 | 30 min | 10 min |
 | 3 | 3 | 45 min | 15 min |
 | 4 | 2 | 13 min | 7 min |
+| 5 | 1 | 6 min | 6 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 04-02 (8 min), 04-01 (5 min), 03-03 (10 min), 03-02 (10 min), 03-01 (25 min)
-- Trend: Improving
-- Latest metric: Phase 04 Plan 02 — 8 min across 2 tasks and 3 files
+- Last 5 plans: 05-01 (6 min), 04-02 (8 min), 04-01 (5 min), 03-03 (10 min), 03-02 (10 min)
+- Trend: Stable
+- Latest metric: Phase 05 Plan 01 — 6 min across 2 tasks and 12 files
+
+| Phase 05 P01 | 6 min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -85,6 +82,8 @@ Recent decisions affecting current work:
 - [Phase 04]: Focused CLI wbtests now pin direct-input precedence, raw direct-input slurp, and jqx usage text while compile and execute remain delegated to the shared core.
 - [Phase 04]: Maintained jq differential cases now name direct-input raw output, raw slurp, module-path imports, and runtime-error output ordering explicitly.
 - [Phase 04]: Fast wbtests and native wbtests now mirror the maintained CLI parity corpus instead of describing a separate proof story.
+- [Phase 05]: Root `@shina1024/jqx` now publishes only `.` and `./bind`; adapter imports are standalone package names only.
+- [Phase 05]: Adapter package tests now build first and self-reference the package name so boundary proof runs against built artifacts.
 
 ### Pending Todos
 
@@ -97,6 +96,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T06:44:51.734Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-schema-adapter-packages/05-CONTEXT.md
+Last session: 2026-03-20T07:19:31.964Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: .planning/phases/05-schema-adapter-packages/05-02-PLAN.md

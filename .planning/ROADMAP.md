@@ -95,7 +95,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: Stabilize adapter-core contracts and package boundaries
+- [x] 05-01: Stabilize adapter-core contracts and package boundaries
 - [ ] 05-02: Harden and document Zod, Yup, and Valibot adapters
 
 ### Phase 6: Release Readiness and Docs
@@ -125,5 +125,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. MoonBit Public API | 3/3 | Complete | 2026-03-14 |
 | 3. JS/TS Runtime Surface | 3/3 | Complete | 2026-03-14 |
 | 4. CLI Workflow Parity | 2/2 | Complete | 2026-03-20 |
-| 5. Schema Adapter Packages | 0/2 | Not started | - |
+| 5. Schema Adapter Packages | 1/2 | In Progress | - |
 | 6. Release Readiness and Docs | 0/3 | Not started | - |
