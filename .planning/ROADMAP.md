@@ -124,7 +124,7 @@ Plans:
 
 Plans:
 - [x] 07-01: Reconcile JS/TS runtime and adapter validation artifacts
-- [ ] 07-02: Reconcile CLI and release-readiness validation artifacts
+- [x] 07-02: Reconcile CLI and release-readiness validation artifacts
 - [ ] 07-03: Re-audit milestone readiness after Nyquist closure
 
 ## Progress
