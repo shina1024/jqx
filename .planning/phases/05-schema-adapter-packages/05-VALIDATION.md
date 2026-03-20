@@ -1,9 +1,9 @@
 ---
 phase: 5
 slug: schema-adapter-packages
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-03-20
 ---
 
@@ -38,10 +38,10 @@ created: 2026-03-20
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 05-01-01 | 01 | 1 | ADPT-01, ADPT-02, ADPT-03 | shared contract and issue-shape proof | `pnpm test && pnpm typecheck` | ✅ | ⬜ pending |
-| 05-01-02 | 01 | 1 | ADPT-01, ADPT-02, ADPT-03 | root export-map and built-artifact proof | `pnpm build && pnpm test` | ❌ W0 | ⬜ pending |
-| 05-02-01 | 02 | 2 | ADPT-01, ADPT-02, ADPT-03 | adapter README and install/import contract | `pnpm test` | ✅ | ⬜ pending |
-| 05-02-02 | 02 | 2 | ADPT-01, ADPT-02, ADPT-03 | full package verification | `bash ./scripts/ts_packages.sh verify --frozen-lockfile` | ❌ W0 | ⬜ pending |
+| 05-01-01 | 01 | 1 | ADPT-01, ADPT-02, ADPT-03 | shared contract and issue-shape proof | `pnpm test && pnpm typecheck` | ✅ | ✅ green |
+| 05-01-02 | 01 | 1 | ADPT-01, ADPT-02, ADPT-03 | root export-map and built-artifact proof | `pnpm build && pnpm test` | ✅ | ✅ green |
+| 05-02-01 | 02 | 2 | ADPT-01, ADPT-02, ADPT-03 | adapter README and install/import contract | `pnpm test` | ✅ | ✅ green |
+| 05-02-02 | 02 | 2 | ADPT-01, ADPT-02, ADPT-03 | full package verification | `bash ./scripts/ts_packages.sh verify --frozen-lockfile` | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠ flaky*
 
@@ -49,19 +49,16 @@ created: 2026-03-20
 
 ## Wave 0 Requirements
 
-- [ ] Root-package artifact verification in `ts/jqx` must be restored so `pnpm build && pnpm test` is runnable after export-map changes
-- [ ] `ts/jqx/test/package_exports.test.ts` must be updated to prove the post-cleanup package boundary rather than the current root adapter subpaths
-- [ ] Package refresh or build-path hardening may be required if the missing native binding under `ts_package_build.mjs` persists in this checkout
+Existing infrastructure covers all phase requirements.
 
-Current local finding:
-- `pnpm test` passes in `ts/zod-adapter`
-- `pnpm test` passes in `ts/yup-adapter`
-- `pnpm test` passes in `ts/valibot-adapter`
-- `pnpm test` fails in `ts/jqx` because `pnpm build` fails before tests with a missing native binding
+Already present and locally verified:
+- `ts/jqx/package.json` exports only `.` and `./bind`, keeping the root npm surface runtime-only.
+- `ts/jqx/test/package_exports.test.ts` proves removed root adapter subpaths stay absent and package-name imports resolve through the built root and bind entrypoints only.
+- `ts/zod-adapter/test/index.test.ts`, `ts/yup-adapter/test/index.test.ts`, and `ts/valibot-adapter/test/index.test.ts` prove standalone package-name imports.
+- `ts/yup-adapter/test/typecheck.ts` and `ts/valibot-adapter/test/typecheck.ts` prove richer validator-native issue payloads.
+- `bash ./scripts/ts_packages.sh verify --frozen-lockfile` passes across `ts/adapter-core`, `ts/jqx`, and all standalone adapter packages.
 
-If local `file:` dependencies need refresh while stabilizing package verification, use the documented dependency-order path:
-- Windows: `./scripts/ts_packages.ps1 refresh`
-- Linux/macOS: `bash ./scripts/ts_packages.sh refresh`
+Wave 0 is complete for this phase because the root package boundary, built-artifact proof, standalone adapter package proof, and richer issue-shape type fixtures are all now present and verified.
 
 ---
 
@@ -77,11 +74,11 @@ If local `file:` dependencies need refresh while stabilizing package verificatio
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 240s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 240s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved
