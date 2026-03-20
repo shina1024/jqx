@@ -4,6 +4,6 @@
   "readme": "README.mbt.md",
   "repository": "https://github.com/shina1024/jqx",
   "license": "Apache-2.0",
-  "keywords": ["jq", "json", "query", "filter"],
-  "description": "jq-compatible JSON processor written in MoonBit with a CLI and TypeScript bindings"
+  "keywords": ["jq", "json", "query", "filter", "moonbit"],
+  "description": "jq-compatible JSON processor for MoonBit with CLI and TypeScript package surfaces"
 }

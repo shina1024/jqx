@@ -1,5 +1,7 @@
 .DS_Store
 _build/
+_bundle_tmp/
+_bundle_wasmgc/
 target/
 target
 .mooncakes/

@@ -1,12 +1,16 @@
 # jqx
 
-A jq-compatible executable and JS/TS library written in MoonBit.
+A jq-compatible executable, MoonBit package, and JS/TS library written in MoonBit.
 
 ## Install
 
 - CLI executable: `jqx` (download from GitHub Releases)
+- MoonBit package: `shina1024/jqx`
 - npm package: `@shina1024/jqx`
-- MoonBit package on `mooncakes.io`: planned
+
+```bash
+moon add shina1024/jqx
+```
 
 ```bash
 npm install @shina1024/jqx
