@@ -7,6 +7,15 @@ const require = createRequire(import.meta.url);
 const packageJson = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as {
   exports: Record<string, { import?: string; require?: string; types?: string }>;
 };
+const runtimeEntryPoints = [".", "./bind"];
+const removedAdapterSubpaths = ["./zod", "./yup", "./valibot"];
+
+void test("root export map stays runtime-only", () => {
+  assert.deepEqual(Object.keys(packageJson.exports).sort(), runtimeEntryPoints.slice().sort());
+  for (const subpath of removedAdapterSubpaths) {
+    assert.equal(subpath in packageJson.exports, false, `Unexpected root adapter export: ${subpath}`);
+  }
+});
 
 void test("package export map points at built artifact files", () => {
   for (const [subpath, conditions] of Object.entries(packageJson.exports)) {
@@ -52,14 +61,4 @@ void test("package-name CJS requires resolve root and bind entrypoints", () => {
   };
   assert.equal(typeof bind.bindRuntime, "function");
   assert.equal(typeof bind.bindQueryRuntime, "function");
-});
-
-void test("adapter subpaths resolve as built package entrypoints", async () => {
-  const zod = await import("@shina1024/jqx/zod");
-  const yup = await import("@shina1024/jqx/yup");
-  const valibot = await import("@shina1024/jqx/valibot");
-
-  assert.equal(typeof zod, "object");
-  assert.equal(typeof yup, "object");
-  assert.equal(typeof valibot, "object");
 });

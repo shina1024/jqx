@@ -38,21 +38,6 @@
       "types": "./dist/bind.d.ts",
       "import": "./dist/bind.js",
       "require": "./dist/bind.cjs"
-    },
-    "./zod": {
-      "types": "./dist/zod.d.ts",
-      "import": "./dist/zod.js",
-      "require": "./dist/zod.cjs"
-    },
-    "./yup": {
-      "types": "./dist/yup.d.ts",
-      "import": "./dist/yup.js",
-      "require": "./dist/yup.cjs"
-    },
-    "./valibot": {
-      "types": "./dist/valibot.d.ts",
-      "import": "./dist/valibot.js",
-      "require": "./dist/valibot.cjs"
     }
   },
   "publishConfig": {
@@ -60,7 +45,7 @@
   },
   "scripts": {
     "build:moon-runtime": "node ../../scripts/moon_exec.mjs build --target js --release --manifest-path ../../moon.mod.json ../../js",
-    "build": "pnpm build:moon-runtime && node ../../scripts/ts_package_build.mjs src/index.ts src/bind.ts src/zod.ts src/yup.ts src/valibot.ts",
+    "build": "pnpm build:moon-runtime && node ../../scripts/ts_package_build.mjs src/index.ts src/bind.ts",
     "format": "oxfmt .",
     "format:check": "oxfmt . --check",
     "lint": "oxlint .",
@@ -73,10 +58,7 @@
     "test:built": "node --import tsx --test test/**/*.test.ts"
   },
   "dependencies": {
-    "@shina1024/jqx-adapter-core": "^0.1.0",
-    "@shina1024/jqx-valibot-adapter": "^0.1.0",
-    "@shina1024/jqx-yup-adapter": "^0.1.0",
-    "@shina1024/jqx-zod-adapter": "^0.1.0"
+    "@shina1024/jqx-adapter-core": "^0.1.0"
   },
   "devDependencies": {
     "@typescript/native-preview": "7.0.0-dev.20260319.1",
@@ -90,10 +72,7 @@
   },
   "pnpm": {
     "overrides": {
-      "@shina1024/jqx-adapter-core": "file:../adapter-core",
-      "@shina1024/jqx-valibot-adapter": "file:../valibot-adapter",
-      "@shina1024/jqx-yup-adapter": "file:../yup-adapter",
-      "@shina1024/jqx-zod-adapter": "file:../zod-adapter"
+      "@shina1024/jqx-adapter-core": "file:../adapter-core"
     }
   }
 }

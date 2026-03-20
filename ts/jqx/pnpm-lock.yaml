@@ -6,9 +6,6 @@ settings:
 
 overrides:
   '@shina1024/jqx-adapter-core': file:../adapter-core
-  '@shina1024/jqx-valibot-adapter': file:../valibot-adapter
-  '@shina1024/jqx-yup-adapter': file:../yup-adapter
-  '@shina1024/jqx-zod-adapter': file:../zod-adapter
 
 importers:
 
@@ -17,15 +14,6 @@ importers:
       '@shina1024/jqx-adapter-core':
         specifier: file:../adapter-core
         version: file:../adapter-core
-      '@shina1024/jqx-valibot-adapter':
-        specifier: file:../valibot-adapter
-        version: file:../valibot-adapter(valibot@1.2.0(typescript@5.9.3))
-      '@shina1024/jqx-yup-adapter':
-        specifier: file:../yup-adapter
-        version: file:../yup-adapter(yup@1.7.1)
-      '@shina1024/jqx-zod-adapter':
-        specifier: file:../zod-adapter
-        version: file:../zod-adapter(zod@4.3.6)
     devDependencies:
       '@types/node':
         specifier: ^25.4.0
@@ -637,30 +625,6 @@ packages:
   '@shina1024/jqx-adapter-core@file:../adapter-core':
     resolution: {directory: ../adapter-core, type: directory}
 
-  '@shina1024/jqx-valibot-adapter@file:../valibot-adapter':
-    resolution: {directory: ../valibot-adapter, type: directory}
-    peerDependencies:
-      valibot: ^1.0.0
-    peerDependenciesMeta:
-      valibot:
-        optional: true
-
-  '@shina1024/jqx-yup-adapter@file:../yup-adapter':
-    resolution: {directory: ../yup-adapter, type: directory}
-    peerDependencies:
-      yup: ^1.0.0
-    peerDependenciesMeta:
-      yup:
-        optional: true
-
-  '@shina1024/jqx-zod-adapter@file:../zod-adapter':
-    resolution: {directory: ../zod-adapter, type: directory}
-    peerDependencies:
-      zod: ^4.0.0
-    peerDependenciesMeta:
-      zod:
-        optional: true
-
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
 
@@ -813,9 +777,6 @@ packages:
     resolution: {integrity: sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==}
     engines: {node: '>=12'}
 
-  property-expr@2.0.6:
-    resolution: {integrity: sha512-SVtmxhRE/CGkn3eZY1T6pC8Nln6Fr/lu1mKSgRud0eC73whjGfoAogbn78LkD8aFL0zz3bAFerKSnOl7NlErBA==}
-
   quansync@1.0.0:
     resolution: {integrity: sha512-5xZacEEufv3HSTPQuchrvV6soaiACMFnq1H8wkVioctoH3TRha9Sz66lOxRwPK/qZj7HPiSveih9yAyh98gvqA==}
 
@@ -851,9 +812,6 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  tiny-case@1.0.3:
-    resolution: {integrity: sha512-Eet/eeMhkO6TX8mnUteS9zgPbUMQa4I6Kkp5ORiBD5476/m+PIRiumP5tmh5ioJpH7k51Kehawy2UDfsnxxY8Q==}
-
   tinyexec@1.0.4:
     resolution: {integrity: sha512-u9r3uZC0bdpGOXtlxUIdwf9pkmvhqJdrVCH9fapQtgy/OeTTMZ1nqH7agtvEfmGui6e1XxjcdrlxvxJvc3sMqw==}
     engines: {node: '>=18'}
@@ -865,9 +823,6 @@ packages:
   tinypool@2.1.0:
     resolution: {integrity: sha512-Pugqs6M0m7Lv1I7FtxN4aoyToKg1C4tu+/381vH35y8oENM/Ai7f7C4StcoK4/+BSw9ebcS8jRiVrORFKCALLw==}
     engines: {node: ^20.0.0 || >=22.0.0}
-
-  toposort@2.0.2:
-    resolution: {integrity: sha512-0a5EOkAUp8D4moMi2W8ZF8jcga7BgZd91O/yabJCFY8az+XSzeGyTKs0Aoo897iV1Nj6guFq8orWDS96z91oGg==}
 
   tree-kill@1.2.2:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
@@ -909,10 +864,6 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
-  type-fest@2.19.0:
-    resolution: {integrity: sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA==}
-    engines: {node: '>=12.20'}
-
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
     engines: {node: '>=14.17'}
@@ -933,20 +884,6 @@ packages:
     peerDependenciesMeta:
       synckit:
         optional: true
-
-  valibot@1.2.0:
-    resolution: {integrity: sha512-mm1rxUsmOxzrwnX5arGS+U4T25RdvpPjPN4yR0u9pUBov9+zGVtO84tif1eY4r6zWxVxu3KzIyknJy3rxfRZZg==}
-    peerDependencies:
-      typescript: '>=5'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-
-  yup@1.7.1:
-    resolution: {integrity: sha512-GKHFX2nXul2/4Dtfxhozv701jLQHdf6J34YDh2cEkpqoo8le5Mg6/LrdseVLrFarmFygZTlfIhHx/QKfb/QWXw==}
-
-  zod@4.3.6:
-    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
 snapshots:
 
@@ -1276,24 +1213,6 @@ snapshots:
 
   '@shina1024/jqx-adapter-core@file:../adapter-core': {}
 
-  '@shina1024/jqx-valibot-adapter@file:../valibot-adapter(valibot@1.2.0(typescript@5.9.3))':
-    dependencies:
-      '@shina1024/jqx-adapter-core': file:../adapter-core
-    optionalDependencies:
-      valibot: 1.2.0(typescript@5.9.3)
-
-  '@shina1024/jqx-yup-adapter@file:../yup-adapter(yup@1.7.1)':
-    dependencies:
-      '@shina1024/jqx-adapter-core': file:../adapter-core
-    optionalDependencies:
-      yup: 1.7.1
-
-  '@shina1024/jqx-zod-adapter@file:../zod-adapter(zod@4.3.6)':
-    dependencies:
-      '@shina1024/jqx-adapter-core': file:../adapter-core
-    optionalDependencies:
-      zod: 4.3.6
-
   '@tybys/wasm-util@0.10.1':
     dependencies:
       tslib: 2.8.1
@@ -1470,9 +1389,6 @@ snapshots:
 
   picomatch@4.0.3: {}
 
-  property-expr@2.0.6:
-    optional: true
-
   quansync@1.0.0: {}
 
   resolve-pkg-maps@1.0.0: {}
@@ -1518,9 +1434,6 @@ snapshots:
 
   semver@7.7.4: {}
 
-  tiny-case@1.0.3:
-    optional: true
-
   tinyexec@1.0.4: {}
 
   tinyglobby@0.2.15:
@@ -1529,9 +1442,6 @@ snapshots:
       picomatch: 4.0.3
 
   tinypool@2.1.0: {}
-
-  toposort@2.0.2:
-    optional: true
 
   tree-kill@1.2.2: {}
 
@@ -1572,9 +1482,6 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  type-fest@2.19.0:
-    optional: true
-
   typescript@5.9.3:
     optional: true
 
@@ -1588,19 +1495,3 @@ snapshots:
   unrun@0.2.32:
     dependencies:
       rolldown: 1.0.0-rc.9
-
-  valibot@1.2.0(typescript@5.9.3):
-    optionalDependencies:
-      typescript: 5.9.3
-    optional: true
-
-  yup@1.7.1:
-    dependencies:
-      property-expr: 2.0.6
-      tiny-case: 1.0.3
-      toposort: 2.0.2
-      type-fest: 2.19.0
-    optional: true
-
-  zod@4.3.6:
-    optional: true
