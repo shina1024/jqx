@@ -2,43 +2,43 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 07 planned
-last_updated: "2026-03-20T23:45:10.0074100+09:00"
-last_activity: 2026-03-20 - Planned Phase 7 Nyquist Validation Completion
+status: completed
+stopped_at: Phase 07 complete
+last_updated: "2026-03-21T00:22:51.0099982+09:00"
+last_activity: 2026-03-21 - Completed Phase 7 Nyquist Validation Completion
 progress:
   total_phases: 7
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 19
-  completed_plans: 16
-  percent: 84
+  completed_plans: 19
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-20)
+See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** A single MoonBit-based core can deliver full `jq` compatibility and publishable CLI, JS/TS, and MoonBit packages without splitting behavior by surface.
-**Current focus:** Phase 7 planning to close Nyquist validation debt before milestone archival
+**Current focus:** Milestone v1.0 complete and ready for archival
 
 ## Current Position
 
 Phase: 7 of 7 (Nyquist Validation Completion)
-Plan: 0 of 3 in current phase
-Status: Planned
-Last activity: 2026-03-20 - Planned Phase 7 Nyquist Validation Completion
+Plan: 3 of 3 in current phase
+Status: Complete
+Last activity: 2026-03-21 - Completed Phase 7 Nyquist Validation Completion
 
-Progress: [████████░░] 84%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 16
-- Average duration: 18 min
-- Total execution time: 4.8 hours
+- Total plans completed: 19
+- Average duration: 17 min
+- Total execution time: 5.45 hours
 
 **By Phase:**
 
@@ -50,18 +50,19 @@ Progress: [████████░░] 84%
 | 4 | 2 | 13 min | 7 min |
 | 5 | 2 | 12 min | 6 min |
 | 6 | 3 | 38 min | 13 min |
-| 7 | 0 | - | - |
+| 7 | 3 | 39 min | 13 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 06-03 (12 min), 06-02 (17 min), 06-01 (9 min), 05-02 (6 min), 05-01 (6 min)
+- Last 5 plans: 07-03 (9 min), 07-02 (13 min), 07-01 (17 min), 06-03 (12 min), 06-02 (17 min)
 - Trend: Stable
-- Latest metric: Phase 06 Plan 03 — 12 min across 2 tasks and 5 files
+- Latest metric: Phase 07 Plan 03 — 9 min across 2 tasks and 8 files
 
-| Phase 05 P02 | 6 min | 2 tasks | 10 files |
-| Phase 06 P01 | 9 min | 2 tasks | 3 files |
 | Phase 06 P02 | 17 min | 2 tasks | 3 files |
 | Phase 06 P03 | 12 min | 2 tasks | 5 files |
+| Phase 07 P01 | 17 min | 2 tasks | 3 files |
+| Phase 07 P02 | 13 min | 2 tasks | 3 files |
+| Phase 07 P03 | 9 min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,7 @@ Recent decisions affecting current work:
 - [Phase 06]: MoonBit package readiness now depends on explicit `moon.mod.json` exclusions plus a recorded `moon login` / `moon publish --dry-run` preflight path.
 - [Phase 06]: Root docs now introduce CLI, MoonBit, and JS/TS in that order while package READMEs own the detailed runtime and adapter guidance.
 - [Phase 07 planning]: Validation debt closure is documentation- and evidence-reconciliation work only; satisfied product requirements and finished surface behavior stay out of scope.
+- [Phase 07]: Milestone closeout now depends on completed validation contracts across every phase, using one literal approval marker and a refreshed milestone audit.
 
 ### Pending Todos
 
@@ -111,10 +113,9 @@ None yet.
 
 - Local `bash ./scripts/jq_diff.sh` and `bash ./scripts/jq_upstream_ledger.sh --verify` are still not reliable final authorities in this Windows/WSL-like environment, so full differential proof currently depends on Linux CI.
 - Decide in a later release-prep phase whether `mooncakes.io` publish stays deferred or becomes part of the first public release.
-- Milestone v1.0 archival remains blocked only on closing the remaining Nyquist validation debt for phases 03 through 06.
 
 ## Session Continuity
 
-Last session: 2026-03-20T23:45:10.0074100+09:00
-Stopped at: Phase 07 planned
+Last session: 2026-03-21T00:22:51.0099982+09:00
+Stopped at: Phase 07 complete
 Resume file: None
