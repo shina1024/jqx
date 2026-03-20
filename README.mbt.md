@@ -70,13 +70,13 @@ Boundary helpers:
 
 ## CLI Quick Start
 
-Assuming `jqx` is in your `PATH`:
+Use the `jqx` executable once it is in your `PATH`:
 
 ```bash
-# stdin
+# stdin input
 echo '{"foo": 1}' | jqx ".foo"
 
-# argument input
+# direct input argument
 jqx ".foo" '{"foo": 1}'
 ```
 

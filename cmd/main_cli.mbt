@@ -6,16 +6,16 @@ priv struct CliRunResult {
 
 ///|
 fn usage_summary_line() -> String {
-  "Usage: moon run --target native cmd -- [options] \"<filter>\" [\"<json>\"]"
+  "Usage: jqx [options] \"<filter>\" [\"<json>\"]"
 }
 
 ///|
 fn usage_lines() -> Array[String] {
   [
     usage_summary_line(),
-    "Example (stdin): echo '{\"foo\": 1}' | moon run --target native cmd -- \".foo\"",
-    "Example (arg):   moon run --target native cmd -- \".foo\" '{\"foo\": 1}'",
-    "Options: -r (raw strings), -R (raw input), -c (compact; default), -n (null input), -s (slurp inputs), -e (set exit status), -L <dir> (module search path)",
+    "Example (stdin): echo '{\"foo\": 1}' | jqx \".foo\"",
+    "Example (arg):   jqx \".foo\" '{\"foo\": 1}'",
+    "Options: -r, -R, -c, -n, -s, -e, -L <dir>",
   ]
 }
 
