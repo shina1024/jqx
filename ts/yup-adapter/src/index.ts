@@ -31,7 +31,7 @@ export type {
   MaybePromise,
 } from "@shina1024/jqx-adapter-core";
 
-export type AdapterError = CoreAdapterError<string[]>;
+export type AdapterError = CoreAdapterError<yup.ValidationError[]>;
 
 export type YupInputSchema = yup.Schema<Json>;
 
@@ -65,23 +65,17 @@ export interface QueryAdapter<Q> extends DynamicAdapter {
   ): Promise<JqxResult<yup.InferType<OutSchema>[], AdapterError>>;
 }
 
-function normalizeYupIssues(error: yup.ValidationError): string[] {
-  const issues = error.errors.filter(
-    (item): item is string => typeof item === "string" && item.length > 0,
-  );
-  if (issues.length > 0) {
-    return issues;
+function normalizeYupIssues(error: yup.ValidationError): yup.ValidationError[] {
+  if (error.inner.length > 0) {
+    return error.inner;
   }
-  if (error.message.length > 0) {
-    return [error.message];
-  }
-  return ["Validation failed"];
+  return [error];
 }
 
 async function validateWithYup<TSchema extends yup.AnySchema>(
   schema: TSchema,
   input: unknown,
-): Promise<ValidationResult<yup.InferType<TSchema>, string[]>> {
+): Promise<ValidationResult<yup.InferType<TSchema>, yup.ValidationError[]>> {
   try {
     const value = await schema.validate(input, { abortEarly: false, strict: true });
     return { ok: true, value };

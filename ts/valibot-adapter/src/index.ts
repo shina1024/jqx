@@ -39,7 +39,7 @@ export type ValibotInputSchema =
   | v.BaseSchema<unknown, Json, v.BaseIssue<unknown>>
   | v.BaseSchemaAsync<unknown, Json, v.BaseIssue<unknown>>;
 
-export type AdapterError = CoreAdapterError<string[]>;
+export type AdapterError = CoreAdapterError<v.BaseIssue<unknown>[]>;
 
 export interface FilterOptions<
   InSchema extends ValibotInputSchema,
@@ -71,24 +71,17 @@ export interface QueryAdapter<Q> extends DynamicAdapter {
   ): Promise<JqxResult<v.InferOutput<OutSchema>[], AdapterError>>;
 }
 
-function issueToMessage(issue: v.BaseIssue<unknown>): string {
-  if ("message" in issue && typeof issue.message === "string" && issue.message.length > 0) {
-    return issue.message;
-  }
-  return "Validation failed";
-}
-
 async function validateWithValibot<TSchema extends ValibotSchema>(
   schema: TSchema,
   input: unknown,
-): Promise<ValidationResult<v.InferOutput<TSchema>, string[]>> {
+): Promise<ValidationResult<v.InferOutput<TSchema>, v.BaseIssue<unknown>[]>> {
   const result = await v.safeParseAsync(schema, input);
   if (result.success) {
     return { ok: true, value: result.output };
   }
   return {
     ok: false,
-    issues: result.issues.map(issueToMessage),
+    issues: result.issues,
   };
 }
 

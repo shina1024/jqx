@@ -135,3 +135,9 @@ expectTypeOf<InferredOptions<".user.name", InputData>>().toEqualTypeOf<{
 
 expectTypeOf<InferJqOutput<InputData, ".user.name">>().toEqualTypeOf<string>();
 expectTypeOf<InferJqOutput<InputData, ".missing", "json">>().toEqualTypeOf<Json>();
+expectTypeOf<Extract<AdapterError, { kind: "input_validation" }>["issues"]>().toEqualTypeOf<
+  v.BaseIssue<unknown>[]
+>();
+expectTypeOf<Extract<AdapterError, { kind: "output_validation" }>["issues"]>().toEqualTypeOf<
+  v.BaseIssue<unknown>[]
+>();
