@@ -13,6 +13,7 @@ A single MoonBit-based core can deliver full `jq` compatibility and publishable 
 ### Validated
 
 - [x] The native CLI now covers the common jq workflows and option set through the shared core, including stdin, direct input, `-r`, `-R`, `-s`, `-n`, `-e`, and `-L`. Validated in Phase 4: CLI Workflow Parity.
+- [x] Library surfaces can expose practical integrations, such as schema-validator adapters, without compromising the shared compatibility model. Validated in Phase 5: Schema Adapter Packages.
 
 ### Active
 
@@ -21,7 +22,6 @@ A single MoonBit-based core can deliver full `jq` compatibility and publishable 
 - [ ] The JS/TS package is publishable and provides practical runtime and compiled-filter APIs on top of the shared core.
 - [ ] The MoonBit package is publishable and uses standard `Json` as the public boundary while preserving a JSON-text compatibility lane.
 - [ ] Shared semantics remain aligned across CLI, JS/TS, and MoonBit, including the JSON value model and object key input/update order.
-- [ ] Library surfaces can expose practical integrations, such as schema-validator adapters, without compromising the shared compatibility model.
 - [ ] npm and CLI release workflows are dry-run and verified before the first public release.
 
 ### Out of Scope
@@ -52,9 +52,9 @@ This layout may change before release if a different package split, module struc
 
 ## Current State
 
-Phase 4 is complete. The jqx CLI workflow story is now validated locally through maintained jq differential cases, focused wbtests, native module-path proof, and cross-phase JS/TS regression checks.
+Phase 5 is complete. The JS/TS adapter package story is now validated locally through standalone package-name tests, filter-first adapter docs, validator-native Yup and Valibot issue proof, and frozen-lockfile workspace verification.
 
-Next focus: Phase 5 - Schema Adapter Packages.
+Next focus: Phase 6 - Release Readiness and Docs.
 
 ## Constraints
 
@@ -78,4 +78,4 @@ Next focus: Phase 5 - Schema Adapter Packages.
 | Before `1.0`, breaking changes are acceptable when they reduce long-term API debt | Canonical public names and package boundaries should be cleaned up before release rather than preserved as aliases | — Pending |
 
 ---
-*Last updated: 2026-03-20 after Phase 4 completion*
+*Last updated: 2026-03-20 after Phase 5 completion*
