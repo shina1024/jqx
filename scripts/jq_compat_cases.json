@@ -1445,6 +1445,19 @@
     "compat_status": "pass"
   },
   {
+    "name": "cli-direct-input-raw-string-output",
+    "filter": ".foo",
+    "input": "{\"foo\":\"bar\"}",
+    "jq_args": [
+      "-r"
+    ],
+    "jqx_args": [
+      "-r"
+    ],
+    "jqx_use_stdin": false,
+    "compat_status": "pass"
+  },
+  {
     "name": "cli-slurp-ndjson",
     "filter": ".",
     "input": "1\n2",
@@ -1546,6 +1559,45 @@
       "-R",
       "-s"
     ],
+    "compat_status": "pass"
+  },
+  {
+    "name": "cli-direct-input-raw-slurp",
+    "filter": ".",
+    "input": "a\nb\n",
+    "jq_args": [
+      "-R",
+      "-s"
+    ],
+    "jqx_args": [
+      "-R",
+      "-s"
+    ],
+    "jqx_use_stdin": false,
+    "compat_status": "pass"
+  },
+  {
+    "name": "cli-module-search-path-import",
+    "filter": "import \"a\" as foo; foo::a",
+    "input": "",
+    "jq_args": [
+      "-n",
+      "-L",
+      "third_party/jq-tests/tests/modules"
+    ],
+    "jqx_args": [
+      "-n",
+      "-L",
+      "third_party/jq-tests/tests/modules"
+    ],
+    "jqx_use_stdin": true,
+    "compat_status": "pass"
+  },
+  {
+    "name": "cli-runtime-error-keeps-prior-output",
+    "filter": ".[] | tonumber",
+    "input": "[1,\"x\"]",
+    "jqx_use_stdin": false,
     "compat_status": "pass"
   },
   {
