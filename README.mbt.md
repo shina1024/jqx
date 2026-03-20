@@ -12,6 +12,8 @@ A jq-compatible executable, MoonBit package, and JS/TS library written in MoonBi
 moon add shina1024/jqx
 ```
 
+The top-level `shina1024/jqx` package is the canonical MoonBit surface. Use `run(...)` for the normal `Json` lane, `compile(...)` when you want to reuse a filter, and `run_json_text(...)` or `CompiledFilter::run_json_text(...)` when jq-style text fidelity matters.
+
 ```bash
 npm install @shina1024/jqx
 ```
@@ -71,6 +73,7 @@ Boundary helpers:
 - `is_valid_json(...)` and `parse_json(...)` are input-boundary helpers, not the main happy path.
 - When jq-style numeric or output fidelity matters, use `run_json_text(...)` or `CompiledFilter::run_json_text(...)` before reaching for any advanced helper.
 - Normal MoonBit usage should stay on `shina1024/jqx`; you should not need `shina1024/jqx/core`, `@core.Value`, or `@core.Filter`.
+- Release-readiness audit commands: `moon package --list --manifest-path moon.mod.json` should exclude `_bundle_tmp` and `_bundle_wasmgc`, and `moon publish --dry-run --manifest-path moon.mod.json` requires `moon login`.
 
 ## CLI Quick Start
 

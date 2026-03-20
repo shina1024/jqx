@@ -111,7 +111,7 @@ jqx.exe "." "null"
 
 ### Package Identity
 
-- Package: `shina1024/jqx`
+- Package: `shina1024/jqx@0.1.0`
 - Current manifest version seed: `0.1.0`
 - Manifest: `moon.mod.json`
 - Published readme source: `README.mbt.md`
@@ -120,6 +120,7 @@ jqx.exe "." "null"
 
 ```bash
 moon package --list --manifest-path moon.mod.json
+moon login
 moon publish --dry-run --manifest-path moon.mod.json
 ```
 
@@ -131,6 +132,7 @@ moon publish --dry-run --manifest-path moon.mod.json
 - Package listing artifact:
 - `moon package --list --manifest-path moon.mod.json` result:
 - Bundle contents notes:
+  - Expected exclusions: `_bundle_tmp`, `_bundle_wasmgc`
 - `moon publish --dry-run --manifest-path moon.mod.json` result:
 - Authentication prerequisite (`moon login`) satisfied:
 - Public package identity review:
@@ -139,5 +141,6 @@ moon publish --dry-run --manifest-path moon.mod.json
 ### Notes
 
 - Record whether packaged contents include only intended public files.
+- Record whether `moon.mod.json` `exclude` keeps `_bundle_tmp` and `_bundle_wasmgc` out of the package listing.
 - Record whether MoonBit credentials were available at audit time.
 - Record any discrepancy between `moon.mod.json`, `README.mbt.md`, and the intended public package story for `shina1024/jqx`.
