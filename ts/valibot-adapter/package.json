@@ -45,7 +45,7 @@
     "lint:typeaware": "oxlint . --type-aware --type-check",
     "lint:fix": "oxlint . --fix",
     "typecheck": "tsgo -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test test/**/*.test.ts"
+    "test": "pnpm build && node --import tsx --test test/**/*.test.ts"
   },
   "dependencies": {
     "@shina1024/jqx-adapter-core": "^0.1.0"
