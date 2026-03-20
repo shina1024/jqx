@@ -1,7 +1,7 @@
 {
   "name": "@shina1024/jqx",
   "version": "0.1.0",
-  "description": "npm entrypoint for jqx JS/TS runtime and schema adapters",
+  "description": "npm entrypoint for jqx JS/TS runtime",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/shina1024/jqx.git",
