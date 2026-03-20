@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 6 context gathered
-last_updated: "2026-03-20T10:05:14.122Z"
-last_activity: 2026-03-20 - Completed Phase 5 Schema Adapter Packages
+status: completed
+stopped_at: Phase 06 complete
+last_updated: "2026-03-20T23:17:24.0559794+09:00"
+last_activity: 2026-03-20 - Completed Phase 6 Release Readiness and Docs
 progress:
   total_phases: 6
-  completed_phases: 5
-  total_plans: 13
-  completed_plans: 13
-  percent: 83
+  completed_phases: 6
+  total_plans: 16
+  completed_plans: 16
+  percent: 100
 ---
 
 # Project State
@@ -21,24 +21,24 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-20)
 
 **Core value:** A single MoonBit-based core can deliver full `jq` compatibility and publishable CLI, JS/TS, and MoonBit packages without splitting behavior by surface.
-**Current focus:** Phase 6 - Release Readiness and Docs
+**Current focus:** Milestone v1.0 complete
 
 ## Current Position
 
 Phase: 6 of 6 (Release Readiness and Docs)
-Plan: 0 of 3 in current phase
-Status: Ready to plan
-Last activity: 2026-03-20 - Completed Phase 5 Schema Adapter Packages
+Plan: 3 of 3 in current phase
+Status: Complete
+Last activity: 2026-03-20 - Completed Phase 6 Release Readiness and Docs
 
-Progress: [████████░░] 83%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 13
-- Average duration: 20 min
-- Total execution time: 4.2 hours
+- Total plans completed: 16
+- Average duration: 18 min
+- Total execution time: 4.8 hours
 
 **By Phase:**
 
@@ -49,14 +49,18 @@ Progress: [████████░░] 83%
 | 3 | 3 | 45 min | 15 min |
 | 4 | 2 | 13 min | 7 min |
 | 5 | 2 | 12 min | 6 min |
+| 6 | 3 | 38 min | 13 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 05-02 (6 min), 05-01 (6 min), 04-02 (8 min), 04-01 (5 min), 03-03 (10 min)
+- Last 5 plans: 06-03 (12 min), 06-02 (17 min), 06-01 (9 min), 05-02 (6 min), 05-01 (6 min)
 - Trend: Stable
-- Latest metric: Phase 05 Plan 02 — 6 min across 2 tasks and 10 files
+- Latest metric: Phase 06 Plan 03 — 12 min across 2 tasks and 5 files
 
 | Phase 05 P02 | 6 min | 2 tasks | 10 files |
+| Phase 06 P01 | 9 min | 2 tasks | 3 files |
+| Phase 06 P02 | 17 min | 2 tasks | 3 files |
+| Phase 06 P03 | 12 min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -92,6 +96,10 @@ Recent decisions affecting current work:
 - [Phase 05]: Adapter package tests now build first and self-reference the package name so boundary proof runs against built artifacts.
 - [Phase 05]: Adapter errors now keep jqx-owned top-level kinds while Yup and Valibot preserve validator-native issue payloads in `issues`.
 - [Phase 05]: Root and adapter docs now teach standalone package names and `createAdapter(runtime).filter(...)` as the primary adapter flow.
+- [Phase 06]: The npm dry-run path now uploads an audit artifact generated from `scripts/ts_packages.mjs list` so release evidence matches the repo publishable package list.
+- [Phase 06]: CLI `workflow_dispatch` now exposes `dry_run` so maintainers can audit uploaded archives without publishing a GitHub Release.
+- [Phase 06]: MoonBit package readiness now depends on explicit `moon.mod.json` exclusions plus a recorded `moon login` / `moon publish --dry-run` preflight path.
+- [Phase 06]: Root docs now introduce CLI, MoonBit, and JS/TS in that order while package READMEs own the detailed runtime and adapter guidance.
 
 ### Pending Todos
 
@@ -104,6 +112,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T10:05:14.119Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-release-readiness-and-docs/06-CONTEXT.md
+Last session: 2026-03-20T23:17:24.0559794+09:00
+Stopped at: Phase 06 complete
+Resume file: None

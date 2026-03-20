@@ -23,7 +23,7 @@
 
 - [x] **CLI-01**: User can execute jq-compatible filters against JSON from stdin or direct input arguments.
 - [x] **CLI-02**: User can use the common jq options `-r`, `-R`, `-s`, `-n`, and `-e` with jq-compatible behavior.
-- [ ] **CLI-03**: User can install and run published CLI artifacts from project releases.
+- [x] **CLI-03**: User can install and run published CLI artifacts from project releases.
 
 ### MoonBit API
 
@@ -32,7 +32,7 @@
 - [x] **MBT-03**: MoonBit user can execute a compiled filter through canonical compiled-filter methods for the JSON-text compatibility lane.
 - [x] **MBT-04**: MoonBit user can consume the public API without depending on `@core.Value`.
 - [x] **MBT-05**: Maintainer can rename or restructure MoonBit public APIs before versioning if the result is more idiomatic and clearer for users.
-- [ ] **MBT-06**: Maintainer can verify that the MoonBit package is publication-ready for `mooncakes.io`, even if first release defers the actual publish action.
+- [x] **MBT-06**: Maintainer can verify that the MoonBit package is publication-ready for `mooncakes.io`, even if first release defers the actual publish action.
 
 ### JS/TS API
 
@@ -50,9 +50,9 @@
 
 ### Release and Docs
 
-- [ ] **REL-01**: Maintainer can dry-run the npm release workflow and inspect the produced package artifacts before first publication.
-- [ ] **REL-02**: Maintainer can dry-run the CLI release workflow and inspect the produced native artifacts before first publication.
-- [ ] **REL-03**: User can follow consistent documentation and examples for CLI, JS/TS, and MoonBit surfaces using canonical public names.
+- [x] **REL-01**: Maintainer can dry-run the npm release workflow and inspect the produced package artifacts before first publication.
+- [x] **REL-02**: Maintainer can dry-run the CLI release workflow and inspect the produced native artifacts before first publication.
+- [x] **REL-03**: User can follow consistent documentation and examples for CLI, JS/TS, and MoonBit surfaces using canonical public names.
 
 ## v2 Requirements
 
@@ -84,13 +84,13 @@
 | ARCH-04 | Phase 1 | Complete |
 | CLI-01 | Phase 4 | Complete |
 | CLI-02 | Phase 4 | Complete |
-| CLI-03 | Phase 6 | Pending |
+| CLI-03 | Phase 6 | Complete |
 | MBT-01 | Phase 2 | Complete |
 | MBT-02 | Phase 2 | Complete |
 | MBT-03 | Phase 2 | Complete |
 | MBT-04 | Phase 2 | Complete |
 | MBT-05 | Phase 2 | Complete |
-| MBT-06 | Phase 6 | Pending |
+| MBT-06 | Phase 6 | Complete |
 | TS-01 | Phase 3 | Complete |
 | TS-02 | Phase 3 | Complete |
 | TS-03 | Phase 3 | Complete |
@@ -99,9 +99,9 @@
 | ADPT-01 | Phase 5 | Complete |
 | ADPT-02 | Phase 5 | Complete |
 | ADPT-03 | Phase 5 | Complete |
-| REL-01 | Phase 6 | Pending |
-| REL-02 | Phase 6 | Pending |
-| REL-03 | Phase 6 | Pending |
+| REL-01 | Phase 6 | Complete |
+| REL-02 | Phase 6 | Complete |
+| REL-03 | Phase 6 | Complete |
 
 **Coverage:**
 - v1 requirements: 28 total
