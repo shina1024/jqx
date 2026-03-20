@@ -14,15 +14,14 @@ A single MoonBit-based core can deliver full `jq` compatibility and publishable 
 
 - [x] The native CLI now covers the common jq workflows and option set through the shared core, including stdin, direct input, `-r`, `-R`, `-s`, `-n`, `-e`, and `-L`. Validated in Phase 4: CLI Workflow Parity.
 - [x] Library surfaces can expose practical integrations, such as schema-validator adapters, without compromising the shared compatibility model. Validated in Phase 5: Schema Adapter Packages.
+- [x] npm and CLI release workflows now expose auditable dry-run proof paths, with repository-tracked evidence for package lists, archive names, and smoke checks. Validated in Phase 6: Release Readiness and Docs.
+- [x] The MoonBit package is publication-ready as `shina1024/jqx`, with explicit package exclusions, a published readme, and an authenticated dry-run publish checklist. Validated in Phase 6: Release Readiness and Docs.
+- [x] Root, JS/TS, and adapter docs now use canonical package names and ownership boundaries across CLI, MoonBit, JS/TS, and standalone adapter surfaces. Validated in Phase 6: Release Readiness and Docs.
 
 ### Active
 
 - [ ] `jq 1.8.1` compatibility is complete, with any exceptions made explicit and removable.
-- [ ] The native CLI is publishable as a release artifact without CLI-only feature expansion beyond `jq`.
-- [ ] The JS/TS package is publishable and provides practical runtime and compiled-filter APIs on top of the shared core.
-- [ ] The MoonBit package is publishable and uses standard `Json` as the public boundary while preserving a JSON-text compatibility lane.
 - [ ] Shared semantics remain aligned across CLI, JS/TS, and MoonBit, including the JSON value model and object key input/update order.
-- [ ] npm and CLI release workflows are dry-run and verified before the first public release.
 
 ### Out of Scope
 
@@ -52,9 +51,9 @@ This layout may change before release if a different package split, module struc
 
 ## Current State
 
-Phase 5 is complete. The JS/TS adapter package story is now validated locally through standalone package-name tests, filter-first adapter docs, validator-native Yup and Valibot issue proof, and frozen-lockfile workspace verification.
+Phase 6 is complete. Release workflows now have auditable dry-run proof paths, the MoonBit package is publication-ready as `shina1024/jqx`, and the root/package docs are aligned on canonical public names.
 
-Next focus: Phase 6 - Release Readiness and Docs.
+Milestone v1.0 is complete.
 
 ## Constraints
 
@@ -78,4 +77,4 @@ Next focus: Phase 6 - Release Readiness and Docs.
 | Before `1.0`, breaking changes are acceptable when they reduce long-term API debt | Canonical public names and package boundaries should be cleaned up before release rather than preserved as aliases | — Pending |
 
 ---
-*Last updated: 2026-03-20 after Phase 5 completion*
+*Last updated: 2026-03-20 after Phase 6 completion*
