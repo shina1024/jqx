@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: MoonBit Public API** - Turn the MoonBit surface into a small canonical runtime API over the shared core.
 - [x] **Phase 3: JS/TS Runtime Surface** - Ship the canonical npm runtime and binding surface on top of the same semantics.
 - [x] **Phase 4: CLI Workflow Parity** - Finish end-to-end jq-compatible CLI workflows without turning CLI into an extension surface.
-- [ ] **Phase 5: Schema Adapter Packages** - Make Zod, Yup, and Valibot integrations work on the stable JS/TS runtime.
+- [x] **Phase 5: Schema Adapter Packages** - Make Zod, Yup, and Valibot integrations work on the stable JS/TS runtime.
 - [ ] **Phase 6: Release Readiness and Docs** - Validate publishable artifacts, MoonBit package readiness, and surface-consistent docs.
 
 ## Phase Details
@@ -96,7 +96,7 @@ Plans:
 
 Plans:
 - [x] 05-01: Stabilize adapter-core contracts and package boundaries
-- [ ] 05-02: Harden and document Zod, Yup, and Valibot adapters
+- [x] 05-02: Harden and document Zod, Yup, and Valibot adapters
 
 ### Phase 6: Release Readiness and Docs
 **Goal**: Users and maintainers can trust release artifacts and canonical docs across CLI, JS/TS, and MoonBit surfaces.
@@ -125,5 +125,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. MoonBit Public API | 3/3 | Complete | 2026-03-14 |
 | 3. JS/TS Runtime Surface | 3/3 | Complete | 2026-03-14 |
 | 4. CLI Workflow Parity | 2/2 | Complete | 2026-03-20 |
-| 5. Schema Adapter Packages | 1/2 | In Progress | - |
+| 5. Schema Adapter Packages | 2/2 | Complete | 2026-03-20 |
 | 6. Release Readiness and Docs | 0/3 | Not started | - |
