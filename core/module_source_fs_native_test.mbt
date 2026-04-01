@@ -27,3 +27,26 @@ test "execute import/include filesystem module resolution" {
   clear_module_search_paths()
   clear_module_sources()
 }
+
+///|
+test "execute import/include filesystem module resolution preserves non-BMP codepoints" {
+  clear_module_sources()
+  clear_module_search_paths()
+  set_module_search_paths(["core/testdata/native_modules"])
+
+  let expected = must_parse("\"\\ud83d\\ude00\"")
+  assert_eq(
+    must_execute(
+      parse_filter("import \"emoji\" as e; e::v"),
+      must_parse("null"),
+    ),
+    [expected],
+  )
+  assert_eq(
+    must_execute(parse_filter("include \"emoji\"; v"), must_parse("null")),
+    [expected],
+  )
+
+  clear_module_search_paths()
+  clear_module_sources()
+}

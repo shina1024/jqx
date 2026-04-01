@@ -79,11 +79,7 @@ fn module_source_decode_utf8(bytes : Bytes) -> String {
   while i < bytes.length() {
     match module_source_utf8_decode_next_strict(bytes, i) {
       Some((code, width)) => {
-        if code <= 0xFFFF {
-          out.write_char(code.unsafe_to_char())
-        } else {
-          out.write_char('\u{fffd}')
-        }
+        out.write_char(code.unsafe_to_char())
         i += width
       }
       None => {
