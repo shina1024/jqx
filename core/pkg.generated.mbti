@@ -54,8 +54,7 @@ pub suberror EvalError {
   UnknownVariable(String)
   BreakSignal(String, Array[Value])
   Partial(Array[Value], Value, String)
-}
-pub impl Eq for EvalError
+} derive(Eq)
 pub impl Show for EvalError
 
 pub suberror FilterError {
@@ -63,8 +62,7 @@ pub suberror FilterError {
   InvalidEof
   InvalidNumber(Position, String)
   Diagnostics(Array[String])
-}
-pub impl Eq for FilterError
+} derive(Eq)
 pub impl Show for FilterError
 
 pub suberror ParseError {
@@ -75,16 +73,14 @@ pub suberror ParseError {
   InvalidNumericLiteralAtEof(Position)
   InvalidStringLiteral(Position)
   InvalidStringLiteralAtEof(Position)
-}
-pub impl Eq for ParseError
+} derive(Eq)
 pub impl Show for ParseError
 
 pub suberror RunError {
   Parse(ParseError)
   Filter(FilterError)
   Eval(EvalError)
-}
-pub impl Eq for RunError
+} derive(Eq)
 pub impl Show for RunError
 
 // Types and methods
@@ -132,7 +128,7 @@ pub enum Filter {
   IfElse(Filter, Filter, Filter)
   Fallback(Filter, Filter)
   Empty
-}
+} derive(Eq, Show)
 pub fn Filter::add(Self, Self) -> Self
 pub fn Filter::and_(Self, Self) -> Self
 pub fn Filter::as_(Self, String, Self) -> Self
@@ -174,8 +170,6 @@ pub fn Filter::sub(Self, Self) -> Self
 pub fn Filter::try_(Self) -> Self
 pub fn Filter::try_catch(Self, Self) -> Self
 pub fn Filter::var_(String) -> Self
-pub impl Eq for Filter
-pub impl Show for Filter
 
 type JsonObject
 pub fn JsonObject::iter(Self) -> Array[(String, Value)]
@@ -183,8 +177,7 @@ pub fn JsonObject::iter(Self) -> Array[(String, Value)]
 pub struct Position {
   line : Int
   column : Int
-}
-pub impl Eq for Position
+} derive(Eq)
 
 pub enum Value {
   JNull

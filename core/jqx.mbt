@@ -278,7 +278,7 @@ fn decimal_expand_positive_exponent(raw : String) -> String? {
   let exp_part = raw
     .view(start_offset=exp_index + 1, end_offset=raw.length())
     .to_string()
-  let parsed_exp = try? @strconv.parse_int64(exp_part)
+  let parsed_exp = try? @string.parse_int64(exp_part)
   let exp_value = match parsed_exp {
     Ok(v) => v.to_int()
     Err(_) => return None
@@ -442,7 +442,7 @@ pub impl Show for ParseError with output(self, logger) {
     InvalidChar({ line, column }, c) =>
       logger
       ..write_string("Invalid character ")
-      ..write_string(repr(c))
+      ..write_string(to_repr(c).to_string())
       ..write_string(" at line ")
       ..write_object(line)
       ..write_string(", column ")
@@ -1671,7 +1671,7 @@ fn ParseContext::lex_number_end(
 ) -> (Double, StringView?) {
   let s = ctx.input.view(start_offset=start, end_offset=end)
   if !s.contains(".") && !s.contains("e") && !s.contains("E") {
-    let parsed_int = try? @strconv.parse_int64(s)
+    let parsed_int = try? @string.parse_int64(s)
     match parsed_int {
       Ok(i) => {
         if s == "-0" {
@@ -1684,7 +1684,7 @@ fn ParseContext::lex_number_end(
         return (d, Some(s))
       }
       Err(_) => {
-        let parsed_double = try? @strconv.parse_double(s)
+        let parsed_double = try? @string.parse_double(s)
         match parsed_double {
           Ok(d) =>
             if number_literal_needs_exponent_normalization(s) {
@@ -1714,7 +1714,7 @@ fn ParseContext::lex_number_end(
       }
     }
   } else {
-    let parsed_double = try? @strconv.parse_double(s)
+    let parsed_double = try? @string.parse_double(s)
     match parsed_double {
       Ok(d) =>
         if number_literal_should_preserve_repr(s) {

@@ -31,7 +31,7 @@ pub impl Show for JsonParseError with output(self, logger) {
     InvalidChar({ line, column }, c) =>
       logger
       ..write_string("Invalid character ")
-      ..write_string(repr(c))
+      ..write_string(to_repr(c).to_string())
       ..write_string(" at line ")
       ..write_object(line)
       ..write_string(", column ")
@@ -84,7 +84,7 @@ pub impl Show for CompileError with output(self, logger) {
     InvalidChar({ line, column }, c) =>
       logger
       ..write_string("Invalid character ")
-      ..write_string(repr(c))
+      ..write_string(to_repr(c).to_string())
       ..write_string(" at line ")
       ..write_object(line)
       ..write_string(", column ")

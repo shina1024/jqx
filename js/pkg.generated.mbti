@@ -81,9 +81,7 @@ pub struct JqxError {
   line : Int
   column : Int
   offset : Int
-}
-pub impl Eq for JqxError
-pub impl Show for JqxError
+} derive(Eq, Show)
 
 pub struct Query[I, O] {
   filter : @core.Filter

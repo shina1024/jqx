@@ -170,8 +170,8 @@ fn format_error_message(msg : String) -> String {
             .to_string()
           let start_col = start_line + j + marker2.length()
           let col_part = msg.view(start_offset=start_col).to_string()
-          let parsed_line = try? @strconv.parse_int(line_part)
-          let parsed_col = try? @strconv.parse_int(col_part)
+          let parsed_line = try? @string.parse_int(line_part)
+          let parsed_col = try? @string.parse_int(col_part)
           match (parsed_line, parsed_col) {
             (Ok(line), Ok(col)) => {
               let base = msg.view(start_offset=0, end_offset=i).to_string()

@@ -39,26 +39,19 @@ pub fn Context::new() -> Self
 
 type Expr
 
-pub(all) struct Mark(Int)
+pub(all) struct Mark(Int) derive(Compare, Eq, Hash)
 #deprecated
 pub fn Mark::inner(Self) -> Int
-pub impl Compare for Mark
-pub impl Eq for Mark
-pub impl Hash for Mark
 
-type MarkSlotMap
+type MarkSlotMap derive(Eq, Hash)
 pub fn MarkSlotMap::get_slot(Self, Mark) -> Slot
 pub fn MarkSlotMap::iter2(Self) -> Iter2[Mark, Slot]
-pub impl Eq for MarkSlotMap
-pub impl Hash for MarkSlotMap
 
-pub struct Slot(Int)
+pub struct Slot(Int) derive(Eq, Hash)
 #deprecated
 pub fn Slot::inner(Self) -> Int
 pub fn Slot::is_assigned(Self) -> Bool
 pub fn Slot::unassigned() -> Self
-pub impl Eq for Slot
-pub impl Hash for Slot
 
 pub struct State {
   // private fields

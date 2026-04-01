@@ -285,7 +285,7 @@ fn FilterCursor::parse_int(ctx : FilterCursor) -> Int raise FilterError {
   }
   let end = ctx.offset
   let s = ctx.input.view(start_offset=start, end_offset=end)
-  let parsed = try? @strconv.parse_int64(s)
+  let parsed = try? @string.parse_int64(s)
   match parsed {
     Ok(v) => v.to_int()
     Err(_) =>

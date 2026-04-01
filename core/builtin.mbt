@@ -1007,7 +1007,7 @@ fn builtin_call0(name : String, input : Value) -> Array[Value] raise EvalError {
               json_type_with_value(input) + " cannot be parsed as a number",
             )
           }
-          let parsed_double = try? @strconv.parse_double(s)
+          let parsed_double = try? @string.parse_double(s)
           match parsed_double {
             Ok(n) => [json_number_value(n)]
             Err(_) =>
