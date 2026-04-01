@@ -2,6 +2,19 @@
 // Source under test: core/jqx.mbt
 
 ///|
+fn nested_json_array_text(depth : Int, leaf : String) -> String {
+  let buf = StringBuilder::new()
+  for _ in 0..<depth {
+    buf.write_char('[')
+  }
+  buf.write_string(leaf)
+  for _ in 0..<depth {
+    buf.write_char(']')
+  }
+  buf.to_string()
+}
+
+///|
 test "parse primitives" {
   assert_eq(try? parse("null"), Ok(Value::null()))
   assert_eq(try? parse("true"), Ok(Value::boolean(true)))
@@ -125,4 +138,20 @@ test "core run helpers centralize value and text lanes" {
     err => fail("run_compiled_json_text failed: " + err.to_string())
   }
   assert_eq(text, ["9007199254740993"])
+}
+
+///|
+test "run_json_text matches jq 1.8.1 print depth truncation" {
+  let at_limit = nested_json_array_text(256, "0")
+  let within_limit = run_json_text(".", at_limit) catch {
+    err => fail("run_json_text failed at depth limit: " + err.to_string())
+  }
+  assert_eq(within_limit, [at_limit])
+
+  let over_limit = nested_json_array_text(257, "0")
+  let expected = nested_json_array_text(257, "<skipped: too deep>")
+  let truncated = run_json_text(".", over_limit) catch {
+    err => fail("run_json_text failed past depth limit: " + err.to_string())
+  }
+  assert_eq(truncated, [expected])
 }

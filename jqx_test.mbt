@@ -2,6 +2,19 @@
 // Source under test: jqx.mbt, jqx_public_types.mbt
 
 ///|
+fn nested_json_array_text(depth : Int, leaf : String) -> String {
+  let buf = StringBuilder::new()
+  for _ in 0..<depth {
+    buf.write_char('[')
+  }
+  buf.write_string(leaf)
+  for _ in 0..<depth {
+    buf.write_char(']')
+  }
+  buf.to_string()
+}
+
+///|
 test "top-level parse returns standard Json" {
   let parsed = parse_json("{\"a\":1,\"b\":[true,null,\"x\"]}") catch {
     err => fail("parse_json failed: " + err.to_string())
@@ -161,4 +174,14 @@ test "compiled filter run_json_text raises CompiledJsonTextRunError parse errors
   guard (try? filter.run_json_text("{")) is Err(JsonParse(_)) else {
     fail("expected compiled text parse error")
   }
+}
+
+///|
+test "public run_json_text matches jq 1.8.1 print depth truncation" {
+  let over_limit = nested_json_array_text(257, "0")
+  let expected = nested_json_array_text(257, "<skipped: too deep>")
+  let outputs = run_json_text(".", over_limit) catch {
+    err => fail("run_json_text failed past depth limit: " + err.to_string())
+  }
+  assert_eq(outputs, [expected])
 }

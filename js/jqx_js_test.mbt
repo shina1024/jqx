@@ -1,4 +1,17 @@
 ///|
+fn nested_json_array_text(depth : Int, leaf : String) -> String {
+  let buf = StringBuilder::new()
+  for _ in 0..<depth {
+    buf.write_char('[')
+  }
+  buf.write_string(leaf)
+  for _ in 0..<depth {
+    buf.write_char(']')
+  }
+  buf.to_string()
+}
+
+///|
 test "js run_json_text success" {
   let out = run_json_text(".foo", "{\"foo\": 1}")
   guard out is Ok(values) else { fail("expected Ok") }
@@ -149,4 +162,13 @@ test "js structured runtime error" {
   assert_eq(err.line, -1)
   assert_eq(err.column, -1)
   assert_eq(err.offset, -1)
+}
+
+///|
+test "js run_json_text matches jq 1.8.1 print depth truncation" {
+  let over_limit = nested_json_array_text(257, "0")
+  let expected = nested_json_array_text(257, "<skipped: too deep>")
+  let out = run_json_text(".", over_limit)
+  guard out is Ok(values) else { fail("expected Ok") }
+  assert_eq(values, [expected])
 }

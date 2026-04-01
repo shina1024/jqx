@@ -16,6 +16,10 @@ import {
   type Json,
 } from "../src/index.js";
 
+function nestedJsonArrayText(depth: number, leaf: string): string {
+  return "[".repeat(depth) + leaf + "]".repeat(depth);
+}
+
 void test("root package exposes the canonical direct runtime entrypoints", () => {
   assert.equal(typeof run, "function");
   assert.equal(typeof runJsonText, "function");
@@ -27,6 +31,13 @@ void test("root package exposes the canonical direct runtime entrypoints", () =>
 void test("runJsonText executes a jq filter on JSON text", () => {
   const result = runJsonText(".foo", '{"foo":1}');
   assert.deepEqual(result, { ok: true, value: ["1"] });
+});
+
+void test("runJsonText matches jq 1.8.1 print depth truncation", () => {
+  const input = nestedJsonArrayText(257, "0");
+  const expected = nestedJsonArrayText(257, "<skipped: too deep>");
+  const result = runJsonText(".", input);
+  assert.deepEqual(result, { ok: true, value: [expected] });
 });
 
 void test("run stringifies input and parses outputs", () => {
