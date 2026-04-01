@@ -43,6 +43,8 @@ import type {
   JqxDirectQueryRuntime,
   JqxDirectRuntime,
   JqxError,
+  JqxInputValueRuntimeError,
+  JqxOutputValueRuntimeError,
   JqxResult,
   JqxRuntimeError,
   Json,
@@ -181,6 +183,21 @@ const backendRuntimeError: JqxBackendRuntimeError = {
   } satisfies JqxError,
 };
 expectTypeOf(runtimeErrorToMessage(backendRuntimeError)).toEqualTypeOf<string>();
+
+const inputValueRuntimeError: JqxInputValueRuntimeError = {
+  kind: "input_value",
+  message: "boom",
+  path: "$.value",
+};
+expectTypeOf(runtimeErrorToMessage(inputValueRuntimeError)).toEqualTypeOf<string>();
+
+const outputValueRuntimeError: JqxOutputValueRuntimeError = {
+  kind: "output_value",
+  message: "boom",
+  index: 0,
+  path: "$.value",
+};
+expectTypeOf(runtimeErrorToMessage(outputValueRuntimeError)).toEqualTypeOf<string>();
 
 const exportedAstDoc = exportTypedQueryDocument(nameQuery);
 expectTypeOf(exportedAstDoc).toEqualTypeOf<QueryAstDocument>();

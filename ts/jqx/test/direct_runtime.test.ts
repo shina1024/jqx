@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import {
   compile,
+  literal,
   isValidJson,
   parseJson,
   run,
@@ -57,6 +58,29 @@ void test("run returns input_stringify for unserializable value-lane input", () 
   }
 });
 
+void test("run rejects non-finite numbers in the value lane", () => {
+  const result = run(".", { foo: [1, Number.POSITIVE_INFINITY] } as Json);
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.error.kind, "input_value");
+    if (result.error.kind === "input_value") {
+      assert.equal(result.error.path, "$.foo[1]");
+    }
+  }
+});
+
+void test("run rejects jq-compatible outputs that are not representable in the value lane", () => {
+  const result = run("1e309", null);
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.error.kind, "output_value");
+    if (result.error.kind === "output_value") {
+      assert.equal(result.error.index, 0);
+      assert.equal(result.error.path, "$");
+    }
+  }
+});
+
 void test("compile returns an opaque compiled filter with run methods", () => {
   const compiled = compile(".items[]");
   assert.equal(compiled.ok, true);
@@ -71,7 +95,7 @@ void test("compile returns an opaque compiled filter with run methods", () => {
   assert.deepEqual(runtimeValue, { ok: true, value: [1, 2, 3] });
 });
 
-void test("parseJson and isValidJson use jqx parser semantics", () => {
+void test("parseJson and isValidJson use strict value-lane JSON semantics", () => {
   const parsed = parseJson('{"foo":[1,true,null]}');
   assert.deepEqual(parsed, {
     ok: true,
@@ -80,13 +104,30 @@ void test("parseJson and isValidJson use jqx parser semantics", () => {
 
   assert.equal(isValidJson('{"foo":[1,true,null]}'), true);
   assert.equal(isValidJson("{"), false);
+  assert.equal(isValidJson("1e309"), false);
+  assert.equal(isValidJson("NaN"), false);
 
   const invalid = parseJson("{");
   assert.equal(invalid.ok, false);
   if (!invalid.ok) {
     assert.equal(invalid.error.kind, "backend_runtime");
     assert.equal(typeof invalid.error.message, "string");
-    assert.equal(typeof invalid.error.details?.code, "string");
+  }
+
+  const overflow = parseJson("1e309");
+  assert.equal(overflow.ok, false);
+  if (!overflow.ok) {
+    assert.equal(overflow.error.kind, "input_value");
+    if (overflow.error.kind === "input_value") {
+      assert.equal(overflow.error.path, "$");
+    }
+  }
+
+  const jqExtension = parseJson("NaN");
+  assert.equal(jqExtension.ok, false);
+  if (!jqExtension.ok) {
+    assert.equal(jqExtension.error.kind, "backend_runtime");
+    assert.equal(typeof jqExtension.error.message, "string");
   }
 });
 
@@ -114,6 +155,17 @@ void test("query remains available as a secondary root-package lane", () => {
     ok: true,
     value: [{ name: "alice" }],
   });
+});
+
+void test("query rejects non-finite literal values in the value lane", () => {
+  const result = query(literal(Number.POSITIVE_INFINITY), null);
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.error.kind, "input_value");
+    if (result.error.kind === "input_value") {
+      assert.equal(result.error.path, "$");
+    }
+  }
 });
 
 void test("runtime and queryRuntime remain available for adapter integration", () => {

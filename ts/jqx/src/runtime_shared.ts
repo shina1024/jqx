@@ -35,7 +35,93 @@ export function normalizeRuntimeResult<T>(
   return failRuntimeResult(normalizeRuntimeError(result.error, "Unknown runtime error"));
 }
 
+type JsonPathSegment = string | number;
+
+function formatJsonPath(path: JsonPathSegment[]): string {
+  let out = "$";
+  for (const segment of path) {
+    if (typeof segment === "number") {
+      out += `[${segment}]`;
+      continue;
+    }
+    if (/^[A-Za-z_$][A-Za-z0-9_$]*$/u.test(segment)) {
+      out += `.${segment}`;
+      continue;
+    }
+    out += `[${JSON.stringify(segment)}]`;
+  }
+  return out;
+}
+
+function findNonFiniteNumberPath(
+  value: Json,
+  path: JsonPathSegment[] = [],
+  seen: WeakSet<object> = new WeakSet<object>(),
+): JsonPathSegment[] | null {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? null : path;
+  }
+  if (value === null || typeof value !== "object") {
+    return null;
+  }
+  if (seen.has(value)) {
+    return null;
+  }
+  seen.add(value);
+  if (Array.isArray(value)) {
+    for (const [index, item] of value.entries()) {
+      const found = findNonFiniteNumberPath(item, [...path, index], seen);
+      if (found !== null) {
+        return found;
+      }
+    }
+    return null;
+  }
+  for (const [key, item] of Object.entries(value)) {
+    const found = findNonFiniteNumberPath(item, [...path, key], seen);
+    if (found !== null) {
+      return found;
+    }
+  }
+  return null;
+}
+
+function inputValueError(path: JsonPathSegment[]): JqxRuntimeError {
+  const renderedPath = formatJsonPath(path);
+  return {
+    kind: "input_value",
+    path: renderedPath,
+    message:
+      `Value lane only accepts finite JSON numbers; found a non-finite number at ${renderedPath}. ` +
+      "Use runJsonText(...) when jq-compatible numeric fidelity matters.",
+  };
+}
+
+function outputValueError(index: number, path: JsonPathSegment[]): JqxRuntimeError {
+  const renderedPath = formatJsonPath(path);
+  return {
+    kind: "output_value",
+    index,
+    path: renderedPath,
+    message:
+      `Output ${index} is not representable in the value lane because it contains a non-finite ` +
+      `number at ${renderedPath}. Use runJsonText(...) when jq-compatible numeric fidelity matters.`,
+  };
+}
+
+export function validateRuntimeInputValue(input: Json): JqxResult<Json, JqxRuntimeError> {
+  const found = findNonFiniteNumberPath(input);
+  if (found !== null) {
+    return failRuntimeResult(inputValueError(found));
+  }
+  return { ok: true, value: input };
+}
+
 export function encodeRuntimeInput(input: Json): JqxResult<string, JqxRuntimeError> {
+  const validated = validateRuntimeInputValue(input);
+  if (!validated.ok) {
+    return validated;
+  }
   try {
     const encoded = JSON.stringify(input);
     if (typeof encoded !== "string") {
@@ -53,18 +139,47 @@ export function encodeRuntimeInput(input: Json): JqxResult<string, JqxRuntimeErr
   }
 }
 
+export function parseRuntimeJsonText(input: string): JqxResult<Json, JqxRuntimeError> {
+  try {
+    const parsed = JSON.parse(input) as Json;
+    const validated = validateRuntimeInputValue(parsed);
+    if (!validated.ok) {
+      return validated;
+    }
+    return { ok: true, value: parsed };
+  } catch (error) {
+    return failRuntimeResult(normalizeRuntimeError(error, "parseJson failed unexpectedly"));
+  }
+}
+
+export function decodeRuntimeOutput(
+  raw: string,
+  index: number,
+): JqxResult<Json, JqxRuntimeError> {
+  try {
+    const parsed = JSON.parse(raw) as Json;
+    const found = findNonFiniteNumberPath(parsed);
+    if (found !== null) {
+      return failRuntimeResult(outputValueError(index, found));
+    }
+    return { ok: true, value: parsed };
+  } catch (error) {
+    return failRuntimeResult({
+      kind: "output_parse",
+      index,
+      message: error instanceof Error ? error.message : "Failed to parse output",
+    });
+  }
+}
+
 export function decodeRuntimeOutputs(rawValues: string[]): JqxResult<Json[], JqxRuntimeError> {
   const parsed: Json[] = [];
   for (const [index, raw] of rawValues.entries()) {
-    try {
-      parsed.push(JSON.parse(raw) as Json);
-    } catch (error) {
-      return failRuntimeResult({
-        kind: "output_parse",
-        index,
-        message: error instanceof Error ? error.message : "Failed to parse output",
-      });
+    const decoded = decodeRuntimeOutput(raw, index);
+    if (!decoded.ok) {
+      return decoded;
     }
+    parsed.push(decoded.value);
   }
   return { ok: true, value: parsed };
 }

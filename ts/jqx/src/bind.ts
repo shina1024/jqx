@@ -1,4 +1,5 @@
 import {
+  decodeRuntimeOutput,
   decodeRuntimeOutputs,
   encodeRuntimeInput,
   failRuntimeResult,
@@ -37,7 +38,9 @@ export type {
   JqxBackendRuntimeError,
   JqxError,
   JqxInputStringifyRuntimeError,
+  JqxInputValueRuntimeError,
   JqxOutputParseRuntimeError,
+  JqxOutputValueRuntimeError,
   JqxResult,
   JqxResultStream,
   JqxRuntimeError,
@@ -172,16 +175,12 @@ function decodeRawResultStream(
         yield item;
         return;
       }
-      try {
-        yield { ok: true, value: JSON.parse(item.value) as Json };
-      } catch (error) {
-        yield failRuntimeResult<Json>({
-          kind: "output_parse",
-          index,
-          message: error instanceof Error ? error.message : "Failed to parse output",
-        });
+      const decoded = decodeRuntimeOutput(item.value, index);
+      if (!decoded.ok) {
+        yield decoded;
         return;
       }
+      yield decoded;
       index += 1;
     }
   })();

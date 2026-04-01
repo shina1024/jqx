@@ -29,7 +29,7 @@ const valid = isValidJson('{"users":[{"name":"alice"}]}');
 // true
 ```
 
-Use the value lane when native JS values are convenient.
+Use the value lane when native JS values are convenient. This lane only accepts values that stay representable as plain JS JSON values, so non-finite numbers such as `Infinity`, `-Infinity`, and `NaN` are rejected.
 
 ## Compatibility Lane
 
@@ -41,6 +41,8 @@ import { runJsonText } from "@shina1024/jqx";
 const compat = runJsonText(".", "9007199254740993");
 // { ok: true, value: ["9007199254740993"] }
 ```
+
+`parseJson(...)` and `isValidJson(...)` follow the same value-lane contract. For example, `parseJson("1e309")` returns `{ ok: false, error: { kind: "input_value", ... } }` even though the JSON text is syntactically valid, because the resulting JS value would be `Infinity`. Use `runJsonText(...)` when jq-compatible numeric fidelity matters.
 
 ## Compiled Reuse
 
@@ -186,7 +188,9 @@ Runtime operations return `JqxRuntimeError`:
 
 - `{ kind: "backend_runtime", message, details? }`
 - `{ kind: "input_stringify", message }`
+- `{ kind: "input_value", message, path }`
 - `{ kind: "output_parse", message, index }`
+- `{ kind: "output_value", message, index, path }`
 
 Helpers:
 

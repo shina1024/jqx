@@ -125,6 +125,8 @@ const values = run(".foo", { foo: 1 });
 const compat = runJsonText(".", "9007199254740993");
 ```
 
+In JS/TS, the value lane is intentionally stricter than jq itself. `run(...)`, `parseJson(...)`, and `isValidJson(...)` only accept values that remain representable as plain JS JSON values, so non-finite numbers such as `Infinity`, `-Infinity`, and `NaN` are rejected. When jq-compatible numeric fidelity matters, stay on `runJsonText(...)`.
+
 Reuse a compiled filter when you expect to run the same jq program repeatedly:
 
 ```ts

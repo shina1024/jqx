@@ -76,6 +76,23 @@ void test("bindRuntime run returns input_stringify for unserializable value-lane
   }
 });
 
+void test("bindRuntime run rejects non-finite numbers in the value lane", async () => {
+  const runtime: JqxJsonTextRuntime = {
+    runJsonText() {
+      assert.fail("runJsonText should not be called when value-lane validation fails");
+    },
+  };
+  const jqx = bindRuntime(runtime);
+  const result = await jqx.run(".", { nested: [Number.POSITIVE_INFINITY] } as Json);
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.error.kind, "input_value");
+    if (result.error.kind === "input_value") {
+      assert.equal(result.error.path, "$.nested[0]");
+    }
+  }
+});
+
 void test("bindRuntime run returns parse error for invalid raw JSON", async () => {
   const runtime: JqxJsonTextRuntime = {
     runJsonText() {
@@ -89,6 +106,24 @@ void test("bindRuntime run returns parse error for invalid raw JSON", async () =
     assert.equal(result.error.kind, "output_parse");
     if (result.error.kind === "output_parse") {
       assert.equal(result.error.index, 0);
+    }
+  }
+});
+
+void test("bindRuntime run returns output_value for jq-compatible raw outputs outside the value lane", async () => {
+  const runtime: JqxJsonTextRuntime = {
+    runJsonText() {
+      return { ok: true as const, value: ['{"value":[1e309]}'] };
+    },
+  };
+  const jqx = bindRuntime(runtime);
+  const result = await jqx.run(".", null);
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.error.kind, "output_value");
+    if (result.error.kind === "output_value") {
+      assert.equal(result.error.index, 0);
+      assert.equal(result.error.path, "$.value[0]");
     }
   }
 });
@@ -250,6 +285,43 @@ void test("bindRuntime runStream returns parse error with index", async () => {
     assert.equal(items[1].error.kind, "output_parse");
     if (items[1].error.kind === "output_parse") {
       assert.equal(items[1].error.index, 1);
+    }
+  }
+});
+
+void test("bindRuntime runStream returns output_value with index for jq-compatible streamed outputs outside the value lane", async () => {
+  const runtime: JqxJsonTextRuntime & {
+    runJsonTextStream(filter: string, input: string): {
+      ok: true;
+      value: AsyncIterable<string>;
+    };
+  } = {
+    runJsonText() {
+      return { ok: true as const, value: [] };
+    },
+    runJsonTextStream(filter, input) {
+      assert.equal(filter, ".x");
+      assert.equal(input, '{"x":1}');
+      return {
+        ok: true as const,
+        value: (async function* () {
+          yield "1";
+          yield '{"value":[1e309]}';
+          yield "3";
+        })(),
+      };
+    },
+  };
+  const jqx = bindRuntime(runtime);
+  const items = await collectStream(jqx.runStream(".x", { x: 1 }));
+  assert.equal(items.length, 2);
+  assert.deepEqual(items[0], { ok: true, value: 1 });
+  assert.equal(items[1]?.ok, false);
+  if (!items[1]?.ok) {
+    assert.equal(items[1].error.kind, "output_value");
+    if (items[1].error.kind === "output_value") {
+      assert.equal(items[1].error.index, 1);
+      assert.equal(items[1].error.path, "$.value[0]");
     }
   }
 });

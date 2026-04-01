@@ -1,5 +1,6 @@
 import { moonbitRuntime } from "./moonbit_runtime.js";
 import {
+  parseRuntimeJsonText,
   decodeRuntimeOutputs,
   encodeRuntimeInput,
   normalizeRuntimeError,
@@ -115,9 +116,12 @@ function fromMoonBitResult<T, U>(
 }
 
 function toMoonBitValue(value: Json): unknown {
-  const encoded = JSON.stringify(value);
+  const encoded = encodeRuntimeInput(value);
+  if (!encoded.ok) {
+    throw encoded.error;
+  }
   const parsed = fromMoonBitResult<unknown, unknown>(
-    moonbit.try_parse_json(encoded),
+    moonbit.try_parse_json(encoded.value),
     (out) => out,
     "literal",
   );
@@ -300,26 +304,11 @@ export function compile<Filter extends string>(
 }
 
 export function parseJson(input: string): JqxResult<Json, JqxRuntimeError> {
-  const parsed = fromMoonBitResult<unknown, null>(
-    moonbit.try_parse_json(input),
-    () => null,
-    "parse_json",
-  );
-  if (!parsed.ok) {
-    return parsed;
-  }
-  try {
-    return { ok: true, value: JSON.parse(input) as Json };
-  } catch (error) {
-    return {
-      ok: false,
-      error: normalizeRuntimeError(error, "parseJson failed unexpectedly"),
-    };
-  }
+  return parseRuntimeJsonText(input);
 }
 
 export function isValidJson(input: string): boolean {
-  return moonbit.is_valid_json(input);
+  return parseRuntimeJsonText(input).ok;
 }
 
 export const runtime: JqxDirectRuntime = {

@@ -22,16 +22,31 @@ export interface JqxInputStringifyRuntimeError {
   message: string;
 }
 
+export interface JqxInputValueRuntimeError {
+  kind: "input_value";
+  message: string;
+  path: string;
+}
+
 export interface JqxOutputParseRuntimeError {
   kind: "output_parse";
   message: string;
   index: number;
 }
 
+export interface JqxOutputValueRuntimeError {
+  kind: "output_value";
+  message: string;
+  index: number;
+  path: string;
+}
+
 export type JqxRuntimeError =
   | JqxBackendRuntimeError
   | JqxInputStringifyRuntimeError
-  | JqxOutputParseRuntimeError;
+  | JqxInputValueRuntimeError
+  | JqxOutputParseRuntimeError
+  | JqxOutputValueRuntimeError;
 
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
@@ -228,8 +243,14 @@ export function isJqxRuntimeError(value: unknown): value is JqxRuntimeError {
   if (value.kind === "input_stringify") {
     return true;
   }
+  if (value.kind === "input_value") {
+    return typeof value.path === "string";
+  }
   if (value.kind === "output_parse") {
     return typeof value.index === "number";
+  }
+  if (value.kind === "output_value") {
+    return typeof value.index === "number" && typeof value.path === "string";
   }
   return false;
 }
