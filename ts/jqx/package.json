@@ -67,7 +67,7 @@
     "oxfmt": "^0.42.0",
     "oxlint": "^1.57.0",
     "oxlint-tsgolint": "^0.17.0",
-    "tsdown": "0.21.5",
+    "tsdown": "0.21.7",
     "tsx": "^4.21.0"
   },
   "pnpm": {
