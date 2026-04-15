@@ -57,7 +57,159 @@ pub enum Filter {
   IfElse(Filter, Filter, Filter)
   Fallback(Filter, Filter)
   Empty
-} derive(Eq, Show)
+} derive(Eq)
+
+///|
+fn show_named_variant0(name : String, logger : &Logger) -> Unit {
+  logger.write_string(name)
+}
+
+///|
+fn[T : Show] show_named_variant1(
+  name : String,
+  arg : T,
+  logger : &Logger,
+) -> Unit {
+  logger.write_string(name)
+  logger.write_char('(')
+  Show::output(arg, logger)
+  logger.write_char(')')
+}
+
+///|
+fn[T1 : Show, T2 : Show] show_named_variant2(
+  name : String,
+  arg1 : T1,
+  arg2 : T2,
+  logger : &Logger,
+) -> Unit {
+  logger.write_string(name)
+  logger.write_char('(')
+  Show::output(arg1, logger)
+  logger.write_string(", ")
+  Show::output(arg2, logger)
+  logger.write_char(')')
+}
+
+///|
+fn[T1 : Show, T2 : Show, T3 : Show] show_named_variant3(
+  name : String,
+  arg1 : T1,
+  arg2 : T2,
+  arg3 : T3,
+  logger : &Logger,
+) -> Unit {
+  logger.write_string(name)
+  logger.write_char('(')
+  Show::output(arg1, logger)
+  logger.write_string(", ")
+  Show::output(arg2, logger)
+  logger.write_string(", ")
+  Show::output(arg3, logger)
+  logger.write_char(')')
+}
+
+///|
+fn[T1 : Show, T2 : Show, T3 : Show, T4 : Show] show_named_variant4(
+  name : String,
+  arg1 : T1,
+  arg2 : T2,
+  arg3 : T3,
+  arg4 : T4,
+  logger : &Logger,
+) -> Unit {
+  logger.write_string(name)
+  logger.write_char('(')
+  Show::output(arg1, logger)
+  logger.write_string(", ")
+  Show::output(arg2, logger)
+  logger.write_string(", ")
+  Show::output(arg3, logger)
+  logger.write_string(", ")
+  Show::output(arg4, logger)
+  logger.write_char(')')
+}
+
+///|
+fn[T1 : Show, T2 : Show, T3 : Show, T4 : Show, T5 : Show] show_named_variant5(
+  name : String,
+  arg1 : T1,
+  arg2 : T2,
+  arg3 : T3,
+  arg4 : T4,
+  arg5 : T5,
+  logger : &Logger,
+) -> Unit {
+  logger.write_string(name)
+  logger.write_char('(')
+  Show::output(arg1, logger)
+  logger.write_string(", ")
+  Show::output(arg2, logger)
+  logger.write_string(", ")
+  Show::output(arg3, logger)
+  logger.write_string(", ")
+  Show::output(arg4, logger)
+  logger.write_string(", ")
+  Show::output(arg5, logger)
+  logger.write_char(')')
+}
+
+///|
+pub impl Show for Filter with output(self, logger) {
+  match self {
+    Identity => show_named_variant0("Identity", logger)
+    Scope(defs, body) => show_named_variant2("Scope", defs, body, logger)
+    Pipe(left, right) => show_named_variant2("Pipe", left, right, logger)
+    Comma(left, right) => show_named_variant2("Comma", left, right, logger)
+    Field(name) => show_named_variant1("Field", name, logger)
+    FieldOpt(name) => show_named_variant1("FieldOpt", name, logger)
+    Index(i) => show_named_variant1("Index", i, logger)
+    IndexOpt(i) => show_named_variant1("IndexOpt", i, logger)
+    Slice(start, end) => show_named_variant2("Slice", start, end, logger)
+    SliceOpt(start, end) => show_named_variant2("SliceOpt", start, end, logger)
+    Iter => show_named_variant0("Iter", logger)
+    IterOpt => show_named_variant0("IterOpt", logger)
+    Recurse => show_named_variant0("Recurse", logger)
+    Literal(value) => show_named_variant1("Literal", value, logger)
+    Array(items) => show_named_variant1("Array", items, logger)
+    Object(entries) => show_named_variant1("Object", entries, logger)
+    Builtin(name) => show_named_variant1("Builtin", name, logger)
+    Call(name, args) => show_named_variant2("Call", name, args, logger)
+    Var(name) => show_named_variant1("Var", name, logger)
+    As(value, name, body) =>
+      show_named_variant3("As", value, name, body, logger)
+    Label(name, body) => show_named_variant2("Label", name, body, logger)
+    Break(name) => show_named_variant1("Break", name, logger)
+    Try(inner) => show_named_variant1("Try", inner, logger)
+    TryCatch(inner, handler) =>
+      show_named_variant2("TryCatch", inner, handler, logger)
+    Reduce(source, name, init, update) =>
+      show_named_variant4("Reduce", source, name, init, update, logger)
+    Foreach(source, name, init, update, extract) =>
+      show_named_variant5(
+        "Foreach", source, name, init, update, extract, logger,
+      )
+    Eq(left, right) => show_named_variant2("Eq", left, right, logger)
+    Neq(left, right) => show_named_variant2("Neq", left, right, logger)
+    Lt(left, right) => show_named_variant2("Lt", left, right, logger)
+    Lte(left, right) => show_named_variant2("Lte", left, right, logger)
+    Gt(left, right) => show_named_variant2("Gt", left, right, logger)
+    Gte(left, right) => show_named_variant2("Gte", left, right, logger)
+    And(left, right) => show_named_variant2("And", left, right, logger)
+    Or(left, right) => show_named_variant2("Or", left, right, logger)
+    Not(inner) => show_named_variant1("Not", inner, logger)
+    Add(left, right) => show_named_variant2("Add", left, right, logger)
+    Sub(left, right) => show_named_variant2("Sub", left, right, logger)
+    Mul(left, right) => show_named_variant2("Mul", left, right, logger)
+    Div(left, right) => show_named_variant2("Div", left, right, logger)
+    Mod(left, right) => show_named_variant2("Mod", left, right, logger)
+    IfElse(cond, then_branch, else_branch) =>
+      show_named_variant3("IfElse", cond, then_branch, else_branch, logger)
+    Fallback(left, right) =>
+      show_named_variant2("Fallback", left, right, logger)
+    Empty => show_named_variant0("Empty", logger)
+  }
+}
 
 ///|
 pub fn Filter::identity() -> Filter {

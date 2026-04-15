@@ -9,7 +9,22 @@ pub struct JqxError {
   line : Int
   column : Int
   offset : Int
-} derive(Eq, Show)
+} derive(Eq)
+
+///|
+pub impl Show for JqxError with output(self, logger) {
+  logger.write_string("JqxError { code: ")
+  Show::output(self.code, logger)
+  logger.write_string(", message: ")
+  Show::output(self.message, logger)
+  logger.write_string(", line: ")
+  Show::output(self.line, logger)
+  logger.write_string(", column: ")
+  Show::output(self.column, logger)
+  logger.write_string(", offset: ")
+  Show::output(self.offset, logger)
+  logger.write_string(" }")
+}
 
 ///|
 fn jqx_error(

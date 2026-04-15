@@ -128,7 +128,7 @@ pub enum Filter {
   IfElse(Filter, Filter, Filter)
   Fallback(Filter, Filter)
   Empty
-} derive(Eq, Show)
+} derive(Eq)
 pub fn Filter::add(Self, Self) -> Self
 pub fn Filter::and_(Self, Self) -> Self
 pub fn Filter::as_(Self, String, Self) -> Self
@@ -170,6 +170,7 @@ pub fn Filter::sub(Self, Self) -> Self
 pub fn Filter::try_(Self) -> Self
 pub fn Filter::try_catch(Self, Self) -> Self
 pub fn Filter::var_(String) -> Self
+pub impl Show for Filter
 
 type JsonObject
 pub fn JsonObject::iter(Self) -> Array[(String, Value)]
