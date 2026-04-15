@@ -262,20 +262,25 @@ fn ThreadSet::iter(self : ThreadSet) -> Iter[Thread] {
   let mut node = self
   let parents = []
   Iter::new(() => {
-    loop node {
-      Node(t=thread, l=Empty, r=right, ..) => {
-        node = right
-        Some(thread)
+    for current = node {
+      match current {
+        Node(t=thread, l=Empty, r=right, ..) => {
+          node = right
+          break Some(thread)
+        }
+        Node(t=thread, l=left, r=right, ..) => {
+          parents.push((thread, right))
+          continue left
+        }
+        Empty =>
+          match parents.pop() {
+            Some((thread, right)) => {
+              node = right
+              break Some(thread)
+            }
+            None => break None
+          }
       }
-      Node(t=thread, l=left, r=right, ..) => {
-        parents.push((thread, right))
-        continue left
-      }
-      Empty if parents.pop() is Some((thread, right)) => {
-        node = right
-        Some(thread)
-      }
-      Empty => None
     }
   })
 }
@@ -343,15 +348,17 @@ fn ts_seq(
 impl Eq for ThreadSet with equal(self, other) {
   let it1 = self.iter()
   let it2 = other.iter()
-  loop (it1.next(), it2.next()) {
-    (None, None) => true
-    (None, Some(_)) | (Some(_), None) => false
-    (Some(b1), Some(b2)) =>
-      if b1 == b2 {
-        continue (it1.next(), it2.next())
-      } else {
-        false
-      }
+  for left = it1.next(), right = it2.next() {
+    match (left, right) {
+      (None, None) => break true
+      (None, Some(_)) | (Some(_), None) => break false
+      (Some(b1), Some(b2)) =>
+        if b1 == b2 {
+          continue it1.next(), it2.next()
+        } else {
+          break false
+        }
+    }
   }
 }
 

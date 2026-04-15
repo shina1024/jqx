@@ -826,27 +826,29 @@ fn ParseContext::parse_object(ctx : ParseContext) -> Value raise ParseError {
   ctx.remaining_available_depth -= 1
   let map = Map::new()
   let key_order = []
-  loop ctx.lex_property_name() {
-    RBrace => {
-      ctx.remaining_available_depth += 1
-      Value::object_with_order(map, key_order)
-    }
-    String(name) => {
-      ctx.lex_after_property_name()
-      if !map.contains(name) {
-        key_order.push(name)
+  for token = ctx.lex_property_name() {
+    match token {
+      RBrace => {
+        ctx.remaining_available_depth += 1
+        break Value::object_with_order(map, key_order)
       }
-      map[name] = ctx.parse_value()
-      match ctx.lex_after_object_value() {
-        Comma => continue ctx.lex_property_name2()
-        RBrace => {
-          ctx.remaining_available_depth += 1
-          Value::object_with_order(map, key_order)
+      String(name) => {
+        ctx.lex_after_property_name()
+        if !map.contains(name) {
+          key_order.push(name)
         }
-        _ => abort("unreachable")
+        map[name] = ctx.parse_value()
+        match ctx.lex_after_object_value() {
+          Comma => continue ctx.lex_property_name2()
+          RBrace => {
+            ctx.remaining_available_depth += 1
+            break Value::object_with_order(map, key_order)
+          }
+          _ => abort("unreachable")
+        }
       }
+      _ => abort("unreachable")
     }
-    _ => abort("unreachable")
   }
 }
 
@@ -857,21 +859,23 @@ fn ParseContext::parse_array(ctx : ParseContext) -> Value raise ParseError {
   }
   ctx.remaining_available_depth -= 1
   let vec = []
-  loop ctx.lex_value(allow_rbracket=true) {
-    RBracket => {
-      ctx.remaining_available_depth += 1
-      Value::array(vec)
-    }
-    tok => {
-      vec.push(ctx.parse_value2(tok))
-      let tok2 = ctx.lex_after_array_value()
-      match tok2 {
-        Comma => continue ctx.lex_value(allow_rbracket=false)
-        RBracket => {
-          ctx.remaining_available_depth += 1
-          Value::array(vec)
+  for token = ctx.lex_value(allow_rbracket=true) {
+    match token {
+      RBracket => {
+        ctx.remaining_available_depth += 1
+        break Value::array(vec)
+      }
+      tok => {
+        vec.push(ctx.parse_value2(tok))
+        let tok2 = ctx.lex_after_array_value()
+        match tok2 {
+          Comma => continue ctx.lex_value(allow_rbracket=false)
+          RBracket => {
+            ctx.remaining_available_depth += 1
+            break Value::array(vec)
+          }
+          _ => abort("unreachable")
         }
-        _ => abort("unreachable")
       }
     }
   }

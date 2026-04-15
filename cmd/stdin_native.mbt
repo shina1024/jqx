@@ -1,10 +1,11 @@
 ///|
 fn read_stdin_all_internal() -> String {
   let bytes = []
-  loop getchar() {
-    -1 => break
-    c => {
-      bytes.push(c)
+  for ch = getchar() {
+    if ch == -1 {
+      break
+    } else {
+      bytes.push(ch)
       continue getchar()
     }
   }
