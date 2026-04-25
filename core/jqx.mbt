@@ -1116,9 +1116,9 @@ fn ParseContext::lex_value(
     Some('n') =>
       match ctx.peek_char() {
         Some('u') => {
-          ctx.expect_ascii_char('u')
-          ctx.expect_ascii_char('l')
-          ctx.expect_ascii_char('l')
+          ctx.expect_ascii_char(b'u')
+          ctx.expect_ascii_char(b'l')
+          ctx.expect_ascii_char(b'l')
           return Null
         }
         _ => return ctx.lex_nonfinite_number(start=ctx.offset - 1)
@@ -1134,16 +1134,16 @@ fn ParseContext::lex_value(
         None => raise InvalidEof
       }
     Some('t') => {
-      ctx.expect_ascii_char('r')
-      ctx.expect_ascii_char('u')
-      ctx.expect_ascii_char('e')
+      ctx.expect_ascii_char(b'r')
+      ctx.expect_ascii_char(b'u')
+      ctx.expect_ascii_char(b'e')
       return True
     }
     Some('f') => {
-      ctx.expect_ascii_char('a')
-      ctx.expect_ascii_char('l')
-      ctx.expect_ascii_char('s')
-      ctx.expect_ascii_char('e')
+      ctx.expect_ascii_char(b'a')
+      ctx.expect_ascii_char(b'l')
+      ctx.expect_ascii_char(b's')
+      ctx.expect_ascii_char(b'e')
       return False
     }
     Some('-') =>
