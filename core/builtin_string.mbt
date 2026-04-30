@@ -134,7 +134,7 @@ fn builtin_call_string(
             (String(h), String(n)) =>
               if h.has_prefix(n) {
                 out.push(
-                  Value::string(h.view(start_offset=n.length()).to_string()),
+                  Value::string(h.view(start_offset=n.length()).to_owned()),
                 )
               } else {
                 out.push(Value::string(h))
@@ -158,7 +158,7 @@ fn builtin_call_string(
               } else {
                 let mut trimmed = h
                 if trimmed.has_prefix(n) {
-                  trimmed = trimmed.view(start_offset=n.length()).to_string()
+                  trimmed = trimmed.view(start_offset=n.length()).to_owned()
                 }
                 if trimmed.has_suffix(n) {
                   trimmed = trimmed
@@ -166,7 +166,7 @@ fn builtin_call_string(
                       start_offset=0,
                       end_offset=trimmed.length() - n.length(),
                     )
-                    .to_string()
+                    .to_owned()
                 }
                 out.push(Value::string(trimmed))
               }
@@ -191,7 +191,7 @@ fn builtin_call_string(
                   Value::string(
                     h
                     .view(start_offset=0, end_offset=h.length() - n.length())
-                    .to_string(),
+                    .to_owned(),
                   ),
                 )
               } else {

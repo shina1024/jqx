@@ -6,7 +6,7 @@ fn builtin_ltrim_ascii_ws(s : String) -> String {
         builtin_is_trim_ws(s.unsafe_get(start).to_int().unsafe_to_char()) {
     start += 1
   }
-  s.view(start_offset=start, end_offset=end).to_string()
+  s.view(start_offset=start, end_offset=end).to_owned()
 }
 
 ///|
@@ -17,7 +17,7 @@ fn builtin_rtrim_ascii_ws(s : String) -> String {
         builtin_is_trim_ws(s.unsafe_get(end - 1).to_int().unsafe_to_char()) {
     end -= 1
   }
-  s.view(start_offset=start, end_offset=end).to_string()
+  s.view(start_offset=start, end_offset=end).to_owned()
 }
 
 ///|
@@ -163,7 +163,7 @@ fn format_filter_string_type_with_preview(s : String) -> String {
     "string (" + quoted + ")"
   } else {
     "string (" +
-    quoted.view(start_offset=0, end_offset=quoted.length() - 1).to_string() +
+    quoted.view(start_offset=0, end_offset=quoted.length() - 1).to_owned() +
     ")"
   }
 }
@@ -792,7 +792,7 @@ fn builtin_call0(name : String, input : Value) -> Array[Value] raise EvalError {
                       -n,
                       repr=s
                         .view(start_offset=1, end_offset=s.length())
-                        .to_string(),
+                        .to_owned(),
                     ),
                   ]
                 } else {

@@ -44,7 +44,9 @@ test "regex execute remains matchable for valid index" {
   guard regex.execute("ba"[:], 0) is Some(result) else {
     fail("expected match result")
   }
-  assert_eq(result.group(0), Some((1, 2)))
+  guard result.group(0) is Some((1, 2)) else {
+    fail("expected group 0 to equal Some((1, 2))")
+  }
 }
 
 ///|
@@ -53,5 +55,5 @@ test "match result group returns None for out-of-range index" {
   guard regex.execute("a"[:], 0) is Some(result) else {
     fail("expected match result")
   }
-  assert_eq(result.group(99), None)
+  guard result.group(99) is None else { fail("expected group 99 to be None") }
 }

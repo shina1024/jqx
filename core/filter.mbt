@@ -155,6 +155,18 @@ fn[T1 : Show, T2 : Show, T3 : Show, T4 : Show, T5 : Show] show_named_variant5(
 }
 
 ///|
+fn show_int_option(arg : Int?, logger : &Logger) -> Unit {
+  match arg {
+    Some(value) => {
+      logger.write_string("Some(")
+      Show::output(value, logger)
+      logger.write_char(')')
+    }
+    None => logger.write_string("None")
+  }
+}
+
+///|
 pub impl Show for Filter with output(self, logger) {
   match self {
     Identity => show_named_variant0("Identity", logger)
@@ -165,8 +177,20 @@ pub impl Show for Filter with output(self, logger) {
     FieldOpt(name) => show_named_variant1("FieldOpt", name, logger)
     Index(i) => show_named_variant1("Index", i, logger)
     IndexOpt(i) => show_named_variant1("IndexOpt", i, logger)
-    Slice(start, end) => show_named_variant2("Slice", start, end, logger)
-    SliceOpt(start, end) => show_named_variant2("SliceOpt", start, end, logger)
+    Slice(start, end) => {
+      logger.write_string("Slice(")
+      show_int_option(start, logger)
+      logger.write_string(", ")
+      show_int_option(end, logger)
+      logger.write_char(')')
+    }
+    SliceOpt(start, end) => {
+      logger.write_string("SliceOpt(")
+      show_int_option(start, logger)
+      logger.write_string(", ")
+      show_int_option(end, logger)
+      logger.write_char(')')
+    }
     Iter => show_named_variant0("Iter", logger)
     IterOpt => show_named_variant0("IterOpt", logger)
     Recurse => show_named_variant0("Recurse", logger)

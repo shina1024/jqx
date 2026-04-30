@@ -51,7 +51,7 @@ fn module_path_basename(path : String) -> String {
   } else if idx + 1 >= path.length() {
     ""
   } else {
-    path.view(start_offset=idx + 1).to_string()
+    path.view(start_offset=idx + 1).to_owned()
   }
 }
 
@@ -61,9 +61,9 @@ fn module_path_parent(path : String) -> String {
   if idx < 0 {
     "."
   } else if idx == 0 {
-    path.view(start_offset=0, end_offset=1).to_string()
+    path.view(start_offset=0, end_offset=1).to_owned()
   } else {
-    path.view(start_offset=0, end_offset=idx).to_string()
+    path.view(start_offset=0, end_offset=idx).to_owned()
   }
 }
 

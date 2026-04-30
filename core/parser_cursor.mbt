@@ -204,7 +204,7 @@ fn FilterCursor::try_qslash_fallback_sep(ctx : FilterCursor) -> Bool {
 ///|
 fn FilterCursor::skip_ws(ctx : FilterCursor) -> Unit {
   let rest = ctx.input.view(start_offset=ctx.offset, end_offset=ctx.end_offset)
-  lexmatch rest {
+  lexmatch rest with longest {
     ("[ \t\r\n]+", next) => ctx.offset = ctx.end_offset - next.length()
     _ => ()
   }
@@ -241,7 +241,7 @@ fn FilterCursor::parse_identifier(
       _ => break
     }
   }
-  ctx.input.view(start_offset=start, end_offset=ctx.offset).to_string()
+  ctx.input.view(start_offset=start, end_offset=ctx.offset).to_owned()
 }
 
 ///|
@@ -291,7 +291,7 @@ fn FilterCursor::parse_int(ctx : FilterCursor) -> Int raise FilterError {
     Err(_) =>
       raise InvalidNumber(
         filter_offset_to_position(ctx.input, start),
-        s.to_string(),
+        s.to_owned(),
       )
   }
 }
@@ -601,7 +601,7 @@ fn FilterCursor::parse_number_literal(
   }
   let end = ctx.offset
   let s = ctx.input.view(start_offset=start, end_offset=end)
-  let s_str = s.to_string()
+  let s_str = s.to_owned()
   let starts_with_dot = s_str.length() > 0 &&
     s_str.unsafe_get(0).to_int().unsafe_to_char() == '.'
   let parse_input = if starts_with_dot { "0" + s_str } else { s_str }

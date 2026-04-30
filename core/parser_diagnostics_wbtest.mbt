@@ -95,8 +95,12 @@ test "compile signatures and offsets helpers" {
     ("g", ["x", "y"], Filter::add(Filter::var_("x"), Filter::var_("y"))),
   ]
   assert_eq(compile_scope_signatures(defs), [("f", 0), ("g", 2)])
-  assert_eq(compile_find_token_offset("$x + $y", "$y"), Some(5))
-  assert_eq(compile_find_token_offset("$x + $y", "$z"), None)
+  guard compile_find_token_offset("$x + $y", "$y") is Some(5) else {
+    fail("expected token offset lookup to return Some(5)")
+  }
+  guard compile_find_token_offset("$x + $y", "$z") is None else {
+    fail("expected missing token offset lookup to return None")
+  }
   assert_eq(compile_has_signature([("f", 0), ("g", 1)], "g", 1), true)
   assert_eq(compile_has_signature([("f", 0), ("g", 1)], "g", 0), false)
 }
@@ -104,22 +108,30 @@ test "compile signatures and offsets helpers" {
 ///|
 test "compile unresolved local call detection" {
   let all = [("f", 0), ("g", 0)]
-  assert_eq(
-    compile_first_unresolved_local_call(Filter::builtin("g"), [("f", 0)], all),
-    Some(("g", 0)),
-  )
-  assert_eq(
-    compile_first_unresolved_local_call(Filter::builtin("g"), [("g", 0)], all),
-    None,
-  )
-  assert_eq(
-    compile_first_unresolved_local_call(
+  guard compile_first_unresolved_local_call(
+      Filter::builtin("g"),
+      [("f", 0)],
+      all,
+    )
+    is Some(("g", 0)) else {
+    fail("expected unresolved local call to report g/0")
+  }
+  guard compile_first_unresolved_local_call(
+      Filter::builtin("g"),
+      [("g", 0)],
+      all,
+    )
+    is None else {
+    fail("expected resolved builtin g/0 to return None")
+  }
+  guard compile_first_unresolved_local_call(
       Filter::call("g", [Filter::identity()]),
       [("f", 1)],
       [("f", 1), ("g", 1)],
-    ),
-    Some(("g", 1)),
-  )
+    )
+    is Some(("g", 1)) else {
+    fail("expected unresolved local call to report g/1")
+  }
 }
 
 ///|
@@ -136,9 +148,15 @@ test "compile forward reference detection in scope" {
     ("f", ["x"], Filter::call("g", [Filter::var_("x")])),
     ("g", ["y"], Filter::var_("y")),
   ]
-  assert_eq(compile_first_forward_ref_in_scope(defs_forward), Some(("g", 0)))
-  assert_eq(compile_first_forward_ref_in_scope(defs_ordered), None)
-  assert_eq(compile_first_forward_ref_in_scope(defs_arity), Some(("g", 1)))
+  guard compile_first_forward_ref_in_scope(defs_forward) is Some(("g", 0)) else {
+    fail("expected forward reference detection to report g/0")
+  }
+  guard compile_first_forward_ref_in_scope(defs_ordered) is None else {
+    fail("expected ordered definitions to have no forward reference")
+  }
+  guard compile_first_forward_ref_in_scope(defs_arity) is Some(("g", 1)) else {
+    fail("expected forward reference detection to report g/1")
+  }
 }
 
 ///|

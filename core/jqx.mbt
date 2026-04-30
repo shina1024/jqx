@@ -274,10 +274,10 @@ fn decimal_expand_positive_exponent(raw : String) -> String? {
   if exp_index < 0 {
     return None
   }
-  let mantissa = raw.view(start_offset=0, end_offset=exp_index).to_string()
+  let mantissa = raw.view(start_offset=0, end_offset=exp_index).to_owned()
   let exp_part = raw
     .view(start_offset=exp_index + 1, end_offset=raw.length())
-    .to_string()
+    .to_owned()
   let parsed_exp = try? @string.parse_int64(exp_part)
   let exp_value = match parsed_exp {
     Ok(v) => v.to_int()
@@ -313,10 +313,10 @@ fn decimal_expand_positive_exponent(raw : String) -> String? {
   }
   let int_end = if dot_index >= 0 { dot_index } else { mantissa.length() }
   let frac_start = if dot_index >= 0 { dot_index + 1 } else { int_end }
-  let int_part = mantissa.view(start_offset=pos, end_offset=int_end).to_string()
+  let int_part = mantissa.view(start_offset=pos, end_offset=int_end).to_owned()
   let frac_part = mantissa
     .view(start_offset=frac_start, end_offset=mantissa.length())
-    .to_string()
+    .to_owned()
   let digits = int_part + frac_part
   if digits.length() == 0 {
     return None
@@ -339,7 +339,7 @@ fn decimal_expand_positive_exponent(raw : String) -> String? {
     buf.write_string(sign)
     if integer_len > 0 {
       buf.write_string(
-        digits.view(start_offset=0, end_offset=integer_len).to_string(),
+        digits.view(start_offset=0, end_offset=integer_len).to_owned(),
       )
     } else {
       buf.write_char('0')
@@ -348,7 +348,7 @@ fn decimal_expand_positive_exponent(raw : String) -> String? {
     buf.write_string(
       digits
       .view(start_offset=integer_len, end_offset=digits.length())
-      .to_string(),
+      .to_owned(),
     )
     Some(buf.to_string())
   }
@@ -506,9 +506,12 @@ pub impl Show for Value with output(self, logger) {
     Number(n, repr) => {
       logger.write_string("Number(")
       Show::output(n, logger)
-      if repr is Some(_) {
-        logger.write_string(", repr=")
-        Show::output(repr, logger)
+      match repr {
+        Some(repr) => {
+          logger.write_string(", repr=")
+          Show::output(repr, logger)
+        }
+        None => ()
       }
       logger.write_string(")")
     }
@@ -543,7 +546,7 @@ fn format_finite_number_without_repr(n : Double) -> String {
   }
   let negative = raw.has_prefix("-")
   let digits = if negative {
-    raw.view(start_offset=1, end_offset=raw.length()).to_string()
+    raw.view(start_offset=1, end_offset=raw.length()).to_owned()
   } else {
     raw
   }
@@ -980,7 +983,7 @@ fn ParseContext::lex_nonfinite_number(
   }
   let token = ctx.input
     .view(start_offset=start, end_offset=ctx.offset)
-    .to_string()
+    .to_owned()
   match parse_ascii_downcase_string(token) {
     "inf" | "+inf" | "infinity" | "+infinity" => Number(@double.infinity, None)
     "-inf" | "-infinity" => Number(@double.neg_infinity, None)
@@ -1021,7 +1024,7 @@ fn ParseContext::expect_ascii_char(
 ///|
 fn ParseContext::lex_skip_whitespace(ctx : ParseContext) -> Unit {
   let rest = ctx.input.view(start_offset=ctx.offset, end_offset=ctx.end_offset)
-  lexmatch rest {
+  lexmatch rest with longest {
     ("[ \t\r\n]+", next) => ctx.offset = ctx.end_offset - next.length()
     _ => ()
   }
@@ -1150,12 +1153,12 @@ fn ParseContext::lex_value(
       match ctx.read_char() {
         Some('0') => {
           let (n, repr) = ctx.lex_zero(start=ctx.offset - 2)
-          return Number(n, repr.map(s => s.to_string()))
+          return Number(n, repr.map(s => s.to_owned()))
         }
         Some(c2) => {
           if c2 is ('1'..='9') {
             let (n, repr) = ctx.lex_decimal_integer(start=ctx.offset - 2)
-            return Number(n, repr.map(s => s.to_string()))
+            return Number(n, repr.map(s => s.to_owned()))
           } else if c2 is ('i' | 'I' | 'n' | 'N') {
             return ctx.lex_nonfinite_number(start=ctx.offset - 2)
           }
@@ -1165,11 +1168,11 @@ fn ParseContext::lex_value(
       }
     Some('0') => {
       let (n, repr) = ctx.lex_zero(start=ctx.offset - 1)
-      return Number(n, repr.map(s => s.to_string()))
+      return Number(n, repr.map(s => s.to_owned()))
     }
     Some('1'..='9') => {
       let (n, repr) = ctx.lex_decimal_integer(start=ctx.offset - 1)
-      return Number(n, repr.map(s => s.to_string()))
+      return Number(n, repr.map(s => s.to_owned()))
     }
     Some('"') => {
       let s = ctx.lex_string()
@@ -1578,7 +1581,7 @@ fn number_literal_should_preserve_repr(token : StringView) -> Bool {
 fn number_literal_normalized_large_exponent_repr(token : StringView) -> String {
   let exp_index = match number_literal_exponent_index(token) {
     Some(i) => i
-    None => return token.to_string()
+    None => return token.to_owned()
   }
   let mut exp_pos = exp_index + 1
   let mut exp_sign = 1
@@ -1595,7 +1598,7 @@ fn number_literal_normalized_large_exponent_repr(token : StringView) -> String {
   for i in exp_pos..<token.length() {
     let ch = token.unsafe_get(i).to_int().unsafe_to_char()
     if !is_ascii_digit(ch) {
-      return token.to_string()
+      return token.to_owned()
     }
     exp_value = exp_value * 10 + (ch.to_int() - '0'.to_int())
   }
@@ -1619,7 +1622,7 @@ fn number_literal_normalized_large_exponent_repr(token : StringView) -> String {
     let ch = token.unsafe_get(i).to_int().unsafe_to_char()
     if ch == '.' {
       if saw_dot {
-        return token.to_string()
+        return token.to_owned()
       }
       saw_dot = true
     } else if is_ascii_digit(ch) {
@@ -1628,12 +1631,12 @@ fn number_literal_normalized_large_exponent_repr(token : StringView) -> String {
         frac_digits += 1
       }
     } else {
-      return token.to_string()
+      return token.to_owned()
     }
   }
   let digits_raw = digits_raw_buf.to_string()
   if digits_raw.length() == 0 {
-    return token.to_string()
+    return token.to_owned()
   }
   let mut lead = 0
   while lead < digits_raw.length() &&
@@ -1645,22 +1648,22 @@ fn number_literal_normalized_large_exponent_repr(token : StringView) -> String {
   }
   let trimmed = digits_raw
     .view(start_offset=lead, end_offset=digits_raw.length())
-    .to_string()
+    .to_owned()
   let mut end = trimmed.length()
   let mut exp_base = exp_value - frac_digits
   while end > 1 && trimmed.unsafe_get(end - 1).to_int().unsafe_to_char() == '0' {
     end -= 1
     exp_base += 1
   }
-  let digits = trimmed.view(start_offset=0, end_offset=end).to_string()
+  let digits = trimmed.view(start_offset=0, end_offset=end).to_owned()
   let exp_final = exp_base + digits.length() - 1
   let sign = if negative { "-" } else { "" }
   let mantissa = if digits.length() == 1 {
     digits
   } else {
-    digits.view(start_offset=0, end_offset=1).to_string() +
+    digits.view(start_offset=0, end_offset=1).to_owned() +
     "." +
-    digits.view(start_offset=1, end_offset=digits.length()).to_string()
+    digits.view(start_offset=1, end_offset=digits.length()).to_owned()
   }
   let exp_mark = if exp_final >= 0 { "+" } else { "-" }
   let exp_abs = if exp_final >= 0 { exp_final } else { -exp_final }

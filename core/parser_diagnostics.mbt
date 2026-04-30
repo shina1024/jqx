@@ -12,7 +12,7 @@ fn is_compile_special_variable(name : String) -> Bool {
 ///|
 fn normalize_compile_param_name(param : String) -> String {
   if param.has_prefix("$") {
-    param.view(start_offset=1).to_string()
+    param.view(start_offset=1).to_owned()
   } else {
     param
   }
@@ -166,7 +166,7 @@ fn compile_first_diagnostic(
 
 ///|
 fn compile_find_token_offset(input : StringView, token : String) -> Int? {
-  input.to_string().find(token)
+  input.to_owned().find(token)
 }
 
 ///|

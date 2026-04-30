@@ -172,7 +172,7 @@ fn parse_json_piece(
   start_offset : Int,
   end_ : Int,
 ) -> @lib.Value raise @lib.ParseError {
-  @lib.parse(text.view(start_offset~, end_offset=end_).to_string())
+  @lib.parse(text.view(start_offset~, end_offset=end_).to_owned())
 }
 
 ///|
@@ -180,7 +180,7 @@ fn raise_parse_error_end_from_offset(
   text : String,
   start : Int,
 ) -> Int raise @lib.ParseError {
-  let piece = text.view(start_offset=start).to_string()
+  let piece = text.view(start_offset=start).to_owned()
   try {
     ignore(@lib.parse(piece))
     return start
@@ -198,13 +198,13 @@ fn parse_raw_lines(text : String) -> Array[@lib.Value] {
   let mut start = 0
   for i in 0..<text.length() {
     if text.unsafe_get(i) == '\n' {
-      let line = text.view(start_offset=start, end_offset=i).to_string()
+      let line = text.view(start_offset=start, end_offset=i).to_owned()
       values.push(@lib.Value::string(trim_single_trailing_cr(line)))
       start = i + 1
     }
   }
   if start < text.length() {
-    let line = text.view(start_offset=start).to_string()
+    let line = text.view(start_offset=start).to_owned()
     values.push(@lib.Value::string(trim_single_trailing_cr(line)))
   }
   values
@@ -213,7 +213,7 @@ fn parse_raw_lines(text : String) -> Array[@lib.Value] {
 ///|
 fn trim_single_trailing_cr(s : String) -> String {
   if s.length() > 0 && s.unsafe_get(s.length() - 1) == '\r' {
-    s.view(end_offset=s.length() - 1).to_string()
+    s.view(end_offset=s.length() - 1).to_owned()
   } else {
     s
   }

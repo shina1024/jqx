@@ -2,6 +2,15 @@
 // Source under test: cmd/args.mbt
 
 ///|
+fn cfg_input_matches(cfg : CliArgs, expected : String?) -> Bool {
+  match (cfg.input, expected) {
+    (None, None) => true
+    (Some(actual), Some(expected)) => actual == expected
+    _ => false
+  }
+}
+
+///|
 test "parse args -n" {
   let args = ["jqx", "-n", "."]
   let parsed = parse_cli_args(args)
@@ -12,7 +21,7 @@ test "parse args -n" {
   assert_eq(cfg.slurp, false)
   assert_eq(cfg.module_search_paths, [])
   assert_eq(cfg.filter, ".")
-  assert_eq(cfg.input, None)
+  assert_eq(cfg_input_matches(cfg, None), true)
 }
 
 ///|
@@ -26,7 +35,7 @@ test "parse args input" {
   assert_eq(cfg.slurp, false)
   assert_eq(cfg.module_search_paths, [])
   assert_eq(cfg.filter, ".foo")
-  assert_eq(cfg.input, Some("{\"foo\":1}"))
+  assert_eq(cfg_input_matches(cfg, Some("{\"foo\":1}")), true)
 }
 
 ///|
@@ -39,7 +48,7 @@ test "parse args -e" {
   assert_eq(cfg.no_input, false)
   assert_eq(cfg.slurp, false)
   assert_eq(cfg.filter, ".foo")
-  assert_eq(cfg.input, Some("{\"foo\":1}"))
+  assert_eq(cfg_input_matches(cfg, Some("{\"foo\":1}")), true)
 }
 
 ///|
@@ -52,7 +61,7 @@ test "parse args -e with -n" {
   assert_eq(cfg.no_input, true)
   assert_eq(cfg.slurp, false)
   assert_eq(cfg.filter, ".")
-  assert_eq(cfg.input, None)
+  assert_eq(cfg_input_matches(cfg, None), true)
 }
 
 ///|
@@ -64,7 +73,7 @@ test "parse args -s" {
   assert_eq(cfg.raw_input, false)
   assert_eq(cfg.no_input, false)
   assert_eq(cfg.filter, ".")
-  assert_eq(cfg.input, Some("1"))
+  assert_eq(cfg_input_matches(cfg, Some("1")), true)
 }
 
 ///|
@@ -76,7 +85,7 @@ test "parse args -s with -n" {
   assert_eq(cfg.raw_input, false)
   assert_eq(cfg.no_input, true)
   assert_eq(cfg.filter, ".")
-  assert_eq(cfg.input, None)
+  assert_eq(cfg_input_matches(cfg, None), true)
 }
 
 ///|
@@ -89,7 +98,7 @@ test "parse args -R" {
   assert_eq(cfg.slurp, false)
   assert_eq(cfg.no_input, false)
   assert_eq(cfg.filter, ".")
-  assert_eq(cfg.input, None)
+  assert_eq(cfg_input_matches(cfg, None), true)
 }
 
 ///|
@@ -110,7 +119,7 @@ test "parse args -R with -n" {
   guard parsed is Ok(cfg) else { fail("expected Ok") }
   assert_eq(cfg.raw_input, true)
   assert_eq(cfg.no_input, true)
-  assert_eq(cfg.input, None)
+  assert_eq(cfg_input_matches(cfg, None), true)
 }
 
 ///|
@@ -164,7 +173,7 @@ test "parse args respects -- option terminator" {
   let parsed = parse_cli_args(["jqx", "--", ".foo", "1"])
   guard parsed is Ok(cfg) else { fail("expected Ok") }
   assert_eq(cfg.filter, ".foo")
-  assert_eq(cfg.input, Some("1"))
+  assert_eq(cfg_input_matches(cfg, Some("1")), true)
 }
 
 ///|
@@ -173,7 +182,7 @@ test "parse args -r and -c are accepted" {
   guard parsed is Ok(cfg) else { fail("expected Ok") }
   assert_eq(cfg.raw, true)
   assert_eq(cfg.filter, ".")
-  assert_eq(cfg.input, Some("\"x\""))
+  assert_eq(cfg_input_matches(cfg, Some("\"x\"")), true)
 }
 
 ///|

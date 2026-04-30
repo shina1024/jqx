@@ -171,7 +171,7 @@ fn trim_ascii_ws(s : String) -> String {
         is_ascii_ws(s.unsafe_get(end - 1).to_int().unsafe_to_char()) {
     end -= 1
   }
-  s.view(start_offset=start, end_offset=end).to_string()
+  s.view(start_offset=start, end_offset=end).to_owned()
 }
 
 ///|
@@ -1130,14 +1130,14 @@ fn split_string(s : String, sep : String) -> Array[Value] {
       Some(i) => {
         out.push(
           Value::string(
-            s.view(start_offset=start, end_offset=start + i).to_string(),
+            s.view(start_offset=start, end_offset=start + i).to_owned(),
           ),
         )
         start = start + i + sep_len
         continue
       }
       None => {
-        out.push(Value::string(s.view(start_offset=start).to_string()))
+        out.push(Value::string(s.view(start_offset=start).to_owned()))
         return out
       }
     }
@@ -1343,7 +1343,7 @@ fn execute_slice_string(s : String, start : Int?, end : Int?) -> String {
   if hi <= lo {
     ""
   } else {
-    s.view(start_offset=lo, end_offset=hi).to_string()
+    s.view(start_offset=lo, end_offset=hi).to_owned()
   }
 }
 

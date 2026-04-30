@@ -348,6 +348,17 @@ test "split error lines keeps trailing empty line" {
 }
 
 ///|
+
+///|
+fn exit_code_matches(actual : Int?, expected : Int?) -> Bool {
+  match (actual, expected) {
+    (None, None) => true
+    (Some(actual), Some(expected)) => actual == expected
+    _ => false
+  }
+}
+
+///|
 test "format error message rewrites line and column" {
   assert_eq(
     format_error_message("Invalid number abc at line 3, column 14"),
@@ -363,7 +374,7 @@ test "format error message rewrites line and column" {
 test "run cli prints usage when filter is missing" {
   let result = run_cli(["jqx"], "")
   assert_eq(result.lines, usage_lines())
-  assert_eq(result.exit_code, None)
+  assert_eq(exit_code_matches(result.exit_code, None), true)
 }
 
 ///|
@@ -385,14 +396,14 @@ test "run cli reports arg parse errors with short usage" {
     "jqx: error: missing argument for -L",
     usage_summary_line(),
   ])
-  assert_eq(result.exit_code, None)
+  assert_eq(exit_code_matches(result.exit_code, None), true)
 }
 
 ///|
 test "run cli executes stdin input" {
   let result = run_cli(["jqx", ".foo"], "{\"foo\":1}")
   assert_eq(result.lines, ["1"])
-  assert_eq(result.exit_code, None)
+  assert_eq(exit_code_matches(result.exit_code, None), true)
 }
 
 ///|
@@ -400,20 +411,20 @@ test "run cli direct input raw string parity case" {
   assert_eq(format_output(true, @lib.Value::string("bar")), "bar")
   let result = run_cli(["jqx", "-r", ".foo", "{\"foo\":\"bar\"}"], "")
   assert_eq(result.lines, ["bar"])
-  assert_eq(result.exit_code, None)
+  assert_eq(exit_code_matches(result.exit_code, None), true)
 }
 
 ///|
 test "run cli computes -e exit status" {
   let result = run_cli(["jqx", "-e", ".", "null"], "")
   assert_eq(result.lines, ["null"])
-  assert_eq(result.exit_code, Some(1))
+  assert_eq(exit_code_matches(result.exit_code, Some(1)), true)
 }
 
 ///|
 test "run cli formats compile errors" {
   let result = run_cli(["jqx", ".['x']", "null"], "")
-  assert_eq(result.exit_code, Some(5))
+  assert_eq(exit_code_matches(result.exit_code, Some(5)), true)
   guard result.lines.length() == 1 &&
     result.lines[0].contains("jqx: error (at <stdin>:1:3):") &&
     result.lines[0].contains("Invalid character") else {
@@ -424,7 +435,7 @@ test "run cli formats compile errors" {
 ///|
 test "run cli runtime error parity corpus case" {
   let result = run_cli(["jqx", ".[] | tonumber", "[1,\"x\"]"], "")
-  assert_eq(result.exit_code, Some(5))
+  assert_eq(exit_code_matches(result.exit_code, Some(5)), true)
   guard result.lines.length() == 2 &&
     result.lines[0].contains("cannot be parsed as a number") &&
     result.lines[1] == "1" else {

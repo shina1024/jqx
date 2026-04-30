@@ -72,7 +72,7 @@ fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
       continue
     }
     if a.length() > 2 && a.has_prefix("-L") {
-      module_search_paths.push(a.view(start_offset=2).to_string())
+      module_search_paths.push(a.view(start_offset=2).to_owned())
       idx += 1
       continue
     }

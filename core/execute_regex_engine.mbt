@@ -318,7 +318,7 @@ fn regex_compile_pattern(
 
 ///|
 fn regex_slice_string(s : String, start : Int, end_ : Int) -> String {
-  s.view(start_offset=start, end_offset=end_).to_string()
+  s.view(start_offset=start, end_offset=end_).to_owned()
 }
 
 ///|

@@ -1005,7 +1005,7 @@ fn def_param_is_value(param : String) -> Bool {
 ///|
 fn def_param_name(param : String) -> String {
   if def_param_is_value(param) {
-    param.view(start_offset=1).to_string()
+    param.view(start_offset=1).to_owned()
   } else {
     param
   }
