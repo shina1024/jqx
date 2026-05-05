@@ -1,1 +1,66 @@
-[]
+[
+  {
+    "name": "upstream-jq-test-l1188",
+    "category": "temporary-exception",
+    "compat_status": "temporary_exception",
+    "compat_ledger_id": "jq-1.8.1-abort-del-nan-index",
+    "compat_reason": "jq 1.8.1 aborts while deleting an array path selected by a NaN index; jqx intentionally does not reproduce process aborts",
+    "compat_removal_condition": "jq upstream stops aborting for del(.[nan]) or jqx adopts a documented jq-crash compatibility mode",
+    "jq_status": "1",
+    "jqx_status": "0",
+    "jq_out": "jq: src/jv.c:999: jv_array_length: Assertion `JVP_HAS_KIND(j, JV_KIND_ARRAY)' failed.",
+    "jqx_out": "[2,3]",
+    "jq_stdout": "",
+    "jq_stderr": "jq: src/jv.c:999: jv_array_length: Assertion `JVP_HAS_KIND(j, JV_KIND_ARRAY)' failed.",
+    "jqx_stdout": "[2,3]",
+    "jqx_stderr": ""
+  },
+  {
+    "name": "upstream-jq-test-l1192",
+    "category": "temporary-exception",
+    "compat_status": "temporary_exception",
+    "compat_ledger_id": "jq-1.8.1-abort-del-nan-index",
+    "compat_reason": "jq 1.8.1 aborts while deleting an array path selected by NaN indices; jqx intentionally does not reproduce process aborts",
+    "compat_removal_condition": "jq upstream stops aborting for del(.[nan,nan]) or jqx adopts a documented jq-crash compatibility mode",
+    "jq_status": "1",
+    "jqx_status": "0",
+    "jq_out": "jq: src/jv.c:999: jv_array_length: Assertion `JVP_HAS_KIND(j, JV_KIND_ARRAY)' failed.",
+    "jqx_out": "[2,3]",
+    "jq_stdout": "",
+    "jq_stderr": "jq: src/jv.c:999: jv_array_length: Assertion `JVP_HAS_KIND(j, JV_KIND_ARRAY)' failed.",
+    "jqx_stdout": "[2,3]",
+    "jqx_stderr": ""
+  },
+  {
+    "name": "upstream-jq-test-l1553",
+    "category": "temporary-exception",
+    "compat_status": "temporary_exception",
+    "compat_ledger_id": "jq-1.8.1-abort-strindices-input",
+    "compat_reason": "jq 1.8.1 aborts when _strindices receives a non-string input; jqx returns a normal type error instead of reproducing process aborts",
+    "compat_removal_condition": "jq upstream stops aborting for _strindices with non-string input or jqx adopts a documented jq-crash compatibility mode",
+    "jq_status": "1",
+    "jqx_status": "0",
+    "jq_out": "jq: src/jv.c:1312: jv_string_indexes: Assertion `JVP_HAS_KIND(j, JV_KIND_STRING)' failed.",
+    "jqx_out": "\"number (123) cannot be searched, as it is not a string\"",
+    "jq_stdout": "",
+    "jq_stderr": "jq: src/jv.c:1312: jv_string_indexes: Assertion `JVP_HAS_KIND(j, JV_KIND_STRING)' failed.",
+    "jqx_stdout": "\"number (123) cannot be searched, as it is not a string\"",
+    "jqx_stderr": ""
+  },
+  {
+    "name": "upstream-jq-test-l1557",
+    "category": "temporary-exception",
+    "compat_status": "temporary_exception",
+    "compat_ledger_id": "jq-1.8.1-abort-strindices-pattern",
+    "compat_reason": "jq 1.8.1 aborts when _strindices receives a non-string pattern; jqx returns a normal type error instead of reproducing process aborts",
+    "compat_removal_condition": "jq upstream stops aborting for _strindices with non-string pattern or jqx adopts a documented jq-crash compatibility mode",
+    "jq_status": "1",
+    "jqx_status": "0",
+    "jq_out": "jq: src/jv.c:1313: jv_string_indexes: Assertion `JVP_HAS_KIND(k, JV_KIND_STRING)' failed.",
+    "jqx_out": "\"number (123) is not a string\"",
+    "jq_stdout": "",
+    "jq_stderr": "jq: src/jv.c:1313: jv_string_indexes: Assertion `JVP_HAS_KIND(k, JV_KIND_STRING)' failed.",
+    "jqx_stdout": "\"number (123) is not a string\"",
+    "jqx_stderr": ""
+  }
+]

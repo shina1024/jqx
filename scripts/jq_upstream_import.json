@@ -11,5 +11,31 @@
   ],
   "include_compile_fail": true,
   "compile_fail_expect_error_mode": "strict",
-  "default_case_fields": {}
+  "default_case_fields": {},
+  "case_overrides": {
+    "upstream-jq-test-l1188": {
+      "compat_status": "temporary_exception",
+      "compat_ledger_id": "jq-1.8.1-abort-del-nan-index",
+      "compat_reason": "jq 1.8.1 aborts while deleting an array path selected by a NaN index; jqx intentionally does not reproduce process aborts",
+      "compat_removal_condition": "jq upstream stops aborting for del(.[nan]) or jqx adopts a documented jq-crash compatibility mode"
+    },
+    "upstream-jq-test-l1192": {
+      "compat_status": "temporary_exception",
+      "compat_ledger_id": "jq-1.8.1-abort-del-nan-index",
+      "compat_reason": "jq 1.8.1 aborts while deleting an array path selected by NaN indices; jqx intentionally does not reproduce process aborts",
+      "compat_removal_condition": "jq upstream stops aborting for del(.[nan,nan]) or jqx adopts a documented jq-crash compatibility mode"
+    },
+    "upstream-jq-test-l1553": {
+      "compat_status": "temporary_exception",
+      "compat_ledger_id": "jq-1.8.1-abort-strindices-input",
+      "compat_reason": "jq 1.8.1 aborts when _strindices receives a non-string input; jqx returns a normal type error instead of reproducing process aborts",
+      "compat_removal_condition": "jq upstream stops aborting for _strindices with non-string input or jqx adopts a documented jq-crash compatibility mode"
+    },
+    "upstream-jq-test-l1557": {
+      "compat_status": "temporary_exception",
+      "compat_ledger_id": "jq-1.8.1-abort-strindices-pattern",
+      "compat_reason": "jq 1.8.1 aborts when _strindices receives a non-string pattern; jqx returns a normal type error instead of reproducing process aborts",
+      "compat_removal_condition": "jq upstream stops aborting for _strindices with non-string pattern or jqx adopts a documented jq-crash compatibility mode"
+    }
+  }
 }

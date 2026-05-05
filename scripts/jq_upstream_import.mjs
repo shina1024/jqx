@@ -151,6 +151,26 @@ function applyObjectProperties(target, patch) {
   }
 }
 
+function readCaseOverrides(config) {
+  if (config.case_overrides == null) {
+    return new Map();
+  }
+  if (
+    typeof config.case_overrides !== "object" ||
+    Array.isArray(config.case_overrides)
+  ) {
+    throw new Error("case_overrides must be an object keyed by generated case name");
+  }
+  return new Map(
+    Object.entries(config.case_overrides).map(([name, patch]) => {
+      if (!patch || typeof patch !== "object" || Array.isArray(patch)) {
+        throw new Error(`case_overrides.${name} must be an object`);
+      }
+      return [name, patch];
+    }),
+  );
+}
+
 function main() {
   const { configPath, outputPath } = parseArgs(process.argv.slice(2));
   const resolvedConfigPath = resolveRepoPath(configPath);
@@ -164,6 +184,8 @@ function main() {
   if (enabledFiles.length === 0) {
     throw new Error(`enabled_test_files is empty in config: ${resolvedConfigPath}`);
   }
+  const caseOverrides = readCaseOverrides(config);
+  const appliedOverrides = new Set();
 
   const includeCompileFail = Boolean(config.include_compile_fail);
   const compileFailExpectErrorMode =
@@ -225,8 +247,20 @@ function main() {
     }
 
     applyObjectProperties(testCase, config.default_case_fields);
+    const caseOverride = caseOverrides.get(testCase.name);
+    if (caseOverride != null) {
+      applyObjectProperties(testCase, caseOverride);
+      appliedOverrides.add(testCase.name);
+    }
     outputCases.push(testCase);
     statsEmitted += 1;
+  }
+
+  const unusedOverrides = [...caseOverrides.keys()].filter(
+    (name) => !appliedOverrides.has(name),
+  );
+  if (unusedOverrides.length > 0) {
+    throw new Error(`unused case_overrides: ${unusedOverrides.join(", ")}`);
   }
 
   writeJsonFile(resolvedOutputPath, outputCases);
