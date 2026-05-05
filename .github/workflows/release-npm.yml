@@ -225,15 +225,24 @@ jobs:
               continue
             fi
 
+            pack_dir="$(mktemp -d)"
+            tarball_output="$(pnpm pack --pack-destination "${pack_dir}" | tail -n 1)"
+            if [[ "${tarball_output}" = /* ]]; then
+              tarball_path="${tarball_output}"
+            else
+              tarball_path="${pack_dir}/${tarball_output}"
+            fi
+
             if [ "${DRY_RUN}" = "true" ]; then
               echo "dry-run publish ${package_ref}"
-              pnpm publish --access public --dry-run --no-git-checks
+              npm publish "${tarball_path}" --access public --dry-run
             else
               echo "publish ${package_ref}"
-              pnpm publish --access public --provenance --no-git-checks
+              npm publish "${tarball_path}" --access public --provenance
               npm access set status=public "${package_name}"
               npm access get status "${package_name}"
             fi
 
+            rm -rf "${pack_dir}"
             popd >/dev/null
           done

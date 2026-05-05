@@ -113,13 +113,7 @@ jobs:
 
           if curl -fsSL "${module_url}" -o release-audit/mooncakes-module.json; then
             published="$(
-              node <<'NODE'
-              const fs = require("fs");
-              const version = process.env.RELEASE_VERSION;
-              const data = JSON.parse(fs.readFileSync("release-audit/mooncakes-module.json", "utf8"));
-              const versions = Array.isArray(data.versions) ? data.versions : [];
-              console.log(versions.some((entry) => entry.version === version) ? "true" : "false");
-              NODE
+              node -e 'const fs = require("fs"); const version = process.env.RELEASE_VERSION; const data = JSON.parse(fs.readFileSync("release-audit/mooncakes-module.json", "utf8")); const versions = Array.isArray(data.versions) ? data.versions : []; console.log(versions.some((entry) => entry.version === version) ? "true" : "false");'
             )"
           else
             published="false"
