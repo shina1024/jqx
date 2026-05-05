@@ -1,0 +1,248 @@
+name: Post-release Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to smoke test (for example: v0.1.1)"
+        required: true
+        type: string
+  workflow_run:
+    workflows:
+      - Release CLI
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Prepare
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.vars.outputs.tag }}
+      version: ${{ steps.vars.outputs.version }}
+    steps:
+      - name: Resolve release metadata
+        id: vars
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="${{ github.event.workflow_run.head_branch }}"
+          fi
+
+          if [[ "${tag}" != v* ]]; then
+            echo "::error::Tag must start with v. got=${tag}"
+            exit 1
+          fi
+
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+  cli:
+    name: CLI smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset_suffix: linux.tar.gz
+            executable: jqx
+          - os: macos-latest
+            asset_suffix: macos.tar.gz
+            executable: jqx
+          - os: windows-latest
+            asset_suffix: windows.zip
+            executable: jqx.exe
+
+    steps:
+      - name: Download and smoke CLI (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          ASSET_SUFFIX: ${{ matrix.asset_suffix }}
+          EXECUTABLE: ${{ matrix.executable }}
+        run: |
+          set -euo pipefail
+          asset="jqx-${RELEASE_TAG}-${ASSET_SUFFIX}"
+          deadline=$((SECONDS + 900))
+          until gh release download "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" --pattern "${asset}" --dir release-assets; do
+            if [ "${SECONDS}" -ge "${deadline}" ]; then
+              echo "::error::Timed out waiting for GitHub Release asset: ${asset}"
+              exit 1
+            fi
+            rm -rf release-assets
+            sleep 30
+          done
+          mkdir -p smoke-bin
+          tar -C smoke-bin -xzf "release-assets/${asset}"
+          chmod +x "smoke-bin/${EXECUTABLE}"
+          out="$(./smoke-bin/${EXECUTABLE} ".foo + 1" '{"foo":41}')"
+          if [ "${out}" != "42" ]; then
+            echo "unexpected CLI output: ${out}" >&2
+            exit 1
+          fi
+
+      - name: Download and smoke CLI (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          ASSET_SUFFIX: ${{ matrix.asset_suffix }}
+          EXECUTABLE: ${{ matrix.executable }}
+        run: |
+          $asset = "jqx-$env:RELEASE_TAG-$env:ASSET_SUFFIX"
+          $deadline = (Get-Date).AddMinutes(15)
+          do {
+            gh release download $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --pattern $asset --dir release-assets
+            if ($LASTEXITCODE -eq 0) {
+              break
+            }
+            if ((Get-Date) -ge $deadline) {
+              throw "Timed out waiting for GitHub Release asset: $asset"
+            }
+            Remove-Item -Recurse -Force release-assets -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 30
+          } while ($true)
+          New-Item -ItemType Directory -Force -Path smoke-bin | Out-Null
+          Expand-Archive -Path "release-assets/$asset" -DestinationPath smoke-bin -Force
+          $out = & "smoke-bin/$env:EXECUTABLE" ".foo + 1" '{"foo":41}'
+          if ($out.Trim() -ne "42") {
+            throw "unexpected CLI output: $out"
+          }
+
+  npm:
+    name: npm smoke
+    runs-on: ubuntu-latest
+    needs: prepare
+
+    steps:
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          check-latest: true
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Setup pnpm (latest)
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      - name: Install and smoke npm packages
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir smoke-npm
+          cd smoke-npm
+          npm init -y
+          packages=(
+            "@shina1024/jqx@${RELEASE_VERSION}"
+            "@shina1024/jqx-zod-adapter@${RELEASE_VERSION}"
+            "@shina1024/jqx-yup-adapter@${RELEASE_VERSION}"
+            "@shina1024/jqx-valibot-adapter@${RELEASE_VERSION}"
+          )
+          deadline=$((SECONDS + 900))
+          for package_ref in "${packages[@]}"; do
+            until npm view "${package_ref}" version >/dev/null 2>&1; do
+              if [ "${SECONDS}" -ge "${deadline}" ]; then
+                echo "::error::Timed out waiting for npm package: ${package_ref}"
+                exit 1
+              fi
+              sleep 30
+            done
+          done
+          pnpm add \
+            "${packages[@]}" \
+            zod yup valibot
+
+          node --input-type=module <<'NODE'
+          import { run, runJsonText, runtime } from "@shina1024/jqx";
+          import { createAdapter as createZodAdapter } from "@shina1024/jqx-zod-adapter";
+          import { z } from "zod";
+
+          const valueResult = run(".foo + 1", { foo: 41 });
+          if (!valueResult.ok || valueResult.value[0] !== 42) {
+            throw new Error(`unexpected run result: ${JSON.stringify(valueResult)}`);
+          }
+
+          const textResult = runJsonText(".", "9007199254740993");
+          if (!textResult.ok || textResult.value[0] !== "9007199254740993") {
+            throw new Error(`unexpected runJsonText result: ${JSON.stringify(textResult)}`);
+          }
+
+          const adapter = createZodAdapter(runtime);
+          const adapterResult = await adapter.filter({
+            filter: ".users[].name",
+            input: { users: [{ name: "alice" }] },
+            inputSchema: z.object({ users: z.array(z.object({ name: z.string() })) }),
+            outputSchema: z.string(),
+          });
+          if (!adapterResult.ok || adapterResult.value[0] !== "alice") {
+            throw new Error(`unexpected adapter result: ${JSON.stringify(adapterResult)}`);
+          }
+          NODE
+
+  mooncakes:
+    name: Mooncakes smoke
+    runs-on: ubuntu-latest
+    needs: prepare
+
+    steps:
+      - name: Setup smoke module
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+          mkdir smoke-moonbit
+          cd smoke-moonbit
+          moon new smoke_jqx
+          cd smoke_jqx
+          deadline=$((SECONDS + 900))
+          until moon add "shina1024/jqx@${RELEASE_VERSION}"; do
+            if [ "${SECONDS}" -ge "${deadline}" ]; then
+              echo "::error::Timed out waiting for Mooncakes package: shina1024/jqx@${RELEASE_VERSION}"
+              exit 1
+            fi
+            sleep 30
+          done
+          cat > cmd/main/moon.pkg <<'MOONPKG'
+          import {
+            "moonbitlang/core/json",
+            "shina1024/jqx" @jqx,
+          }
+
+          options("is-main": true)
+          MOONPKG
+          cat > cmd/main/main.mbt <<'MBT'
+          ///|
+          fn main {
+            let input : Json = { "foo": 41.0 }
+            let outputs = try! @jqx.run(".foo + 1", input)
+            guard outputs.length() == 1 && outputs[0].stringify() == "42" else {
+              abort("unexpected jqx value-lane output")
+            }
+
+            let text_outputs = try! @jqx.run_json_text(".", "9007199254740993")
+            guard text_outputs.length() == 1 && text_outputs[0] == "9007199254740993" else {
+              abort("unexpected jqx text-lane output")
+            }
+          }
+          MBT
+          moon run cmd/main

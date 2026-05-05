@@ -1,0 +1,346 @@
+name: Release Preflight
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version to validate before tagging (for example: 0.1.2)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.vars.outputs.version }}
+      tag: ${{ steps.vars.outputs.tag }}
+    steps:
+      - name: Checkout candidate ref
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release metadata
+        id: vars
+        shell: bash
+        run: |
+          set -euo pipefail
+          raw="${{ inputs.version }}"
+          version="${raw#v}"
+          tag="v${version}"
+
+          if [ -z "${version}" ] || [ "${version}" != "${raw}" ]; then
+            echo "::error::Version input must not include the leading v. got=${raw}"
+            exit 1
+          fi
+
+          if ! [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Version must be semver-like. got=${version}"
+            exit 1
+          fi
+
+          if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            echo "::error::Local tag already exists: ${tag}"
+            exit 1
+          fi
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
+            echo "::error::Remote tag already exists: ${tag}"
+            exit 1
+          fi
+
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify version metadata
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.version }}
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const { execFileSync } = require("child_process");
+          const expected = process.env.RELEASE_VERSION;
+
+          const mod = JSON.parse(fs.readFileSync("moon.mod.json", "utf8"));
+          if (mod.version !== expected) {
+            console.error(`[version-mismatch] ${mod.name}: moon.mod.json=${mod.version}, expected=${expected}`);
+            process.exit(1);
+          }
+
+          const dirs = execFileSync("node", ["./scripts/ts_packages.mjs", "list"], {
+            encoding: "utf8",
+          }).trim().split(/\r?\n/).filter(Boolean);
+
+          for (const dir of dirs) {
+            const pkg = JSON.parse(fs.readFileSync(`${dir}/package.json`, "utf8"));
+            if (pkg.version !== expected) {
+              console.error(`[version-mismatch] ${pkg.name}: package.json=${pkg.version}, expected=${expected}`);
+              process.exit(1);
+            }
+          }
+
+          console.log(`MoonBit and npm package versions match ${expected}`);
+          NODE
+
+  cli:
+    name: CLI dry-run (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+
+    steps:
+      - name: Checkout candidate ref
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install MoonBit (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Install MoonBit (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+          irm https://cli.moonbitlang.com/install/powershell.ps1 | iex
+          echo "$HOME\\.moon\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: MoonBit Version
+        run: moon version --all
+
+      - name: Build and package (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          TAG_NAME: ${{ needs.prepare.outputs.tag }}
+        run: |
+          set -euo pipefail
+          moon build --target native --release cmd
+          CLI_BIN=""
+          for candidate in \
+            "_build/native/release/build/cmd/cmd" \
+            "_build/native/release/build/cmd/cmd.exe"
+          do
+            if [ -f "${candidate}" ]; then
+              CLI_BIN="${candidate}"
+              break
+            fi
+          done
+
+          if [ -z "${CLI_BIN}" ]; then
+            echo "could not find release CLI binary" >&2
+            find _build/native/release/build/cmd -maxdepth 1 -type f -print >&2
+            exit 1
+          fi
+
+          chmod +x "${CLI_BIN}"
+          CLI_SMOKE="$("${CLI_BIN}" "." "null")"
+          if [ "${CLI_SMOKE}" != "null" ]; then
+            echo "unexpected release smoke output: ${CLI_SMOKE}" >&2
+            exit 1
+          fi
+
+          mkdir -p dist
+          cp "${CLI_BIN}" "dist/jqx"
+          chmod +x "dist/jqx"
+
+          if [ "${RUNNER_OS}" = "Linux" ]; then
+            ASSET="jqx-${TAG_NAME}-linux.tar.gz"
+          else
+            ASSET="jqx-${TAG_NAME}-macos.tar.gz"
+          fi
+
+          tar -C dist -czf "${ASSET}" jqx
+          echo "ASSET=${ASSET}" >> "$GITHUB_ENV"
+
+      - name: Build and package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          TAG_NAME: ${{ needs.prepare.outputs.tag }}
+        run: |
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\\Installer\\vswhere.exe"
+          $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $vs) { throw "Visual Studio with C++ tools not found." }
+          $vcvars = Join-Path $vs "VC\\Auxiliary\\Build\\vcvars64.bat"
+          cmd /c "`"$vcvars`" && moon build --target native --release cmd"
+
+          $cliBin = "_build/native/release/build/cmd/cmd.exe"
+          $cliSmoke = & $cliBin "." "null"
+          if ($cliSmoke.Trim() -ne "null") {
+            throw "unexpected release smoke output: $cliSmoke"
+          }
+
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          Copy-Item $cliBin "dist/jqx.exe"
+          $asset = "jqx-$env:TAG_NAME-windows.zip"
+          Compress-Archive -Path "dist/jqx.exe" -DestinationPath $asset -Force
+          "ASSET=$asset" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Upload preflight CLI artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: preflight-cli-${{ runner.os }}-${{ needs.prepare.outputs.tag }}
+          path: ${{ env.ASSET }}
+          if-no-files-found: error
+
+  npm:
+    name: npm dry-run
+    runs-on: ubuntu-latest
+    needs: prepare
+
+    steps:
+      - name: Checkout candidate ref
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node (npm registry)
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          check-latest: true
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Setup pnpm (latest)
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      - name: Install MoonBit
+        shell: bash
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Verify TS packages
+        shell: bash
+        run: bash ./scripts/ts_packages.sh verify --frozen-lockfile
+
+      - name: Dry-run npm publication from packed tarballs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t packages < <(node ./scripts/ts_packages.mjs list)
+
+          for package_dir in "${packages[@]}"; do
+            pushd "${package_dir}" >/dev/null
+            package_name="$(node -p "require('./package.json').name")"
+            package_version="$(node -p "require('./package.json').version")"
+            package_ref="${package_name}@${package_version}"
+
+            if npm view "${package_ref}" version >/dev/null 2>&1; then
+              echo "::error::npm package version already exists: ${package_ref}"
+              exit 1
+            fi
+
+            pack_dir="$(mktemp -d)"
+            tarball_output="$(pnpm pack --pack-destination "${pack_dir}" | tail -n 1)"
+            if [[ "${tarball_output}" = /* ]]; then
+              tarball_path="${tarball_output}"
+            else
+              tarball_path="${pack_dir}/${tarball_output}"
+            fi
+
+            node - "${tarball_path}" <<'NODE'
+            const { execFileSync } = require("child_process");
+            const tarball = process.argv[2];
+            const manifest = JSON.parse(execFileSync("tar", ["-xOf", tarball, "package/package.json"], {
+              encoding: "utf8",
+            }));
+            const deps = {
+              ...manifest.dependencies,
+              ...manifest.optionalDependencies,
+              ...manifest.peerDependencies,
+            };
+            for (const [name, spec] of Object.entries(deps)) {
+              if (typeof spec === "string" && spec.startsWith("workspace:")) {
+                console.error(`[workspace-dependency-leaked] ${manifest.name} -> ${name}: ${spec}`);
+                process.exit(1);
+              }
+            }
+            NODE
+
+            npm publish "${tarball_path}" --access public --dry-run
+            rm -rf "${pack_dir}"
+            popd >/dev/null
+          done
+
+  mooncakes:
+    name: Mooncakes dry-run
+    runs-on: ubuntu-latest
+    needs: prepare
+
+    steps:
+      - name: Checkout candidate ref
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install MoonBit
+        shell: bash
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: MoonBit Version
+        run: moon version --all
+
+      - name: Verify MoonBit package
+        shell: bash
+        run: |
+          moon info
+          moon fmt --check
+          moon check
+          moon test
+          moon package --frozen --list
+
+      - name: Verify Mooncakes version is not already published
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          module_name="$(node -p "require('./moon.mod.json').name")"
+          module_url="https://mooncakes.io/api/v0/modules/${module_name}"
+          if curl -fsSL "${module_url}" -o mooncakes-module.json; then
+            node <<'NODE'
+            const fs = require("fs");
+            const version = process.env.RELEASE_VERSION;
+            const data = JSON.parse(fs.readFileSync("mooncakes-module.json", "utf8"));
+            const versions = Array.isArray(data.versions) ? data.versions : [];
+            if (versions.some((entry) => entry.version === version)) {
+              console.error(`[mooncakes-version-exists] ${data.module ?? "module"}@${version}`);
+              process.exit(1);
+            }
+            NODE
+          fi
+
+      - name: Dry-run Mooncakes publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! output="$(moon publish --frozen --dry-run 2>&1)"; then
+            printf '%s\n' "${output}"
+            if ! grep -q "Dry run completed successfully" <<<"${output}"; then
+              exit 1
+            fi
+            exit 0
+          fi
+          printf '%s\n' "${output}"
