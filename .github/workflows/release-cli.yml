@@ -95,7 +95,24 @@ jobs:
           TAG_NAME: ${{ needs.prepare.outputs.tag }}
         run: |
           moon build --target native --release cmd
-          CLI_BIN="_build/native/release/build/cmd/cmd"
+          CLI_BIN=""
+          for candidate in \
+            "_build/native/release/build/cmd/cmd" \
+            "_build/native/release/build/cmd/cmd.exe"
+          do
+            if [ -f "${candidate}" ]; then
+              CLI_BIN="${candidate}"
+              break
+            fi
+          done
+
+          if [ -z "${CLI_BIN}" ]; then
+            echo "could not find release CLI binary" >&2
+            find _build/native/release/build/cmd -maxdepth 1 -type f -print >&2
+            exit 1
+          fi
+
+          chmod +x "${CLI_BIN}"
           CLI_SMOKE="$("${CLI_BIN}" "." "null")"
           if [ "${CLI_SMOKE}" != "null" ]; then
             echo "unexpected release smoke output: ${CLI_SMOKE}" >&2

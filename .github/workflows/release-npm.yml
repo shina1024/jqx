@@ -81,6 +81,15 @@ jobs:
           corepack enable
           corepack prepare pnpm@latest --activate
 
+      - name: Install MoonBit
+        shell: bash
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: MoonBit Version
+        run: moon version --all
+
       - name: Verify package versions match tag
         shell: bash
         run: |
