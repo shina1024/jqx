@@ -10,13 +10,13 @@ This repository targets jq-compatible behavior.
 - Temporary compatibility exceptions must be explicit and removable.
 - Preserve the shared JSON value model across CLI/JS/TS, including object key input/update order.
 
-## MoonBit Public API
+## Public Surfaces
 
-- `shina1024/jqx` top-level package is intended to become the primary MoonBit public API and the basis for `mooncakes.io` publication.
+- Published surfaces are GitHub Release CLI artifacts, npm packages, and the `shina1024/jqx` Mooncakes module.
+- `shina1024/jqx` is the primary MoonBit public API. Keep normal user examples on this package, not on `shina1024/jqx/core`.
 - Before `1.0`, prioritize a coherent long-term public API over preserving the current thin wrapper or early cross-surface API shapes. Breaking changes are acceptable when they reduce long-term API debt.
 - Keep `shina1024/jqx/core` as the lower-level jq-compatible engine. It may keep internal `Json` / `Filter` representations needed for jq semantics, evaluation internals, and numeric repr preservation.
 - Do not use `@core.Value` as the primary MoonBit user boundary. MoonBit-facing APIs should prefer the standard `Json` type from `moonbitlang/core/json`.
-- Add explicit conversion helpers between standard `Json` and `@core.Value`. Treat conversion through standard `Json` as the convenience lane; jq-specific numeric repr fidelity is preserved by text-based compatibility lanes, not by `Json` round-trips.
 - Public MoonBit APIs should expose two lanes:
   - value lane: accept and return standard `Json` for embedding in MoonBit applications
   - compatibility lane: accept and return JSON text (`StringView` / `String`) when jq-style fidelity matters
@@ -33,7 +33,6 @@ This repository targets jq-compatible behavior.
 - Do not keep alias exports for old names once a better canonical name is chosen. Prefer one obvious public spelling per operation.
 - For compiled execution, prefer a public compiled-filter abstraction over asking MoonBit users to depend on `@core.Filter` directly. `@core.Filter` can remain an implementation detail unless a strong reason appears.
 - Do not block MoonBit public package publication on a typed query DSL. First prioritize string-filter execution, compiled execution, JSON conversion, and clear public errors; query DSL can follow later.
-- Do not advertise `mooncakes.io` as an active channel until top-level public APIs and examples are MoonBit-user-facing and no longer tell users to import `core` directly.
 
 ## Internal Layout
 
@@ -65,3 +64,12 @@ This repository targets jq-compatible behavior.
   - Windows: `./scripts/ts_packages.ps1 refresh`
   - Linux/macOS: `bash ./scripts/ts_packages.sh refresh`
 - CI-equivalent TS verification: `bash ./scripts/ts_packages.sh verify --frozen-lockfile`
+
+## Release
+
+- Before tagging a release, ensure `moon.mod.json` and all publishable npm package versions match the tag version.
+- Use lightweight `vX.Y.Z` tags unless the user explicitly asks for annotated tags.
+- Release channels are GitHub Release CLI artifacts, npm packages, and Mooncakes.
+- Mooncakes publishing uses `.github/workflows/release-mooncakes.yml` and the `MOONCAKES_CREDENTIALS_JSON` Actions secret.
+- npm publishing uses `.github/workflows/release-npm.yml` and `NPM_TOKEN`.
+- GitHub Release CLI artifacts use `.github/workflows/release-cli.yml`.
