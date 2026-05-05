@@ -18,5 +18,5 @@
     "**/*_wbtest.mbt"
   ],
   "keywords": ["jq", "json", "query", "filter", "moonbit"],
-  "description": "jq-compatible JSON processor with a first-class MoonBit package plus shared CLI and TypeScript surfaces"
+  "description": "jq-compatible JSON processor written in MoonBit with a CLI and TypeScript bindings"
 }

@@ -1,7 +1,7 @@
 {
   "name": "@shina1024/jqx-yup-adapter",
   "version": "0.1.0",
-  "description": "Yup adapter utilities for jqx JS/TS runtime",
+  "description": "Yup adapter for jqx, a jq-compatible JSON processor written in MoonBit",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/shina1024/jqx.git",
