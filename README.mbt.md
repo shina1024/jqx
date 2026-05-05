@@ -121,7 +121,6 @@ Boundary helpers:
 - `@jqx.is_valid_json(...)` and `@jqx.parse_json(...)` are input-boundary helpers, not the main happy path.
 - When jq-style numeric or output fidelity matters, use `@jqx.run_json_text(...)` or `CompiledFilter::run_json_text(...)` before reaching for any advanced helper.
 - Normal MoonBit usage should stay on `shina1024/jqx`; you should not need `shina1024/jqx/core`, `@core.Value`, or `@core.Filter`.
-- Release-readiness audit commands: `moon package --list --manifest-path moon.mod.json` should exclude development-only files and directories such as `scripts`, `third_party`, `ts`, and test files; `moon publish --dry-run --manifest-path moon.mod.json` requires `moon login`.
 
 ## JS/TS Quick Start
 
