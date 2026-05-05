@@ -143,6 +143,22 @@ jobs:
             release-audit/mooncakes-module.json
           if-no-files-found: error
 
+      - name: Validate Mooncakes credentials
+        if: ${{ needs.prepare.outputs.dry_run != 'true' && env.MOONCAKES_CREDENTIALS_JSON != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.moon"
+          credentials="$HOME/.moon/credentials.json"
+          cleanup() {
+            rm -f "${credentials}"
+          }
+          trap cleanup EXIT
+
+          printf '%s' "${MOONCAKES_CREDENTIALS_JSON}" > "${credentials}"
+          chmod 600 "${credentials}"
+          moon whoami
+
       - name: Publish to Mooncakes (or dry-run)
         shell: bash
         run: |
