@@ -1,0 +1,184 @@
+name: Release Mooncakes
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish (for example: v0.1.0)"
+        required: true
+        type: string
+      dry_run:
+        description: "Run publish in dry-run mode"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.vars.outputs.tag }}
+      version: ${{ steps.vars.outputs.version }}
+      dry_run: ${{ steps.vars.outputs.dry_run }}
+    steps:
+      - name: Resolve release metadata
+        id: vars
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+            DRY_RUN="${{ inputs.dry_run }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+            DRY_RUN="false"
+          fi
+
+          if [[ "${TAG}" != v* ]]; then
+            echo "::error::Tag must start with v. got=${TAG}"
+            exit 1
+          fi
+
+          VERSION="${TAG#v}"
+
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "dry_run=${DRY_RUN}" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: Publish Mooncakes module
+    runs-on: ubuntu-latest
+    needs: prepare
+    concurrency:
+      group: release-mooncakes-${{ needs.prepare.outputs.tag }}
+      cancel-in-progress: false
+    env:
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+      RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+      DRY_RUN: ${{ needs.prepare.outputs.dry_run }}
+      MOONCAKES_CREDENTIALS_JSON: ${{ secrets.MOONCAKES_CREDENTIALS_JSON }}
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: refs/tags/${{ needs.prepare.outputs.tag }}
+
+      - name: Install MoonBit
+        shell: bash
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: MoonBit Version
+        run: moon version --all
+
+      - name: Verify module version matches tag
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const expected = process.env.RELEASE_VERSION;
+          const mod = JSON.parse(fs.readFileSync("moon.mod.json", "utf8"));
+          if (mod.version !== expected) {
+            console.error(`[version-mismatch] ${mod.name}: moon.mod.json=${mod.version}, tag=${expected}`);
+            process.exit(1);
+          }
+          console.log(`module version matches tag v${expected}`);
+          NODE
+
+      - name: Verify MoonBit package
+        shell: bash
+        run: |
+          moon info
+          moon fmt --check
+          moon check
+          moon test
+          moon package --frozen --list
+
+      - name: Check Mooncakes registry state
+        id: registry
+        shell: bash
+        run: |
+          set -euo pipefail
+          module_name="$(node -p "require('./moon.mod.json').name")"
+          module_url="https://mooncakes.io/api/v0/modules/${module_name}"
+          mkdir -p release-audit
+
+          if curl -fsSL "${module_url}" -o release-audit/mooncakes-module.json; then
+            published="$(
+              node <<'NODE'
+              const fs = require("fs");
+              const version = process.env.RELEASE_VERSION;
+              const data = JSON.parse(fs.readFileSync("release-audit/mooncakes-module.json", "utf8"));
+              const versions = Array.isArray(data.versions) ? data.versions : [];
+              console.log(versions.some((entry) => entry.version === version) ? "true" : "false");
+              NODE
+            )"
+          else
+            published="false"
+            printf '{"module":"%s","versions":[]}\n' "${module_name}" > release-audit/mooncakes-module.json
+          fi
+
+          {
+            echo "# Mooncakes release audit"
+            echo
+            echo "- Tag: \`${RELEASE_TAG}\`"
+            echo "- Version: \`${RELEASE_VERSION}\`"
+            echo "- Module: \`${module_name}\`"
+            echo "- Dry run: \`${DRY_RUN}\`"
+            echo "- Already published: \`${published}\`"
+          } > release-audit/mooncakes-release-audit.md
+
+          cat release-audit/mooncakes-release-audit.md >> "$GITHUB_STEP_SUMMARY"
+          echo "module=${module_name}" >> "$GITHUB_OUTPUT"
+          echo "already_published=${published}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Mooncakes release audit artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: mooncakes-release-audit-${{ needs.prepare.outputs.tag }}
+          path: |
+            release-audit/mooncakes-release-audit.md
+            release-audit/mooncakes-module.json
+          if-no-files-found: error
+
+      - name: Publish to Mooncakes (or dry-run)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${DRY_RUN}" = "true" ]; then
+            echo "dry-run publish ${RELEASE_TAG}"
+            moon publish --frozen --dry-run
+            exit 0
+          fi
+
+          if [ "${{ steps.registry.outputs.already_published }}" = "true" ]; then
+            echo "skip: already published ${{ steps.registry.outputs.module }}@${RELEASE_VERSION}"
+            exit 0
+          fi
+
+          if [ -z "${MOONCAKES_CREDENTIALS_JSON:-}" ]; then
+            echo "::error::MOONCAKES_CREDENTIALS_JSON is required for non-dry-run publish"
+            exit 1
+          fi
+
+          mkdir -p "$HOME/.moon"
+          credentials="$HOME/.moon/credentials.json"
+          cleanup() {
+            rm -f "${credentials}"
+          }
+          trap cleanup EXIT
+
+          printf '%s' "${MOONCAKES_CREDENTIALS_JSON}" > "${credentials}"
+          chmod 600 "${credentials}"
+
+          moon whoami
+          moon publish --frozen
