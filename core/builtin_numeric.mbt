@@ -425,46 +425,51 @@ fn format_datetime_with_strftime_pattern(
   day_of_year : Int,
 ) -> String {
   let second_int = second.floor().to_int()
-  match
-    strftime_locale_format(
-      pattern, year, month, day, hour, minute, second_int, day_of_week, day_of_year,
-    ) {
-    Some(localized) => localized
-    None => {
-      let sb = StringBuilder::new()
-      let mut i = 0
-      while i < pattern.length() {
-        let ch = pattern.unsafe_get(i).to_int().unsafe_to_char()
-        if ch != '%' {
-          sb.write_char(ch)
-          i += 1
-          continue
-        }
-        if i + 1 >= pattern.length() {
-          sb.write_char('%')
-          i += 1
-          continue
-        }
-        let token = pattern.unsafe_get(i + 1).to_int().unsafe_to_char()
-        match token {
-          '%' => sb.write_char('%')
-          'Y' => sb.write_string(year.to_string())
-          'm' => sb.write_string(format_two_digits_zero(month))
-          'd' => sb.write_string(format_two_digits_zero(day))
-          'e' => sb.write_string(format_two_digits_space(day))
-          'H' => sb.write_string(format_two_digits_zero(hour))
-          'M' => sb.write_string(format_two_digits_zero(minute))
-          'S' => sb.write_string(format_two_digits_zero(second_int))
-          'A' => sb.write_string(weekday_name_english(day_of_week))
-          'B' => sb.write_string(month_name_english(month))
-          _ => {
-            sb.write_char('%')
-            sb.write_char(token)
-          }
-        }
-        i += 2
+  let sb = StringBuilder::new()
+  let mut fully_supported = true
+  let mut i = 0
+  while i < pattern.length() {
+    let ch = pattern.unsafe_get(i).to_int().unsafe_to_char()
+    if ch != '%' {
+      sb.write_char(ch)
+      i += 1
+      continue
+    }
+    if i + 1 >= pattern.length() {
+      sb.write_char('%')
+      i += 1
+      continue
+    }
+    let token = pattern.unsafe_get(i + 1).to_int().unsafe_to_char()
+    match token {
+      '%' => sb.write_char('%')
+      'Y' => sb.write_string(year.to_string())
+      'm' => sb.write_string(format_two_digits_zero(month))
+      'd' => sb.write_string(format_two_digits_zero(day))
+      'e' => sb.write_string(format_two_digits_space(day))
+      'H' => sb.write_string(format_two_digits_zero(hour))
+      'M' => sb.write_string(format_two_digits_zero(minute))
+      'S' => sb.write_string(format_two_digits_zero(second_int))
+      'A' => sb.write_string(weekday_name_english(day_of_week))
+      'B' => sb.write_string(month_name_english(month))
+      _ => {
+        fully_supported = false
+        sb.write_char('%')
+        sb.write_char(token)
       }
-      sb.to_string()
+    }
+    i += 2
+  }
+  let fallback = sb.to_string()
+  if fully_supported {
+    fallback
+  } else {
+    match
+      strftime_locale_format(
+        pattern, year, month, day, hour, minute, second_int, day_of_week, day_of_year,
+      ) {
+      Some(localized) => localized
+      None => fallback
     }
   }
 }

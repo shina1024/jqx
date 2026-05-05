@@ -584,11 +584,13 @@ pub fn Value::to_json_string(self : Value) -> String {
         '\r' => buf.write_string("\\r")
         '\t' => buf.write_string("\\t")
         _ =>
-          if ch.to_int() < 32 {
+          if ch.to_int() < 32 || ch.to_int() == 0x7F {
             let code = ch.to_int()
-            buf.write_string("\\u00")
-            let hi = (code >> 4) & 0xF
-            let lo = code & 0xF
+            buf.write_string("\\u")
+            let d3 = (code >> 12) & 0xF
+            let d2 = (code >> 8) & 0xF
+            let d1 = (code >> 4) & 0xF
+            let d0 = code & 0xF
             fn hex(d : Int) -> Char {
               if d < 10 {
                 (d + '0'.to_int()).unsafe_to_char()
@@ -597,8 +599,10 @@ pub fn Value::to_json_string(self : Value) -> String {
               }
             }
 
-            buf.write_char(hex(hi))
-            buf.write_char(hex(lo))
+            buf.write_char(hex(d3))
+            buf.write_char(hex(d2))
+            buf.write_char(hex(d1))
+            buf.write_char(hex(d0))
           } else {
             buf.write_char(ch)
           }

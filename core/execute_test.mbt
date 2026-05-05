@@ -717,6 +717,10 @@ test "execute tostring/tonumber compatibility" {
   assert_eq(must_execute(parse_filter("tonumber"), must_parse("\"1.25\"")), [
     Value::number(1.25),
   ])
+  assert_eq(
+    must_execute(parse_filter("tonumber"), must_parse("\"123\\u0000456\"")),
+    [Value::number(123.0)],
+  )
   assert_eq(must_execute(parse_filter("tonumber"), must_parse("1")), [
     Value::number(1.0),
   ])
@@ -825,6 +829,23 @@ test "execute format filter compatibility" {
   assert_eq(
     must_execute(parse_filter("(@uri|@urid)"), must_parse("\"<>&'\\\"\\t\"")),
     [Value::string("<>&'\"\t")],
+  )
+  assert_eq(
+    must_execute(parse_filter("@urid"), must_parse("\"a\\u0000b\\u0000c\"")),
+    [Value::string("a")],
+  )
+  assert_eq(
+    must_execute(parse_filter("@urid"), must_parse("\"Knäckebröd\"")),
+    [Value::string("Kn\u{fffd}\u{fffd}ckebr\u{fffd}\u{fffd}d")],
+  )
+  assert_eq(
+    must_execute(
+      parse_filter("@urid | tojson"),
+      must_parse(
+        "\"%2C-.%2F09%3A%3B%3C%3D%3E%3F%40AZ%5B%5C%5D%5E_%60az%7B%7C%7D~%7F\"",
+      ),
+    ),
+    [Value::string("\",-./09:;<=>?@AZ[\\\\]^_`az{|}~\\u007f\"")],
   )
   assert_eq(
     must_execute(
@@ -1946,6 +1967,20 @@ test "execute index/rindex/indices compatibility" {
     [Value::array([Value::number(2.0), Value::number(3.0)])],
   )
   assert_eq(
+    must_execute(
+      parse_filter("_strindices(\"aba\")"),
+      must_parse("\"xababababax\""),
+    ),
+    [
+      Value::array([
+        Value::number(1.0),
+        Value::number(3.0),
+        Value::number(5.0),
+        Value::number(7.0),
+      ]),
+    ],
+  )
+  assert_eq(
     must_execute(parse_filter("index((\"l\",\"e\"))"), must_parse("\"hello\"")),
     [Value::number(2.0), Value::number(1.0)],
   )
@@ -1989,6 +2024,16 @@ test "execute index/rindex/indices errors" {
     is Err(err) &&
     err.to_string() == "Cannot index number with string \"a\"" else {
     fail("expected number index(string) type error")
+  }
+  guard (try? execute(parse_filter("_strindices(\"abc\")"), must_parse("123")))
+    is Err(err) &&
+    err.to_string() == "number (123) cannot be searched, as it is not a string" else {
+    fail("expected _strindices input type error")
+  }
+  guard (try? execute(parse_filter("_strindices(123)"), must_parse("\"abc\"")))
+    is Err(err) &&
+    err.to_string() == "number (123) is not a string" else {
+    fail("expected _strindices pattern type error")
   }
 }
 
@@ -3550,6 +3595,13 @@ test "execute numeric/meta builtins errors" {
     err.to_string() == "string (\"tru\") cannot be parsed as a boolean" else {
     fail("expected toboolean parse error")
   }
+  assert_eq(
+    must_execute(
+      parse_filter("\"true\\u0000x\", \"false\\u0000\" | toboolean"),
+      must_parse("null"),
+    ),
+    [Value::boolean(true), Value::boolean(false)],
+  )
   guard (try? execute(parse_filter("sqrt"), must_parse("\"x\""))) is Err(err) &&
     err.to_string() == "string (\"x\") only numbers have sqrt" else {
     fail("expected sqrt type error")

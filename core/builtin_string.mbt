@@ -618,6 +618,34 @@ fn builtin_call_string(
         }
         Some(out)
       }
+    "_strindices" =>
+      if args.length() != 1 {
+        raise UnknownFunction("_strindices")
+      } else {
+        let needles = execute_with_env(args[0], input, env)
+        let out = []
+        for needle in needles {
+          let haystack = match input {
+            String(haystack) => haystack
+            _ =>
+              raise TypeError(
+                json_type_with_value(input) +
+                " cannot be searched, as it is not a string",
+              )
+          }
+          let pattern = match needle {
+            String(pattern) => pattern
+            _ =>
+              raise TypeError(json_type_with_value(needle) + " is not a string")
+          }
+          let arr = []
+          for i in find_string_indices(haystack, pattern) {
+            arr.push(Value::number(i.to_double()))
+          }
+          out.push(Value::array(arr))
+        }
+        Some(out)
+      }
     _ => None
   }
 }

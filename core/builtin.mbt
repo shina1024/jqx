@@ -58,6 +58,16 @@ fn builtin_has_outer_trim_ws(s : String) -> Bool {
 }
 
 ///|
+fn builtin_c_string_prefix(s : String) -> String {
+  for i in 0..<s.length() {
+    if s.unsafe_get(i).to_int() == 0 {
+      return s.view(start_offset=0, end_offset=i).to_owned()
+    }
+  }
+  s
+}
+
+///|
 fn builtin_utf8_byte_length(s : String) -> Int {
   let mut total = 0
   for ch in s {
@@ -80,9 +90,9 @@ fn builtin_to_boolean(input : Value) -> Value raise EvalError {
   match input {
     JTrue | JFalse => input
     String(s) =>
-      if s == "true" {
+      if builtin_c_string_prefix(s) == "true" {
         Value::boolean(true)
-      } else if s == "false" {
+      } else if builtin_c_string_prefix(s) == "false" {
         Value::boolean(false)
       } else {
         raise TypeError(
@@ -471,9 +481,9 @@ fn format_uri_encode(input : String) -> String {
 }
 
 ///|
-fn format_uri_decode(input : String) -> String? {
+fn format_uri_decode_percent_run(input : String, start : Int) -> (String, Int)? {
   let bytes = []
-  let mut i = 0
+  let mut i = start
   while i < input.length() {
     let ch = input.unsafe_get(i).to_int().unsafe_to_char()
     if ch == '%' {
@@ -488,11 +498,42 @@ fn format_uri_decode(input : String) -> String? {
         _ => return None
       }
     } else {
-      append_utf8_codepoint_bytes(bytes, ch.to_int())
+      break
+    }
+  }
+  match utf8_decode_bytes_strict(bytes) {
+    Some(decoded) => Some((decoded, i))
+    None => None
+  }
+}
+
+///|
+fn format_uri_decode(input : String) -> String? {
+  let c_input = builtin_c_string_prefix(input)
+  let buf = StringBuilder::new()
+  let mut i = 0
+  while i < c_input.length() {
+    let ch = c_input.unsafe_get(i).to_int().unsafe_to_char()
+    if ch == '%' {
+      match format_uri_decode_percent_run(c_input, i) {
+        Some((decoded, next_i)) => {
+          buf.write_string(decoded)
+          i = next_i
+        }
+        None => return None
+      }
+    } else {
+      if ch.to_int() <= 0x7F {
+        buf.write_char(ch)
+      } else {
+        for b in utf8_bytes_of_string(ch.to_string()) {
+          buf.write_string(utf8_decode_bytes_lossy([b]))
+        }
+      }
       i += 1
     }
   }
-  utf8_decode_bytes_strict(bytes)
+  Some(buf.to_string())
 }
 
 ///|
@@ -1002,16 +1043,17 @@ fn builtin_call0(name : String, input : Value) -> Array[Value] raise EvalError {
       match input {
         Number(_, _) => [input]
         String(s) => {
-          if builtin_has_outer_trim_ws(s) {
+          let parse_input = builtin_c_string_prefix(s)
+          if builtin_has_outer_trim_ws(parse_input) {
             raise TypeError(
               json_type_with_value(input) + " cannot be parsed as a number",
             )
           }
-          let parsed_double = try? @string.parse_double(s)
+          let parsed_double = try? @string.parse_double(parse_input)
           match parsed_double {
             Ok(n) => [json_number_value(n)]
             Err(_) =>
-              try parse(s) catch {
+              try parse(parse_input) catch {
                 _ =>
                   raise TypeError(
                     json_type_with_value(input) +
