@@ -219,6 +219,8 @@ jobs:
 
             if npm view "${package_ref}" version >/dev/null 2>&1; then
               echo "skip: already published ${package_ref}"
+              npm access set status=public "${package_name}"
+              npm access get status "${package_name}"
               popd >/dev/null
               continue
             fi
@@ -229,6 +231,8 @@ jobs:
             else
               echo "publish ${package_ref}"
               pnpm publish --access public --provenance --no-git-checks
+              npm access set status=public "${package_name}"
+              npm access get status "${package_name}"
             fi
 
             popd >/dev/null
