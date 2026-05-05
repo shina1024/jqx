@@ -4,14 +4,14 @@
 - upstream cases: `scripts/jq_compat_cases.upstream.json`
 - upstream diff snapshot: `scripts/jq_upstream_failures.snapshot.json`
 - upstream commit (HEAD): `b33a7634ba34ffa7ce7368cc0ebf5ca40b54c7e6`
-- upstream commit (current): `b33a7634ba34ffa7ce7368cc0ebf5ca40b54c7e6`
+- upstream commit (current): `532ccea6080ed6758f39fe9f6208a44b665023d2`
 
 ## Corpus Status
 
 | Corpus | Total | Passing | Temporary Exceptions | Broken | Stale Exception Metadata |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| maintained | 248 | 248 | 0 | 0 | 0 |
-| upstream | 843 | 843 | 0 | 0 | 0 |
+| maintained | 252 | 252 | 0 | 0 | 0 |
+| upstream | 874 | 865 | 0 | 9 | 0 |
 
 ## Temporary Exceptions
 
@@ -19,7 +19,15 @@
 
 ## Broken Cases
 
-- none
+- [upstream] upstream-jq-test-l1188 (`output-mismatch`)
+- [upstream] upstream-jq-test-l1192 (`output-mismatch`)
+- [upstream] upstream-jq-test-l1553 (`unknown-function`)
+- [upstream] upstream-jq-test-l1557 (`unknown-function`)
+- [upstream] upstream-jq-test-l701 (`output-mismatch`)
+- [upstream] upstream-jq-test-l720 (`output-mismatch`)
+- [upstream] upstream-uri-test-l36 (`output-mismatch`)
+- [upstream] upstream-uri-test-l52 (`output-mismatch`)
+- [upstream] upstream-uri-test-l60 (`output-mismatch`)
 
 ## Stale Exception Metadata
 
@@ -27,14 +35,22 @@
 
 ## Upstream Drift Summary
 
-- upstream cases old/new: 843 -> 843
-- upstream cases added/removed/changed: 0 / 0 / 0
-- upstream differences old/new: 0 -> 0
-- upstream differences new/resolved/changed: 0 / 0 / 0
+- upstream cases old/new: 843 -> 874
+- upstream cases added/removed/changed: 353 / 322 / 68
+- upstream differences old/new: 0 -> 9
+- upstream differences new/resolved/changed: 9 / 0 / 0
 
 ## New Upstream Differences
 
-- none
+- upstream-jq-test-l1188 (`output-mismatch`)
+- upstream-jq-test-l1192 (`output-mismatch`)
+- upstream-jq-test-l1553 (`unknown-function`)
+- upstream-jq-test-l1557 (`unknown-function`)
+- upstream-jq-test-l701 (`output-mismatch`)
+- upstream-jq-test-l720 (`output-mismatch`)
+- upstream-uri-test-l36 (`output-mismatch`)
+- upstream-uri-test-l52 (`output-mismatch`)
+- upstream-uri-test-l60 (`output-mismatch`)
 
 ## Resolved Upstream Differences
 
@@ -46,13 +62,753 @@
 
 ## Upstream Case Behavior Changes
 
-- none
+- upstream-jq-test-l1053: filter, input
+- upstream-jq-test-l1057: filter, input
+- upstream-jq-test-l1110: filter, input, source_expected_count
+- upstream-jq-test-l1184: filter, input
+- upstream-jq-test-l1188: filter, input
+- upstream-jq-test-l1192: filter, input
+- upstream-jq-test-l1197: filter, input
+- upstream-jq-test-l1241: filter, input, source_expected_count
+- upstream-jq-test-l1253: filter, input
+- upstream-jq-test-l1390: filter
+- upstream-jq-test-l1394: filter
+- upstream-jq-test-l1399: filter
+- upstream-jq-test-l1421: filter, input
+- upstream-jq-test-l1456: filter, input
+- upstream-jq-test-l1460: filter, input
+- upstream-jq-test-l1464: filter, input
+- upstream-jq-test-l1468: filter, source_expected_count
+- upstream-jq-test-l1499: filter, input
+- upstream-jq-test-l1563: filter, input, source_expected_count
+- upstream-jq-test-l1575: filter, input, source_expected_count
+- upstream-jq-test-l1725: filter, input
+- upstream-jq-test-l1729: filter, input
+- upstream-jq-test-l1733: filter, input
+- upstream-jq-test-l1737: filter, input
+- upstream-jq-test-l1741: filter, input
+- upstream-jq-test-l1745: filter, input
+- upstream-jq-test-l1851: filter, input
+- upstream-jq-test-l1855: filter, input
+- upstream-jq-test-l1859: filter, input
+- upstream-jq-test-l1895: filter
+- upstream-jq-test-l1904: filter, source_kind, expect_error, expect_error_mode, source_expected_count, source_error_lines
+- upstream-jq-test-l1934: filter, source_error_lines
+- upstream-jq-test-l1952: filter, source_error_lines
+- upstream-jq-test-l1958: filter, source_error_lines
+- upstream-jq-test-l1988: filter, input, source_kind, expect_error, expect_error_mode, source_expected_count, source_error_lines
+- upstream-jq-test-l2071: filter, source_expected_count
+- upstream-jq-test-l2105: filter, source_expected_count
+- upstream-jq-test-l2135: filter, input
+- upstream-jq-test-l2190: filter, input, jqx_args
+- upstream-jq-test-l2224: filter, input, jqx_args
+- upstream-jq-test-l2228: filter, input, jqx_args
+- upstream-jq-test-l2241: filter, input, source_expected_count
+- upstream-jq-test-l2281: filter, input
+- upstream-jq-test-l2285: filter, input
+- upstream-jq-test-l2377: filter, input
+- upstream-jq-test-l2382: filter, input
+- upstream-jq-test-l2386: filter, input
+- upstream-jq-test-l2425: filter, input
+- upstream-jq-test-l2475: filter, input, source_expected_count
+- upstream-jq-test-l2504: filter, input, source_expected_count
+- upstream-jq-test-l701: filter, input
+- upstream-jq-test-l705: filter, input, source_expected_count
+- upstream-jq-test-l741: filter, input
+- upstream-jq-test-l745: filter, input
+- upstream-jq-test-l762: filter, input
+- upstream-jq-test-l766: filter, input
+- upstream-jq-test-l775: filter, input, source_expected_count
+- upstream-jq-test-l789: filter, input, source_expected_count
+- upstream-jq-test-l794: filter, input
+- upstream-jq-test-l803: filter, input
+- upstream-jq-test-l838: filter, input
+- upstream-jq-test-l851: filter, input, source_expected_count
+- upstream-jq-test-l915: filter, input
+- upstream-jq-test-l924: filter, input
+- upstream-jq-test-l929: filter, input, source_expected_count
+- upstream-uri-test-l14: input
+- upstream-uri-test-l18: filter, input
+- upstream-uri-test-l36: filter, input
 
 ## Added Upstream Cases
 
-- none
+- upstream-jq-test-l1003
+- upstream-jq-test-l1010
+- upstream-jq-test-l1017
+- upstream-jq-test-l1024
+- upstream-jq-test-l1031
+- upstream-jq-test-l1038
+- upstream-jq-test-l1045
+- upstream-jq-test-l1049
+- upstream-jq-test-l1062
+- upstream-jq-test-l1066
+- upstream-jq-test-l1070
+- upstream-jq-test-l1074
+- upstream-jq-test-l1078
+- upstream-jq-test-l1082
+- upstream-jq-test-l1086
+- upstream-jq-test-l1090
+- upstream-jq-test-l1094
+- upstream-jq-test-l1098
+- upstream-jq-test-l1102
+- upstream-jq-test-l1115
+- upstream-jq-test-l1119
+- upstream-jq-test-l1123
+- upstream-jq-test-l1127
+- upstream-jq-test-l1131
+- upstream-jq-test-l1135
+- upstream-jq-test-l1139
+- upstream-jq-test-l1143
+- upstream-jq-test-l1147
+- upstream-jq-test-l1153
+- upstream-jq-test-l1159
+- upstream-jq-test-l1163
+- upstream-jq-test-l1169
+- upstream-jq-test-l1173
+- upstream-jq-test-l1177
+- upstream-jq-test-l1201
+- upstream-jq-test-l1205
+- upstream-jq-test-l1209
+- upstream-jq-test-l1214
+- upstream-jq-test-l1221
+- upstream-jq-test-l1225
+- upstream-jq-test-l1229
+- upstream-jq-test-l1233
+- upstream-jq-test-l1245
+- upstream-jq-test-l1249
+- upstream-jq-test-l1258
+- upstream-jq-test-l1270
+- upstream-jq-test-l1274
+- upstream-jq-test-l1278
+- upstream-jq-test-l1282
+- upstream-jq-test-l1286
+- upstream-jq-test-l1290
+- upstream-jq-test-l1294
+- upstream-jq-test-l1298
+- upstream-jq-test-l1302
+- upstream-jq-test-l1306
+- upstream-jq-test-l1314
+- upstream-jq-test-l1318
+- upstream-jq-test-l1322
+- upstream-jq-test-l1326
+- upstream-jq-test-l1330
+- upstream-jq-test-l1334
+- upstream-jq-test-l1338
+- upstream-jq-test-l1342
+- upstream-jq-test-l1346
+- upstream-jq-test-l1350
+- upstream-jq-test-l1354
+- upstream-jq-test-l1358
+- upstream-jq-test-l1362
+- upstream-jq-test-l1366
+- upstream-jq-test-l1370
+- upstream-jq-test-l1374
+- upstream-jq-test-l1378
+- upstream-jq-test-l1385
+- upstream-jq-test-l1403
+- upstream-jq-test-l1407
+- upstream-jq-test-l1411
+- upstream-jq-test-l1416
+- upstream-jq-test-l1426
+- upstream-jq-test-l1430
+- upstream-jq-test-l1434
+- upstream-jq-test-l1438
+- upstream-jq-test-l1442
+- upstream-jq-test-l1448
+- upstream-jq-test-l1452
+- upstream-jq-test-l1473
+- upstream-jq-test-l1477
+- upstream-jq-test-l1481
+- upstream-jq-test-l1485
+- upstream-jq-test-l1489
+- upstream-jq-test-l1493
+- upstream-jq-test-l1504
+- upstream-jq-test-l1508
+- upstream-jq-test-l1512
+- upstream-jq-test-l1516
+- upstream-jq-test-l1520
+- upstream-jq-test-l1524
+- upstream-jq-test-l1528
+- upstream-jq-test-l1532
+- upstream-jq-test-l1536
+- upstream-jq-test-l1540
+- upstream-jq-test-l1544
+- upstream-jq-test-l1548
+- upstream-jq-test-l1553
+- upstream-jq-test-l1557
+- upstream-jq-test-l1569
+- upstream-jq-test-l1581
+- upstream-jq-test-l1585
+- upstream-jq-test-l1589
+- upstream-jq-test-l1593
+- upstream-jq-test-l1597
+- upstream-jq-test-l1601
+- upstream-jq-test-l1605
+- upstream-jq-test-l1609
+- upstream-jq-test-l1613
+- upstream-jq-test-l1617
+- upstream-jq-test-l1621
+- upstream-jq-test-l1625
+- upstream-jq-test-l1629
+- upstream-jq-test-l1633
+- upstream-jq-test-l1637
+- upstream-jq-test-l1641
+- upstream-jq-test-l1645
+- upstream-jq-test-l1649
+- upstream-jq-test-l1653
+- upstream-jq-test-l1657
+- upstream-jq-test-l1661
+- upstream-jq-test-l1665
+- upstream-jq-test-l1669
+- upstream-jq-test-l1673
+- upstream-jq-test-l1677
+- upstream-jq-test-l1685
+- upstream-jq-test-l1689
+- upstream-jq-test-l1693
+- upstream-jq-test-l1697
+- upstream-jq-test-l1701
+- upstream-jq-test-l1705
+- upstream-jq-test-l1709
+- upstream-jq-test-l1713
+- upstream-jq-test-l1717
+- upstream-jq-test-l1721
+- upstream-jq-test-l1751
+- upstream-jq-test-l1755
+- upstream-jq-test-l1759
+- upstream-jq-test-l1763
+- upstream-jq-test-l1767
+- upstream-jq-test-l1771
+- upstream-jq-test-l1775
+- upstream-jq-test-l1779
+- upstream-jq-test-l1783
+- upstream-jq-test-l1787
+- upstream-jq-test-l1791
+- upstream-jq-test-l1795
+- upstream-jq-test-l1799
+- upstream-jq-test-l1803
+- upstream-jq-test-l1807
+- upstream-jq-test-l1811
+- upstream-jq-test-l1815
+- upstream-jq-test-l1819
+- upstream-jq-test-l1823
+- upstream-jq-test-l1827
+- upstream-jq-test-l1835
+- upstream-jq-test-l1839
+- upstream-jq-test-l1843
+- upstream-jq-test-l1847
+- upstream-jq-test-l1863
+- upstream-jq-test-l1868
+- upstream-jq-test-l1872
+- upstream-jq-test-l1876
+- upstream-jq-test-l1881
+- upstream-jq-test-l1885
+- upstream-jq-test-l1889
+- upstream-jq-test-l1900
+- upstream-jq-test-l1908
+- upstream-jq-test-l1912
+- upstream-jq-test-l1917
+- upstream-jq-test-l1921
+- upstream-jq-test-l1925
+- upstream-jq-test-l1929
+- upstream-jq-test-l1940
+- upstream-jq-test-l1946
+- upstream-jq-test-l1964
+- upstream-jq-test-l1969
+- upstream-jq-test-l1973
+- upstream-jq-test-l1977
+- upstream-jq-test-l1982
+- upstream-jq-test-l1993
+- upstream-jq-test-l1997
+- upstream-jq-test-l2001
+- upstream-jq-test-l2005
+- upstream-jq-test-l2014
+- upstream-jq-test-l2018
+- upstream-jq-test-l2022
+- upstream-jq-test-l2029
+- upstream-jq-test-l2034
+- upstream-jq-test-l2038
+- upstream-jq-test-l2042
+- upstream-jq-test-l2046
+- upstream-jq-test-l2050
+- upstream-jq-test-l2054
+- upstream-jq-test-l2058
+- upstream-jq-test-l2062
+- upstream-jq-test-l2067
+- upstream-jq-test-l2075
+- upstream-jq-test-l2081
+- upstream-jq-test-l2086
+- upstream-jq-test-l2089
+- upstream-jq-test-l2093
+- upstream-jq-test-l2097
+- upstream-jq-test-l2116
+- upstream-jq-test-l2121
+- upstream-jq-test-l2125
+- upstream-jq-test-l2130
+- upstream-jq-test-l2139
+- upstream-jq-test-l2143
+- upstream-jq-test-l2147
+- upstream-jq-test-l2152
+- upstream-jq-test-l2157
+- upstream-jq-test-l2161
+- upstream-jq-test-l2165
+- upstream-jq-test-l2169
+- upstream-jq-test-l2196
+- upstream-jq-test-l2200
+- upstream-jq-test-l2204
+- upstream-jq-test-l2211
+- upstream-jq-test-l2215
+- upstream-jq-test-l2219
+- upstream-jq-test-l2232
+- upstream-jq-test-l2236
+- upstream-jq-test-l2250
+- upstream-jq-test-l2254
+- upstream-jq-test-l2258
+- upstream-jq-test-l2262
+- upstream-jq-test-l2267
+- upstream-jq-test-l2271
+- upstream-jq-test-l2275
+- upstream-jq-test-l2289
+- upstream-jq-test-l2293
+- upstream-jq-test-l2297
+- upstream-jq-test-l2304
+- upstream-jq-test-l2308
+- upstream-jq-test-l2315
+- upstream-jq-test-l2319
+- upstream-jq-test-l2324
+- upstream-jq-test-l2337
+- upstream-jq-test-l2341
+- upstream-jq-test-l2346
+- upstream-jq-test-l2350
+- upstream-jq-test-l2354
+- upstream-jq-test-l2359
+- upstream-jq-test-l2363
+- upstream-jq-test-l2367
+- upstream-jq-test-l2372
+- upstream-jq-test-l2390
+- upstream-jq-test-l2395
+- upstream-jq-test-l2403
+- upstream-jq-test-l2407
+- upstream-jq-test-l2411
+- upstream-jq-test-l2416
+- upstream-jq-test-l2420
+- upstream-jq-test-l2430
+- upstream-jq-test-l2435
+- upstream-jq-test-l2439
+- upstream-jq-test-l2443
+- upstream-jq-test-l2447
+- upstream-jq-test-l2451
+- upstream-jq-test-l2455
+- upstream-jq-test-l2459
+- upstream-jq-test-l2463
+- upstream-jq-test-l2467
+- upstream-jq-test-l2471
+- upstream-jq-test-l2479
+- upstream-jq-test-l2483
+- upstream-jq-test-l2487
+- upstream-jq-test-l2494
+- upstream-jq-test-l2498
+- upstream-jq-test-l2509
+- upstream-jq-test-l2516
+- upstream-jq-test-l2523
+- upstream-jq-test-l2533
+- upstream-jq-test-l2538
+- upstream-jq-test-l2548
+- upstream-jq-test-l2558
+- upstream-jq-test-l2563
+- upstream-jq-test-l2568
+- upstream-jq-test-l2573
+- upstream-jq-test-l2577
+- upstream-jq-test-l2581
+- upstream-jq-test-l2585
+- upstream-jq-test-l2589
+- upstream-jq-test-l2593
+- upstream-jq-test-l2598
+- upstream-jq-test-l2602
+- upstream-jq-test-l2607
+- upstream-jq-test-l2611
+- upstream-jq-test-l709
+- upstream-jq-test-l720
+- upstream-jq-test-l725
+- upstream-jq-test-l737
+- upstream-jq-test-l750
+- upstream-jq-test-l754
+- upstream-jq-test-l758
+- upstream-jq-test-l771
+- upstream-jq-test-l784
+- upstream-jq-test-l798
+- upstream-jq-test-l808
+- upstream-jq-test-l812
+- upstream-jq-test-l816
+- upstream-jq-test-l820
+- upstream-jq-test-l826
+- upstream-jq-test-l830
+- upstream-jq-test-l834
+- upstream-jq-test-l847
+- upstream-jq-test-l855
+- upstream-jq-test-l860
+- upstream-jq-test-l868
+- upstream-jq-test-l873
+- upstream-jq-test-l878
+- upstream-jq-test-l884
+- upstream-jq-test-l889
+- upstream-jq-test-l899
+- upstream-jq-test-l903
+- upstream-jq-test-l907
+- upstream-jq-test-l911
+- upstream-jq-test-l919
+- upstream-jq-test-l933
+- upstream-jq-test-l938
+- upstream-jq-test-l945
+- upstream-jq-test-l949
+- upstream-jq-test-l953
+- upstream-jq-test-l957
+- upstream-jq-test-l961
+- upstream-jq-test-l968
+- upstream-jq-test-l975
+- upstream-jq-test-l982
+- upstream-jq-test-l989
+- upstream-jq-test-l996
+- upstream-uri-test-l10
+- upstream-uri-test-l22
+- upstream-uri-test-l28
+- upstream-uri-test-l32
+- upstream-uri-test-l40
+- upstream-uri-test-l44
+- upstream-uri-test-l48
+- upstream-uri-test-l52
+- upstream-uri-test-l56
+- upstream-uri-test-l6
+- upstream-uri-test-l60
+- upstream-uri-test-l65
+- upstream-uri-test-l70
+- upstream-uri-test-l75
+- upstream-uri-test-l80
+- upstream-uri-test-l85
+- upstream-uri-test-l90
 
 ## Removed Upstream Cases
 
-- none
+- upstream-jq-test-l1001
+- upstream-jq-test-l1008
+- upstream-jq-test-l1015
+- upstream-jq-test-l1022
+- upstream-jq-test-l1029
+- upstream-jq-test-l1036
+- upstream-jq-test-l1040
+- upstream-jq-test-l1044
+- upstream-jq-test-l1048
+- upstream-jq-test-l1061
+- upstream-jq-test-l1065
+- upstream-jq-test-l1069
+- upstream-jq-test-l1073
+- upstream-jq-test-l1077
+- upstream-jq-test-l1081
+- upstream-jq-test-l1085
+- upstream-jq-test-l1089
+- upstream-jq-test-l1093
+- upstream-jq-test-l1101
+- upstream-jq-test-l1106
+- upstream-jq-test-l1114
+- upstream-jq-test-l1118
+- upstream-jq-test-l1122
+- upstream-jq-test-l1126
+- upstream-jq-test-l1130
+- upstream-jq-test-l1134
+- upstream-jq-test-l1138
+- upstream-jq-test-l1144
+- upstream-jq-test-l1150
+- upstream-jq-test-l1154
+- upstream-jq-test-l1160
+- upstream-jq-test-l1164
+- upstream-jq-test-l1168
+- upstream-jq-test-l1175
+- upstream-jq-test-l1180
+- upstream-jq-test-l1204
+- upstream-jq-test-l1208
+- upstream-jq-test-l1212
+- upstream-jq-test-l1216
+- upstream-jq-test-l1224
+- upstream-jq-test-l1228
+- upstream-jq-test-l1232
+- upstream-jq-test-l1236
+- upstream-jq-test-l1257
+- upstream-jq-test-l1261
+- upstream-jq-test-l1265
+- upstream-jq-test-l1269
+- upstream-jq-test-l1273
+- upstream-jq-test-l1277
+- upstream-jq-test-l1281
+- upstream-jq-test-l1285
+- upstream-jq-test-l1289
+- upstream-jq-test-l1297
+- upstream-jq-test-l1301
+- upstream-jq-test-l1305
+- upstream-jq-test-l1309
+- upstream-jq-test-l1313
+- upstream-jq-test-l1317
+- upstream-jq-test-l1321
+- upstream-jq-test-l1325
+- upstream-jq-test-l1329
+- upstream-jq-test-l1333
+- upstream-jq-test-l1337
+- upstream-jq-test-l1341
+- upstream-jq-test-l1345
+- upstream-jq-test-l1349
+- upstream-jq-test-l1353
+- upstream-jq-test-l1357
+- upstream-jq-test-l1361
+- upstream-jq-test-l1368
+- upstream-jq-test-l1373
+- upstream-jq-test-l1377
+- upstream-jq-test-l1382
+- upstream-jq-test-l1386
+- upstream-jq-test-l1404
+- upstream-jq-test-l1409
+- upstream-jq-test-l1413
+- upstream-jq-test-l1417
+- upstream-jq-test-l1425
+- upstream-jq-test-l1431
+- upstream-jq-test-l1435
+- upstream-jq-test-l1439
+- upstream-jq-test-l1443
+- upstream-jq-test-l1447
+- upstream-jq-test-l1451
+- upstream-jq-test-l1472
+- upstream-jq-test-l1476
+- upstream-jq-test-l1482
+- upstream-jq-test-l1487
+- upstream-jq-test-l1491
+- upstream-jq-test-l1495
+- upstream-jq-test-l1503
+- upstream-jq-test-l1507
+- upstream-jq-test-l1511
+- upstream-jq-test-l1515
+- upstream-jq-test-l1519
+- upstream-jq-test-l1523
+- upstream-jq-test-l1527
+- upstream-jq-test-l1531
+- upstream-jq-test-l1537
+- upstream-jq-test-l1543
+- upstream-jq-test-l1549
+- upstream-jq-test-l1555
+- upstream-jq-test-l1559
+- upstream-jq-test-l1567
+- upstream-jq-test-l1571
+- upstream-jq-test-l1579
+- upstream-jq-test-l1583
+- upstream-jq-test-l1587
+- upstream-jq-test-l1591
+- upstream-jq-test-l1595
+- upstream-jq-test-l1599
+- upstream-jq-test-l1603
+- upstream-jq-test-l1607
+- upstream-jq-test-l1611
+- upstream-jq-test-l1615
+- upstream-jq-test-l1619
+- upstream-jq-test-l1623
+- upstream-jq-test-l1627
+- upstream-jq-test-l1631
+- upstream-jq-test-l1635
+- upstream-jq-test-l1639
+- upstream-jq-test-l1643
+- upstream-jq-test-l1647
+- upstream-jq-test-l1651
+- upstream-jq-test-l1659
+- upstream-jq-test-l1663
+- upstream-jq-test-l1667
+- upstream-jq-test-l1671
+- upstream-jq-test-l1675
+- upstream-jq-test-l1679
+- upstream-jq-test-l1683
+- upstream-jq-test-l1687
+- upstream-jq-test-l1691
+- upstream-jq-test-l1695
+- upstream-jq-test-l1699
+- upstream-jq-test-l1703
+- upstream-jq-test-l1707
+- upstream-jq-test-l1711
+- upstream-jq-test-l1715
+- upstream-jq-test-l1719
+- upstream-jq-test-l1749
+- upstream-jq-test-l1753
+- upstream-jq-test-l1757
+- upstream-jq-test-l1761
+- upstream-jq-test-l1765
+- upstream-jq-test-l1769
+- upstream-jq-test-l1773
+- upstream-jq-test-l1777
+- upstream-jq-test-l1781
+- upstream-jq-test-l1785
+- upstream-jq-test-l1789
+- upstream-jq-test-l1793
+- upstream-jq-test-l1797
+- upstream-jq-test-l1801
+- upstream-jq-test-l1809
+- upstream-jq-test-l1813
+- upstream-jq-test-l1817
+- upstream-jq-test-l1821
+- upstream-jq-test-l1825
+- upstream-jq-test-l1829
+- upstream-jq-test-l1833
+- upstream-jq-test-l1838
+- upstream-jq-test-l1842
+- upstream-jq-test-l1846
+- upstream-jq-test-l1865
+- upstream-jq-test-l1870
+- upstream-jq-test-l1874
+- upstream-jq-test-l1878
+- upstream-jq-test-l1882
+- upstream-jq-test-l1887
+- upstream-jq-test-l1891
+- upstream-jq-test-l1899
+- upstream-jq-test-l1910
+- upstream-jq-test-l1916
+- upstream-jq-test-l1922
+- upstream-jq-test-l1928
+- upstream-jq-test-l1939
+- upstream-jq-test-l1943
+- upstream-jq-test-l1947
+- upstream-jq-test-l1963
+- upstream-jq-test-l1967
+- upstream-jq-test-l1971
+- upstream-jq-test-l1975
+- upstream-jq-test-l1984
+- upstream-jq-test-l1995
+- upstream-jq-test-l2000
+- upstream-jq-test-l2004
+- upstream-jq-test-l2008
+- upstream-jq-test-l2012
+- upstream-jq-test-l2016
+- upstream-jq-test-l2020
+- upstream-jq-test-l2024
+- upstream-jq-test-l2028
+- upstream-jq-test-l2033
+- upstream-jq-test-l2037
+- upstream-jq-test-l2041
+- upstream-jq-test-l2047
+- upstream-jq-test-l2052
+- upstream-jq-test-l2055
+- upstream-jq-test-l2059
+- upstream-jq-test-l2063
+- upstream-jq-test-l2082
+- upstream-jq-test-l2087
+- upstream-jq-test-l2091
+- upstream-jq-test-l2096
+- upstream-jq-test-l2101
+- upstream-jq-test-l2109
+- upstream-jq-test-l2113
+- upstream-jq-test-l2118
+- upstream-jq-test-l2123
+- upstream-jq-test-l2127
+- upstream-jq-test-l2131
+- upstream-jq-test-l2156
+- upstream-jq-test-l2162
+- upstream-jq-test-l2166
+- upstream-jq-test-l2170
+- upstream-jq-test-l2177
+- upstream-jq-test-l2181
+- upstream-jq-test-l2185
+- upstream-jq-test-l2194
+- upstream-jq-test-l2198
+- upstream-jq-test-l2202
+- upstream-jq-test-l2207
+- upstream-jq-test-l2216
+- upstream-jq-test-l2220
+- upstream-jq-test-l2233
+- upstream-jq-test-l2237
+- upstream-jq-test-l2247
+- upstream-jq-test-l2251
+- upstream-jq-test-l2255
+- upstream-jq-test-l2259
+- upstream-jq-test-l2263
+- upstream-jq-test-l2270
+- upstream-jq-test-l2274
+- upstream-jq-test-l2290
+- upstream-jq-test-l2303
+- upstream-jq-test-l2307
+- upstream-jq-test-l2312
+- upstream-jq-test-l2316
+- upstream-jq-test-l2320
+- upstream-jq-test-l2325
+- upstream-jq-test-l2329
+- upstream-jq-test-l2333
+- upstream-jq-test-l2338
+- upstream-jq-test-l2343
+- upstream-jq-test-l2348
+- upstream-jq-test-l2352
+- upstream-jq-test-l2356
+- upstream-jq-test-l2361
+- upstream-jq-test-l2369
+- upstream-jq-test-l2373
+- upstream-jq-test-l2391
+- upstream-jq-test-l2396
+- upstream-jq-test-l2401
+- upstream-jq-test-l2405
+- upstream-jq-test-l2409
+- upstream-jq-test-l2413
+- upstream-jq-test-l2417
+- upstream-jq-test-l2421
+- upstream-jq-test-l2429
+- upstream-jq-test-l2433
+- upstream-jq-test-l2437
+- upstream-jq-test-l2441
+- upstream-jq-test-l2445
+- upstream-jq-test-l2449
+- upstream-jq-test-l2453
+- upstream-jq-test-l2460
+- upstream-jq-test-l2464
+- upstream-jq-test-l2470
+- upstream-jq-test-l2482
+- upstream-jq-test-l2489
+- upstream-jq-test-l2499
+- upstream-jq-test-l2514
+- upstream-jq-test-l2524
+- upstream-jq-test-l2529
+- upstream-jq-test-l2534
+- upstream-jq-test-l716
+- upstream-jq-test-l728
+- upstream-jq-test-l732
+- upstream-jq-test-l736
+- upstream-jq-test-l749
+- upstream-jq-test-l753
+- upstream-jq-test-l757
+- upstream-jq-test-l780
+- upstream-jq-test-l785
+- upstream-jq-test-l799
+- upstream-jq-test-l807
+- upstream-jq-test-l811
+- upstream-jq-test-l817
+- upstream-jq-test-l821
+- upstream-jq-test-l825
+- upstream-jq-test-l829
+- upstream-jq-test-l842
+- upstream-jq-test-l846
+- upstream-jq-test-l859
+- upstream-jq-test-l864
+- upstream-jq-test-l869
+- upstream-jq-test-l875
+- upstream-jq-test-l880
+- upstream-jq-test-l890
+- upstream-jq-test-l894
+- upstream-jq-test-l898
+- upstream-jq-test-l902
+- upstream-jq-test-l906
+- upstream-jq-test-l910
+- upstream-jq-test-l920
+- upstream-jq-test-l936
+- upstream-jq-test-l940
+- upstream-jq-test-l944
+- upstream-jq-test-l948
+- upstream-jq-test-l952
+- upstream-jq-test-l959
+- upstream-jq-test-l966
+- upstream-jq-test-l973
+- upstream-jq-test-l980
+- upstream-jq-test-l987
+- upstream-jq-test-l994
+- upstream-uri-test-l25
+- upstream-uri-test-l30
+- upstream-uri-test-l4
+- upstream-uri-test-l9
 
