@@ -171,7 +171,11 @@ jobs:
 
           node --input-type=module <<'NODE'
           import { run, runJsonText, runtime } from "@shina1024/jqx";
+          import { createAdapter as createValibotAdapter } from "@shina1024/jqx-valibot-adapter";
+          import { createAdapter as createYupAdapter } from "@shina1024/jqx-yup-adapter";
           import { createAdapter as createZodAdapter } from "@shina1024/jqx-zod-adapter";
+          import * as v from "valibot";
+          import * as yup from "yup";
           import { z } from "zod";
 
           const valueResult = run(".foo + 1", { foo: 41 });
@@ -193,6 +197,30 @@ jobs:
           });
           if (!adapterResult.ok || adapterResult.value[0] !== "alice") {
             throw new Error(`unexpected adapter result: ${JSON.stringify(adapterResult)}`);
+          }
+
+          const yupAdapter = createYupAdapter(runtime);
+          const yupResult = await yupAdapter.filter({
+            filter: ".users[].name",
+            input: { users: [{ name: "alice" }] },
+            inputSchema: yup.object({
+              users: yup.array(yup.object({ name: yup.string().defined() }).defined()).defined(),
+            }).defined(),
+            outputSchema: yup.string().defined(),
+          });
+          if (!yupResult.ok || yupResult.value[0] !== "alice") {
+            throw new Error(`unexpected yup adapter result: ${JSON.stringify(yupResult)}`);
+          }
+
+          const valibotAdapter = createValibotAdapter(runtime);
+          const valibotResult = await valibotAdapter.filter({
+            filter: ".users[].name",
+            input: { users: [{ name: "alice" }] },
+            inputSchema: v.object({ users: v.array(v.object({ name: v.string() })) }),
+            outputSchema: v.string(),
+          });
+          if (!valibotResult.ok || valibotResult.value[0] !== "alice") {
+            throw new Error(`unexpected valibot adapter result: ${JSON.stringify(valibotResult)}`);
           }
           NODE
 
