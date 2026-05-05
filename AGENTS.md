@@ -68,8 +68,10 @@ This repository targets jq-compatible behavior.
 ## Release
 
 - Before tagging a release, ensure `moon.mod.json` and all publishable npm package versions match the tag version.
+- Before creating a release tag, run `.github/workflows/release-preflight.yml` through `workflow_dispatch` with the plain version such as `0.1.2`; it is intended for not-yet-created tags and should fail if the tag or package versions already exist.
 - Use lightweight `vX.Y.Z` tags unless the user explicitly asks for annotated tags.
 - Release channels are GitHub Release CLI artifacts, npm packages, and Mooncakes.
+- After release publication, use `.github/workflows/post-release-smoke.yml` to verify the actual published GitHub Release CLI artifacts, npm packages, and Mooncakes module for the tag.
 - Mooncakes publishing uses `.github/workflows/release-mooncakes.yml` and the `MOONCAKES_CREDENTIALS_JSON` Actions secret.
 - npm publishing uses `.github/workflows/release-npm.yml` and `NPM_TOKEN`.
 - GitHub Release CLI artifacts use `.github/workflows/release-cli.yml`.
