@@ -72,7 +72,7 @@ The normal path is standard `Json` via `run(filter, input)`. Reach for `compile(
 
 Add the package to your `moon.pkg` imports with an alias:
 
-```moonbit
+```moonbit nocheck
 import {
   "moonbitlang/core/json",
   "shina1024/jqx" @jqx,
@@ -85,7 +85,9 @@ Value lane example:
 ///|
 test "moonbit run on standard Json" {
   let input : Json = { "foo": 41.0 }
-  let outputs = @jqx.run(".foo + 1", input) catch { err => fail(err.to_string()) }
+  let outputs = @jqx.run(".foo + 1", input) catch {
+    err => fail(err.to_string())
+  }
   assert_eq(outputs.length(), 1)
   assert_eq(outputs[0].stringify(), "42")
 }
