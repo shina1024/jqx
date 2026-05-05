@@ -1,12 +1,15 @@
 # @shina1024/jqx-adapter-core
 
-Shared runtime/result/inference utilities for jqx TypeScript adapters.
+Shared support package for jqx TypeScript runtime and adapter packages.
 
-This package is an internal building block for adapter packages such as:
+Most users should install `@shina1024/jqx` and one of the validator adapters directly.
+Use this package when you are building a custom jqx adapter or integrating with the shared runtime/result/query types used by:
 
 - `@shina1024/jqx-zod-adapter`
 - `@shina1024/jqx-yup-adapter`
 - `@shina1024/jqx-valibot-adapter`
+
+The package is published because the public adapter packages depend on these shared contracts, but it is not the main end-user entrypoint.
 
 ## Scripts
 

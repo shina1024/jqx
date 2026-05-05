@@ -1,6 +1,6 @@
 # jqx
 
-A jq-compatible CLI, MoonBit package, and JS/TS runtime built from one shared MoonBit core.
+jq-compatible JSON processor written in MoonBit with a CLI and TypeScript bindings
 
 ## Install
 
@@ -70,13 +70,22 @@ The CLI stays on the shared jq-compatible core. Use it when you want the release
 MoonBit users should use the top-level `shina1024/jqx` package API.
 The normal path is standard `Json` via `run(filter, input)`. Reach for `compile(...)` when you want to reuse a filter, and use `run_json_text(...)` when jq-style text fidelity matters.
 
+Add the package to your `moon.pkg` imports with an alias:
+
+```moonbit
+import {
+  "moonbitlang/core/json",
+  "shina1024/jqx" @jqx,
+}
+```
+
 Value lane example:
 
-```mbt check
+```mbt nocheck
 ///|
 test "moonbit run on standard Json" {
   let input : Json = { "foo": 41.0 }
-  let outputs = run(".foo + 1", input) catch { err => fail(err.to_string()) }
+  let outputs = @jqx.run(".foo + 1", input) catch { err => fail(err.to_string()) }
   assert_eq(outputs.length(), 1)
   assert_eq(outputs[0].stringify(), "42")
 }
@@ -84,10 +93,10 @@ test "moonbit run on standard Json" {
 
 Compiled execution:
 
-```mbt check
+```mbt nocheck
 ///|
 test "moonbit compile and run through a compiled filter" {
-  let filter = compile(".items[]") catch { err => fail(err.to_string()) }
+  let filter = @jqx.compile(".items[]") catch { err => fail(err.to_string()) }
   let input : Json = { "items": [1.0, 2.0, 3.0] }
   let outputs = filter.run(input) catch { err => fail(err.to_string()) }
   assert_eq(outputs.map(v => v.stringify()), ["1", "2", "3"])
@@ -98,10 +107,10 @@ Compiled filters expose `run(...)` for the value lane and `run_json_text(...)` f
 
 Compatibility lane:
 
-```mbt check
+```mbt nocheck
 ///|
 test "moonbit run_json_text preserves output text" {
-  let outputs = run_json_text(".", "9007199254740993") catch {
+  let outputs = @jqx.run_json_text(".", "9007199254740993") catch {
     err => fail(err.to_string())
   }
   assert_eq(outputs, ["9007199254740993"])
@@ -109,10 +118,10 @@ test "moonbit run_json_text preserves output text" {
 ```
 
 Boundary helpers:
-- `is_valid_json(...)` and `parse_json(...)` are input-boundary helpers, not the main happy path.
-- When jq-style numeric or output fidelity matters, use `run_json_text(...)` or `CompiledFilter::run_json_text(...)` before reaching for any advanced helper.
+- `@jqx.is_valid_json(...)` and `@jqx.parse_json(...)` are input-boundary helpers, not the main happy path.
+- When jq-style numeric or output fidelity matters, use `@jqx.run_json_text(...)` or `CompiledFilter::run_json_text(...)` before reaching for any advanced helper.
 - Normal MoonBit usage should stay on `shina1024/jqx`; you should not need `shina1024/jqx/core`, `@core.Value`, or `@core.Filter`.
-- Release-readiness audit commands: `moon package --list --manifest-path moon.mod.json` should exclude `_bundle_tmp` and `_bundle_wasmgc`, and `moon publish --dry-run --manifest-path moon.mod.json` requires `moon login`.
+- Release-readiness audit commands: `moon package --list --manifest-path moon.mod.json` should exclude development-only files and directories such as `scripts`, `third_party`, `ts`, and test files; `moon publish --dry-run --manifest-path moon.mod.json` requires `moon login`.
 
 ## JS/TS Quick Start
 

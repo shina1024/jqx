@@ -4,7 +4,19 @@
   "readme": "README.mbt.md",
   "repository": "https://github.com/shina1024/jqx",
   "license": "Apache-2.0",
-  "exclude": ["_bundle_tmp", "_bundle_wasmgc"],
+  "exclude": [
+    "_build",
+    "_bundle_tmp",
+    "_bundle_wasmgc",
+    "target",
+    "AGENTS.md",
+    "lefthook.yml",
+    "scripts",
+    "third_party",
+    "ts",
+    "**/*_test.mbt",
+    "**/*_wbtest.mbt"
+  ],
   "keywords": ["jq", "json", "query", "filter", "moonbit"],
   "description": "jq-compatible JSON processor with a first-class MoonBit package plus shared CLI and TypeScript surfaces"
 }
