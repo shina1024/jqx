@@ -1,6 +1,6 @@
 {
   "name": "@shina1024/jqx-valibot-adapter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Valibot adapter for jqx, a jq-compatible JSON processor written in MoonBit",
   "repository": {
     "type": "git",
@@ -48,7 +48,7 @@
     "test": "pnpm build && node --import tsx --test test/**/*.test.ts"
   },
   "dependencies": {
-    "@shina1024/jqx-adapter-core": "^0.1.0"
+    "@shina1024/jqx-adapter-core": "workspace:^"
   },
   "devDependencies": {
     "@typescript/native-preview": "beta",
@@ -67,11 +67,6 @@
   "peerDependenciesMeta": {
     "valibot": {
       "optional": true
-    }
-  },
-  "pnpm": {
-    "overrides": {
-      "@shina1024/jqx-adapter-core": "file:../adapter-core"
     }
   }
 }

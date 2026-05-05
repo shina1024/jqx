@@ -1,6 +1,6 @@
 {
   "name": "@shina1024/jqx",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "JavaScript and TypeScript bindings for jqx, a jq-compatible JSON processor written in MoonBit",
   "repository": {
     "type": "git",
@@ -58,7 +58,7 @@
     "test:built": "node --import tsx --test test/**/*.test.ts"
   },
   "dependencies": {
-    "@shina1024/jqx-adapter-core": "^0.1.0"
+    "@shina1024/jqx-adapter-core": "workspace:^"
   },
   "devDependencies": {
     "@typescript/native-preview": "beta",
@@ -69,10 +69,5 @@
     "oxlint-tsgolint": "^0.22.1",
     "tsdown": "0.21.10",
     "tsx": "^4.21.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "@shina1024/jqx-adapter-core": "file:../adapter-core"
-    }
   }
 }

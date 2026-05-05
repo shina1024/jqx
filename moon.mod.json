@@ -1,6 +1,6 @@
 {
   "name": "shina1024/jqx",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "readme": "README.mbt.md",
   "repository": "https://github.com/shina1024/jqx",
   "license": "Apache-2.0",
@@ -11,6 +11,9 @@
     "target",
     "AGENTS.md",
     "lefthook.yml",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
     "scripts",
     "third_party",
     "ts",

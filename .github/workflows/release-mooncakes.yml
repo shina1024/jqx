@@ -156,7 +156,14 @@ jobs:
 
           if [ "${DRY_RUN}" = "true" ]; then
             echo "dry-run publish ${RELEASE_TAG}"
-            moon publish --frozen --dry-run
+            if ! output="$(moon publish --frozen --dry-run 2>&1)"; then
+              printf '%s\n' "${output}"
+              if ! grep -q "Dry run completed successfully" <<<"${output}"; then
+                exit 1
+              fi
+              exit 0
+            fi
+            printf '%s\n' "${output}"
             exit 0
           fi
 
