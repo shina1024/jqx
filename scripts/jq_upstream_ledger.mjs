@@ -111,6 +111,26 @@ function getCompatField(testCase, name) {
   return testCase[name] == null ? "" : String(testCase[name]);
 }
 
+function getCompatPlatforms(testCase) {
+  if (testCase.compat_platforms == null) {
+    return [];
+  }
+  if (!Array.isArray(testCase.compat_platforms)) {
+    return null;
+  }
+  return testCase.compat_platforms.map((value) => String(value).toLowerCase());
+}
+
+function isCompatActive(testCase) {
+  const compatPlatforms = getCompatPlatforms(testCase);
+  return (
+    getCompatStatus(testCase) === "temporary_exception" &&
+    (compatPlatforms == null ||
+      compatPlatforms.length === 0 ||
+      compatPlatforms.includes(process.platform))
+  );
+}
+
 function getCaseSkipReason(testCase) {
   return getCompatField(testCase, "skip_reason");
 }
@@ -139,6 +159,7 @@ function buildCaseComparableRecord(testCase) {
       testCase.jqx_use_stdin == null ? true : Boolean(testCase.jqx_use_stdin),
     skip_reason: getCaseSkipReason(testCase),
     compat_status: getCompatStatus(testCase),
+    compat_platforms: getCompatPlatforms(testCase) ?? [],
     compat_ledger_id: getCompatField(testCase, "compat_ledger_id"),
     compat_reason: getCompatField(testCase, "compat_reason"),
     compat_removal_condition: getCompatField(testCase, "compat_removal_condition"),
@@ -193,10 +214,17 @@ function validateCaseMetadata(cases, corpusName) {
     const compatLedgerId = getCompatField(testCase, "compat_ledger_id");
     const compatReason = getCompatField(testCase, "compat_reason");
     const compatRemovalCondition = getCompatField(testCase, "compat_removal_condition");
+    const compatPlatforms = getCompatPlatforms(testCase);
     const skipReason = getCaseSkipReason(testCase);
 
     if (!["pass", "temporary_exception"].includes(compatStatus)) {
       errors.push(`${corpusName} case ${name} has invalid compat_status: ${compatStatus}`);
+    }
+    if (
+      compatPlatforms == null ||
+      compatPlatforms.some((platform) => platform.trim() === "")
+    ) {
+      errors.push(`${corpusName} case ${name} has invalid compat_platforms`);
     }
 
     if (compatStatus === "temporary_exception") {
@@ -282,7 +310,7 @@ function getCorpusStatus(corpusName, cases, diffRecords) {
   const broken = [];
 
   for (const testCase of cases) {
-    if (getCompatStatus(testCase) !== "temporary_exception") {
+    if (!isCompatActive(testCase)) {
       continue;
     }
     const name = String(testCase.name);
@@ -290,6 +318,9 @@ function getCorpusStatus(corpusName, cases, diffRecords) {
     const skipReason = getCaseSkipReason(testCase);
 
     if (!record) {
+      if (getCompatPlatforms(testCase).length > 0) {
+        continue;
+      }
       (skipReason.trim() !== "" ? activeTemporary : staleTemporary).push({
         case: testCase,
         record: null,

@@ -36,6 +36,41 @@
       "compat_ledger_id": "jq-1.8.1-abort-strindices-pattern",
       "compat_reason": "jq 1.8.1 aborts when _strindices receives a non-string pattern; jqx returns a normal type error instead of reproducing process aborts",
       "compat_removal_condition": "jq upstream stops aborting for _strindices with non-string pattern or jqx adopts a documented jq-crash compatibility mode"
+    },
+    "upstream-jq-test-l2573": {
+      "compat_status": "temporary_exception",
+      "compat_platforms": ["win32"],
+      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-setpath-flatten",
+      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep setpath/flatten case; jqx completes without reproducing process aborts",
+      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep setpath/flatten cases or jqx adopts a documented jq-crash compatibility mode"
+    },
+    "upstream-jq-test-l2577": {
+      "compat_status": "temporary_exception",
+      "compat_platforms": ["win32"],
+      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-setpath",
+      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep setpath case; jqx completes without reproducing process aborts",
+      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep setpath cases or jqx adopts a documented jq-crash compatibility mode"
+    },
+    "upstream-jq-test-l2602": {
+      "compat_status": "temporary_exception",
+      "compat_platforms": ["win32"],
+      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-contains",
+      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep contains case; jqx completes without reproducing process aborts",
+      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep contains cases or jqx adopts a documented jq-crash compatibility mode"
+    },
+    "upstream-jq-test-l2607": {
+      "compat_status": "temporary_exception",
+      "compat_platforms": ["win32"],
+      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-object-multiply",
+      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep object multiplication case; jqx completes without reproducing process aborts",
+      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep object multiplication cases or jqx adopts a documented jq-crash compatibility mode"
+    },
+    "upstream-jq-test-l2611": {
+      "compat_status": "temporary_exception",
+      "compat_platforms": ["win32"],
+      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-object-multiply",
+      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep object multiplication case; jqx completes without reproducing process aborts",
+      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep object multiplication cases or jqx adopts a documented jq-crash compatibility mode"
     }
   }
 }

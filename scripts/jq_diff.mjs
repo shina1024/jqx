@@ -241,6 +241,26 @@ function getCompatField(testCase, name) {
   return testCase[name] == null ? "" : String(testCase[name]);
 }
 
+function getCompatPlatforms(testCase) {
+  if (testCase.compat_platforms == null) {
+    return [];
+  }
+  if (!Array.isArray(testCase.compat_platforms)) {
+    return null;
+  }
+  return testCase.compat_platforms.map((value) => String(value).toLowerCase());
+}
+
+function isCompatActive(testCase) {
+  const compatPlatforms = getCompatPlatforms(testCase);
+  return (
+    getCompatStatus(testCase) === "temporary_exception" &&
+    (compatPlatforms == null ||
+      compatPlatforms.length === 0 ||
+      compatPlatforms.includes(process.platform))
+  );
+}
+
 function readCases(filePath) {
   const raw = readFileSync(filePath, "utf8");
   const parsed = JSON.parse(raw);
@@ -282,8 +302,15 @@ function warmupJqx({ moonCommand, runner, profile }) {
 function ensureValidMetadata(testCase) {
   const compatStatus = getCompatStatus(testCase);
   const name = String(testCase.name ?? "");
+  const compatPlatforms = getCompatPlatforms(testCase);
   if (!["pass", "temporary_exception"].includes(compatStatus)) {
     throw new Error(`invalid compat_status for case ${name}: ${compatStatus}`);
+  }
+  if (
+    compatPlatforms == null ||
+    compatPlatforms.some((platform) => platform.trim() === "")
+  ) {
+    throw new Error(`invalid compat_platforms for case ${name}: expected non-empty strings`);
   }
   if (
     compatStatus === "temporary_exception" &&
@@ -349,6 +376,7 @@ function main() {
         testCase,
         "compat_removal_condition",
       );
+      const compatActive = isCompatActive(testCase);
       const jqArgs = Array.isArray(testCase.jq_args) ? [...testCase.jq_args].map(String) : [];
       const jqxArgs = Array.isArray(testCase.jqx_args)
         ? [...testCase.jqx_args].map(String)
@@ -432,7 +460,7 @@ function main() {
           jqClass.stderrOtherText === jqxClass.stderrOtherText;
       }
 
-      if (compatStatus === "temporary_exception") {
+      if (compatActive) {
         if (ok) {
           failed += 1;
           diffRecords.push({
