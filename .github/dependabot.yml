@@ -6,12 +6,7 @@
 version: 2
 updates:
   - package-ecosystem: "npm" # See documentation for possible values
-    directories: # Location of package manifests
-      - "/ts/jqx"
-      - "/ts/adapter-core"
-      - "/ts/zod-adapter"
-      - "/ts/yup-adapter"
-      - "/ts/valibot-adapter"
+    directory: "/" # Workspace root contains packageManager, pnpm-workspace.yaml, and pnpm-lock.yaml
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 1
