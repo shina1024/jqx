@@ -1,6 +1,6 @@
 {
   "name": "@shina1024/jqx-adapter-core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Shared adapter utilities for jqx, a jq-compatible JSON processor written in MoonBit",
   "repository": {
     "type": "git",
