@@ -275,7 +275,7 @@ jobs:
                 process.exit(1);
               }
             }
-            NODE
+          NODE
 
             npm publish "${tarball_path}" --access public --dry-run
             rm -rf "${pack_dir}"
@@ -329,7 +329,7 @@ jobs:
               console.error(`[mooncakes-version-exists] ${data.module ?? "module"}@${version}`);
               process.exit(1);
             }
-            NODE
+          NODE
           fi
 
       - name: Dry-run Mooncakes publication
