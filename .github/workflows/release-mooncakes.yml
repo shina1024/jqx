@@ -166,6 +166,21 @@ jobs:
 
           if [ "${DRY_RUN}" = "true" ]; then
             echo "dry-run publish ${RELEASE_TAG}"
+            if [ -z "${MOONCAKES_CREDENTIALS_JSON:-}" ]; then
+              echo "::error::MOONCAKES_CREDENTIALS_JSON is required for dry-run publish"
+              exit 1
+            fi
+
+            mkdir -p "$HOME/.moon"
+            credentials="$HOME/.moon/credentials.json"
+            cleanup() {
+              rm -f "${credentials}"
+            }
+            trap cleanup EXIT
+
+            printf '%s' "${MOONCAKES_CREDENTIALS_JSON}" > "${credentials}"
+            chmod 600 "${credentials}"
+
             if ! output="$(moon publish --frozen --dry-run 2>&1)"; then
               printf '%s\n' "${output}"
               if ! grep -q "Dry run completed successfully" <<<"${output}"; then
