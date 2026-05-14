@@ -9,7 +9,7 @@ fn read_stdin_all_internal() -> String {
       continue getchar()
     }
   }
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let mut i = 0
   while i < bytes.length() {
     match utf8_decode_next_strict(bytes, i) {

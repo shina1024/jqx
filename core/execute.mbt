@@ -18,7 +18,7 @@ pub suberror EvalError {
   UnknownVariable(String)
   BreakSignal(String, Array[Value])
   Partial(Array[Value], Value, String)
-} derive(Eq)
+} derive(Eq, Debug)
 
 ///|
 pub impl Show for EvalError with output(self, logger) {
@@ -395,7 +395,7 @@ fn filter_param_needs_direct_inline(filter : Filter, name : String) -> Bool {
 
 ///|
 fn clone_runtime_env(env : Map[String, Value]) -> Map[String, Value] {
-  let out = Map::new()
+  let out = Map([])
   for kv in env {
     out[kv.0] = kv.1
   }
@@ -538,7 +538,7 @@ fn execute_runtime_def_call(
 
 ///|
 pub fn execute(filter : Filter, input : Value) -> Array[Value] raise EvalError {
-  let env = Map::new()
+  let env = Map([])
   let prev_defs = runtime_def_state.current
   let prev_closures = runtime_filter_closure_state.current
   runtime_def_state.current = None
@@ -692,7 +692,7 @@ fn execute_with_env(
         Some(v) => [v]
         None =>
           if name == "ENV" {
-            [Value::object(Map::new())]
+            [Value::object(Map([]))]
           } else if name == "__loc__" {
             [
               Value::object_from_entries([
@@ -891,7 +891,7 @@ fn execute_with_env(
       [Value::array(out)]
     }
     Object(items) => {
-      let mut partials = [(Map::new(), [])]
+      let mut partials = [(Map([]), [])]
       for kv in items {
         let key = kv.0
         let f = kv.1
@@ -1147,7 +1147,7 @@ fn split_string(s : String, sep : String) -> Array[Value] {
 
 ///|
 fn char_to_string(ch : Char) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   buf.write_char(ch)
   buf.to_string()
 }
@@ -1163,7 +1163,7 @@ fn explode_string(s : String) -> Array[Value] {
 
 ///|
 fn implode_array(a : Array[Value]) -> String raise EvalError {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for v in a {
     match v {
       Number(n, _) =>
@@ -1198,7 +1198,7 @@ fn codepoint_or_replacement(code : Int) -> Char {
 
 ///|
 fn ascii_upcase_string(s : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for ch in s {
     let code = ch.to_int()
     if code >= 'a'.to_int() && code <= 'z'.to_int() {
@@ -1212,7 +1212,7 @@ fn ascii_upcase_string(s : String) -> String {
 
 ///|
 fn ascii_downcase_string(s : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for ch in s {
     let code = ch.to_int()
     if code >= 'A'.to_int() && code <= 'Z'.to_int() {
@@ -1331,7 +1331,7 @@ fn set_slice_on_input(
       Value::array(set_slice_array([], start, end, replacement))
     }
     String(_) => raise TypeError("Cannot update string slices")
-    _ => index_type_error(input, Value::object(Map::new()))
+    _ => index_type_error(input, Value::object(Map([])))
   }
 }
 

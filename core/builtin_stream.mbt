@@ -279,7 +279,7 @@ fn walk_transform(
       Value::array(out)
     }
     Object(obj) => {
-      let out = Map::new()
+      let out = Map([])
       let out_order = []
       for kv in object_entries_sorted(obj) {
         let mapped = walk_transform(kv.1, transform, env)
@@ -367,7 +367,7 @@ fn builtin_call_stream(
       } else {
         match input {
           Object(o) => {
-            let out = Map::new()
+            let out = Map([])
             let out_order = []
             let f = args[0]
             for kv in object_entries_sorted(o) {

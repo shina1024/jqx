@@ -188,9 +188,9 @@ fn compiled_json_text_run_error_from_core(
   input : @core.RunError,
 ) -> CompiledJsonTextRunError {
   match input {
-    @core.Parse(err) => JsonParse(json_parse_error_from_core(err))
-    @core.Eval(err) => Runtime(runtime_error_from_core(err))
-    @core.Filter(_) =>
+    Parse(err) => JsonParse(json_parse_error_from_core(err))
+    Eval(err) => Runtime(runtime_error_from_core(err))
+    Filter(_) =>
       abort("unreachable: compiled JSON-text run does not recompile filters")
   }
 }
@@ -203,16 +203,14 @@ fn position_from_core(input : @core.Position) -> Position {
 ///|
 fn json_parse_error_from_core(input : @core.ParseError) -> JsonParseError {
   match input {
-    @core.InvalidChar(pos, ch) => InvalidChar(position_from_core(pos), ch)
-    @core.InvalidEof => InvalidEof
-    @core.DepthLimitExceeded => DepthLimitExceeded
-    @core.InvalidNumericLiteral(pos) =>
-      InvalidNumericLiteral(position_from_core(pos))
-    @core.InvalidNumericLiteralAtEof(pos) =>
+    InvalidChar(pos, ch) => InvalidChar(position_from_core(pos), ch)
+    InvalidEof => InvalidEof
+    DepthLimitExceeded => DepthLimitExceeded
+    InvalidNumericLiteral(pos) => InvalidNumericLiteral(position_from_core(pos))
+    InvalidNumericLiteralAtEof(pos) =>
       InvalidNumericLiteralAtEof(position_from_core(pos))
-    @core.InvalidStringLiteral(pos) =>
-      InvalidStringLiteral(position_from_core(pos))
-    @core.InvalidStringLiteralAtEof(pos) =>
+    InvalidStringLiteral(pos) => InvalidStringLiteral(position_from_core(pos))
+    InvalidStringLiteralAtEof(pos) =>
       InvalidStringLiteralAtEof(position_from_core(pos))
   }
 }
@@ -220,23 +218,22 @@ fn json_parse_error_from_core(input : @core.ParseError) -> JsonParseError {
 ///|
 fn compile_error_from_core(input : @core.FilterError) -> CompileError {
   match input {
-    @core.InvalidChar(pos, ch) => InvalidChar(position_from_core(pos), ch)
-    @core.InvalidEof => InvalidEof
-    @core.InvalidNumber(pos, raw) => InvalidNumber(position_from_core(pos), raw)
-    @core.Diagnostics(lines) => Diagnostics(lines)
+    InvalidChar(pos, ch) => InvalidChar(position_from_core(pos), ch)
+    InvalidEof => InvalidEof
+    InvalidNumber(pos, raw) => InvalidNumber(position_from_core(pos), raw)
+    Diagnostics(lines) => Diagnostics(lines)
   }
 }
 
 ///|
 fn runtime_error_from_core(input : @core.EvalError) -> RuntimeError {
   match input {
-    @core.TypeError(msg) => TypeError(msg)
-    @core.Thrown(value) => Thrown(@core.Value::to_json(value))
-    @core.UnknownFunction(name) => UnknownFunction(name)
-    @core.UnknownVariable(name) => UnknownVariable(name)
-    @core.BreakSignal(name, values) =>
-      BreakSignal(name, @core.values_to_json(values))
-    @core.Partial(values, catch_input, message) =>
+    TypeError(msg) => TypeError(msg)
+    Thrown(value) => Thrown(@core.Value::to_json(value))
+    UnknownFunction(name) => UnknownFunction(name)
+    UnknownVariable(name) => UnknownVariable(name)
+    BreakSignal(name, values) => BreakSignal(name, @core.values_to_json(values))
+    Partial(values, catch_input, message) =>
       Partial(
         @core.values_to_json(values),
         @core.Value::to_json(catch_input),

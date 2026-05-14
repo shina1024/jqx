@@ -71,36 +71,31 @@ pub fn char(cs : @shared_types.RecharSet) -> Pattern {
   if cs.is_empty() {
     empty
   } else {
-    Pattern::{ desc: Char(cs), nullable: false }
+    { desc: Char(cs), nullable: false }
   }
 }
 
 ///|
-pub let epsilon : Pattern = Pattern::{ desc: Sequence([]), nullable: true }
+pub let epsilon : Pattern = { desc: Sequence([]), nullable: true }
 
 ///|
 pub fn seq(exprs : ReadOnlyArray[Pattern]) -> Pattern {
   match exprs {
     [] => epsilon
     [expr] => expr
-    exprs =>
-      Pattern::{ desc: Sequence(exprs), nullable: exprs.all(e => e.nullable) }
+    exprs => { desc: Sequence(exprs), nullable: exprs.all(e => e.nullable) }
   }
 }
 
 ///|
-pub let empty : Pattern = Pattern::{ desc: Alternation([]), nullable: false }
+pub let empty : Pattern = { desc: Alternation([]), nullable: false }
 
 ///|
 pub fn alt(exprs : ReadOnlyArray[Pattern]) -> Pattern {
   match exprs {
     [] => empty
     [expr] => expr
-    exprs =>
-      Pattern::{
-        desc: Alternation(exprs),
-        nullable: exprs.any(e => e.nullable),
-      }
+    exprs => { desc: Alternation(exprs), nullable: exprs.any(e => e.nullable) }
   }
 }
 
@@ -108,7 +103,7 @@ pub fn alt(exprs : ReadOnlyArray[Pattern]) -> Pattern {
 pub fn quantifier(expr : Pattern, q : Quantifier) -> Pattern {
   guard q.min >= 0 else { panic() }
   guard q.max is None || (q.max is Some(max) && max >= q.min) else { panic() }
-  Pattern::{ desc: Quantifier(q, expr), nullable: expr.nullable || q.min == 0 }
+  { desc: Quantifier(q, expr), nullable: expr.nullable || q.min == 0 }
 }
 
 ///|
@@ -116,7 +111,7 @@ pub fn preference(pref : @shared_types.Preference, expr : Pattern) -> Pattern {
   if expr.desc is Char(_) {
     expr
   } else {
-    Pattern::{ desc: Preference(pref, expr), nullable: expr.nullable }
+    { desc: Preference(pref, expr), nullable: expr.nullable }
   }
 }
 
@@ -137,12 +132,12 @@ pub fn first(expr : Pattern) -> Pattern {
 
 ///|
 pub fn capture(name? : String, expr : Pattern) -> Pattern {
-  Pattern::{ desc: Capture(name~, expr), nullable: expr.nullable }
+  { desc: Capture(name~, expr), nullable: expr.nullable }
 }
 
 ///|
 pub fn assertion(a : Assertion) -> Pattern {
-  Pattern::{ desc: Assertion(a), nullable: true }
+  { desc: Assertion(a), nullable: true }
 }
 
 ///|

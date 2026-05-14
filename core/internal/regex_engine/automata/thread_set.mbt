@@ -218,7 +218,7 @@ fn ThreadSet::split_at_first_match(self : ThreadSet) -> (ThreadSet, ThreadSet) {
 
 ///|
 fn ThreadSet::remove_duplicates(self : ThreadSet, next : Expr) -> ThreadSet {
-  let seen = @hashset.HashSet::new()
+  let seen = @hashset.HashSet([])
   let mut result = ts_empty
   for thread in self {
     match thread {

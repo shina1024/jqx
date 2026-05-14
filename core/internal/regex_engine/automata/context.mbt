@@ -21,7 +21,7 @@ struct Context {
 
 ///|
 pub fn Context::new() -> Context {
-  Context::{
+  {
     next_expr_id: EXPR_ID_RESERVED + 1,
     book: SlotBook::empty(),
     book_dirty: false,

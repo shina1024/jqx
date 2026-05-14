@@ -425,7 +425,7 @@ fn format_datetime_with_strftime_pattern(
   day_of_year : Int,
 ) -> String {
   let second_int = second.floor().to_int()
-  let sb = StringBuilder::new()
+  let sb = StringBuilder()
   let mut fully_supported = true
   let mut i = 0
   while i < pattern.length() {
@@ -663,7 +663,7 @@ fn builtin_call_numeric(
       if args.length() != 0 {
         raise UnknownFunction("env")
       } else {
-        Some([Value::object(Map::new())])
+        Some([Value::object(Map([]))])
       }
     "range" =>
       if args.length() == 0 || args.length() > 3 {

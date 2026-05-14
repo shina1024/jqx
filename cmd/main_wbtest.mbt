@@ -3,12 +3,12 @@
 
 ///|
 test "compute exit status" {
-  assert_eq(compute_exit_status([]), 4)
-  assert_eq(compute_exit_status([@lib.Value::null()]), 1)
-  assert_eq(compute_exit_status([@lib.Value::boolean(false)]), 1)
-  assert_eq(compute_exit_status([@lib.Value::boolean(true)]), 0)
-  assert_eq(compute_exit_status([@lib.Value::number(1.0)]), 0)
-  assert_eq(
+  @debug.assert_eq(compute_exit_status([]), 4)
+  @debug.assert_eq(compute_exit_status([@lib.Value::null()]), 1)
+  @debug.assert_eq(compute_exit_status([@lib.Value::boolean(false)]), 1)
+  @debug.assert_eq(compute_exit_status([@lib.Value::boolean(true)]), 0)
+  @debug.assert_eq(compute_exit_status([@lib.Value::number(1.0)]), 0)
+  @debug.assert_eq(
     compute_exit_status([@lib.Value::number(1.0), @lib.Value::boolean(false)]),
     1,
   )
@@ -27,7 +27,9 @@ test "parse cli inputs json basic" {
     input: Some("{\"a\":1}"),
   }
   let parsed = parse_cli_inputs(cfg, "")
-  assert_eq(parsed, [@lib.Value::object({ "a": @lib.Value::number(1.0) })])
+  @debug.assert_eq(parsed, [
+    @lib.Value::object({ "a": @lib.Value::number(1.0) }),
+  ])
 }
 
 ///|
@@ -43,7 +45,9 @@ test "parse cli inputs direct input overrides stdin" {
     input: Some("{\"a\":2}"),
   }
   let parsed = parse_cli_inputs(cfg, "{\"a\":1}")
-  assert_eq(parsed, [@lib.Value::object({ "a": @lib.Value::number(2.0) })])
+  @debug.assert_eq(parsed, [
+    @lib.Value::object({ "a": @lib.Value::number(2.0) }),
+  ])
 }
 
 ///|
@@ -59,7 +63,7 @@ test "parse cli inputs json stream accepts leading bom" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "\u{FEFF}\"byte order mark\"")
-  assert_eq(parsed, [@lib.Value::string("byte order mark")])
+  @debug.assert_eq(parsed, [@lib.Value::string("byte order mark")])
 }
 
 ///|
@@ -75,7 +79,7 @@ test "parse cli inputs json stream ndjson" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "1\n2\n3\n")
-  assert_eq(parsed, [
+  @debug.assert_eq(parsed, [
     @lib.Value::number(1.0),
     @lib.Value::number(2.0),
     @lib.Value::number(3.0),
@@ -95,7 +99,7 @@ test "parse cli inputs json stream whitespace separated" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "1 2")
-  assert_eq(parsed, [@lib.Value::number(1.0), @lib.Value::number(2.0)])
+  @debug.assert_eq(parsed, [@lib.Value::number(1.0), @lib.Value::number(2.0)])
 }
 
 ///|
@@ -111,7 +115,7 @@ test "parse cli inputs json stream adjacent structured values" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "{}[]\"x\"")
-  assert_eq(parsed, [
+  @debug.assert_eq(parsed, [
     @lib.Value::object({}),
     @lib.Value::array([]),
     @lib.Value::string("x"),
@@ -148,7 +152,7 @@ test "parse cli inputs json empty stdin" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, " \n\t\r ")
-  assert_eq(parsed, [])
+  @debug.assert_eq(parsed, [])
 }
 
 ///|
@@ -164,7 +168,7 @@ test "parse cli inputs json slurp single" {
     input: Some("{\"a\":1}"),
   }
   let parsed = parse_cli_inputs(cfg, "")
-  assert_eq(parsed, [
+  @debug.assert_eq(parsed, [
     @lib.Value::array([@lib.Value::object({ "a": @lib.Value::number(1.0) })]),
   ])
 }
@@ -182,7 +186,7 @@ test "parse cli inputs json slurp ndjson" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "1\n2\n3\n")
-  assert_eq(parsed, [
+  @debug.assert_eq(parsed, [
     @lib.Value::array([
       @lib.Value::number(1.0),
       @lib.Value::number(2.0),
@@ -204,7 +208,7 @@ test "parse cli inputs json slurp whitespace separated" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "1 2")
-  assert_eq(parsed, [
+  @debug.assert_eq(parsed, [
     @lib.Value::array([@lib.Value::number(1.0), @lib.Value::number(2.0)]),
   ])
 }
@@ -222,7 +226,7 @@ test "parse cli inputs json slurp empty" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, " \n\t\r ")
-  assert_eq(parsed, [@lib.Value::array([])])
+  @debug.assert_eq(parsed, [@lib.Value::array([])])
 }
 
 ///|
@@ -238,7 +242,7 @@ test "parse cli inputs no-input with slurp" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "1\n2\n")
-  assert_eq(parsed, [@lib.Value::null()])
+  @debug.assert_eq(parsed, [@lib.Value::null()])
 }
 
 ///|
@@ -254,7 +258,7 @@ test "parse cli inputs raw lines" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "a\nb\n")
-  assert_eq(parsed, [@lib.Value::string("a"), @lib.Value::string("b")])
+  @debug.assert_eq(parsed, [@lib.Value::string("a"), @lib.Value::string("b")])
 }
 
 ///|
@@ -270,7 +274,7 @@ test "parse cli inputs raw lines keep empty records" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "a\n\nb\n")
-  assert_eq(parsed, [
+  @debug.assert_eq(parsed, [
     @lib.Value::string("a"),
     @lib.Value::string(""),
     @lib.Value::string("b"),
@@ -290,7 +294,7 @@ test "parse cli inputs raw lines trim crlf" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "a\r\nb\r\n")
-  assert_eq(parsed, [@lib.Value::string("a"), @lib.Value::string("b")])
+  @debug.assert_eq(parsed, [@lib.Value::string("a"), @lib.Value::string("b")])
 }
 
 ///|
@@ -306,7 +310,7 @@ test "parse cli inputs raw slurp" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "a\nb\n")
-  assert_eq(parsed, [@lib.Value::string("a\nb\n")])
+  @debug.assert_eq(parsed, [@lib.Value::string("a\nb\n")])
 }
 
 ///|
@@ -322,7 +326,7 @@ test "parse cli inputs raw direct input slurp" {
     input: Some("a\nb\n"),
   }
   let parsed = parse_cli_inputs(cfg, "ignored\n")
-  assert_eq(parsed, [@lib.Value::string("a\nb\n")])
+  @debug.assert_eq(parsed, [@lib.Value::string("a\nb\n")])
 }
 
 ///|
@@ -338,13 +342,13 @@ test "parse cli inputs raw no-input takes precedence" {
     input: None,
   }
   let parsed = parse_cli_inputs(cfg, "a\n")
-  assert_eq(parsed, [@lib.Value::null()])
+  @debug.assert_eq(parsed, [@lib.Value::null()])
 }
 
 ///|
 test "split error lines keeps trailing empty line" {
-  assert_eq(split_error_lines("line1\nline2\n"), ["line1", "line2", ""])
-  assert_eq(split_error_lines("single"), ["single"])
+  @debug.assert_eq(split_error_lines("line1\nline2\n"), ["line1", "line2", ""])
+  @debug.assert_eq(split_error_lines("single"), ["single"])
 }
 
 ///|
@@ -360,11 +364,11 @@ fn exit_code_matches(actual : Int?, expected : Int?) -> Bool {
 
 ///|
 test "format error message rewrites line and column" {
-  assert_eq(
+  @debug.assert_eq(
     format_error_message("Invalid number abc at line 3, column 14"),
     "jqx: error (at <stdin>:3:14): Invalid number abc",
   )
-  assert_eq(
+  @debug.assert_eq(
     format_error_message("Unexpected end of file"),
     "jqx: error: Unexpected end of file",
   )
@@ -373,17 +377,17 @@ test "format error message rewrites line and column" {
 ///|
 test "run cli prints usage when filter is missing" {
   let result = run_cli(["jqx"], "")
-  assert_eq(result.lines, usage_lines())
-  assert_eq(exit_code_matches(result.exit_code, None), true)
+  @debug.assert_eq(result.lines, usage_lines())
+  @debug.assert_eq(exit_code_matches(result.exit_code, None), true)
 }
 
 ///|
 test "run cli usage text uses jqx command" {
-  assert_eq(
+  @debug.assert_eq(
     usage_summary_line(),
     "Usage: jqx [options] \"<filter>\" [\"<json>\"]",
   )
-  assert_eq(usage_lines(), [
+  @debug.assert_eq(usage_lines(), [
     "Usage: jqx [options] \"<filter>\" [\"<json>\"]", "Example (stdin): echo '{\"foo\": 1}' | jqx \".foo\"",
     "Example (arg):   jqx \".foo\" '{\"foo\": 1}'", "Options: -r, -R, -c, -n, -s, -e, -L <dir>",
   ])
@@ -392,39 +396,39 @@ test "run cli usage text uses jqx command" {
 ///|
 test "run cli reports arg parse errors with short usage" {
   let result = run_cli(["jqx", "-L"], "")
-  assert_eq(result.lines, [
+  @debug.assert_eq(result.lines, [
     "jqx: error: missing argument for -L",
     usage_summary_line(),
   ])
-  assert_eq(exit_code_matches(result.exit_code, None), true)
+  @debug.assert_eq(exit_code_matches(result.exit_code, None), true)
 }
 
 ///|
 test "run cli executes stdin input" {
   let result = run_cli(["jqx", ".foo"], "{\"foo\":1}")
-  assert_eq(result.lines, ["1"])
-  assert_eq(exit_code_matches(result.exit_code, None), true)
+  @debug.assert_eq(result.lines, ["1"])
+  @debug.assert_eq(exit_code_matches(result.exit_code, None), true)
 }
 
 ///|
 test "run cli direct input raw string parity case" {
-  assert_eq(format_output(true, @lib.Value::string("bar")), "bar")
+  @debug.assert_eq(format_output(true, @lib.Value::string("bar")), "bar")
   let result = run_cli(["jqx", "-r", ".foo", "{\"foo\":\"bar\"}"], "")
-  assert_eq(result.lines, ["bar"])
-  assert_eq(exit_code_matches(result.exit_code, None), true)
+  @debug.assert_eq(result.lines, ["bar"])
+  @debug.assert_eq(exit_code_matches(result.exit_code, None), true)
 }
 
 ///|
 test "run cli computes -e exit status" {
   let result = run_cli(["jqx", "-e", ".", "null"], "")
-  assert_eq(result.lines, ["null"])
-  assert_eq(exit_code_matches(result.exit_code, Some(1)), true)
+  @debug.assert_eq(result.lines, ["null"])
+  @debug.assert_eq(exit_code_matches(result.exit_code, Some(1)), true)
 }
 
 ///|
 test "run cli formats compile errors" {
   let result = run_cli(["jqx", ".['x']", "null"], "")
-  assert_eq(exit_code_matches(result.exit_code, Some(5)), true)
+  @debug.assert_eq(exit_code_matches(result.exit_code, Some(5)), true)
   guard result.lines.length() == 1 &&
     result.lines[0].contains("jqx: error (at <stdin>:1:3):") &&
     result.lines[0].contains("Invalid character") else {
@@ -435,7 +439,7 @@ test "run cli formats compile errors" {
 ///|
 test "run cli runtime error parity corpus case" {
   let result = run_cli(["jqx", ".[] | tonumber", "[1,\"x\"]"], "")
-  assert_eq(exit_code_matches(result.exit_code, Some(5)), true)
+  @debug.assert_eq(exit_code_matches(result.exit_code, Some(5)), true)
   guard result.lines.length() == 2 &&
     result.lines[0].contains("cannot be parsed as a number") &&
     result.lines[1] == "1" else {
@@ -460,31 +464,31 @@ test "parse json value end reports structured and string eof errors" {
 test "parse json value end handles escaped quotes" {
   let structured = "{\"a\":\"b\\\"c\"}"
   let string_value = "\"a\\\"b\""
-  assert_eq(parse_json_value_end(structured, 0), structured.length())
-  assert_eq(parse_json_value_end(string_value, 0), string_value.length())
+  @debug.assert_eq(parse_json_value_end(structured, 0), structured.length())
+  @debug.assert_eq(parse_json_value_end(string_value, 0), string_value.length())
 }
 
 ///|
 test "parse raw lines handles empty and no-trailing-newline" {
-  assert_eq(parse_raw_lines(""), [])
-  assert_eq(parse_raw_lines("last"), [@lib.Value::string("last")])
+  @debug.assert_eq(parse_raw_lines(""), [])
+  @debug.assert_eq(parse_raw_lines("last"), [@lib.Value::string("last")])
 }
 
 ///|
 test "render error lines skips empties and falls back on blank input" {
-  assert_eq(render_error_lines("line1\n\nline2\n"), [
+  @debug.assert_eq(render_error_lines("line1\n\nline2\n"), [
     "jqx: error: line1", "jqx: error: line2",
   ])
-  assert_eq(render_error_lines(""), ["jqx: error: "])
+  @debug.assert_eq(render_error_lines(""), ["jqx: error: "])
 }
 
 ///|
 test "cli reads stdin only for parsed stdin input" {
-  assert_eq(cli_reads_stdin(["jqx"]), false)
-  assert_eq(cli_reads_stdin(["jqx", "."]), true)
-  assert_eq(cli_reads_stdin(["jqx", ".", "1"]), false)
-  assert_eq(cli_reads_stdin(["jqx", "-n", "."]), false)
-  assert_eq(cli_reads_stdin(["jqx", "-L"]), false)
+  @debug.assert_eq(cli_reads_stdin(["jqx"]), false)
+  @debug.assert_eq(cli_reads_stdin(["jqx", "."]), true)
+  @debug.assert_eq(cli_reads_stdin(["jqx", ".", "1"]), false)
+  @debug.assert_eq(cli_reads_stdin(["jqx", "-n", "."]), false)
+  @debug.assert_eq(cli_reads_stdin(["jqx", "-L"]), false)
 }
 
 ///|
@@ -504,11 +508,11 @@ test "configure module search paths accepts explicit paths" {
 
 ///|
 test "format error message falls back for malformed locations" {
-  assert_eq(
+  @debug.assert_eq(
     format_error_message("Invalid number abc at line x, column 14"),
     "jqx: error: Invalid number abc at line x, column 14",
   )
-  assert_eq(
+  @debug.assert_eq(
     format_error_message("Invalid number abc at line 3"),
     "jqx: error: Invalid number abc at line 3",
   )

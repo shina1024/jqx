@@ -54,7 +54,7 @@ fn parse_regex_pattern_input(
   allow_array : Bool,
 ) -> RegexPatternInput raise EvalError {
   match value {
-    String(pattern) => RegexPatternInput::{ pattern, inline_flags: "" }
+    String(pattern) => { pattern, inline_flags: "" }
     Array(values) =>
       if !allow_array {
         raise TypeError(json_type_with_value(value) + " is not a string")
@@ -79,7 +79,7 @@ fn parse_regex_pattern_input(
         } else {
           ""
         }
-        RegexPatternInput::{ pattern, inline_flags }
+        { pattern, inline_flags }
       }
     _ => raise TypeError(json_type_name(value) + " not a string or array")
   }

@@ -418,7 +418,7 @@ fn multiply_string_number(s : String, n : Double) -> Value raise EvalError {
   if count > max_result_len / s.length() {
     raise TypeError("Repeat string result too long")
   }
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for _ in 0..<count {
     buf.write_string(s)
   }

@@ -102,7 +102,7 @@ fn builtin_call_collection(
         raise UnknownFunction("INDEX")
       } else {
         let values = execute_with_env(args[0], input, env)
-        let out = Map::new()
+        let out = Map([])
         let out_order = []
         for value in values {
           let keys = execute_with_env(args[1], value, env)

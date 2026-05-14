@@ -11,7 +11,7 @@ pub suberror FilterError {
   InvalidEof
   InvalidNumber(Position, String)
   Diagnostics(Array[String])
-} derive(Eq)
+} derive(Eq, Debug)
 
 ///|
 pub impl Show for FilterError with output(self, logger) {

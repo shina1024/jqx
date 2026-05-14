@@ -4,10 +4,10 @@
 ///|
 test "object_keys_in_order normalizes duplicates and missing keys" {
   let single = { "a": Value::number(1.0) }
-  assert_eq(object_keys_in_order(single, []), ["a"])
+  @debug.assert_eq(object_keys_in_order(single, []), ["a"])
 
   let pair = { "a": Value::number(1.0), "b": Value::number(2.0) }
-  assert_eq(object_keys_in_order(pair, ["b", "missing", "b"]), ["b", "a"])
+  @debug.assert_eq(object_keys_in_order(pair, ["b", "missing", "b"]), ["b", "a"])
 }
 
 ///|

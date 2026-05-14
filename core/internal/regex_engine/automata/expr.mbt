@@ -106,10 +106,10 @@ pub fn e_copy(ctx~ : Context, e : Expr) -> Expr {
 }
 
 ///|
-let e_empty : Expr = Expr::{ id: EXPR_ID_EMPTY, def: Alt([]) }
+let e_empty : Expr = { id: EXPR_ID_EMPTY, def: Alt([]) }
 
 ///|
-pub let e_eps : Expr = Expr::{ id: EXPR_ID_EPS, def: Eps }
+pub let e_eps : Expr = { id: EXPR_ID_EPS, def: Eps }
 
 ///|
 pub fn is_eps(e : Expr) -> Bool {
@@ -121,7 +121,7 @@ pub fn e_cset(ctx~ : Context, c : @shared_types.RecharSet) -> Expr {
   if c.is_empty() {
     e_empty
   } else {
-    Expr::{ id: ctx.new_expr_id(), def: Chr(c) }
+    { id: ctx.new_expr_id(), def: Chr(c) }
   }
 }
 
@@ -132,22 +132,22 @@ pub fn e_rep(
   pref : @shared_types.Preference,
   x : Expr,
 ) -> Expr {
-  Expr::{ id: ctx.new_expr_id(), def: Rep(mode, pref, x) }
+  { id: ctx.new_expr_id(), def: Rep(mode, pref, x) }
 }
 
 ///|
 pub fn e_mark(ctx~ : Context, m : Mark) -> Expr {
-  Expr::{ id: ctx.new_expr_id(), def: Mark(m) }
+  { id: ctx.new_expr_id(), def: Mark(m) }
 }
 
 ///|
 pub fn e_before(ctx~ : Context, cat : @shared_types.Category) -> Expr {
-  Expr::{ id: ctx.new_expr_id(), def: Before(cat) }
+  { id: ctx.new_expr_id(), def: Before(cat) }
 }
 
 ///|
 pub fn e_after(ctx~ : Context, cat : @shared_types.Category) -> Expr {
-  Expr::{ id: ctx.new_expr_id(), def: After(cat) }
+  { id: ctx.new_expr_id(), def: After(cat) }
 }
 
 ///|
@@ -160,7 +160,7 @@ pub fn e_alt(ctx~ : Context, xs : Array[Expr]) -> Expr {
   match xs {
     [] => e_empty
     [x] => x
-    xs => Expr::{ id: ctx.new_expr_id(), def: Alt(xs) }
+    xs => { id: ctx.new_expr_id(), def: Alt(xs) }
   }
 }
 
@@ -184,6 +184,6 @@ pub fn e_seq(
     (_, Alt([])) => y
     (Eps, _) => y
     (_, Eps) if pref is First => x
-    _ => Expr::{ id: ctx.new_expr_id(), def: Seq(pref, x, y) }
+    _ => { id: ctx.new_expr_id(), def: Seq(pref, x, y) }
   }
 }

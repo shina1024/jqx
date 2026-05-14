@@ -237,7 +237,7 @@ fn delpaths_on_input(
   match input {
     JNull => Value::null()
     Object(o) => {
-      let groups = Map::new()
+      let groups = Map([])
       for path in paths {
         if path.length() == 0 {
           continue
@@ -252,7 +252,7 @@ fn delpaths_on_input(
             )
         }
       }
-      let out = Map::new()
+      let out = Map([])
       let out_order = []
       for kv in object_entries_sorted(o) {
         let name = kv.0
@@ -274,7 +274,7 @@ fn delpaths_on_input(
       Value::object_with_order(out, out_order)
     }
     Array(a) => {
-      let groups = Map::new()
+      let groups = Map([])
       for path in paths {
         if path.length() == 0 {
           continue
@@ -374,7 +374,7 @@ fn path_eval_state(
   path : Array[Value],
   valid : Bool,
 ) -> PathEvalState {
-  PathEvalState::{ value, path, valid }
+  { value, path, valid }
 }
 
 ///|
@@ -855,7 +855,7 @@ fn path_filter_state(
   state : PathEvalState,
   env : Map[String, Value],
 ) -> Array[PathEvalState] raise EvalError {
-  path_filter_state_with_bindings(filter, state, env, Map::new())
+  path_filter_state_with_bindings(filter, state, env, Map([]))
 }
 
 ///|

@@ -53,7 +53,7 @@ priv struct RegexCompileCacheState {
 }
 
 ///|
-let regex_compile_cache_state : RegexCompileCacheState = { entries: Map::new() }
+let regex_compile_cache_state : RegexCompileCacheState = { entries: Map([]) }
 
 ///|
 priv struct RegexMatchData {
@@ -71,7 +71,7 @@ fn regex_is_extended_ws(ch : Char) -> Bool {
 fn regex_expand_shorthand_classes(pattern : String) -> String {
   let chars = string_to_chars(pattern)
   let len = chars.length()
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let mut i = 0
   while i < len {
     let ch = chars[i]
@@ -101,7 +101,7 @@ fn regex_expand_shorthand_classes(pattern : String) -> String {
 fn regex_apply_extended_mode(pattern : String) -> String {
   let chars = string_to_chars(pattern)
   let len = chars.length()
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let mut in_char_class = false
   let mut i = 0
   while i < len {
@@ -240,11 +240,7 @@ fn regex_parse_pattern(
     source = "(?i:" + source + ")"
   }
   let parsed = try
-    @regex_parser.parse(
-      profile=regex_unicode_profile,
-      mode=@regex_parser.Mode::String,
-      source[:],
-    )
+    @regex_parser.parse(profile=regex_unicode_profile, mode=String, source[:])
   catch {
     err => raise TypeError("Regex failure: " + err.to_string())
   } noraise {
@@ -280,14 +276,14 @@ fn regex_compile_pattern_uncached(
   if regex_extract_top_level_positive_lookahead(normalized)
     is Some(lookahead_inner) {
     let lookahead_regex = regex_compile_engine_pattern(lookahead_inner, flags)
-    CompiledRegexPattern::{
+    {
       matcher: TopLevelPositiveLookahead(lookahead_regex),
       group_names: lookahead_regex.group_names(),
       skip_empty_match,
     }
   } else {
     let regex = regex_compile_engine_pattern(normalized, flags)
-    CompiledRegexPattern::{
+    {
       matcher: Native(regex),
       group_names: regex.group_names(),
       skip_empty_match,
@@ -332,7 +328,7 @@ fn regex_find_native_next_match(
     Some(result) =>
       match result.group(0) {
         None => None
-        Some((start, end_)) => Some(RegexMatchData::{ start, end_, result })
+        Some((start, end_)) => Some({ start, end_, result })
       }
   }
 }
@@ -353,11 +349,7 @@ fn regex_find_top_level_lookahead_match(
           None => return None
           Some((inner_start, _)) =>
             if inner_start == current_start {
-              return Some(RegexMatchData::{
-                start: current_start,
-                end_: current_start,
-                result,
-              })
+              return Some({ start: current_start, end_: current_start, result })
             } else if inner_start > current_start {
               current_start = inner_start
               continue
@@ -461,7 +453,7 @@ fn regex_named_capture_object(
   result : @regex_engine.MatchResult,
   group_names : ReadOnlyArray[String?],
 ) -> Value {
-  let out = Map::new()
+  let out = Map([])
   for i in 1..<group_names.length() {
     match group_names[i] {
       Some(name) => out[name] = regex_group_value_or_null(s, result, i)
@@ -667,7 +659,7 @@ fn regex_apply_replacement_chunks(
 
 ///|
 fn regex_join_chunks(chunks : Array[String]) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for chunk in chunks {
     buf.write_string(chunk)
   }

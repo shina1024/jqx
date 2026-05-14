@@ -199,7 +199,7 @@ fn compute_exit_status(outputs : Array[@lib.Value]) -> Int {
     return 4
   }
   match outputs[outputs.length() - 1] {
-    @lib.Value::JFalse | @lib.Value::JNull => 1
+    JFalse | JNull => 1
     _ => 0
   }
 }

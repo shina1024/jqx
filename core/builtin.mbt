@@ -133,7 +133,7 @@ fn format_filter_input_string(input : Value) -> String {
 ///|
 fn format_filter_string_preview(s : String) -> String {
   let max_preview_bytes = 10
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let mut used = 0
   for ch in s {
     let code = ch.to_int()
@@ -180,7 +180,7 @@ fn format_filter_string_type_with_preview(s : String) -> String {
 
 ///|
 fn format_html_escape(input : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for ch in input {
     if ch == '<' {
       buf.write_string("&lt;")
@@ -202,7 +202,7 @@ fn format_html_escape(input : String) -> String {
 ///|
 fn format_sh_quote(input : String) -> String {
   let squote = (39).unsafe_to_char()
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   buf.write_char(squote)
   for ch in input {
     if ch.to_int() == 39 {
@@ -220,7 +220,7 @@ fn format_sh_quote(input : String) -> String {
 
 ///|
 fn format_csv_field_string(input : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   buf.write_char('\"')
   for ch in input {
     if ch == '\"' {
@@ -246,7 +246,7 @@ fn format_csv_scalar(value : Value) -> String raise EvalError {
 
 ///|
 fn format_tsv_escape(input : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for ch in input {
     if ch == '\\' {
       buf.write_string("\\\\")
@@ -278,7 +278,7 @@ fn format_tsv_scalar(value : Value) -> String raise EvalError {
 fn format_csv_row(input : Value) -> String raise EvalError {
   match input {
     Array(items) => {
-      let buf = StringBuilder::new()
+      let buf = StringBuilder()
       for i in 0..<items.length() {
         if i > 0 {
           buf.write_char(',')
@@ -295,7 +295,7 @@ fn format_csv_row(input : Value) -> String raise EvalError {
 fn format_tsv_row(input : Value) -> String raise EvalError {
   match input {
     Array(items) => {
-      let buf = StringBuilder::new()
+      let buf = StringBuilder()
       for i in 0..<items.length() {
         if i > 0 {
           buf.write_char('\t')
@@ -407,7 +407,7 @@ fn utf8_decode_next_strict(bytes : Array[Int], i : Int) -> (Int, Int)? {
 
 ///|
 fn utf8_decode_bytes_strict(bytes : Array[Int]) -> String? {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let mut i = 0
   while i < bytes.length() {
     match utf8_decode_next_strict(bytes, i) {
@@ -423,7 +423,7 @@ fn utf8_decode_bytes_strict(bytes : Array[Int]) -> String? {
 
 ///|
 fn utf8_decode_bytes_lossy(bytes : Array[Int]) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let mut i = 0
   while i < bytes.length() {
     match utf8_decode_next_strict(bytes, i) {
@@ -467,7 +467,7 @@ fn uri_hex_nibble(ch : Char) -> Int? {
 ///|
 fn format_uri_encode(input : String) -> String {
   let bytes = utf8_bytes_of_string(input)
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for b in bytes {
     if is_uri_unreserved_byte(b) {
       buf.write_char(b.unsafe_to_char())
@@ -510,7 +510,7 @@ fn format_uri_decode_percent_run(input : String, start : Int) -> (String, Int)? 
 ///|
 fn format_uri_decode(input : String) -> String? {
   let c_input = builtin_c_string_prefix(input)
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let mut i = 0
   while i < c_input.length() {
     let ch = c_input.unsafe_get(i).to_int().unsafe_to_char()
@@ -557,7 +557,7 @@ fn base64_value_of_char(ch : Char) -> Int? {
 fn format_base64_encode(input : String) -> String {
   let bytes = utf8_bytes_of_string(input)
   let alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let mut i = 0
   while i < bytes.length() {
     let b0 = bytes[i]
@@ -720,11 +720,11 @@ fn builtin_call0(name : String, input : Value) -> Array[Value] raise EvalError {
           [
             Value::object_from_entries([
               ("deps", Value::array([])),
-              ("defs", Value::object(Map::new())),
+              ("defs", Value::object(Map([]))),
             ]),
           ]
       }
-    "env" => [Value::object(Map::new())]
+    "env" => [Value::object(Map([]))]
     "builtins" => [Value::array(builtin_list())]
     "now" => [json_number_value(@env.now().to_double() / 1000.0)]
     "gmtime" => [gmtime_json(input)]
@@ -969,7 +969,7 @@ fn builtin_call0(name : String, input : Value) -> Array[Value] raise EvalError {
         Array(_) | Object(_) => []
         _ => [input]
       }
-    "paths" => collect_paths(input, [], None, Map::new())
+    "paths" => collect_paths(input, [], None, Map([]))
     "add" =>
       match input {
         Array(a) => {

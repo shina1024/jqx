@@ -16,14 +16,14 @@ priv struct ModuleSearchPathState {
 }
 
 ///|
-let module_source_state : ModuleSourceState = { sources: Map::new() }
+let module_source_state : ModuleSourceState = { sources: Map([]) }
 
 ///|
 let module_search_path_state : ModuleSearchPathState = { search_paths: [] }
 
 ///|
 pub fn clear_module_sources() -> Unit {
-  module_source_state.sources = Map::new()
+  module_source_state.sources = Map([])
 }
 
 ///|
@@ -106,7 +106,7 @@ fn lower_with_null_defaults_for_patterns(
 
 ///|
 fn as_pattern_key_access(base : Filter, key : Filter) -> Filter {
-  Filter::pipe(base, Filter::call("getpath", [Filter::Array([key])]))
+  Filter::pipe(base, Filter::call("getpath", [Array([key])]))
 }
 
 ///|
@@ -129,7 +129,7 @@ fn filter_constant_json_for_diagnostics(filter : Filter) -> Value? {
         None
       }
     Object(items) => {
-      let out = Map::new()
+      let out = Map([])
       for kv in items {
         match filter_constant_json_for_diagnostics(kv.1) {
           Some(value) => out[kv.0] = value
@@ -201,7 +201,7 @@ fn FilterCursor::parse_as_pattern(
   match ctx.peek_char() {
     Some('$') => {
       ctx.read_char() |> ignore
-      AsPattern::Var(ctx.parse_identifier())
+      Var(ctx.parse_identifier())
     }
     Some('[') => {
       ctx.expect_char('[')
@@ -228,7 +228,7 @@ fn FilterCursor::parse_as_pattern(
             None => raise InvalidEof
           }
         }
-        AsPattern::Array(items)
+        Array(items)
       }
     }
     Some('{') => {
@@ -287,7 +287,7 @@ fn FilterCursor::parse_as_pattern(
                 ctx.read_char() |> ignore
                 bindings.push(ctx.parse_as_pattern())
               } else {
-                bindings.push(AsPattern::Var(name))
+                bindings.push(Var(name))
               }
             }
             Some(_) => ctx.invalid_char()
@@ -305,7 +305,7 @@ fn FilterCursor::parse_as_pattern(
             None => raise InvalidEof
           }
         }
-        AsPattern::Object(entries)
+        Object(entries)
       }
     }
     _ => ctx.invalid_char()
@@ -732,20 +732,20 @@ fn FilterCursor::lower_update_assignment(
           )
           let delete_step = Filter::if_else(
             Filter::call("isempty", [Filter::pipe(original_value, right)]),
-            Filter::add(Filter::identity(), Filter::Array([path_var])),
+            Filter::add(Filter::identity(), Array([path_var])),
             Filter::identity(),
           )
           let delete_paths = Filter::reduce(
             path_stream,
             path_tmp,
-            Filter::Array([]),
+            Array([]),
             delete_step,
           )
           Filter::as_(
             Filter::identity(),
             input_tmp,
             Filter::as_(
-              Filter::Array([source]),
+              Array([source]),
               paths_tmp,
               Filter::as_(
                 updated_root,
@@ -856,12 +856,9 @@ fn lower_filter_with_defs(
         lower_filter_with_defs(left, defs),
         lower_filter_with_defs(right, defs),
       )
-    Array(items) =>
-      Filter::Array(items.map(f => lower_filter_with_defs(f, defs)))
+    Array(items) => Array(items.map(f => lower_filter_with_defs(f, defs)))
     Object(items) =>
-      Filter::Object(
-        items.map(kv => (kv.0, lower_filter_with_defs(kv.1, defs))),
-      )
+      Object(items.map(kv => (kv.0, lower_filter_with_defs(kv.1, defs))))
     Builtin(name) =>
       match find_filter_definition_arity(defs, name, 0) {
         Some((params, replaced)) =>
@@ -1064,11 +1061,9 @@ fn lower_filter_param_refs(
         lower_filter_param_refs(right, params, args),
       )
     Array(items) =>
-      Filter::Array(
-        items.map(item => lower_filter_param_refs(item, params, args)),
-      )
+      Array(items.map(item => lower_filter_param_refs(item, params, args)))
     Object(items) =>
-      Filter::Object(
+      Object(
         items.map(kv => (kv.0, lower_filter_param_refs(kv.1, params, args))),
       )
     As(value, name, body) =>
@@ -1511,13 +1506,13 @@ fn prefix_module_filter_refs(
         prefix_module_filter_refs(right, module_defs, module_alias, shadowed),
       )
     Array(items) =>
-      Filter::Array(
+      Array(
         items.map(item => {
           prefix_module_filter_refs(item, module_defs, module_alias, shadowed)
         }),
       )
     Object(items) =>
-      Filter::Object(
+      Object(
         items.map(kv => {
           (
             kv.0,

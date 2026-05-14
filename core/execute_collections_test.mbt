@@ -4,47 +4,53 @@
 ///|
 test "execute contains jq semantics" {
   let array_input = must_parse("[1,{\"x\":2},3]")
-  assert_eq(must_execute(parse_filter("contains([1,3])"), array_input), [
+  @debug.assert_eq(must_execute(parse_filter("contains([1,3])"), array_input), [
     Value::boolean(true),
   ])
-  assert_eq(must_execute(parse_filter("contains([{\"x\":2}])"), array_input), [
-    Value::boolean(true),
-  ])
-  assert_eq(must_execute(parse_filter("contains([{\"x\":9}])"), array_input), [
-    Value::boolean(false),
-  ])
-  assert_eq(must_execute(parse_filter("contains(([],[3]))"), array_input), [
-    Value::boolean(true),
-    Value::boolean(true),
-  ])
+  @debug.assert_eq(
+    must_execute(parse_filter("contains([{\"x\":2}])"), array_input),
+    [Value::boolean(true)],
+  )
+  @debug.assert_eq(
+    must_execute(parse_filter("contains([{\"x\":9}])"), array_input),
+    [Value::boolean(false)],
+  )
+  @debug.assert_eq(
+    must_execute(parse_filter("contains(([],[3]))"), array_input),
+    [Value::boolean(true), Value::boolean(true)],
+  )
   let repeated_input = must_parse("[1]")
-  assert_eq(must_execute(parse_filter("contains([1,1])"), repeated_input), [
-    Value::boolean(true),
-  ])
+  @debug.assert_eq(
+    must_execute(parse_filter("contains([1,1])"), repeated_input),
+    [Value::boolean(true)],
+  )
   let object_input = must_parse("{\"a\":1,\"b\":{\"c\":2,\"d\":3}}")
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("contains({\"b\":{\"c\":2}})"), object_input),
     [Value::boolean(true)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("contains({\"b\":{\"c\":9}})"), object_input),
     [Value::boolean(false)],
   )
-  assert_eq(must_execute(parse_filter("contains({\"z\":1})"), object_input), [
+  @debug.assert_eq(
+    must_execute(parse_filter("contains({\"z\":1})"), object_input),
+    [Value::boolean(false)],
+  )
+  @debug.assert_eq(must_execute(parse_filter("contains(1)"), must_parse("1")), [
+    Value::boolean(true),
+  ])
+  @debug.assert_eq(must_execute(parse_filter("contains(2)"), must_parse("1")), [
     Value::boolean(false),
   ])
-  assert_eq(must_execute(parse_filter("contains(1)"), must_parse("1")), [
-    Value::boolean(true),
-  ])
-  assert_eq(must_execute(parse_filter("contains(2)"), must_parse("1")), [
-    Value::boolean(false),
-  ])
-  assert_eq(must_execute(parse_filter("contains(true)"), must_parse("true")), [
-    Value::boolean(true),
-  ])
-  assert_eq(must_execute(parse_filter("contains(null)"), must_parse("null")), [
-    Value::boolean(true),
-  ])
+  @debug.assert_eq(
+    must_execute(parse_filter("contains(true)"), must_parse("true")),
+    [Value::boolean(true)],
+  )
+  @debug.assert_eq(
+    must_execute(parse_filter("contains(null)"), must_parse("null")),
+    [Value::boolean(true)],
+  )
 }
 
 ///|
@@ -79,43 +85,46 @@ test "execute contains/startswith/endswith type errors" {
 
 ///|
 test "execute inside jq semantics" {
-  assert_eq(must_execute(parse_filter("inside(1)"), must_parse("1")), [
+  @debug.assert_eq(must_execute(parse_filter("inside(1)"), must_parse("1")), [
     Value::boolean(true),
   ])
-  assert_eq(must_execute(parse_filter("inside(2)"), must_parse("1")), [
+  @debug.assert_eq(must_execute(parse_filter("inside(2)"), must_parse("1")), [
     Value::boolean(false),
   ])
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("inside([0,1,2,3])"), must_parse("[1,2]")),
     [Value::boolean(true)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("inside([0,1,2,3])"), must_parse("[1,4]")),
     [Value::boolean(false)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("inside({\"a\":1,\"b\":2})"),
       must_parse("{\"a\":1}"),
     ),
     [Value::boolean(true)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("inside({\"a\":1,\"b\":2})"),
       must_parse("{\"a\":2}"),
     ),
     [Value::boolean(false)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("inside(\"hello\")"), must_parse("\"ell\"")),
     [Value::boolean(true)],
   )
-  assert_eq(must_execute(parse_filter("inside((1,2))"), must_parse("1")), [
-    Value::boolean(true),
-    Value::boolean(false),
-  ])
-  assert_eq(must_execute(parse_filter("inside(empty)"), must_parse("1")), [])
+  @debug.assert_eq(
+    must_execute(parse_filter("inside((1,2))"), must_parse("1")),
+    [Value::boolean(true), Value::boolean(false)],
+  )
+  @debug.assert_eq(
+    must_execute(parse_filter("inside(empty)"), must_parse("1")),
+    [],
+  )
 }
 
 ///|
@@ -141,28 +150,32 @@ test "execute inside type errors" {
 ///|
 test "execute has jq semantics" {
   let obj = must_parse("{\"a\":1}")
-  assert_eq(must_execute(parse_filter("has(\"a\")"), obj), [
+  @debug.assert_eq(must_execute(parse_filter("has(\"a\")"), obj), [
     Value::boolean(true),
   ])
-  assert_eq(must_execute(parse_filter("has(\"z\")"), obj), [
+  @debug.assert_eq(must_execute(parse_filter("has(\"z\")"), obj), [
     Value::boolean(false),
   ])
-  assert_eq(must_execute(parse_filter("has((\"a\",\"z\"))"), obj), [
+  @debug.assert_eq(must_execute(parse_filter("has((\"a\",\"z\"))"), obj), [
     Value::boolean(true),
     Value::boolean(false),
   ])
-  assert_eq(must_execute(parse_filter("has(empty)"), obj), [])
+  @debug.assert_eq(must_execute(parse_filter("has(empty)"), obj), [])
   let arr = must_parse("[1,2]")
-  assert_eq(must_execute(parse_filter("has(0)"), arr), [Value::boolean(true)])
-  assert_eq(must_execute(parse_filter("has(2)"), arr), [Value::boolean(false)])
-  assert_eq(must_execute(parse_filter("has((-1,1.9,-0.9))"), arr), [
+  @debug.assert_eq(must_execute(parse_filter("has(0)"), arr), [
+    Value::boolean(true),
+  ])
+  @debug.assert_eq(must_execute(parse_filter("has(2)"), arr), [
+    Value::boolean(false),
+  ])
+  @debug.assert_eq(must_execute(parse_filter("has((-1,1.9,-0.9))"), arr), [
     Value::boolean(false),
     Value::boolean(true),
     Value::boolean(true),
   ])
-  assert_eq(must_execute(parse_filter("has(empty)"), arr), [])
+  @debug.assert_eq(must_execute(parse_filter("has(empty)"), arr), [])
   let n = must_parse("null")
-  assert_eq(must_execute(parse_filter("has((0,\"a\",true))"), n), [
+  @debug.assert_eq(must_execute(parse_filter("has((0,\"a\",true))"), n), [
     Value::boolean(false),
     Value::boolean(false),
     Value::boolean(false),
@@ -190,24 +203,29 @@ test "execute has type errors" {
 
 ///|
 test "execute in jq semantics" {
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("\"a\" | in({\"a\":1})"), must_parse("null")),
     [Value::boolean(true)],
   )
-  assert_eq(must_execute(parse_filter("2 | in([10,20])"), must_parse("null")), [
-    Value::boolean(false),
-  ])
-  assert_eq(
+  @debug.assert_eq(
+    must_execute(parse_filter("2 | in([10,20])"), must_parse("null")),
+    [Value::boolean(false)],
+  )
+  @debug.assert_eq(
     must_execute(
       parse_filter("\"a\" | in(({\"a\":1},{\"b\":2}))"),
       must_parse("null"),
     ),
     [Value::boolean(true), Value::boolean(false)],
   )
-  assert_eq(must_execute(parse_filter("0 | in(null)"), must_parse("null")), [
-    Value::boolean(false),
-  ])
-  assert_eq(must_execute(parse_filter("0 | in(empty)"), must_parse("null")), [])
+  @debug.assert_eq(
+    must_execute(parse_filter("0 | in(null)"), must_parse("null")),
+    [Value::boolean(false)],
+  )
+  @debug.assert_eq(
+    must_execute(parse_filter("0 | in(empty)"), must_parse("null")),
+    [],
+  )
 }
 
 ///|
@@ -241,49 +259,53 @@ test "execute iter non-array errors" {
 ///|
 test "execute index negative" {
   let j = must_parse("[1,2]")
-  assert_eq(must_execute(parse_filter(".[-1]"), j), [Value::number(2.0)])
-  assert_eq(must_execute(parse_filter(".[-1]?"), j), [Value::number(2.0)])
-  assert_eq(must_execute(parse_filter(".[-3]"), j), [Value::null()])
+  @debug.assert_eq(must_execute(parse_filter(".[-1]"), j), [Value::number(2.0)])
+  @debug.assert_eq(must_execute(parse_filter(".[-1]?"), j), [Value::number(2.0)])
+  @debug.assert_eq(must_execute(parse_filter(".[-3]"), j), [Value::null()])
 }
 
 ///|
 test "execute slice compatibility" {
   let arr = must_parse("[1,2,3]")
-  assert_eq(must_execute(parse_filter(".[1:2]"), arr), [
+  @debug.assert_eq(must_execute(parse_filter(".[1:2]"), arr), [
     Value::array([Value::number(2.0)]),
   ])
-  assert_eq(must_execute(parse_filter(".[1:9]"), arr), [
+  @debug.assert_eq(must_execute(parse_filter(".[1:9]"), arr), [
     Value::array([Value::number(2.0), Value::number(3.0)]),
   ])
-  assert_eq(must_execute(parse_filter(".[-2:]"), arr), [
+  @debug.assert_eq(must_execute(parse_filter(".[-2:]"), arr), [
     Value::array([Value::number(2.0), Value::number(3.0)]),
   ])
-  assert_eq(must_execute(parse_filter(".[:2]"), arr), [
+  @debug.assert_eq(must_execute(parse_filter(".[:2]"), arr), [
     Value::array([Value::number(1.0), Value::number(2.0)]),
   ])
   let s = must_parse("\"abcd\"")
-  assert_eq(must_execute(parse_filter(".[1:3]"), s), [Value::string("bc")])
-  assert_eq(must_execute(parse_filter(".[-2:]"), s), [Value::string("cd")])
-  assert_eq(must_execute(parse_filter(".[:2]"), s), [Value::string("ab")])
-  assert_eq(must_execute(parse_filter(".[2:2]"), s), [Value::string("")])
+  @debug.assert_eq(must_execute(parse_filter(".[1:3]"), s), [
+    Value::string("bc"),
+  ])
+  @debug.assert_eq(must_execute(parse_filter(".[-2:]"), s), [
+    Value::string("cd"),
+  ])
+  @debug.assert_eq(must_execute(parse_filter(".[:2]"), s), [Value::string("ab")])
+  @debug.assert_eq(must_execute(parse_filter(".[2:2]"), s), [Value::string("")])
   let n = must_parse("null")
-  assert_eq(must_execute(parse_filter(".[1:2]"), n), [Value::null()])
-  assert_eq(must_execute(parse_filter(".[1:2]?"), n), [Value::null()])
+  @debug.assert_eq(must_execute(parse_filter(".[1:2]"), n), [Value::null()])
+  @debug.assert_eq(must_execute(parse_filter(".[1:2]?"), n), [Value::null()])
   let num = must_parse("1")
   guard (try? execute(parse_filter(".[1:2]"), num)) is Err(err) &&
     err.to_string() == "Cannot index number with object" else {
     fail("expected type error for number slice")
   }
-  assert_eq(must_execute(parse_filter(".[1:2]?"), num), [])
+  @debug.assert_eq(must_execute(parse_filter(".[1:2]?"), num), [])
 }
 
 ///|
 test "execute dynamic slice compatibility" {
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter(".[:rindex(\"x\")]"), must_parse("\"正xyz\"")),
     [Value::string("正")],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("map([1,2][0:.])"),
       must_parse("[-1, 1, 2, 3, 1000000000000000000]"),
@@ -298,11 +320,11 @@ test "execute dynamic slice compatibility" {
       ]),
     ],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("[range(3)] | .[nan:1]"), must_parse("null")),
     [Value::array([Value::number(0.0)])],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("[range(3)] | .[1:nan]"), must_parse("null")),
     [Value::array([Value::number(1.0), Value::number(2.0)])],
   )
@@ -318,13 +340,13 @@ test "execute dynamic slice compatibility" {
 
 ///|
 test "execute length compatibility" {
-  assert_eq(must_execute(parse_filter("length"), must_parse("null")), [
+  @debug.assert_eq(must_execute(parse_filter("length"), must_parse("null")), [
     Value::number(0.0),
   ])
-  assert_eq(must_execute(parse_filter("length"), must_parse("-3")), [
+  @debug.assert_eq(must_execute(parse_filter("length"), must_parse("-3")), [
     Value::number(3.0),
   ])
-  assert_eq(must_execute(parse_filter("length"), must_parse("3.14")), [
+  @debug.assert_eq(must_execute(parse_filter("length"), must_parse("3.14")), [
     Value::number(3.14),
   ])
 }
@@ -332,7 +354,7 @@ test "execute length compatibility" {
 ///|
 test "execute keys array compatibility" {
   let j = must_parse("[10,20]")
-  assert_eq(must_execute(parse_filter("keys"), j), [
+  @debug.assert_eq(must_execute(parse_filter("keys"), j), [
     Value::array([Value::number(0.0), Value::number(1.0)]),
   ])
 }

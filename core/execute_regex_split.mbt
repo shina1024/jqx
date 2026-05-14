@@ -27,7 +27,7 @@ fn chars_slice_to_string(
   start : Int,
   end_ : Int,
 ) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for i in start..<end_ {
     buf.write_char(chars[i])
   }
@@ -132,7 +132,7 @@ fn parse_split_regex_pattern(pattern : String) -> SplitRegexPattern {
     out.push(SplitRegexAtom::{ ch, min_repeat, max_repeat })
     i = i + 1
   }
-  SplitRegexPattern::{ atoms: out, anchor_start, anchor_end }
+  { atoms: out, anchor_start, anchor_end }
 }
 
 ///|

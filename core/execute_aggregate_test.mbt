@@ -3,84 +3,91 @@
 
 ///|
 test "execute any/all compatibility" {
-  assert_eq(must_execute(parse_filter("any"), must_parse("[true,false]")), [
-    Value::boolean(true),
-  ])
-  assert_eq(must_execute(parse_filter("all"), must_parse("[true,false]")), [
+  @debug.assert_eq(
+    must_execute(parse_filter("any"), must_parse("[true,false]")),
+    [Value::boolean(true)],
+  )
+  @debug.assert_eq(
+    must_execute(parse_filter("all"), must_parse("[true,false]")),
+    [Value::boolean(false)],
+  )
+  @debug.assert_eq(must_execute(parse_filter("any"), must_parse("[]")), [
     Value::boolean(false),
   ])
-  assert_eq(must_execute(parse_filter("any"), must_parse("[]")), [
-    Value::boolean(false),
-  ])
-  assert_eq(must_execute(parse_filter("all"), must_parse("[]")), [
+  @debug.assert_eq(must_execute(parse_filter("all"), must_parse("[]")), [
     Value::boolean(true),
   ])
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("any"), must_parse("{\"a\":false,\"b\":true}")),
     [Value::boolean(true)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("all"), must_parse("{\"a\":false,\"b\":true}")),
     [Value::boolean(false)],
   )
-  assert_eq(must_execute(parse_filter("any"), must_parse("{}")), [
+  @debug.assert_eq(must_execute(parse_filter("any"), must_parse("{}")), [
     Value::boolean(false),
   ])
-  assert_eq(must_execute(parse_filter("all"), must_parse("{}")), [
+  @debug.assert_eq(must_execute(parse_filter("all"), must_parse("{}")), [
     Value::boolean(true),
   ])
-  assert_eq(must_execute(parse_filter("any(. > 2)"), must_parse("[1,2,3]")), [
-    Value::boolean(true),
-  ])
-  assert_eq(must_execute(parse_filter("all(. > 0)"), must_parse("[1,2,3]")), [
-    Value::boolean(true),
-  ])
-  assert_eq(must_execute(parse_filter("all(. > 2)"), must_parse("[1,2,3]")), [
-    Value::boolean(false),
-  ])
-  assert_eq(must_execute(parse_filter("any(empty)"), must_parse("[1,2,3]")), [
-    Value::boolean(false),
-  ])
-  assert_eq(must_execute(parse_filter("all(empty)"), must_parse("[1,2,3]")), [
-    Value::boolean(true),
-  ])
-  assert_eq(
+  @debug.assert_eq(
+    must_execute(parse_filter("any(. > 2)"), must_parse("[1,2,3]")),
+    [Value::boolean(true)],
+  )
+  @debug.assert_eq(
+    must_execute(parse_filter("all(. > 0)"), must_parse("[1,2,3]")),
+    [Value::boolean(true)],
+  )
+  @debug.assert_eq(
+    must_execute(parse_filter("all(. > 2)"), must_parse("[1,2,3]")),
+    [Value::boolean(false)],
+  )
+  @debug.assert_eq(
+    must_execute(parse_filter("any(empty)"), must_parse("[1,2,3]")),
+    [Value::boolean(false)],
+  )
+  @debug.assert_eq(
+    must_execute(parse_filter("all(empty)"), must_parse("[1,2,3]")),
+    [Value::boolean(true)],
+  )
+  @debug.assert_eq(
     must_execute(parse_filter("any((false,true))"), must_parse("[1,2,3]")),
     [Value::boolean(true)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("all((true,false))"), must_parse("[1,2,3]")),
     [Value::boolean(false)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("any(. > 0)"), must_parse("{\"a\":1,\"b\":0}")),
     [Value::boolean(true)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("all(. > 0)"), must_parse("{\"a\":1,\"b\":0}")),
     [Value::boolean(false)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("any(.[]; . > 2)"), must_parse("[1,2,3]")),
     [Value::boolean(true)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("all(.[]; . > 0)"), must_parse("[1,2,3]")),
     [Value::boolean(true)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("all(.[]; . > 2)"), must_parse("[1,2,3]")),
     [Value::boolean(false)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("any(.[]; . > 9)"), must_parse("[1,2,3]")),
     [Value::boolean(false)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("any(true, error; .)"), must_parse("\"badness\"")),
     [Value::boolean(true)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("all(false, error; .)"),
       must_parse("\"badness\""),
@@ -124,19 +131,23 @@ test "execute any/all errors" {
 
 ///|
 test "execute pick compatibility" {
-  assert_eq(must_execute(parse_filter("pick(.a.b.c)"), must_parse("null")), [
-    Value::object({
-      "a": Value::object({ "b": Value::object({ "c": Value::null() }) }),
-    }),
-  ])
-  assert_eq(must_execute(parse_filter("pick(first)"), must_parse("[1,2]")), [
-    Value::array([Value::number(1.0)]),
-  ])
-  assert_eq(
+  @debug.assert_eq(
+    must_execute(parse_filter("pick(.a.b.c)"), must_parse("null")),
+    [
+      Value::object({
+        "a": Value::object({ "b": Value::object({ "c": Value::null() }) }),
+      }),
+    ],
+  )
+  @debug.assert_eq(
+    must_execute(parse_filter("pick(first)"), must_parse("[1,2]")),
+    [Value::array([Value::number(1.0)])],
+  )
+  @debug.assert_eq(
     must_execute(parse_filter("pick(first|first)"), must_parse("[[10,20],30]")),
     [Value::array([Value::array([Value::number(10.0)])])],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("pick(.a, .b.c, .x)"),
       must_parse("{\"a\":1, \"b\":{\"c\":2,\"d\":3}, \"e\":4}"),
@@ -149,7 +160,7 @@ test "execute pick compatibility" {
       }),
     ],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("pick(.[2], .[0], .[0])"),
       must_parse("[1,2,3,4]"),
@@ -169,71 +180,77 @@ test "execute pick errors" {
 
 ///|
 test "execute jq type-filter builtins" {
-  assert_eq(must_execute(parse_filter("values"), must_parse("null")), [])
-  assert_eq(must_execute(parse_filter("values"), must_parse("1")), [
+  @debug.assert_eq(must_execute(parse_filter("values"), must_parse("null")), [])
+  @debug.assert_eq(must_execute(parse_filter("values"), must_parse("1")), [
     Value::number(1.0),
   ])
-  assert_eq(must_execute(parse_filter("nulls"), must_parse("null")), [
+  @debug.assert_eq(must_execute(parse_filter("nulls"), must_parse("null")), [
     Value::null(),
   ])
-  assert_eq(must_execute(parse_filter("nulls"), must_parse("1")), [])
-  assert_eq(must_execute(parse_filter("booleans"), must_parse("true")), [
+  @debug.assert_eq(must_execute(parse_filter("nulls"), must_parse("1")), [])
+  @debug.assert_eq(must_execute(parse_filter("booleans"), must_parse("true")), [
     Value::boolean(true),
   ])
-  assert_eq(must_execute(parse_filter("booleans"), must_parse("1")), [])
-  assert_eq(must_execute(parse_filter("numbers"), must_parse("1")), [
+  @debug.assert_eq(must_execute(parse_filter("booleans"), must_parse("1")), [])
+  @debug.assert_eq(must_execute(parse_filter("numbers"), must_parse("1")), [
     Value::number(1.0),
   ])
-  assert_eq(must_execute(parse_filter("numbers"), must_parse("\"1\"")), [])
-  assert_eq(must_execute(parse_filter("strings"), must_parse("\"x\"")), [
+  @debug.assert_eq(must_execute(parse_filter("numbers"), must_parse("\"1\"")), [])
+  @debug.assert_eq(must_execute(parse_filter("strings"), must_parse("\"x\"")), [
     Value::string("x"),
   ])
-  assert_eq(must_execute(parse_filter("arrays"), must_parse("[]")), [
+  @debug.assert_eq(must_execute(parse_filter("arrays"), must_parse("[]")), [
     Value::array([]),
   ])
-  assert_eq(must_execute(parse_filter("objects"), must_parse("{}")), [
-    Value::object(Map::new()),
+  @debug.assert_eq(must_execute(parse_filter("objects"), must_parse("{}")), [
+    Value::object(Map([])),
   ])
-  assert_eq(must_execute(parse_filter("iterables"), must_parse("{}")), [
-    Value::object(Map::new()),
+  @debug.assert_eq(must_execute(parse_filter("iterables"), must_parse("{}")), [
+    Value::object(Map([])),
   ])
-  assert_eq(must_execute(parse_filter("iterables"), must_parse("1")), [])
-  assert_eq(must_execute(parse_filter("scalars"), must_parse("1")), [
+  @debug.assert_eq(must_execute(parse_filter("iterables"), must_parse("1")), [])
+  @debug.assert_eq(must_execute(parse_filter("scalars"), must_parse("1")), [
     Value::number(1.0),
   ])
-  assert_eq(must_execute(parse_filter("scalars"), must_parse("{}")), [])
+  @debug.assert_eq(must_execute(parse_filter("scalars"), must_parse("{}")), [])
 }
 
 ///|
 test "execute add builtin compatibility" {
-  assert_eq(must_execute(parse_filter("add"), must_parse("[1,2,3]")), [
+  @debug.assert_eq(must_execute(parse_filter("add"), must_parse("[1,2,3]")), [
     Value::number(6.0),
   ])
-  assert_eq(must_execute(parse_filter("add"), must_parse("[]")), [Value::null()])
-  assert_eq(must_execute(parse_filter("add"), must_parse("{}")), [Value::null()])
-  assert_eq(
+  @debug.assert_eq(must_execute(parse_filter("add"), must_parse("[]")), [
+    Value::null(),
+  ])
+  @debug.assert_eq(must_execute(parse_filter("add"), must_parse("{}")), [
+    Value::null(),
+  ])
+  @debug.assert_eq(
     must_execute(parse_filter("add"), must_parse("{\"a\":1,\"b\":2}")),
     [Value::number(3.0)],
   )
-  assert_eq(must_execute(parse_filter("add"), must_parse("[\"a\",\"b\"]")), [
-    Value::string("ab"),
-  ])
-  assert_eq(must_execute(parse_filter("add"), must_parse("[[1],[2]]")), [
+  @debug.assert_eq(
+    must_execute(parse_filter("add"), must_parse("[\"a\",\"b\"]")),
+    [Value::string("ab")],
+  )
+  @debug.assert_eq(must_execute(parse_filter("add"), must_parse("[[1],[2]]")), [
     Value::array([Value::number(1.0), Value::number(2.0)]),
   ])
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("add"), must_parse("[{\"a\":1},{\"b\":2}]")),
     [Value::object({ "a": Value::number(1.0), "b": Value::number(2.0) })],
   )
-  assert_eq(must_execute(parse_filter("add"), must_parse("[null,1]")), [
+  @debug.assert_eq(must_execute(parse_filter("add"), must_parse("[null,1]")), [
     Value::number(1.0),
   ])
-  assert_eq(must_execute(parse_filter("add"), must_parse("[1,null]")), [
+  @debug.assert_eq(must_execute(parse_filter("add"), must_parse("[1,null]")), [
     Value::number(1.0),
   ])
-  assert_eq(must_execute(parse_filter("add"), must_parse("[null,null]")), [
-    Value::null(),
-  ])
+  @debug.assert_eq(
+    must_execute(parse_filter("add"), must_parse("[null,null]")),
+    [Value::null()],
+  )
 }
 
 ///|
@@ -255,7 +272,7 @@ test "execute add builtin errors" {
 
 ///|
 test "execute add call compatibility" {
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter(
         "[add(null), add(range(range(10))), add(empty), add(10,range(10))]",
@@ -271,7 +288,7 @@ test "execute add call compatibility" {
       ]),
     ],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("add(.[].a)"),
       must_parse("[{\"a\":3}, {\"a\":5}, {\"b\":6}]"),
@@ -282,10 +299,10 @@ test "execute add call compatibility" {
 
 ///|
 test "execute sort compatibility" {
-  assert_eq(must_execute(parse_filter("sort"), must_parse("[3,1,2]")), [
+  @debug.assert_eq(must_execute(parse_filter("sort"), must_parse("[3,1,2]")), [
     Value::array([Value::number(1.0), Value::number(2.0), Value::number(3.0)]),
   ])
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("sort"),
       must_parse("[{},[],\"a\",0,true,false,null]"),
@@ -298,11 +315,11 @@ test "execute sort compatibility" {
         Value::number(0.0),
         Value::string("a"),
         Value::array([]),
-        Value::object(Map::new()),
+        Value::object(Map([])),
       ]),
     ],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("sort"), must_parse("[[1,2],[1,1],[1],[]]")),
     [
       Value::array([
@@ -313,7 +330,7 @@ test "execute sort compatibility" {
       ]),
     ],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("sort"), must_parse("[{\"a\":2},{\"a\":1}]")),
     [
       Value::array([
@@ -338,7 +355,7 @@ test "execute sort errors" {
 
 ///|
 test "execute sort_by compatibility" {
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("sort_by(.a)"),
       must_parse("[{\"a\":2},{\"a\":1}]"),
@@ -350,10 +367,11 @@ test "execute sort_by compatibility" {
       ]),
     ],
   )
-  assert_eq(must_execute(parse_filter("sort_by(.)"), must_parse("[3,1,2]")), [
-    Value::array([Value::number(1.0), Value::number(2.0), Value::number(3.0)]),
-  ])
-  assert_eq(
+  @debug.assert_eq(
+    must_execute(parse_filter("sort_by(.)"), must_parse("[3,1,2]")),
+    [Value::array([Value::number(1.0), Value::number(2.0), Value::number(3.0)])],
+  )
+  @debug.assert_eq(
     must_execute(
       parse_filter("sort_by(empty)"),
       must_parse("[{\"a\":2},{\"a\":1}]"),
@@ -365,7 +383,7 @@ test "execute sort_by compatibility" {
       ]),
     ],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("sort_by(.a, .b)"),
       must_parse("[{\"a\":1,\"b\":2},{\"a\":1,\"b\":1},{\"a\":0,\"b\":3}]"),
@@ -390,7 +408,7 @@ test "execute sort_by errors" {
 
 ///|
 test "execute group_by compatibility" {
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("group_by(.a)"),
       must_parse("[{\"a\":2},{\"a\":1},{\"a\":2}]"),
@@ -405,7 +423,7 @@ test "execute group_by compatibility" {
       ]),
     ],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("group_by(.)"), must_parse("[3,1,2,1]")),
     [
       Value::array([
@@ -415,10 +433,11 @@ test "execute group_by compatibility" {
       ]),
     ],
   )
-  assert_eq(must_execute(parse_filter("group_by(.)"), must_parse("[]")), [
-    Value::array([]),
-  ])
-  assert_eq(
+  @debug.assert_eq(
+    must_execute(parse_filter("group_by(.)"), must_parse("[]")),
+    [Value::array([])],
+  )
+  @debug.assert_eq(
     must_execute(
       parse_filter("group_by(empty)"),
       must_parse("[{\"a\":2},{\"a\":1}]"),
@@ -444,19 +463,23 @@ test "execute group_by errors" {
 
 ///|
 test "execute min/max compatibility" {
-  assert_eq(must_execute(parse_filter("min"), must_parse("[3,1,2]")), [
+  @debug.assert_eq(must_execute(parse_filter("min"), must_parse("[3,1,2]")), [
     Value::number(1.0),
   ])
-  assert_eq(must_execute(parse_filter("max"), must_parse("[3,1,2]")), [
+  @debug.assert_eq(must_execute(parse_filter("max"), must_parse("[3,1,2]")), [
     Value::number(3.0),
   ])
-  assert_eq(must_execute(parse_filter("min"), must_parse("[]")), [Value::null()])
-  assert_eq(must_execute(parse_filter("max"), must_parse("[]")), [Value::null()])
-  assert_eq(
+  @debug.assert_eq(must_execute(parse_filter("min"), must_parse("[]")), [
+    Value::null(),
+  ])
+  @debug.assert_eq(must_execute(parse_filter("max"), must_parse("[]")), [
+    Value::null(),
+  ])
+  @debug.assert_eq(
     must_execute(parse_filter("min"), must_parse("[{\"a\":2},{\"a\":1}]")),
     [Value::object({ "a": Value::number(1.0) })],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("max"), must_parse("[{\"a\":2},{\"a\":1}]")),
     [Value::object({ "a": Value::number(2.0) })],
   )
@@ -476,47 +499,49 @@ test "execute min/max errors" {
 
 ///|
 test "execute min_by/max_by compatibility" {
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("min_by(.a)"),
       must_parse("[{\"a\":2},{\"a\":1}]"),
     ),
     [Value::object({ "a": Value::number(1.0) })],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("max_by(.a)"),
       must_parse("[{\"a\":2},{\"a\":1}]"),
     ),
     [Value::object({ "a": Value::number(2.0) })],
   )
-  assert_eq(must_execute(parse_filter("min_by(.)"), must_parse("[3,1,2]")), [
-    Value::number(1.0),
-  ])
-  assert_eq(must_execute(parse_filter("max_by(.)"), must_parse("[3,1,2]")), [
-    Value::number(3.0),
-  ])
-  assert_eq(must_execute(parse_filter("min_by(.)"), must_parse("[]")), [
+  @debug.assert_eq(
+    must_execute(parse_filter("min_by(.)"), must_parse("[3,1,2]")),
+    [Value::number(1.0)],
+  )
+  @debug.assert_eq(
+    must_execute(parse_filter("max_by(.)"), must_parse("[3,1,2]")),
+    [Value::number(3.0)],
+  )
+  @debug.assert_eq(must_execute(parse_filter("min_by(.)"), must_parse("[]")), [
     Value::null(),
   ])
-  assert_eq(must_execute(parse_filter("max_by(.)"), must_parse("[]")), [
+  @debug.assert_eq(must_execute(parse_filter("max_by(.)"), must_parse("[]")), [
     Value::null(),
   ])
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("min_by(empty)"),
       must_parse("[{\"a\":2},{\"a\":1}]"),
     ),
     [Value::object({ "a": Value::number(2.0) })],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("max_by(empty)"),
       must_parse("[{\"a\":2},{\"a\":1}]"),
     ),
     [Value::object({ "a": Value::number(1.0) })],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("max_by(.k)"),
       must_parse("[{\"k\":1,\"id\":\"a\"},{\"k\":1,\"id\":\"b\"}]"),
@@ -539,13 +564,14 @@ test "execute min_by/max_by errors" {
 
 ///|
 test "execute unique compatibility" {
-  assert_eq(must_execute(parse_filter("unique"), must_parse("[1,2,1,3]")), [
-    Value::array([Value::number(1.0), Value::number(2.0), Value::number(3.0)]),
-  ])
-  assert_eq(must_execute(parse_filter("unique"), must_parse("[]")), [
+  @debug.assert_eq(
+    must_execute(parse_filter("unique"), must_parse("[1,2,1,3]")),
+    [Value::array([Value::number(1.0), Value::number(2.0), Value::number(3.0)])],
+  )
+  @debug.assert_eq(must_execute(parse_filter("unique"), must_parse("[]")), [
     Value::array([]),
   ])
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("unique"),
       must_parse("[{\"a\":2},{\"a\":1},{\"a\":2}]"),
@@ -573,7 +599,7 @@ test "execute unique errors" {
 
 ///|
 test "execute unique_by compatibility" {
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("unique_by(.a)"),
       must_parse(
@@ -587,17 +613,18 @@ test "execute unique_by compatibility" {
       ]),
     ],
   )
-  assert_eq(must_execute(parse_filter("unique_by(.)"), must_parse("[]")), [
-    Value::array([]),
-  ])
-  assert_eq(
+  @debug.assert_eq(
+    must_execute(parse_filter("unique_by(.)"), must_parse("[]")),
+    [Value::array([])],
+  )
+  @debug.assert_eq(
     must_execute(
       parse_filter("unique_by(empty)"),
       must_parse("[{\"a\":2},{\"a\":1}]"),
     ),
     [Value::array([Value::object({ "a": Value::number(2.0) })])],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("unique_by((.a,.b))"),
       must_parse("[{\"a\":2},{\"a\":1}]"),

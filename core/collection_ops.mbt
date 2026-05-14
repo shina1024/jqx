@@ -205,7 +205,7 @@ fn entry_key_value(entry : Value) -> (Value, Value) raise EvalError {
 fn from_entries_json(input : Value) -> Value raise EvalError {
   match input {
     Array(a) => {
-      let out = Map::new()
+      let out = Map([])
       let out_order = []
       for entry in a {
         let (key, value) = entry_key_value(entry)

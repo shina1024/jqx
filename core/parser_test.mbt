@@ -13,14 +13,21 @@ test "parse recurse" {
 
 ///|
 test "parse field" {
-  inspect(parse_filter(".foo"), content="Pipe(Identity, Field(\"foo\"))")
+  inspect(
+    parse_filter(".foo"),
+    content=(
+      #|Pipe(Identity, Field("foo"))
+    ),
+  )
 }
 
 ///|
 test "parse chained fields" {
   inspect(
     parse_filter(".foo.bar"),
-    content="Pipe(Pipe(Identity, Field(\"foo\")), Field(\"bar\"))",
+    content=(
+      #|Pipe(Pipe(Identity, Field("foo")), Field("bar"))
+    ),
   )
 }
 
@@ -33,15 +40,21 @@ test "parse index" {
 test "parse chained index without extra dot" {
   inspect(
     parse_filter(".a[0]"),
-    content="Pipe(Pipe(Identity, Field(\"a\")), Index(0))",
+    content=(
+      #|Pipe(Pipe(Identity, Field("a")), Index(0))
+    ),
   )
   inspect(
     parse_filter(".a[0]?"),
-    content="Pipe(Pipe(Identity, Field(\"a\")), IndexOpt(0))",
+    content=(
+      #|Pipe(Pipe(Identity, Field("a")), IndexOpt(0))
+    ),
   )
   inspect(
     parse_filter(".a[1:3]"),
-    content="Pipe(Pipe(Identity, Field(\"a\")), Slice(Some(1), Some(3)))",
+    content=(
+      #|Pipe(Pipe(Identity, Field("a")), Slice(Some(1), Some(3)))
+    ),
   )
 }
 
@@ -73,7 +86,12 @@ test "parse iter" {
 
 ///|
 test "parse optional access" {
-  inspect(parse_filter(".foo?"), content="Pipe(Identity, FieldOpt(\"foo\"))")
+  inspect(
+    parse_filter(".foo?"),
+    content=(
+      #|Pipe(Identity, FieldOpt("foo"))
+    ),
+  )
   inspect(parse_filter(".[0]?"), content="Pipe(Identity, IndexOpt(0))")
   inspect(parse_filter(".[]?"), content="Pipe(Identity, IterOpt)")
 }
@@ -82,7 +100,9 @@ test "parse optional access" {
 test "parse try" {
   inspect(
     parse_filter("(.a + 1)?"),
-    content="Try(Add(Pipe(Identity, Field(\"a\")), Literal(Number(1))))",
+    content=(
+      #|Try(Add(Pipe(Identity, Field("a")), Literal(Number(1, None))))
+    ),
   )
 }
 
@@ -90,19 +110,39 @@ test "parse try" {
 test "parse try/catch" {
   inspect(
     parse_filter("try .a catch .b"),
-    content="TryCatch(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
+    content=(
+      #|TryCatch(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
+    ),
   )
   inspect(
     parse_filter("try .a"),
-    content="TryCatch(Pipe(Identity, Field(\"a\")), Empty)",
+    content=(
+      #|TryCatch(Pipe(Identity, Field("a")), Empty)
+    ),
   )
   inspect(
     parse_filter("1 + try 2 catch 3 + 4"),
-    content="Add(Add(Literal(Number(1)), TryCatch(Literal(Number(2)), Literal(Number(3)))), Literal(Number(4)))",
+    content=(
+      #|Add(
+      #|  Add(
+      #|    Literal(Number(1, None)),
+      #|    TryCatch(Literal(Number(2, None)), Literal(Number(3, None))),
+      #|  ),
+      #|  Literal(Number(4, None)),
+      #|)
+    ),
   )
   inspect(
     parse_filter("try (1/0) catch 9 + 2"),
-    content="Add(TryCatch(Div(Literal(Number(1)), Literal(Number(0))), Literal(Number(9))), Literal(Number(2)))",
+    content=(
+      #|Add(
+      #|  TryCatch(
+      #|    Div(Literal(Number(1, None)), Literal(Number(0, None))),
+      #|    Literal(Number(9, None)),
+      #|  ),
+      #|  Literal(Number(2, None)),
+      #|)
+    ),
   )
   guard (try? parse_filter("try 1/0 catch 9")) is Err(_) else {
     fail("expected parse error for unparenthesized try/catch arithmetic")
@@ -113,15 +153,38 @@ test "parse try/catch" {
 test "parse reduce/foreach" {
   inspect(
     parse_filter("reduce .[] as $x (0; . + $x)"),
-    content="Reduce(Pipe(Identity, Iter), \"x\", Literal(Number(0)), Add(Identity, Var(\"x\")))",
+    content=(
+      #|Reduce(
+      #|  Pipe(Identity, Iter),
+      #|  "x",
+      #|  Literal(Number(0, None)),
+      #|  Add(Identity, Var("x")),
+      #|)
+    ),
   )
   inspect(
     parse_filter("foreach .[] as $x (0; . + $x; .)"),
-    content="Foreach(Pipe(Identity, Iter), \"x\", Literal(Number(0)), Add(Identity, Var(\"x\")), Identity)",
+    content=(
+      #|Foreach(
+      #|  Pipe(Identity, Iter),
+      #|  "x",
+      #|  Literal(Number(0, None)),
+      #|  Add(Identity, Var("x")),
+      #|  Identity,
+      #|)
+    ),
   )
   inspect(
     parse_filter("foreach .[] as $x (0; . + $x)"),
-    content="Foreach(Pipe(Identity, Iter), \"x\", Literal(Number(0)), Add(Identity, Var(\"x\")), Identity)",
+    content=(
+      #|Foreach(
+      #|  Pipe(Identity, Iter),
+      #|  "x",
+      #|  Literal(Number(0, None)),
+      #|  Add(Identity, Var("x")),
+      #|  Identity,
+      #|)
+    ),
   )
   guard (try? parse_filter("reduce .[] as [$i,$j] (0; . + $i * $j)")) is Ok(_) else {
     fail("expected reduce as-pattern parse")
@@ -136,10 +199,17 @@ test "parse reduce/foreach" {
 
 ///|
 test "parse string key index" {
-  inspect(parse_filter(".[\"foo\"]"), content="Pipe(Identity, Field(\"foo\"))")
+  inspect(
+    parse_filter(".[\"foo\"]"),
+    content=(
+      #|Pipe(Identity, Field("foo"))
+    ),
+  )
   inspect(
     parse_filter(".\"foo\".\"bar\""),
-    content="Pipe(Pipe(Identity, Field(\"foo\")), Field(\"bar\"))",
+    content=(
+      #|Pipe(Pipe(Identity, Field("foo")), Field("bar"))
+    ),
   )
 }
 
@@ -182,22 +252,65 @@ test "parse dynamic slice bounds" {
 test "parse pipe and comma" {
   inspect(
     parse_filter(".foo | .bar, .baz"),
-    content="Pipe(Pipe(Identity, Field(\"foo\")), Comma(Pipe(Identity, Field(\"bar\")), Pipe(Identity, Field(\"baz\"))))",
+    content=(
+      #|Pipe(
+      #|  Pipe(Identity, Field("foo")),
+      #|  Comma(Pipe(Identity, Field("bar")), Pipe(Identity, Field("baz"))),
+      #|)
+    ),
   )
   inspect(
     parse_filter("{x:(1,2)},{x:3} | .x"),
-    content="Pipe(Comma(Object([(\"x\", Comma(Literal(Number(1)), Literal(Number(2))))]), Object([(\"x\", Literal(Number(3)))])), Pipe(Identity, Field(\"x\")))",
+    content=(
+      #|Pipe(
+      #|  Comma(
+      #|    Object([("x", Comma(Literal(Number(1, None)), Literal(Number(2, None))))]),
+      #|    Object([("x", Literal(Number(3, None)))]),
+      #|  ),
+      #|  Pipe(Identity, Field("x")),
+      #|)
+    ),
   )
 }
 
 ///|
 test "parse literals" {
-  inspect(parse_filter("null"), content="Literal(Null)")
-  inspect(parse_filter("true"), content="Literal(True)")
-  inspect(parse_filter("false"), content="Literal(False)")
-  inspect(parse_filter("\"hi\""), content="Literal(String(\"hi\"))")
-  inspect(parse_filter("123"), content="Literal(Number(123))")
-  inspect(parse_filter("@uri"), content="Builtin(\"@uri\")")
+  inspect(
+    parse_filter("null"),
+    content=(
+      #|Literal(JNull)
+    ),
+  )
+  inspect(
+    parse_filter("true"),
+    content=(
+      #|Literal(JTrue)
+    ),
+  )
+  inspect(
+    parse_filter("false"),
+    content=(
+      #|Literal(JFalse)
+    ),
+  )
+  inspect(
+    parse_filter("\"hi\""),
+    content=(
+      #|Literal(String("hi"))
+    ),
+  )
+  inspect(
+    parse_filter("123"),
+    content=(
+      #|Literal(Number(123, None))
+    ),
+  )
+  inspect(
+    parse_filter("@uri"),
+    content=(
+      #|Builtin("@uri")
+    ),
+  )
   guard (try? parse_filter("(@uri|@urid)")) is Ok(_) else {
     fail("expected format filter parse")
   }
@@ -217,9 +330,24 @@ test "parse literals" {
 
 ///|
 test "parse builtin" {
-  inspect(parse_filter("length"), content="Builtin(\"length\")")
-  inspect(parse_filter("type"), content="Builtin(\"type\")")
-  inspect(parse_filter("keys"), content="Builtin(\"keys\")")
+  inspect(
+    parse_filter("length"),
+    content=(
+      #|Builtin("length")
+    ),
+  )
+  inspect(
+    parse_filter("type"),
+    content=(
+      #|Builtin("type")
+    ),
+  )
+  inspect(
+    parse_filter("keys"),
+    content=(
+      #|Builtin("keys")
+    ),
+  )
 }
 
 ///|
@@ -252,38 +380,74 @@ test "parse def no-arg minimal" {
 test "parse call" {
   inspect(
     parse_filter("select(.a)"),
-    content="Call(\"select\", [Pipe(Identity, Field(\"a\"))])",
+    content=(
+      #|Call("select", [Pipe(Identity, Field("a"))])
+    ),
   )
   inspect(
     parse_filter("setpath([\"a\"]; 1)"),
-    content="Call(\"setpath\", [Array([Literal(String(\"a\"))]), Literal(Number(1))])",
+    content=(
+      #|Call(
+      #|  "setpath",
+      #|  [Array([Literal(String("a"))]), Literal(Number(1, None))],
+      #|)
+    ),
   )
   inspect(
     parse_filter("setpath(([\"a\"], [\"b\"]); 1)"),
-    content="Call(\"setpath\", [Comma(Array([Literal(String(\"a\"))]), Array([Literal(String(\"b\"))])), Literal(Number(1))])",
+    content=(
+      #|Call(
+      #|  "setpath",
+      #|  [
+      #|    Comma(Array([Literal(String("a"))]), Array([Literal(String("b"))])),
+      #|    Literal(Number(1, None)),
+      #|  ],
+      #|)
+    ),
   )
 }
 
 ///|
 test "parse qualified callable names" {
-  inspect(parse_filter("foo::bar"), content="Builtin(\"foo::bar\")")
+  inspect(
+    parse_filter("foo::bar"),
+    content=(
+      #|Builtin("foo::bar")
+    ),
+  )
   inspect(
     parse_filter("foo::bar(1)"),
-    content="Call(\"foo::bar\", [Literal(Number(1))])",
+    content=(
+      #|Call("foo::bar", [Literal(Number(1, None))])
+    ),
   )
-  inspect(parse_filter("a::b::c"), content="Builtin(\"a::b::c\")")
+  inspect(
+    parse_filter("a::b::c"),
+    content=(
+      #|Builtin("a::b::c")
+    ),
+  )
 }
 
 ///|
 test "parse variables and as" {
-  inspect(parse_filter("$x"), content="Var(\"x\")")
+  inspect(
+    parse_filter("$x"),
+    content=(
+      #|Var("x")
+    ),
+  )
   inspect(
     parse_filter(".a as $x | $x"),
-    content="As(Pipe(Identity, Field(\"a\")), \"x\", Var(\"x\"))",
+    content=(
+      #|As(Pipe(Identity, Field("a")), "x", Var("x"))
+    ),
   )
   inspect(
     parse_filter(". as $x | $x[]"),
-    content="As(Identity, \"x\", Pipe(Var(\"x\"), Iter))",
+    content=(
+      #|As(Identity, "x", Pipe(Var("x"), Iter))
+    ),
   )
 }
 
@@ -310,27 +474,39 @@ test "parse as pattern bindings" {
 test "parse compare" {
   inspect(
     parse_filter(".a == .b"),
-    content="Eq(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
+    content=(
+      #|Eq(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
+    ),
   )
   inspect(
     parse_filter(".a != .b"),
-    content="Neq(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
+    content=(
+      #|Neq(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
+    ),
   )
   inspect(
     parse_filter(".a < .b"),
-    content="Lt(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
+    content=(
+      #|Lt(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
+    ),
   )
   inspect(
     parse_filter(".a <= .b"),
-    content="Lte(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
+    content=(
+      #|Lte(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
+    ),
   )
   inspect(
     parse_filter(".a > .b"),
-    content="Gt(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
+    content=(
+      #|Gt(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
+    ),
   )
   inspect(
     parse_filter(".a >= .b"),
-    content="Gte(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
+    content=(
+      #|Gte(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
+    ),
   )
 }
 
@@ -338,46 +514,83 @@ test "parse compare" {
 test "parse logical" {
   inspect(
     parse_filter(".a and .b"),
-    content="And(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
+    content=(
+      #|And(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
+    ),
   )
   inspect(
     parse_filter(".a or .b"),
-    content="Or(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
+    content=(
+      #|Or(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
+    ),
   )
   inspect(parse_filter("not"), content="Not(Identity)")
   inspect(
     parse_filter(".a | not"),
-    content="Pipe(Pipe(Identity, Field(\"a\")), Not(Identity))",
+    content=(
+      #|Pipe(Pipe(Identity, Field("a")), Not(Identity))
+    ),
   )
-  inspect(parse_filter("not .a"), content="Not(Pipe(Identity, Field(\"a\")))")
+  inspect(
+    parse_filter("not .a"),
+    content=(
+      #|Not(Pipe(Identity, Field("a")))
+    ),
+  )
 }
 
 ///|
 test "parse arithmetic" {
   inspect(
     parse_filter(".a + .b * .c"),
-    content="Add(Pipe(Identity, Field(\"a\")), Mul(Pipe(Identity, Field(\"b\")), Pipe(Identity, Field(\"c\"))))",
+    content=(
+      #|Add(
+      #|  Pipe(Identity, Field("a")),
+      #|  Mul(Pipe(Identity, Field("b")), Pipe(Identity, Field("c"))),
+      #|)
+    ),
   )
   inspect(
     parse_filter("1+2"),
-    content="Add(Literal(Number(1)), Literal(Number(2)))",
+    content=(
+      #|Add(Literal(Number(1, None)), Literal(Number(2, None)))
+    ),
   )
   inspect(
     parse_filter("1-2"),
-    content="Sub(Literal(Number(1)), Literal(Number(2)))",
+    content=(
+      #|Sub(Literal(Number(1, None)), Literal(Number(2, None)))
+    ),
   )
   inspect(
     parse_filter("(.a - .b) / 2"),
-    content="Div(Sub(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\"))), Literal(Number(2)))",
+    content=(
+      #|Div(
+      #|  Sub(Pipe(Identity, Field("a")), Pipe(Identity, Field("b"))),
+      #|  Literal(Number(2, None)),
+      #|)
+    ),
   )
   inspect(
     parse_filter("10 % 3"),
-    content="Mod(Literal(Number(10)), Literal(Number(3)))",
+    content=(
+      #|Mod(Literal(Number(10, None)), Literal(Number(3, None)))
+    ),
   )
-  inspect(parse_filter("-."), content="Call(\"__neg\", [Identity])")
+  inspect(
+    parse_filter("-."),
+    content=(
+      #|Call("__neg", [Identity])
+    ),
+  )
   inspect(
     parse_filter("-(.a + 1)"),
-    content="Call(\"__neg\", [Add(Pipe(Identity, Field(\"a\")), Literal(Number(1)))])",
+    content=(
+      #|Call(
+      #|  "__neg",
+      #|  [Add(Pipe(Identity, Field("a")), Literal(Number(1, None)))],
+      #|)
+    ),
   )
 }
 
@@ -385,15 +598,37 @@ test "parse arithmetic" {
 test "parse if-then-else" {
   inspect(
     parse_filter("if .a then .b else .c end"),
-    content="IfElse(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")), Pipe(Identity, Field(\"c\")))",
+    content=(
+      #|IfElse(
+      #|  Pipe(Identity, Field("a")),
+      #|  Pipe(Identity, Field("b")),
+      #|  Pipe(Identity, Field("c")),
+      #|)
+    ),
   )
   inspect(
     parse_filter("if .a then .b elif .c then .d else .e end"),
-    content="IfElse(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")), IfElse(Pipe(Identity, Field(\"c\")), Pipe(Identity, Field(\"d\")), Pipe(Identity, Field(\"e\"))))",
+    content=(
+      #|IfElse(
+      #|  Pipe(Identity, Field("a")),
+      #|  Pipe(Identity, Field("b")),
+      #|  IfElse(
+      #|    Pipe(Identity, Field("c")),
+      #|    Pipe(Identity, Field("d")),
+      #|    Pipe(Identity, Field("e")),
+      #|  ),
+      #|)
+    ),
   )
   inspect(
     parse_filter("if .a then .b end"),
-    content="IfElse(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")), Identity)",
+    content=(
+      #|IfElse(
+      #|  Pipe(Identity, Field("a")),
+      #|  Pipe(Identity, Field("b")),
+      #|  Identity,
+      #|)
+    ),
   )
 }
 
@@ -401,7 +636,9 @@ test "parse if-then-else" {
 test "parse fallback and empty" {
   inspect(
     parse_filter(".a // .b"),
-    content="Fallback(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
+    content=(
+      #|Fallback(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
+    ),
   )
   inspect(parse_filter("empty"), content="Empty")
 }
@@ -410,27 +647,104 @@ test "parse fallback and empty" {
 test "parse update assignment operators" {
   inspect(
     parse_filter(".a |= . + 1"),
-    content="IfElse(Call(\"isempty\", [Pipe(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Add(Identity, Literal(Number(1))))]), Call(\"delpaths\", [Literal(Array([Array([String(\"a\")])]))]), Call(\"setpath\", [Literal(Array([String(\"a\")])), Call(\"first\", [Pipe(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Add(Identity, Literal(Number(1))))])]))",
+    content=(
+      #|IfElse(
+      #|  Call(
+      #|    "isempty",
+      #|    [
+      #|      Pipe(
+      #|        Call("getpath", [Literal(Array([String("a")]))]),
+      #|        Add(Identity, Literal(Number(1, None))),
+      #|      ),
+      #|    ],
+      #|  ),
+      #|  Call("delpaths", [Literal(Array([Array([String("a")])]))]),
+      #|  Call(
+      #|    "setpath",
+      #|    [
+      #|      Literal(Array([String("a")])),
+      #|      Call(
+      #|        "first",
+      #|        [
+      #|          Pipe(
+      #|            Call("getpath", [Literal(Array([String("a")]))]),
+      #|            Add(Identity, Literal(Number(1, None))),
+      #|          ),
+      #|        ],
+      #|      ),
+      #|    ],
+      #|  ),
+      #|)
+    ),
   )
   inspect(
     parse_filter(".a += 2"),
-    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Add(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Literal(Number(2)))])",
+    content=(
+      #|Call(
+      #|  "setpath",
+      #|  [
+      #|    Literal(Array([String("a")])),
+      #|    Add(
+      #|      Call("getpath", [Literal(Array([String("a")]))]),
+      #|      Literal(Number(2, None)),
+      #|    ),
+      #|  ],
+      #|)
+    ),
   )
   inspect(
     parse_filter(".a //= 0"),
-    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Fallback(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Literal(Number(0)))])",
+    content=(
+      #|Call(
+      #|  "setpath",
+      #|  [
+      #|    Literal(Array([String("a")])),
+      #|    Fallback(
+      #|      Call("getpath", [Literal(Array([String("a")]))]),
+      #|      Literal(Number(0, None)),
+      #|    ),
+      #|  ],
+      #|)
+    ),
   )
   inspect(
     parse_filter(".[0] *= 3"),
-    content="Call(\"setpath\", [Literal(Array([Number(0)])), Mul(Call(\"getpath\", [Literal(Array([Number(0)]))]), Literal(Number(3)))])",
+    content=(
+      #|Call(
+      #|  "setpath",
+      #|  [
+      #|    Literal(Array([Number(0, None)])),
+      #|    Mul(
+      #|      Call("getpath", [Literal(Array([Number(0, None)]))]),
+      #|      Literal(Number(3, None)),
+      #|    ),
+      #|  ],
+      #|)
+    ),
   )
   inspect(
     parse_filter(".a = 1"),
-    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Literal(Number(1))])",
+    content=(
+      #|Call(
+      #|  "setpath",
+      #|  [Literal(Array([String("a")])), Literal(Number(1, None))],
+      #|)
+    ),
   )
   inspect(
     parse_filter(".a %= 2"),
-    content="Call(\"setpath\", [Literal(Array([String(\"a\")])), Mod(Call(\"getpath\", [Literal(Array([String(\"a\")]))]), Literal(Number(2)))])",
+    content=(
+      #|Call(
+      #|  "setpath",
+      #|  [
+      #|    Literal(Array([String("a")])),
+      #|    Mod(
+      #|      Call("getpath", [Literal(Array([String("a")]))]),
+      #|      Literal(Number(2, None)),
+      #|    ),
+      #|  ],
+      #|)
+    ),
   )
 }
 
@@ -454,7 +768,12 @@ test "parse update assignment dynamic lhs" {
 test "parse update assignment precedence" {
   inspect(
     parse_filter("1 < 2 | . + 1"),
-    content="Pipe(Lt(Literal(Number(1)), Literal(Number(2))), Add(Identity, Literal(Number(1))))",
+    content=(
+      #|Pipe(
+      #|  Lt(Literal(Number(1, None)), Literal(Number(2, None))),
+      #|  Add(Identity, Literal(Number(1, None))),
+      #|)
+    ),
   )
   guard (try? parse_filter(".a = .b | .a")) is Ok(_) else {
     fail("expected parse success for pipe after update assignment")
@@ -474,36 +793,71 @@ test "parse update assignment precedence" {
 test "parse array and object literals" {
   inspect(
     parse_filter("[.a, .b]"),
-    content="Array([Comma(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))])",
+    content=(
+      #|Array([Comma(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))])
+    ),
   )
   inspect(
     parse_filter("[10 > 0, 1 == 2]"),
-    content="Array([Comma(Gt(Literal(Number(10)), Literal(Number(0))), Eq(Literal(Number(1)), Literal(Number(2))))])",
+    content=(
+      #|Array(
+      #|  [
+      #|    Comma(
+      #|      Gt(Literal(Number(10, None)), Literal(Number(0, None))),
+      #|      Eq(Literal(Number(1, None)), Literal(Number(2, None))),
+      #|    ),
+      #|  ],
+      #|)
+    ),
   )
   inspect(
     parse_filter("{\"a\": .b, c: .d}"),
-    content="Object([(\"a\", Pipe(Identity, Field(\"b\"))), (\"c\", Pipe(Identity, Field(\"d\")))])",
+    content=(
+      #|Object([("a", Pipe(Identity, Field("b"))), ("c", Pipe(Identity, Field("d")))])
+    ),
   )
   inspect(
     parse_filter("{\"ok\": (10 > 0)}"),
-    content="Object([(\"ok\", Gt(Literal(Number(10)), Literal(Number(0))))])",
+    content=(
+      #|Object([("ok", Gt(Literal(Number(10, None)), Literal(Number(0, None))))])
+    ),
   )
   inspect(
     parse_filter("{a, \"b\", c: .d}"),
-    content="Object([(\"a\", Pipe(Identity, Field(\"a\"))), (\"b\", Pipe(Identity, Field(\"b\"))), (\"c\", Pipe(Identity, Field(\"d\")))])",
+    content=(
+      #|Object(
+      #|  [
+      #|    ("a", Pipe(Identity, Field("a"))),
+      #|    ("b", Pipe(Identity, Field("b"))),
+      #|    ("c", Pipe(Identity, Field("d"))),
+      #|  ],
+      #|)
+    ),
   )
-  inspect(parse_filter("{ $x }"), content="Object([(\"x\", Var(\"x\"))])")
+  inspect(
+    parse_filter("{ $x }"),
+    content=(
+      #|Object([("x", Var("x"))])
+    ),
+  )
   inspect(
     parse_filter(".[1,2]"),
     content="Pipe(Identity, Comma(Index(1), Index(2)))",
   )
   inspect(
     parse_filter(".[\"a\", \"b\"]"),
-    content="Pipe(Identity, Comma(Field(\"a\"), Field(\"b\")))",
+    content=(
+      #|Pipe(Identity, Comma(Field("a"), Field("b")))
+    ),
   )
   inspect(
     parse_filter("[1,2][]"),
-    content="Pipe(Array([Comma(Literal(Number(1)), Literal(Number(2)))]), Iter)",
+    content=(
+      #|Pipe(
+      #|  Array([Comma(Literal(Number(1, None)), Literal(Number(2, None)))]),
+      #|  Iter,
+      #|)
+    ),
   )
   guard (try? parse_filter("{a,b,(.d):.a,e:.b}")) is Ok(_) else {
     fail("expected dynamic object key parse")
@@ -542,6 +896,8 @@ test "parse interpolated string literal" {
 test "parse parentheses" {
   inspect(
     parse_filter("(.a, .b)"),
-    content="Comma(Pipe(Identity, Field(\"a\")), Pipe(Identity, Field(\"b\")))",
+    content=(
+      #|Comma(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
+    ),
   )
 }

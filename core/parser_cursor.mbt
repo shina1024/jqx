@@ -48,7 +48,7 @@ fn filter_offset_to_position(input : StringView, offset : Int) -> Position {
       column += 1
     }
   }
-  return Position::{ line, column }
+  return { line, column }
 }
 
 ///|
@@ -318,7 +318,7 @@ fn FilterCursor::parse_string_literal(
     Some(_) => ctx.invalid_char(shift=-1)
     None => raise InvalidEof
   }
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let mut start = ctx.offset
   fn flush(end : Int) {
     if start > 0 && end > start {
@@ -380,13 +380,13 @@ fn FilterCursor::parse_string_expr(
     None => raise InvalidEof
   }
 
-  let mut text = StringBuilder::new()
+  let mut text = StringBuilder()
   let parts = []
   fn flush_text() {
     let s = text.to_string()
     if s.length() > 0 {
       parts.push(Filter::literal(Value::string(s)))
-      text = StringBuilder::new()
+      text = StringBuilder()
     }
   }
 
@@ -463,13 +463,13 @@ fn FilterCursor::parse_format_string_expr(
     None => raise InvalidEof
   }
 
-  let mut text = StringBuilder::new()
+  let mut text = StringBuilder()
   let parts = []
   fn flush_text() {
     let s = text.to_string()
     if s.length() > 0 {
       parts.push(Filter::literal(Value::string(s)))
-      text = StringBuilder::new()
+      text = StringBuilder()
     }
   }
 

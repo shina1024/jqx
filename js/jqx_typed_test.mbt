@@ -3,14 +3,14 @@ test "typed identity query" {
   let q : Query[@core.Value, @core.Value] = identity()
   let out = query_json_text(q, "{\"a\":1}")
   guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values, ["{\"a\":1}"])
+  @debug.assert_eq(values, ["{\"a\":1}"])
 }
 
 ///|
 test "typed field query" {
   let out = query_json_text(field("foo"), "{\"foo\":2}")
   guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values, ["2"])
+  @debug.assert_eq(values, ["2"])
 }
 
 ///|
@@ -20,14 +20,14 @@ test "typed pipe query" {
     "{\"foo\":{\"bar\":3}}",
   )
   guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values, ["3"])
+  @debug.assert_eq(values, ["3"])
 }
 
 ///|
 test "typed map query" {
   let out = query_json_text(map(field("x")), "[{\"x\":1},{\"x\":2}]")
   guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values, ["[1,2]"])
+  @debug.assert_eq(values, ["[1,2]"])
 }
 
 ///|
@@ -35,15 +35,15 @@ test "typed query values" {
   let input = parse_json("{\"foo\":7}")
   let out = query(field("foo"), input)
   guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values.length(), 1)
-  assert_eq(values[0].to_json_string(), "7")
+  @debug.assert_eq(values.length(), 1)
+  @debug.assert_eq(values[0].to_json_string(), "7")
 }
 
 ///|
 test "typed comma query" {
   let out = query_json_text(comma(field("a"), field("b")), "{\"a\":1,\"b\":2}")
   guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values, ["1", "2"])
+  @debug.assert_eq(values, ["1", "2"])
 }
 
 ///|
@@ -59,7 +59,7 @@ test "typed select + iter query" {
     q, "[{\"kind\":\"ok\",\"v\":1},{\"kind\":\"ng\",\"v\":2}]",
   )
   guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values, ["1"])
+  @debug.assert_eq(values, ["1"])
 }
 
 ///|
@@ -67,7 +67,7 @@ test "typed add query" {
   let q = add(field("x"), literal(@core.Value::number(1.0)))
   let out = query_json_text(q, "{\"x\":41}")
   guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values, ["42"])
+  @debug.assert_eq(values, ["42"])
 }
 
 ///|
@@ -75,7 +75,7 @@ test "typed fallback query" {
   let q = fallback(field("a"), field("b"))
   let out = query_json_text(q, "{\"b\":2}")
   guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values, ["2"])
+  @debug.assert_eq(values, ["2"])
 }
 
 ///|
@@ -83,7 +83,7 @@ test "typed try_catch query" {
   let q = try_catch(field("x"), literal(@core.Value::string("err")))
   let out = query_json_text(q, "1")
   guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values, ["\"err\""])
+  @debug.assert_eq(values, ["\"err\""])
 }
 
 ///|
@@ -91,7 +91,7 @@ test "typed generic call query" {
   let q = call("contains", [literal(@core.Value::string("ab"))])
   let out = query_json_text(q, "\"abc\"")
   guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values, ["true"])
+  @debug.assert_eq(values, ["true"])
 }
 
 ///|
@@ -102,7 +102,7 @@ test "typed comparison + select query" {
   )
   let out = query_json_text(q, "[{\"v\":1},{\"v\":2},{\"v\":3}]")
   guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values, ["{\"v\":2}", "{\"v\":3}"])
+  @debug.assert_eq(values, ["{\"v\":2}", "{\"v\":3}"])
 }
 
 ///|
@@ -116,7 +116,7 @@ test "typed boolean combinator query" {
     q, "[{\"kind\":\"ok\",\"v\":1},{\"kind\":\"ok\",\"v\":2},{\"kind\":\"skip\",\"v\":3}]",
   )
   guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values, ["2"])
+  @debug.assert_eq(values, ["2"])
 }
 
 ///|
@@ -131,5 +131,5 @@ test "typed if_else query" {
   )
   let out = query_json_text(q, "[{\"v\":1},{\"v\":3}]")
   guard out is Ok(values) else { fail("expected Ok") }
-  assert_eq(values, ["\"small\"", "\"large\""])
+  @debug.assert_eq(values, ["\"small\"", "\"large\""])
 }

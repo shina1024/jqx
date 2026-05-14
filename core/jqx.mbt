@@ -7,14 +7,14 @@ pub enum Value {
   String(String)
   Array(Array[Value])
   Object(JsonObject)
-}
+} derive(Debug)
 
 ///|
 struct JsonObject {
   map : Map[String, Value]
   key_order : Array[String]
   lex_key_order : Array[String]
-}
+} derive(Debug)
 
 ///|
 fn object_keys_in_order(
@@ -22,7 +22,7 @@ fn object_keys_in_order(
   key_order : Array[String],
 ) -> Array[String] {
   let out = []
-  let seen = Map::new()
+  let seen = Map([])
   for key in key_order {
     if !seen.contains(key) {
       seen[key] = true
@@ -200,7 +200,7 @@ fn Value::object_with_order(
 
 ///|
 pub fn Value::object_from_entries(entries : Array[(String, Value)]) -> Value {
-  let map = Map::new()
+  let map = Map([])
   let key_order = []
   for kv in entries {
     let key = kv.0
@@ -242,7 +242,7 @@ pub fn Value::to_json(self : Value) -> Json {
     String(s) => Json::string(s)
     Array(values) => Json::array(values.map(value => Value::to_json(value)))
     Object(obj) => {
-      let out = Map::new()
+      let out = Map([])
       for kv in obj.iter() {
         out[kv.0] = Value::to_json(kv.1)
       }
@@ -326,7 +326,7 @@ fn decimal_expand_positive_exponent(raw : String) -> String? {
   let sign = if negative { "-" } else { "" }
   if exp_nonneg >= frac_len {
     let zero_count = exp_nonneg - frac_len
-    let buf = StringBuilder::new()
+    let buf = StringBuilder()
     buf.write_string(sign)
     buf.write_string(digits)
     for _ in 0..<zero_count {
@@ -335,7 +335,7 @@ fn decimal_expand_positive_exponent(raw : String) -> String? {
     Some(buf.to_string())
   } else {
     let integer_len = digits.length() - (frac_len - exp_nonneg)
-    let buf = StringBuilder::new()
+    let buf = StringBuilder()
     buf.write_string(sign)
     if integer_len > 0 {
       buf.write_string(
@@ -423,7 +423,7 @@ fn object_entries_sorted(o : JsonObject) -> Array[(String, Value)] {
 pub struct Position {
   line : Int // 1-based
   column : Int // 1-based
-} derive(Eq)
+} derive(Eq, Debug)
 
 ///|
 pub suberror ParseError {
@@ -434,7 +434,7 @@ pub suberror ParseError {
   InvalidNumericLiteralAtEof(Position)
   InvalidStringLiteral(Position)
   InvalidStringLiteralAtEof(Position)
-} derive(Eq)
+} derive(Eq, Debug)
 
 ///|
 pub impl Show for ParseError with output(self, logger) {
@@ -486,7 +486,7 @@ pub suberror RunError {
   Parse(ParseError)
   Filter(FilterError)
   Eval(EvalError)
-} derive(Eq)
+} derive(Eq, Debug)
 
 ///|
 pub impl Show for RunError with output(self, logger) {
@@ -499,38 +499,7 @@ pub impl Show for RunError with output(self, logger) {
 
 ///|
 pub impl Show for Value with output(self, logger) {
-  match self {
-    JNull => logger.write_string("Null")
-    JTrue => logger.write_string("True")
-    JFalse => logger.write_string("False")
-    Number(n, repr) => {
-      logger.write_string("Number(")
-      Show::output(n, logger)
-      match repr {
-        Some(repr) => {
-          logger.write_string(", repr=")
-          Show::output(repr, logger)
-        }
-        None => ()
-      }
-      logger.write_string(")")
-    }
-    String(s) => {
-      logger.write_string("String(")
-      Show::output(s, logger)
-      logger.write_string(")")
-    }
-    Array(a) => {
-      logger.write_string("Array(")
-      Show::output(a, logger)
-      logger.write_string(")")
-    }
-    Object(o) => {
-      logger.write_string("Object(")
-      Show::output(o.to_map(), logger)
-      logger.write_string(")")
-    }
-  }
+  logger.write_string(@debug.to_string(self))
 }
 
 ///|
@@ -568,7 +537,7 @@ fn format_finite_number_without_repr(n : Double) -> String {
 ///|
 /// Encode Value as a compact JSON string (jq-style output).
 pub fn Value::to_json_string(self : Value) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   // jq 1.8.1 uses MAX_PRINT_DEPTH=256 in src/jv_print.c and emits
   // "<skipped: too deep>" once printing recurses past that depth.
   let max_depth = 256
@@ -831,7 +800,7 @@ fn ParseContext::parse_object(ctx : ParseContext) -> Value raise ParseError {
     raise DepthLimitExceeded
   }
   ctx.remaining_available_depth -= 1
-  let map = Map::new()
+  let map = Map([])
   let key_order = []
   for token = ctx.lex_property_name() {
     match token {
@@ -900,7 +869,7 @@ fn offset_to_position(input : StringView, offset : Int) -> Position {
       column += 1
     }
   }
-  return Position::{ line, column }
+  return { line, column }
 }
 
 ///|
@@ -961,7 +930,7 @@ fn parse_ascii_downcase_char(c : Char) -> Char {
 
 ///|
 fn parse_ascii_downcase_string(s : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for ch in s {
     buf.write_char(parse_ascii_downcase_char(ch))
   }
@@ -1193,7 +1162,7 @@ fn ParseContext::lex_value(
 
 ///|
 fn ParseContext::lex_string(ctx : ParseContext) -> String raise ParseError {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let mut start = ctx.offset
   fn flush(end : Int) {
     if start > 0 && end > start {
@@ -1619,7 +1588,7 @@ fn number_literal_normalized_large_exponent_repr(token : StringView) -> String {
       mant_start += 1
     }
   }
-  let digits_raw_buf = StringBuilder::new()
+  let digits_raw_buf = StringBuilder()
   let mut frac_digits = 0
   let mut saw_dot = false
   for i in mant_start..<exp_index {

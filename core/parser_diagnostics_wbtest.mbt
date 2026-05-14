@@ -94,15 +94,15 @@ test "compile signatures and offsets helpers" {
     ("f", [], Filter::identity()),
     ("g", ["x", "y"], Filter::add(Filter::var_("x"), Filter::var_("y"))),
   ]
-  assert_eq(compile_scope_signatures(defs), [("f", 0), ("g", 2)])
+  @debug.assert_eq(compile_scope_signatures(defs), [("f", 0), ("g", 2)])
   guard compile_find_token_offset("$x + $y", "$y") is Some(5) else {
     fail("expected token offset lookup to return Some(5)")
   }
   guard compile_find_token_offset("$x + $y", "$z") is None else {
     fail("expected missing token offset lookup to return None")
   }
-  assert_eq(compile_has_signature([("f", 0), ("g", 1)], "g", 1), true)
-  assert_eq(compile_has_signature([("f", 0), ("g", 1)], "g", 0), false)
+  @debug.assert_eq(compile_has_signature([("f", 0), ("g", 1)], "g", 1), true)
+  @debug.assert_eq(compile_has_signature([("f", 0), ("g", 1)], "g", 0), false)
 }
 
 ///|

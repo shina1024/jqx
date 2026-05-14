@@ -4,34 +4,40 @@
 ///|
 test "execute getpath compatibility" {
   let j = must_parse("{\"a\":[1,2],\"b\":{\"c\":3}}")
-  assert_eq(must_execute(parse_filter("getpath([\"a\",1])"), j), [
+  @debug.assert_eq(must_execute(parse_filter("getpath([\"a\",1])"), j), [
     Value::number(2.0),
   ])
-  assert_eq(must_execute(parse_filter("getpath([\"b\",\"c\"])"), j), [
+  @debug.assert_eq(must_execute(parse_filter("getpath([\"b\",\"c\"])"), j), [
     Value::number(3.0),
   ])
-  assert_eq(must_execute(parse_filter("getpath([\"a\",9])"), j), [Value::null()])
-  assert_eq(must_execute(parse_filter("getpath([\"x\"])"), j), [Value::null()])
-  assert_eq(
+  @debug.assert_eq(must_execute(parse_filter("getpath([\"a\",9])"), j), [
+    Value::null(),
+  ])
+  @debug.assert_eq(must_execute(parse_filter("getpath([\"x\"])"), j), [
+    Value::null(),
+  ])
+  @debug.assert_eq(
     must_execute(parse_filter("getpath(( [\"a\",0], [\"a\",1] ))"), j),
     [Value::number(1.0), Value::number(2.0)],
   )
-  assert_eq(must_execute(parse_filter("getpath([])"), j), [j])
-  assert_eq(must_execute(parse_filter("getpath(empty)"), j), [])
-  assert_eq(
+  @debug.assert_eq(must_execute(parse_filter("getpath([])"), j), [j])
+  @debug.assert_eq(must_execute(parse_filter("getpath(empty)"), j), [])
+  @debug.assert_eq(
     must_execute(parse_filter("getpath([1.9])"), must_parse("[10,20,30]")),
     [Value::number(20.0)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("getpath([\"a\"])"), must_parse("null")),
     [Value::null()],
   )
-  assert_eq(must_execute(parse_filter("getpath([0])"), must_parse("null")), [
-    Value::null(),
-  ])
-  assert_eq(must_execute(parse_filter("getpath([{}])"), must_parse("null")), [
-    Value::null(),
-  ])
+  @debug.assert_eq(
+    must_execute(parse_filter("getpath([0])"), must_parse("null")),
+    [Value::null()],
+  )
+  @debug.assert_eq(
+    must_execute(parse_filter("getpath([{}])"), must_parse("null")),
+    [Value::null()],
+  )
 }
 
 ///|
@@ -70,37 +76,39 @@ test "execute getpath errors" {
 
 ///|
 test "execute setpath compatibility" {
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("setpath([\"a\"];2)"), must_parse("{\"a\":1}")),
     [Value::object({ "a": Value::number(2.0) })],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("setpath([\"a\",\"b\"];1)"), must_parse("{}")),
     [Value::object({ "a": Value::object({ "b": Value::number(1.0) }) })],
   )
-  assert_eq(must_execute(parse_filter("setpath([2];1)"), must_parse("[]")), [
-    Value::array([Value::null(), Value::null(), Value::number(1.0)]),
-  ])
-  assert_eq(
+  @debug.assert_eq(
+    must_execute(parse_filter("setpath([2];1)"), must_parse("[]")),
+    [Value::array([Value::null(), Value::null(), Value::number(1.0)])],
+  )
+  @debug.assert_eq(
     must_execute(parse_filter("setpath([-1];9)"), must_parse("[0,1]")),
     [Value::array([Value::number(0.0), Value::number(9.0)])],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("setpath([1.9];9)"), must_parse("[0,1]")),
     [Value::array([Value::number(0.0), Value::number(9.0)])],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("setpath([\"a\"];2)"), must_parse("null")),
     [Value::object({ "a": Value::number(2.0) })],
   )
-  assert_eq(must_execute(parse_filter("setpath([0];2)"), must_parse("null")), [
-    Value::array([Value::number(2.0)]),
-  ])
-  assert_eq(
+  @debug.assert_eq(
+    must_execute(parse_filter("setpath([0];2)"), must_parse("null")),
+    [Value::array([Value::number(2.0)])],
+  )
+  @debug.assert_eq(
     must_execute(parse_filter("setpath([];2)"), must_parse("{\"a\":1}")),
     [Value::number(2.0)],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("setpath(([\"a\"],[\"b\"]);(2,3))"),
       must_parse("{\"a\":1}"),
@@ -112,25 +120,25 @@ test "execute setpath compatibility" {
       Value::object({ "a": Value::number(1.0), "b": Value::number(3.0) }),
     ],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("setpath(empty;2)"), must_parse("{\"a\":1}")),
     [],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("setpath([\"a\"];empty)"),
       must_parse("{\"a\":1}"),
     ),
     [],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("setpath((empty,[\"a\"]);2)"),
       must_parse("{\"a\":1}"),
     ),
     [Value::object({ "a": Value::number(2.0) })],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("setpath([\"a\",2];1)"), must_parse("{}")),
     [
       Value::object({
@@ -138,7 +146,7 @@ test "execute setpath compatibility" {
       }),
     ],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("setpath([0,\"a\"];1)"), must_parse("[]")),
     [Value::array([Value::object({ "a": Value::number(1.0) })])],
   )
@@ -254,11 +262,11 @@ test "execute setpath errors" {
     err.to_string() == "Cannot update field at array index of array" else {
     fail("expected setpath array index-in-array error")
   }
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("setpath(.foo;empty)"), must_parse("1")),
     [],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("setpath(\"a\";empty)"), must_parse("1")),
     [],
   )
@@ -266,33 +274,33 @@ test "execute setpath errors" {
 
 ///|
 test "execute delpaths compatibility" {
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("delpaths([[\"a\"]])"),
       must_parse("{\"a\":1,\"b\":2}"),
     ),
     [Value::object({ "b": Value::number(2.0) })],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("delpaths([[\"a\",\"b\"],[\"d\"]])"),
       must_parse("{\"a\":{\"b\":1,\"c\":2},\"d\":3}"),
     ),
     [Value::object({ "a": Value::object({ "c": Value::number(2.0) }) })],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("delpaths([[1]])"), must_parse("[10,20,30]")),
     [Value::array([Value::number(10.0), Value::number(30.0)])],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("delpaths([[1],[0]])"), must_parse("[10,20,30]")),
     [Value::array([Value::number(30.0)])],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("delpaths([[-1]])"), must_parse("[10,20,30]")),
     [Value::array([Value::number(10.0), Value::number(20.0)])],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("delpaths([[9]])"), must_parse("[10,20,30]")),
     [
       Value::array([
@@ -302,44 +310,45 @@ test "execute delpaths compatibility" {
       ]),
     ],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("delpaths([[\"a\"],[0],[true]])"),
       must_parse("null"),
     ),
     [Value::null()],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("delpaths([[]])"), must_parse("{\"a\":1}")),
     [Value::null()],
   )
-  assert_eq(must_execute(parse_filter("delpaths([[]])"), must_parse("1")), [
-    Value::null(),
-  ])
-  assert_eq(
+  @debug.assert_eq(
+    must_execute(parse_filter("delpaths([[]])"), must_parse("1")),
+    [Value::null()],
+  )
+  @debug.assert_eq(
     must_execute(
       parse_filter("delpaths([[\"a\",\"x\"]])"),
       must_parse("{\"a\":{\"b\":1}}"),
     ),
     [Value::object({ "a": Value::object({ "b": Value::number(1.0) }) })],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("delpaths([[\"a\",\"x\"]])"),
       must_parse("{\"a\":null}"),
     ),
     [Value::object({ "a": Value::null() })],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("delpaths(empty)"), must_parse("{\"a\":1}")),
     [],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("delpaths(([[\"a\"]],[]))"),
       must_parse("{\"a\":1}"),
     ),
-    [Value::object(Map::new()), Value::object({ "a": Value::number(1.0) })],
+    [Value::object(Map([])), Value::object({ "a": Value::number(1.0) })],
   )
 }
 
@@ -438,28 +447,32 @@ test "execute delpaths errors" {
 
 ///|
 test "execute path compatibility" {
-  assert_eq(must_execute(parse_filter("path(.foo[0,1])"), must_parse("null")), [
-    Value::array([Value::string("foo"), Value::number(0.0)]),
-    Value::array([Value::string("foo"), Value::number(1.0)]),
-  ])
-  assert_eq(
+  @debug.assert_eq(
+    must_execute(parse_filter("path(.foo[0,1])"), must_parse("null")),
+    [
+      Value::array([Value::string("foo"), Value::number(0.0)]),
+      Value::array([Value::string("foo"), Value::number(1.0)]),
+    ],
+  )
+  @debug.assert_eq(
     must_execute(parse_filter("path(.[] | select(.>3))"), must_parse("[1,5,3]")),
     [Value::array([Value::number(1.0)])],
   )
-  assert_eq(must_execute(parse_filter("path(.)"), must_parse("42")), [
+  @debug.assert_eq(must_execute(parse_filter("path(.)"), must_parse("42")), [
     Value::array([]),
   ])
-  assert_eq(must_execute(parse_filter("path(.a[0].b)"), must_parse("null")), [
-    Value::array([Value::string("a"), Value::number(0.0), Value::string("b")]),
-  ])
-  assert_eq(
+  @debug.assert_eq(
+    must_execute(parse_filter("path(.a[0].b)"), must_parse("null")),
+    [Value::array([Value::string("a"), Value::number(0.0), Value::string("b")])],
+  )
+  @debug.assert_eq(
     must_execute(
       parse_filter("path(.a[path(.b)[0]])"),
       must_parse("{\"a\":{\"b\":0}}"),
     ),
     [Value::array([Value::string("a"), Value::string("b")])],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(parse_filter("[path(..)]"), must_parse("{\"a\":[{\"b\":1}]}")),
     [
       Value::array([
@@ -517,14 +530,14 @@ test "execute path invalid expression errors" {
 
 ///|
 test "execute del compatibility" {
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("del(.[2:4],.[0],.[-2:])"),
       must_parse("[0,1,2,3,4,5,6,7]"),
     ),
     [Value::array([Value::number(1.0), Value::number(4.0), Value::number(5.0)])],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter(
         "del(.), del(empty), del((.foo,.bar,.baz) | .[2,3,0]), del(.foo[0], .bar[0], .foo, .baz.bar[0].x)",
@@ -550,7 +563,7 @@ test "execute del compatibility" {
       Value::object({ "bar": Value::array([Value::number(1.0)]) }),
     ],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("del(.[1], .[-6], .[2], .[-3:9])"),
       must_parse("[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]"),
@@ -565,7 +578,7 @@ test "execute del compatibility" {
       ]),
     ],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("del(.foo)"),
       must_parse("{\"foo\": 42, \"bar\": 9001, \"baz\": 42}"),
@@ -574,14 +587,14 @@ test "execute del compatibility" {
       Value::object({ "bar": Value::number(9001.0), "baz": Value::number(42.0) }),
     ],
   )
-  assert_eq(
+  @debug.assert_eq(
     must_execute(
       parse_filter("del(.[1, 2])"),
       must_parse("[\"foo\", \"bar\", \"baz\"]"),
     ),
     [Value::array([Value::string("foo")])],
   )
-  assert_eq(must_execute(parse_filter("del(empty)"), must_parse("1")), [
+  @debug.assert_eq(must_execute(parse_filter("del(empty)"), must_parse("1")), [
     Value::number(1.0),
   ])
 }
@@ -589,22 +602,25 @@ test "execute del compatibility" {
 ///|
 test "execute paths compatibility" {
   let obj = must_parse("{\"a\":1,\"b\":[2,3]}")
-  assert_eq(must_execute(parse_filter("paths"), obj), [
+  @debug.assert_eq(must_execute(parse_filter("paths"), obj), [
     Value::array([Value::string("a")]),
     Value::array([Value::string("b")]),
     Value::array([Value::string("b"), Value::number(0.0)]),
     Value::array([Value::string("b"), Value::number(1.0)]),
   ])
-  assert_eq(must_execute(parse_filter("paths(type==\"number\")"), obj), [
+  @debug.assert_eq(must_execute(parse_filter("paths(type==\"number\")"), obj), [
     Value::array([Value::string("a")]),
     Value::array([Value::string("b"), Value::number(0.0)]),
     Value::array([Value::string("b"), Value::number(1.0)]),
   ])
-  assert_eq(must_execute(parse_filter("paths(type==\"array\" or .==3)"), obj), [
-    Value::array([Value::string("b")]),
-    Value::array([Value::string("b"), Value::number(1.0)]),
-  ])
-  assert_eq(
+  @debug.assert_eq(
+    must_execute(parse_filter("paths(type==\"array\" or .==3)"), obj),
+    [
+      Value::array([Value::string("b")]),
+      Value::array([Value::string("b"), Value::number(1.0)]),
+    ],
+  )
+  @debug.assert_eq(
     must_execute(parse_filter("paths"), must_parse("[1,[2],{\"a\":3}]")),
     [
       Value::array([Value::number(0.0)]),
@@ -614,20 +630,20 @@ test "execute paths compatibility" {
       Value::array([Value::number(2.0), Value::string("a")]),
     ],
   )
-  assert_eq(must_execute(parse_filter("paths"), must_parse("1")), [])
-  assert_eq(must_execute(parse_filter("paths"), must_parse("null")), [])
-  assert_eq(must_execute(parse_filter("paths"), must_parse("{}")), [])
-  assert_eq(must_execute(parse_filter("paths"), must_parse("[]")), [])
-  assert_eq(must_execute(parse_filter("paths(.)"), must_parse("1")), [])
-  assert_eq(
+  @debug.assert_eq(must_execute(parse_filter("paths"), must_parse("1")), [])
+  @debug.assert_eq(must_execute(parse_filter("paths"), must_parse("null")), [])
+  @debug.assert_eq(must_execute(parse_filter("paths"), must_parse("{}")), [])
+  @debug.assert_eq(must_execute(parse_filter("paths"), must_parse("[]")), [])
+  @debug.assert_eq(must_execute(parse_filter("paths(.)"), must_parse("1")), [])
+  @debug.assert_eq(
     must_execute(
       parse_filter("paths(values)"),
       must_parse("{\"a\":null,\"b\":1}"),
     ),
     [Value::array([Value::string("b")])],
   )
-  assert_eq(must_execute(parse_filter("paths(empty)"), obj), [])
-  assert_eq(
+  @debug.assert_eq(must_execute(parse_filter("paths(empty)"), obj), [])
+  @debug.assert_eq(
     must_execute(parse_filter("paths((true,true))"), must_parse("{\"a\":1}")),
     [Value::array([Value::string("a")])],
   )

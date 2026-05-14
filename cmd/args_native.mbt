@@ -18,7 +18,7 @@ fn utf8_decode_bytes_lossy_prefix(bytes : Bytes, len : Int) -> String {
   for i in 0..<len {
     ints.push(bytes[i].to_int())
   }
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   let mut i = 0
   while i < ints.length() {
     match utf8_decode_next_strict(ints, i) {

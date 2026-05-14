@@ -1,7 +1,8 @@
 import {
-  "shina1024/jqx/core" @lib,
+  "moonbitlang/core/debug",
   "moonbitlang/core/env",
   "moonbitlang/core/string",
+  "shina1024/jqx/core" @lib,
 }
 
 options(

@@ -3,7 +3,7 @@
 
 ///|
 fn nested_json_array_text(depth : Int, leaf : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for _ in 0..<depth {
     buf.write_char('[')
   }
@@ -16,15 +16,15 @@ fn nested_json_array_text(depth : Int, leaf : String) -> String {
 
 ///|
 test "parse primitives" {
-  assert_eq(try? parse("null"), Ok(Value::null()))
-  assert_eq(try? parse("true"), Ok(Value::boolean(true)))
-  assert_eq(try? parse("false"), Ok(Value::boolean(false)))
+  @debug.assert_eq(try? parse("null"), Ok(Value::null()))
+  @debug.assert_eq(try? parse("true"), Ok(Value::boolean(true)))
+  @debug.assert_eq(try? parse("false"), Ok(Value::boolean(false)))
 }
 
 ///|
 test "parse numbers and arrays" {
   let json = try? parse("[1, -2, 3.5, 1e2]")
-  assert_eq(
+  @debug.assert_eq(
     json,
     Ok(
       Value::array([
@@ -61,7 +61,7 @@ test "parse non-finite number tokens" {
   let obj = parse("{\"a\":nan,\"b\":-NaN,\"c\":inf,\"d\":-infinity}") catch {
     err => fail("parse failed: " + err.to_string())
   }
-  assert_eq(
+  @debug.assert_eq(
     obj.to_json_string(),
     "{\"a\":null,\"b\":null,\"c\":1.7976931348623157e+308,\"d\":-1.7976931348623157e+308}",
   )
@@ -74,7 +74,7 @@ test "parse non-finite number tokens" {
 ///|
 test "parse large integer keeps repr" {
   let json = try? parse("9007199254740993")
-  assert_eq(
+  @debug.assert_eq(
     json,
     Ok(Value::number(9007199254740992.0, repr="9007199254740993")),
   )
@@ -83,7 +83,7 @@ test "parse large integer keeps repr" {
 ///|
 test "parse object" {
   let json = try? parse("{\"a\":1,\"b\":[true,false]}")
-  assert_eq(
+  @debug.assert_eq(
     json,
     Ok(
       Value::object({
@@ -97,13 +97,16 @@ test "parse object" {
 ///|
 test "parse string escapes" {
   let json = try? parse("\"\\n\\t\\\"\"")
-  assert_eq(json, Ok(Value::string("\n\t\"")))
+  @debug.assert_eq(json, Ok(Value::string("\n\t\"")))
 }
 
 ///|
 test "parse whitespace" {
   let json = try? parse(" \n\t[1, 2]\r ")
-  assert_eq(json, Ok(Value::array([Value::number(1.0), Value::number(2.0)])))
+  @debug.assert_eq(
+    json,
+    Ok(Value::array([Value::number(1.0), Value::number(2.0)])),
+  )
 }
 
 ///|
@@ -127,17 +130,17 @@ test "core run helpers centralize value and text lanes" {
   let compiled_values = run_compiled_values(compiled, "{\"foo\": 4}") catch {
     err => fail("run_compiled_values failed: " + err.to_string())
   }
-  assert_eq(compiled_values, [Value::number(4.0)])
+  @debug.assert_eq(compiled_values, [Value::number(4.0)])
 
   let values = run_values(".foo", "{\"foo\": 9}") catch {
     err => fail("run_values failed: " + err.to_string())
   }
-  assert_eq(values, [Value::number(9.0)])
+  @debug.assert_eq(values, [Value::number(9.0)])
 
   let text = run_compiled_json_text(compiled, "{\"foo\": 9007199254740993}") catch {
     err => fail("run_compiled_json_text failed: " + err.to_string())
   }
-  assert_eq(text, ["9007199254740993"])
+  @debug.assert_eq(text, ["9007199254740993"])
 }
 
 ///|
@@ -146,12 +149,12 @@ test "run_json_text matches jq 1.8.1 print depth truncation" {
   let within_limit = run_json_text(".", at_limit) catch {
     err => fail("run_json_text failed at depth limit: " + err.to_string())
   }
-  assert_eq(within_limit, [at_limit])
+  @debug.assert_eq(within_limit, [at_limit])
 
   let over_limit = nested_json_array_text(257, "0")
   let expected = nested_json_array_text(257, "<skipped: too deep>")
   let truncated = run_json_text(".", over_limit) catch {
     err => fail("run_json_text failed past depth limit: " + err.to_string())
   }
-  assert_eq(truncated, [expected])
+  @debug.assert_eq(truncated, [expected])
 }

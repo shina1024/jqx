@@ -3,7 +3,7 @@
 
 ///|
 fn nested_json_array_text(depth : Int, leaf : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for _ in 0..<depth {
     buf.write_char('[')
   }
@@ -19,7 +19,7 @@ test "top-level parse returns standard Json" {
   let parsed = parse_json("{\"a\":1,\"b\":[true,null,\"x\"]}") catch {
     err => fail("parse_json failed: " + err.to_string())
   }
-  assert_eq(parsed.stringify(), "{\"a\":1,\"b\":[true,null,\"x\"]}")
+  @debug.assert_eq(parsed.stringify(), "{\"a\":1,\"b\":[true,null,\"x\"]}")
 }
 
 ///|
@@ -30,8 +30,8 @@ test "run roundtrips standard Json values without exposing core types" {
   let outputs = run(".", parsed) catch {
     err => fail("run failed: " + err.to_string())
   }
-  assert_eq(outputs.length(), 1)
-  assert_eq(outputs[0].stringify(), "{\"z\":0,\"a\":9007199254740993}")
+  @debug.assert_eq(outputs.length(), 1)
+  @debug.assert_eq(outputs[0].stringify(), "{\"z\":0,\"a\":9007199254740993}")
 }
 
 ///|
@@ -43,12 +43,12 @@ test "compile returns a filter with run methods on public Json surface" {
   let values = filter.run(input) catch {
     err => fail("compiled run failed: " + err.to_string())
   }
-  assert_eq(values.length(), 1)
-  assert_eq(values[0].stringify(), "42")
+  @debug.assert_eq(values.length(), 1)
+  @debug.assert_eq(values[0].stringify(), "42")
   let text_values = filter.run_json_text("{\"foo\":41}") catch {
     err => fail("compiled run_json_text failed: " + err.to_string())
   }
-  assert_eq(text_values, ["42"])
+  @debug.assert_eq(text_values, ["42"])
 }
 
 ///|
@@ -57,8 +57,8 @@ test "run convenience lane executes filter strings on Json" {
   let values = run(".foo", input) catch {
     err => fail("run failed: " + err.to_string())
   }
-  assert_eq(values.length(), 1)
-  assert_eq(values[0].stringify(), "9")
+  @debug.assert_eq(values.length(), 1)
+  @debug.assert_eq(values[0].stringify(), "9")
 }
 
 ///|
@@ -69,8 +69,8 @@ test "run preserves public Json object order across updates" {
   let outputs = run(". + {\"a\":9,\"c\":3}", input) catch {
     err => fail("run failed: " + err.to_string())
   }
-  assert_eq(outputs.length(), 1)
-  assert_eq(
+  @debug.assert_eq(outputs.length(), 1)
+  @debug.assert_eq(
     outputs[0].stringify(),
     "{\"b\":1,\"a\":9,\"huge\":9007199254740993,\"c\":3}",
   )
@@ -81,7 +81,7 @@ test "run_json_text compatibility lane preserves json text outputs" {
   let values = run_json_text(".", "9007199254740993") catch {
     err => fail("run_json_text failed: " + err.to_string())
   }
-  assert_eq(values, ["9007199254740993"])
+  @debug.assert_eq(values, ["9007199254740993"])
 }
 
 ///|
@@ -91,7 +91,7 @@ test "run_json_text preserves escaped strings and large-number repr" {
   ) catch {
     err => fail("run_json_text failed: " + err.to_string())
   }
-  assert_eq(values, ["\"line\\nbreak\"", "1e309", "9007199254740993"])
+  @debug.assert_eq(values, ["\"line\\nbreak\"", "1e309", "9007199254740993"])
 }
 
 ///|
@@ -107,7 +107,7 @@ test "run raises runtime errors through RunError" {
   guard (try? run("error({\"code\":1})", null)) is Err(Runtime(Thrown(value))) else {
     fail("expected wrapped runtime error")
   }
-  assert_eq(value.stringify(), "{\"code\":1}")
+  @debug.assert_eq(value.stringify(), "{\"code\":1}")
 }
 
 ///|
@@ -148,7 +148,7 @@ test "compiled filter run raises public RuntimeError with Json payloads" {
   guard (try? filter.run(input)) is Err(Thrown(value)) else {
     fail("expected public thrown eval error")
   }
-  assert_eq(value.stringify(), "{\"code\":1}")
+  @debug.assert_eq(value.stringify(), "{\"code\":1}")
 }
 
 ///|
@@ -161,7 +161,7 @@ test "compiled filter run_json_text preserves order and repr-sensitive outputs" 
   ) catch {
     err => fail("compiled run_json_text failed: " + err.to_string())
   }
-  assert_eq(outputs, [
+  @debug.assert_eq(outputs, [
     "{\"b\":1,\"a\":9,\"huge\":9007199254740993,\"c\":3}", "9007199254740993",
   ])
 }
@@ -183,5 +183,5 @@ test "public run_json_text matches jq 1.8.1 print depth truncation" {
   let outputs = run_json_text(".", over_limit) catch {
     err => fail("run_json_text failed past depth limit: " + err.to_string())
   }
-  assert_eq(outputs, [expected])
+  @debug.assert_eq(outputs, [expected])
 }

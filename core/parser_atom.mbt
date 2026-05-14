@@ -37,10 +37,7 @@ fn FilterCursor::lower_bracket_dynamic_on_bound(
 ) -> Filter {
   let key_tmp = ctx.fresh_as_tmp()
   let key_var = Filter::var_(key_tmp)
-  let access = Filter::pipe(
-    bound,
-    Filter::call("getpath", [Filter::Array([key_var])]),
-  )
+  let access = Filter::pipe(bound, Filter::call("getpath", [Array([key_var])]))
   let access = if optional { Filter::try_(access) } else { access }
   Filter::as_(key, key_tmp, access)
 }
@@ -744,12 +741,12 @@ fn FilterCursor::parse_array_literal(
   ctx.skip_ws()
   if ctx.peek_char() is Some(']') {
     ctx.read_char() |> ignore
-    return Filter::Array([])
+    return Array([])
   }
   let expr = ctx.parse_comma()
   ctx.skip_ws()
   ctx.expect_char(']')
-  Filter::Array([expr])
+  Array([expr])
 }
 
 ///|
@@ -765,13 +762,13 @@ fn FilterCursor::lower_object_item_filter(
   let key_var = Filter::var_(key_tmp)
   let key_on_input = Filter::pipe(input_var, key_filter)
   let value_on_input = if shorthand_dynamic {
-    Filter::pipe(input_var, Filter::call("getpath", [Filter::Array([key_var])]))
+    Filter::pipe(input_var, Filter::call("getpath", [Array([key_var])]))
   } else {
     Filter::pipe(input_var, value_filter)
   }
   let path = Filter::Array([key_var])
   let set_expr = Filter::pipe(
-    Filter::literal(Value::object(Map::new())),
+    Filter::literal(Value::object(Map([]))),
     Filter::call("setpath", [path, value_on_input]),
   )
   Filter::as_(
@@ -793,7 +790,7 @@ fn FilterCursor::parse_object_literal(
   }
   if ctx.peek_char() is Some('}') {
     ctx.read_char() |> ignore
-    return Filter::Object([])
+    return Object([])
   }
   let static_items = []
   let dynamic_items = []
@@ -899,10 +896,10 @@ fn FilterCursor::parse_object_literal(
     }
   }
   if !use_dynamic_lowering {
-    return Filter::Object(static_items)
+    return Object(static_items)
   }
   if dynamic_items.length() == 0 {
-    return Filter::Object([])
+    return Object([])
   }
   let mut out = dynamic_items[0]
   for i in 1..<dynamic_items.length() {

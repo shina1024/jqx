@@ -9,7 +9,7 @@ pub struct JqxError {
   line : Int
   column : Int
   offset : Int
-} derive(Eq)
+} derive(Eq, Debug)
 
 ///|
 pub impl Show for JqxError with output(self, logger) {
@@ -68,7 +68,7 @@ fn offset_from_line_column(input : String, line : Int, column : Int) -> Int {
 ///|
 fn parse_error_to_jqx_error(input : String, err : @core.ParseError) -> JqxError {
   match err {
-    @core.InvalidChar({ line, column }, _) =>
+    InvalidChar({ line, column }, _) =>
       jqx_error(
         "parse_invalid_char",
         err.to_string(),
@@ -76,10 +76,10 @@ fn parse_error_to_jqx_error(input : String, err : @core.ParseError) -> JqxError 
         column~,
         offset=offset_from_line_column(input, line, column),
       )
-    @core.InvalidEof => jqx_error("parse_invalid_eof", err.to_string())
-    @core.DepthLimitExceeded =>
+    InvalidEof => jqx_error("parse_invalid_eof", err.to_string())
+    DepthLimitExceeded =>
       jqx_error("parse_depth_limit_exceeded", err.to_string())
-    @core.InvalidNumericLiteral({ line, column }) =>
+    InvalidNumericLiteral({ line, column }) =>
       jqx_error(
         "parse_invalid_numeric_literal",
         err.to_string(),
@@ -87,7 +87,7 @@ fn parse_error_to_jqx_error(input : String, err : @core.ParseError) -> JqxError 
         column~,
         offset=offset_from_line_column(input, line, column),
       )
-    @core.InvalidNumericLiteralAtEof({ line, column }) =>
+    InvalidNumericLiteralAtEof({ line, column }) =>
       jqx_error(
         "parse_invalid_numeric_literal_at_eof",
         err.to_string(),
@@ -95,7 +95,7 @@ fn parse_error_to_jqx_error(input : String, err : @core.ParseError) -> JqxError 
         column~,
         offset=offset_from_line_column(input, line, column),
       )
-    @core.InvalidStringLiteral({ line, column }) =>
+    InvalidStringLiteral({ line, column }) =>
       jqx_error(
         "parse_invalid_string_literal",
         err.to_string(),
@@ -103,7 +103,7 @@ fn parse_error_to_jqx_error(input : String, err : @core.ParseError) -> JqxError 
         column~,
         offset=offset_from_line_column(input, line, column),
       )
-    @core.InvalidStringLiteralAtEof({ line, column }) =>
+    InvalidStringLiteralAtEof({ line, column }) =>
       jqx_error(
         "parse_invalid_string_literal_at_eof",
         err.to_string(),
@@ -120,7 +120,7 @@ fn filter_error_to_jqx_error(
   err : @core.FilterError,
 ) -> JqxError {
   match err {
-    @core.InvalidChar({ line, column }, _) =>
+    InvalidChar({ line, column }, _) =>
       jqx_error(
         "filter_invalid_char",
         err.to_string(),
@@ -128,8 +128,8 @@ fn filter_error_to_jqx_error(
         column~,
         offset=offset_from_line_column(input, line, column),
       )
-    @core.InvalidEof => jqx_error("filter_invalid_eof", err.to_string())
-    @core.InvalidNumber({ line, column }, _) =>
+    InvalidEof => jqx_error("filter_invalid_eof", err.to_string())
+    InvalidNumber({ line, column }, _) =>
       jqx_error(
         "filter_invalid_number",
         err.to_string(),
@@ -137,21 +137,19 @@ fn filter_error_to_jqx_error(
         column~,
         offset=offset_from_line_column(input, line, column),
       )
-    @core.Diagnostics(_) => jqx_error("filter_diagnostics", err.to_string())
+    Diagnostics(_) => jqx_error("filter_diagnostics", err.to_string())
   }
 }
 
 ///|
 fn eval_error_to_jqx_error(err : @core.EvalError) -> JqxError {
   match err {
-    @core.TypeError(msg) => jqx_error("eval_type_error", msg)
-    @core.Thrown(_) => jqx_error("eval_thrown", err.to_string())
-    @core.UnknownFunction(_) =>
-      jqx_error("eval_unknown_function", err.to_string())
-    @core.UnknownVariable(_) =>
-      jqx_error("eval_unknown_variable", err.to_string())
-    @core.BreakSignal(_, _) => jqx_error("eval_break", err.to_string())
-    @core.Partial(_, _, _) => jqx_error("eval_partial", err.to_string())
+    TypeError(msg) => jqx_error("eval_type_error", msg)
+    Thrown(_) => jqx_error("eval_thrown", err.to_string())
+    UnknownFunction(_) => jqx_error("eval_unknown_function", err.to_string())
+    UnknownVariable(_) => jqx_error("eval_unknown_variable", err.to_string())
+    BreakSignal(_, _) => jqx_error("eval_break", err.to_string())
+    Partial(_, _, _) => jqx_error("eval_partial", err.to_string())
   }
 }
 
@@ -209,10 +207,9 @@ fn run_error_to_jqx_error(
   json_input? : String = "",
 ) -> JqxError {
   match err {
-    @core.Parse(parse_err) => parse_error_to_jqx_error(json_input, parse_err)
-    @core.Filter(filter_err) =>
-      filter_error_to_jqx_error(filter_input, filter_err)
-    @core.Eval(eval_err) => eval_error_to_jqx_error(eval_err)
+    Parse(parse_err) => parse_error_to_jqx_error(json_input, parse_err)
+    Filter(filter_err) => filter_error_to_jqx_error(filter_input, filter_err)
+    Eval(eval_err) => eval_error_to_jqx_error(eval_err)
   }
 }
 
