@@ -1,9 +1,20 @@
 name: Release Mooncakes
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_call:
+    inputs:
+      tag:
+        description: "Tag to publish (for example: v0.1.0)"
+        required: true
+        type: string
+      dry_run:
+        description: "Run publish in dry-run mode"
+        required: false
+        default: false
+        type: boolean
+    secrets:
+      MOONCAKES_CREDENTIALS_JSON:
+        required: false
   workflow_dispatch:
     inputs:
       tag:
@@ -37,7 +48,7 @@ jobs:
           INPUT_DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -euo pipefail
-          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ] || [ "${EVENT_NAME}" = "workflow_call" ]; then
             TAG="${INPUT_TAG}"
             DRY_RUN="${INPUT_DRY_RUN}"
           else

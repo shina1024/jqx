@@ -1,9 +1,22 @@
 name: Release CLI
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_call:
+    inputs:
+      tag:
+        description: "Tag to release (for example: v0.1.0)"
+        required: true
+        type: string
+      dry_run:
+        description: "Build and upload artifacts without publishing a GitHub Release"
+        required: false
+        default: false
+        type: boolean
+      prerelease:
+        description: "Mark release as prerelease"
+        required: false
+        default: false
+        type: boolean
   workflow_dispatch:
     inputs:
       tag:
@@ -43,7 +56,7 @@ jobs:
           INPUT_PRERELEASE: ${{ inputs.prerelease }}
         run: |
           set -euo pipefail
-          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ] || [ "${EVENT_NAME}" = "workflow_call" ]; then
             TAG="${INPUT_TAG}"
             DRY_RUN="${INPUT_DRY_RUN}"
             PRERELEASE="${INPUT_PRERELEASE}"
@@ -182,7 +195,6 @@ jobs:
       - prepare
       - build
     permissions:
-      actions: write
       contents: write
 
     steps:
@@ -212,13 +224,3 @@ jobs:
             release_args+=(--prerelease)
           fi
           gh release create "${RELEASE_TAG}" release-assets/* "${release_args[@]}"
-
-      - name: Dispatch post-release smoke
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
-        run: |
-          set -euo pipefail
-          gh workflow run post-release-smoke.yml --ref main -f tag="${RELEASE_TAG}"
