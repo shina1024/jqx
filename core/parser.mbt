@@ -14,7 +14,7 @@ pub suberror FilterError {
 } derive(Eq, Debug)
 
 ///|
-pub impl Show for FilterError with output(self, logger) {
+pub impl Show for FilterError with fn output(self, logger) {
   match self {
     InvalidChar({ line, column }, c) =>
       logger

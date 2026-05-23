@@ -60,7 +60,7 @@ pub enum Filter {
 } derive(Eq, Debug)
 
 ///|
-pub impl Show for Filter with output(self, logger) {
+pub impl Show for Filter with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }
 

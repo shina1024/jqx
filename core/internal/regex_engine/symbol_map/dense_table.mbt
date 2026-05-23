@@ -16,6 +16,6 @@
 priv struct DenseTable(FixedArray[@shared_types.Rechar])
 
 ///|
-impl Table for DenseTable with map(self, c) {
+impl Table for DenseTable with fn map(self, c) {
   self.0[c]
 }

@@ -21,7 +21,7 @@ pub suberror EvalError {
 } derive(Eq, Debug)
 
 ///|
-pub impl Show for EvalError with output(self, logger) {
+pub impl Show for EvalError with fn output(self, logger) {
   match self {
     TypeError(msg) => logger.write_string(msg)
     Thrown(value) =>

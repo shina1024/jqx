@@ -51,7 +51,7 @@ pub fn Category::inexistant_or_non_word() -> Category {
 }
 
 ///|
-pub impl Add for Category with add(cat1, cat2) {
+pub impl Add for Category with fn add(cat1, cat2) {
   Category(cat1.0 | cat2.0)
 }
 

@@ -1,5 +1,5 @@
 import {
   "moonbitlang/core/debug",
   "moonbitlang/core/json",
-  "shina1024/jqx/core" @core,
+  "shina1024/jqx/core",
 }

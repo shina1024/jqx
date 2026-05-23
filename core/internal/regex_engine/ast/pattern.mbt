@@ -37,7 +37,7 @@ pub struct Pattern {
 }
 
 ///|
-pub impl Debug for Pattern with to_repr(self) {
+pub impl Debug for Pattern with fn to_repr(self) {
   self.desc.to_repr()
 }
 

@@ -12,7 +12,7 @@ pub struct JqxError {
 } derive(Eq, Debug)
 
 ///|
-pub impl Show for JqxError with output(self, logger) {
+pub impl Show for JqxError with fn output(self, logger) {
   logger.write_string("JqxError { code: ")
   Show::output(self.code, logger)
   logger.write_string(", message: ")

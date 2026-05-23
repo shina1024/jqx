@@ -101,9 +101,21 @@ jobs:
           node <<'NODE'
           const fs = require("fs");
           const expected = process.env.RELEASE_VERSION;
-          const mod = JSON.parse(fs.readFileSync("moon.mod.json", "utf8"));
+          const modText = fs.readFileSync("moon.mod", "utf8");
+          const readMoonModField = (name) => {
+            const match = modText.match(new RegExp(`^${name}\\s*=\\s*"([^"]+)"`, "m"));
+            if (!match) {
+              console.error(`[moon-mod-field-missing] ${name}`);
+              process.exit(1);
+            }
+            return match[1];
+          };
+          const mod = {
+            name: readMoonModField("name"),
+            version: readMoonModField("version"),
+          };
           if (mod.version !== expected) {
-            console.error(`[version-mismatch] ${mod.name}: moon.mod.json=${mod.version}, tag=${expected}`);
+            console.error(`[version-mismatch] ${mod.name}: moon.mod=${mod.version}, tag=${expected}`);
             process.exit(1);
           }
           console.log(`module version matches tag v${expected}`);
@@ -123,7 +135,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          module_name="$(node -p "require('./moon.mod.json').name")"
+          module_name="$(
+            node <<'NODE'
+            const fs = require("fs");
+            const text = fs.readFileSync("moon.mod", "utf8");
+            const match = text.match(/^name\s*=\s*"([^"]+)"/m);
+            if (!match) {
+              console.error("[moon-mod-field-missing] name");
+              process.exit(1);
+            }
+            console.log(match[1]);
+          NODE
+          )"
           module_url="https://mooncakes.io/api/v0/modules/${module_name}"
           mkdir -p release-audit
 

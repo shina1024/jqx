@@ -5,7 +5,7 @@ pub struct Position {
 } derive(Eq)
 
 ///|
-pub impl Show for Position with output(self, logger) {
+pub impl Show for Position with fn output(self, logger) {
   logger
   ..write_string("Position(line=")
   ..write_object(self.line)
@@ -26,7 +26,7 @@ pub suberror JsonParseError {
 } derive(Eq)
 
 ///|
-pub impl Show for JsonParseError with output(self, logger) {
+pub impl Show for JsonParseError with fn output(self, logger) {
   match self {
     InvalidChar({ line, column }, c) =>
       logger
@@ -79,7 +79,7 @@ pub suberror CompileError {
 } derive(Eq)
 
 ///|
-pub impl Show for CompileError with output(self, logger) {
+pub impl Show for CompileError with fn output(self, logger) {
   match self {
     InvalidChar({ line, column }, c) =>
       logger
@@ -119,7 +119,7 @@ pub suberror RuntimeError {
 } derive(Eq)
 
 ///|
-pub impl Show for RuntimeError with output(self, logger) {
+pub impl Show for RuntimeError with fn output(self, logger) {
   match self {
     TypeError(msg) => logger.write_string(msg)
     Thrown(value) =>
@@ -146,7 +146,7 @@ pub suberror RunError {
 } derive(Eq)
 
 ///|
-pub impl Show for RunError with output(self, logger) {
+pub impl Show for RunError with fn output(self, logger) {
   match self {
     Compile(err) => Show::output(err, logger)
     Runtime(err) => Show::output(err, logger)
@@ -161,7 +161,7 @@ pub suberror JsonTextRunError {
 } derive(Eq)
 
 ///|
-pub impl Show for JsonTextRunError with output(self, logger) {
+pub impl Show for JsonTextRunError with fn output(self, logger) {
   match self {
     JsonParse(err) => Show::output(err, logger)
     Compile(err) => Show::output(err, logger)
@@ -176,7 +176,7 @@ pub suberror CompiledJsonTextRunError {
 } derive(Eq)
 
 ///|
-pub impl Show for CompiledJsonTextRunError with output(self, logger) {
+pub impl Show for CompiledJsonTextRunError with fn output(self, logger) {
   match self {
     JsonParse(err) => Show::output(err, logger)
     Runtime(err) => Show::output(err, logger)

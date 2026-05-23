@@ -147,12 +147,12 @@ fn json_equal(a : Value, b : Value) -> Bool {
 }
 
 ///|
-pub impl Eq for Value with equal(self, other) {
+pub impl Eq for Value with fn equal(self, other) {
   json_equal(self, other)
 }
 
 ///|
-pub impl Eq for Value with not_equal(self, other) {
+pub impl Eq for Value with fn not_equal(self, other) {
   !json_equal(self, other)
 }
 
@@ -437,7 +437,7 @@ pub suberror ParseError {
 } derive(Eq, Debug)
 
 ///|
-pub impl Show for ParseError with output(self, logger) {
+pub impl Show for ParseError with fn output(self, logger) {
   match self {
     InvalidChar({ line, column }, c) =>
       logger
@@ -489,7 +489,7 @@ pub suberror RunError {
 } derive(Eq, Debug)
 
 ///|
-pub impl Show for RunError with output(self, logger) {
+pub impl Show for RunError with fn output(self, logger) {
   match self {
     Parse(err) => Show::output(err, logger)
     Filter(err) => Show::output(err, logger)
@@ -498,7 +498,7 @@ pub impl Show for RunError with output(self, logger) {
 }
 
 ///|
-pub impl Show for Value with output(self, logger) {
+pub impl Show for Value with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }
 
