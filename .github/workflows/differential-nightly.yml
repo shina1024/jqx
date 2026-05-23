@@ -5,6 +5,9 @@ on:
     - cron: "0 3 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   differential-full:
     name: Differential Full (${{ matrix.os }})
@@ -19,7 +22,9 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
 
       - name: Install MoonBit (Linux/macOS)
         if: runner.os != 'Windows'
@@ -110,7 +115,7 @@ jobs:
     steps:
       - name: Report failure to issue
         if: needs.differential-full.result != 'success'
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
           script: |
             const owner = context.repo.owner;
@@ -157,7 +162,7 @@ jobs:
 
       - name: Close failure issue after recovery
         if: needs.differential-full.result == 'success'
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
           script: |
             const owner = context.repo.owner;

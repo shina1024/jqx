@@ -7,11 +7,6 @@ on:
         description: "Release tag to smoke test (for example: v0.1.1)"
         required: true
         type: string
-  workflow_run:
-    workflows:
-      - Release CLI
-    types:
-      - completed
 
 permissions:
   contents: read
@@ -19,7 +14,6 @@ permissions:
 jobs:
   prepare:
     name: Prepare
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.vars.outputs.tag }}
@@ -28,13 +22,11 @@ jobs:
       - name: Resolve release metadata
         id: vars
         shell: bash
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            tag="${{ inputs.tag }}"
-          else
-            tag="${{ github.event.workflow_run.head_branch }}"
-          fi
+          tag="${INPUT_TAG}"
 
           if [[ "${tag}" != v* ]]; then
             echo "::error::Tag must start with v. got=${tag}"
@@ -128,10 +120,11 @@ jobs:
 
     steps:
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: lts/*
           check-latest: true
+          package-manager-cache: false
           registry-url: "https://registry.npmjs.org"
 
       - name: Setup pnpm (latest)
@@ -238,7 +231,6 @@ jobs:
           set -euo pipefail
           curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           export PATH="$HOME/.moon/bin:$PATH"
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
           mkdir smoke-moonbit
           cd smoke-moonbit
           moon new smoke_jqx

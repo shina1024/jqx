@@ -5,6 +5,16 @@
 
 version: 2
 updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 1
+    groups:
+      actions-all:
+        patterns:
+          - "*"
+
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/" # Workspace root contains packageManager, pnpm-workspace.yaml, and pnpm-lock.yaml
     schedule:

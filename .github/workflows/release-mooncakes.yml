@@ -31,10 +31,15 @@ jobs:
       - name: Resolve release metadata
         id: vars
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG="${{ inputs.tag }}"
-            DRY_RUN="${{ inputs.dry_run }}"
+          set -euo pipefail
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            TAG="${INPUT_TAG}"
+            DRY_RUN="${INPUT_DRY_RUN}"
           else
             TAG="${GITHUB_REF_NAME}"
             DRY_RUN="false"
@@ -62,11 +67,11 @@ jobs:
       RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
       RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
       DRY_RUN: ${{ needs.prepare.outputs.dry_run }}
-      MOONCAKES_CREDENTIALS_JSON: ${{ secrets.MOONCAKES_CREDENTIALS_JSON }}
     steps:
       - name: Checkout tag
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
+          persist-credentials: false
           fetch-depth: 0
           ref: refs/tags/${{ needs.prepare.outputs.tag }}
 
@@ -135,7 +140,7 @@ jobs:
           echo "already_published=${published}" >> "$GITHUB_OUTPUT"
 
       - name: Upload Mooncakes release audit artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: mooncakes-release-audit-${{ needs.prepare.outputs.tag }}
           path: |
@@ -144,10 +149,17 @@ jobs:
           if-no-files-found: error
 
       - name: Validate Mooncakes credentials
-        if: ${{ needs.prepare.outputs.dry_run != 'true' && env.MOONCAKES_CREDENTIALS_JSON != '' }}
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         shell: bash
+        env:
+          MOONCAKES_CREDENTIALS_JSON: ${{ secrets.MOONCAKES_CREDENTIALS_JSON }}
         run: |
           set -euo pipefail
+          if [ -z "${MOONCAKES_CREDENTIALS_JSON:-}" ]; then
+            echo "::error::MOONCAKES_CREDENTIALS_JSON is required for non-dry-run publish"
+            exit 1
+          fi
+
           mkdir -p "$HOME/.moon"
           credentials="$HOME/.moon/credentials.json"
           cleanup() {
@@ -161,6 +173,10 @@ jobs:
 
       - name: Publish to Mooncakes (or dry-run)
         shell: bash
+        env:
+          ALREADY_PUBLISHED: ${{ steps.registry.outputs.already_published }}
+          MODULE_NAME: ${{ steps.registry.outputs.module }}
+          MOONCAKES_CREDENTIALS_JSON: ${{ secrets.MOONCAKES_CREDENTIALS_JSON }}
         run: |
           set -euo pipefail
 
@@ -192,8 +208,8 @@ jobs:
             exit 0
           fi
 
-          if [ "${{ steps.registry.outputs.already_published }}" = "true" ]; then
-            echo "skip: already published ${{ steps.registry.outputs.module }}@${RELEASE_VERSION}"
+          if [ "${ALREADY_PUBLISHED}" = "true" ]; then
+            echo "skip: already published ${MODULE_NAME}@${RELEASE_VERSION}"
             exit 0
           fi
 
