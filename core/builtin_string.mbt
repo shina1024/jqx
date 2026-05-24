@@ -86,7 +86,8 @@ fn parse_regex_pattern_input(
 }
 
 ///|
-fn builtin_call_string(
+fn dispatch_string_builtin(
+  runtime : RuntimeContext,
   name : String,
   args : Array[Filter],
   input : Value,
@@ -98,7 +99,7 @@ fn builtin_call_string(
         raise UnknownFunction("startswith")
       } else {
         let target = args[0]
-        let needles = execute_with_env(target, input, env)
+        let needles = execute_with_runtime(runtime, target, input, env)
         let out = []
         for needle in needles {
           match (input, needle) {
@@ -113,7 +114,7 @@ fn builtin_call_string(
         raise UnknownFunction("endswith")
       } else {
         let target = args[0]
-        let needles = execute_with_env(target, input, env)
+        let needles = execute_with_runtime(runtime, target, input, env)
         let out = []
         for needle in needles {
           match (input, needle) {
@@ -127,7 +128,7 @@ fn builtin_call_string(
       if args.length() != 1 {
         raise UnknownFunction("ltrimstr")
       } else {
-        let needles = execute_with_env(args[0], input, env)
+        let needles = execute_with_runtime(runtime, args[0], input, env)
         let out = []
         for needle in needles {
           match (input, needle) {
@@ -148,7 +149,7 @@ fn builtin_call_string(
       if args.length() != 1 {
         raise UnknownFunction("trimstr")
       } else {
-        let needles = execute_with_env(args[0], input, env)
+        let needles = execute_with_runtime(runtime, args[0], input, env)
         let out = []
         for needle in needles {
           match (input, needle) {
@@ -179,7 +180,7 @@ fn builtin_call_string(
       if args.length() != 1 {
         raise UnknownFunction("rtrimstr")
       } else {
-        let needles = execute_with_env(args[0], input, env)
+        let needles = execute_with_runtime(runtime, args[0], input, env)
         let out = []
         for needle in needles {
           match (input, needle) {
@@ -208,7 +209,7 @@ fn builtin_call_string(
       } else {
         match input {
           Array(a) => {
-            let seps = execute_with_env(args[0], input, env)
+            let seps = execute_with_runtime(runtime, args[0], input, env)
             let out = []
             for sep in seps {
               out.push(join_values(a, sep))
@@ -223,7 +224,7 @@ fn builtin_call_string(
       }
     "split" =>
       if args.length() == 1 {
-        let seps = execute_with_env(args[0], input, env)
+        let seps = execute_with_runtime(runtime, args[0], input, env)
         let out = []
         for sep in seps {
           match (input, sep) {
@@ -233,8 +234,8 @@ fn builtin_call_string(
         }
         Some(out)
       } else if args.length() == 2 {
-        let patterns = execute_with_env(args[0], input, env)
-        let flag_values = execute_with_env(args[1], input, env)
+        let patterns = execute_with_runtime(runtime, args[0], input, env)
+        let flag_values = execute_with_runtime(runtime, args[1], input, env)
         let out = []
         for pattern_value in patterns {
           match pattern_value {
@@ -263,9 +264,9 @@ fn builtin_call_string(
       }
     "splits" =>
       if args.length() == 1 || args.length() == 2 {
-        let patterns = execute_with_env(args[0], input, env)
+        let patterns = execute_with_runtime(runtime, args[0], input, env)
         let flag_values = if args.length() == 2 {
-          execute_with_env(args[1], input, env)
+          execute_with_runtime(runtime, args[1], input, env)
         } else {
           [Value::null()]
         }
@@ -299,9 +300,9 @@ fn builtin_call_string(
       }
     "test" =>
       if args.length() == 1 || args.length() == 2 {
-        let patterns = execute_with_env(args[0], input, env)
+        let patterns = execute_with_runtime(runtime, args[0], input, env)
         let explicit_flag_values = if args.length() == 2 {
-          execute_with_env(args[1], input, env)
+          execute_with_runtime(runtime, args[1], input, env)
         } else {
           []
         }
@@ -322,7 +323,7 @@ fn builtin_call_string(
               String(s) =>
                 out.push(
                   Value::boolean(
-                    regex_has_match(s, pattern_input.pattern, flags),
+                    regex_has_match(runtime, s, pattern_input.pattern, flags),
                   ),
                 )
               _ =>
@@ -339,9 +340,9 @@ fn builtin_call_string(
       }
     "scan" =>
       if args.length() == 1 || args.length() == 2 {
-        let patterns = execute_with_env(args[0], input, env)
+        let patterns = execute_with_runtime(runtime, args[0], input, env)
         let explicit_flag_values = if args.length() == 2 {
-          execute_with_env(args[1], input, env)
+          execute_with_runtime(runtime, args[1], input, env)
         } else {
           []
         }
@@ -361,7 +362,12 @@ fn builtin_call_string(
             match input {
               String(s) =>
                 for
-                  matched in regex_scan_values(s, pattern_input.pattern, flags) {
+                  matched in regex_scan_values(
+                    runtime,
+                    s,
+                    pattern_input.pattern,
+                    flags,
+                  ) {
                   out.push(matched)
                 }
               _ =>
@@ -378,9 +384,9 @@ fn builtin_call_string(
       }
     "match" =>
       if args.length() == 1 || args.length() == 2 {
-        let patterns = execute_with_env(args[0], input, env)
+        let patterns = execute_with_runtime(runtime, args[0], input, env)
         let explicit_flag_values = if args.length() == 2 {
-          execute_with_env(args[1], input, env)
+          execute_with_runtime(runtime, args[1], input, env)
         } else {
           []
         }
@@ -401,6 +407,7 @@ fn builtin_call_string(
               String(s) =>
                 for
                   matched in regex_match_objects(
+                    runtime,
                     s,
                     pattern_input.pattern,
                     flags,
@@ -421,9 +428,9 @@ fn builtin_call_string(
       }
     "capture" =>
       if args.length() == 1 || args.length() == 2 {
-        let patterns = execute_with_env(args[0], input, env)
+        let patterns = execute_with_runtime(runtime, args[0], input, env)
         let explicit_flag_values = if args.length() == 2 {
-          execute_with_env(args[1], input, env)
+          execute_with_runtime(runtime, args[1], input, env)
         } else {
           []
         }
@@ -444,6 +451,7 @@ fn builtin_call_string(
               String(s) =>
                 for
                   matched in regex_capture_objects(
+                    runtime,
                     s,
                     pattern_input.pattern,
                     flags,
@@ -464,9 +472,9 @@ fn builtin_call_string(
       }
     "sub" =>
       if args.length() == 2 || args.length() == 3 {
-        let patterns = execute_with_env(args[0], input, env)
+        let patterns = execute_with_runtime(runtime, args[0], input, env)
         let flag_values = if args.length() == 3 {
-          execute_with_env(args[2], input, env)
+          execute_with_runtime(runtime, args[2], input, env)
         } else {
           [Value::null()]
         }
@@ -480,6 +488,7 @@ fn builtin_call_string(
               String(s) =>
                 for
                   replaced in regex_substitute_values(
+                    runtime,
                     s,
                     pattern_input.pattern,
                     args[1],
@@ -504,9 +513,9 @@ fn builtin_call_string(
       }
     "gsub" =>
       if args.length() == 2 || args.length() == 3 {
-        let patterns = execute_with_env(args[0], input, env)
+        let patterns = execute_with_runtime(runtime, args[0], input, env)
         let flag_values = if args.length() == 3 {
-          execute_with_env(args[2], input, env)
+          execute_with_runtime(runtime, args[2], input, env)
         } else {
           [Value::null()]
         }
@@ -524,6 +533,7 @@ fn builtin_call_string(
               String(s) =>
                 for
                   replaced in regex_substitute_values(
+                    runtime,
                     s,
                     pattern_input.pattern,
                     args[1],
@@ -550,7 +560,7 @@ fn builtin_call_string(
       if args.length() != 1 {
         raise UnknownFunction("index")
       } else {
-        let needles = execute_with_env(args[0], input, env)
+        let needles = execute_with_runtime(runtime, args[0], input, env)
         let out = []
         for needle in needles {
           let indices = match input {
@@ -574,7 +584,7 @@ fn builtin_call_string(
       if args.length() != 1 {
         raise UnknownFunction("rindex")
       } else {
-        let needles = execute_with_env(args[0], input, env)
+        let needles = execute_with_runtime(runtime, args[0], input, env)
         let out = []
         for needle in needles {
           let indices = match input {
@@ -598,7 +608,7 @@ fn builtin_call_string(
       if args.length() != 1 {
         raise UnknownFunction("indices")
       } else {
-        let needles = execute_with_env(args[0], input, env)
+        let needles = execute_with_runtime(runtime, args[0], input, env)
         let out = []
         for needle in needles {
           let indices = match input {
@@ -622,7 +632,7 @@ fn builtin_call_string(
       if args.length() != 1 {
         raise UnknownFunction("_strindices")
       } else {
-        let needles = execute_with_env(args[0], input, env)
+        let needles = execute_with_runtime(runtime, args[0], input, env)
         let out = []
         for needle in needles {
           let haystack = match input {

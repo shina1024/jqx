@@ -396,6 +396,7 @@ fn max_json_array(a : Array[Value]) -> Value {
 
 ///|
 fn minmax_by_json_array(
+  runtime : RuntimeContext,
   a : Array[Value],
   key_filter : Filter,
   env : Map[String, Value],
@@ -405,7 +406,7 @@ fn minmax_by_json_array(
     return Value::null()
   }
   fn key_for(value : Value) -> Value raise EvalError {
-    Value::array(execute_with_env(key_filter, value, env))
+    Value::array(execute_with_runtime(runtime, key_filter, value, env))
   }
   let mut best_value = a[0]
   let mut best_key = key_for(best_value)

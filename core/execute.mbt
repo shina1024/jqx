@@ -202,50 +202,48 @@ fn parse_fromjson_string(s : String) -> Value raise EvalError {
 }
 
 ///|
-priv struct RuntimeDef {
+priv struct RuntimeDefinition {
   name : String
   params : Array[String]
   body : Filter
   env : Map[String, Value]
-  parent : RuntimeDef?
+  parent : RuntimeDefinition?
 }
-
-///|
-priv struct RuntimeDefState {
-  mut current : RuntimeDef?
-}
-
-///|
-let runtime_def_state : RuntimeDefState = { current: None }
 
 ///|
 priv struct RuntimeFilterClosure {
   name : String
   arg : Filter
   env : Map[String, Value]
-  defs : RuntimeDef?
+  definitions : RuntimeDefinition?
   closures : RuntimeFilterClosure?
   parent : RuntimeFilterClosure?
 }
 
 ///|
-priv struct RuntimeFilterClosureState {
-  mut current : RuntimeFilterClosure?
-  mut next_id : Int
+priv struct RuntimeContext {
+  mut current_definitions : RuntimeDefinition?
+  mut current_filter_closures : RuntimeFilterClosure?
+  mut next_filter_closure_id : Int
+  regex_compile_cache : Map[String, CompiledRegexPattern]
 }
 
 ///|
-let runtime_filter_closure_state : RuntimeFilterClosureState = {
-  current: None,
-  next_id: 0,
+fn RuntimeContext::make() -> RuntimeContext {
+  {
+    current_definitions: None,
+    current_filter_closures: None,
+    next_filter_closure_id: 0,
+    regex_compile_cache: Map([]),
+  }
 }
 
 ///|
-fn append_runtime_defs(
-  parent : RuntimeDef?,
+fn append_runtime_definitions(
+  parent : RuntimeDefinition?,
   defs : Array[(String, Array[String], Filter)],
   env : Map[String, Value],
-) -> RuntimeDef? {
+) -> RuntimeDefinition? {
   let mut out = parent
   for def_ in defs {
     out = Some({
@@ -260,29 +258,29 @@ fn append_runtime_defs(
 }
 
 ///|
-fn find_runtime_def(
-  scope : RuntimeDef?,
+fn find_runtime_definition(
+  scope : RuntimeDefinition?,
   name : String,
   arity : Int,
-) -> RuntimeDef? {
+) -> RuntimeDefinition? {
   match scope {
     Some(def_) =>
       if def_.name == name && def_.params.length() == arity {
         Some(def_)
       } else {
-        find_runtime_def(def_.parent, name, arity)
+        find_runtime_definition(def_.parent, name, arity)
       }
     None => None
   }
 }
 
 ///|
-fn collect_runtime_defs(
-  scope : RuntimeDef?,
+fn collect_runtime_definitions(
+  scope : RuntimeDefinition?,
 ) -> Array[(String, Array[String], Filter)] {
   match scope {
     Some(def_) => {
-      let out = collect_runtime_defs(def_.parent)
+      let out = collect_runtime_definitions(def_.parent)
       out.push((def_.name, def_.params, def_.body))
       out
     }
@@ -291,10 +289,11 @@ fn collect_runtime_defs(
 }
 
 ///|
-fn lower_scope_defs_with_runtime_context(
+fn lower_scope_definitions_with_runtime(
+  runtime : RuntimeContext,
   defs : Array[(String, Array[String], Filter)],
 ) -> Array[(String, Array[String], Filter)] {
-  let available = collect_runtime_defs(runtime_def_state.current)
+  let available = collect_runtime_definitions(runtime.current_definitions)
   let lowered = []
   for def_ in defs {
     let lowered_body = lower_filter_with_defs(def_.2, available)
@@ -403,9 +402,9 @@ fn clone_runtime_env(env : Map[String, Value]) -> Map[String, Value] {
 }
 
 ///|
-fn fresh_runtime_filter_closure_name() -> String {
-  let id = runtime_filter_closure_state.next_id
-  runtime_filter_closure_state.next_id += 1
+fn fresh_filter_closure_name(runtime : RuntimeContext) -> String {
+  let id = runtime.next_filter_closure_id
+  runtime.next_filter_closure_id += 1
   "__jqx_filter_param_" + id.to_string()
 }
 
@@ -414,7 +413,7 @@ priv struct RuntimeFilterClosureSeed {
   name : String
   arg : Filter
   env : Map[String, Value]
-  defs : RuntimeDef?
+  definitions : RuntimeDefinition?
   closures : RuntimeFilterClosure?
 }
 
@@ -429,7 +428,7 @@ fn append_runtime_filter_closures(
       name: seed.name,
       arg: seed.arg,
       env: seed.env,
-      defs: seed.defs,
+      definitions: seed.definitions,
       closures: seed.closures,
       parent: out,
     })
@@ -455,25 +454,31 @@ fn find_runtime_filter_closure(
 
 ///|
 fn execute_runtime_filter_closure(
+  runtime : RuntimeContext,
   closure : RuntimeFilterClosure,
   input : Value,
 ) -> Array[Value] raise EvalError {
-  let prev_defs = runtime_def_state.current
-  let prev_closures = runtime_filter_closure_state.current
-  runtime_def_state.current = closure.defs
-  runtime_filter_closure_state.current = closure.closures
+  let previous_definitions = runtime.current_definitions
+  let prev_closures = runtime.current_filter_closures
+  runtime.current_definitions = closure.definitions
+  runtime.current_filter_closures = closure.closures
   try
-    execute_with_env(closure.arg, input, clone_runtime_env(closure.env))
+    execute_with_runtime(
+      runtime,
+      closure.arg,
+      input,
+      clone_runtime_env(closure.env),
+    )
   catch {
     err => {
-      runtime_def_state.current = prev_defs
-      runtime_filter_closure_state.current = prev_closures
+      runtime.current_definitions = previous_definitions
+      runtime.current_filter_closures = prev_closures
       raise err
     }
   } noraise {
     values => {
-      runtime_def_state.current = prev_defs
-      runtime_filter_closure_state.current = prev_closures
+      runtime.current_definitions = previous_definitions
+      runtime.current_filter_closures = prev_closures
       values
     }
   }
@@ -481,7 +486,8 @@ fn execute_runtime_filter_closure(
 
 ///|
 fn execute_runtime_def_call(
-  def_ : RuntimeDef,
+  runtime : RuntimeContext,
+  def_ : RuntimeDefinition,
   args : Array[Filter],
   input : Value,
   env : Map[String, Value],
@@ -495,14 +501,14 @@ fn execute_runtime_def_call(
     } else if filter_param_needs_direct_inline(def_.body, def_param_name(param)) {
       closure_args.push(args[i])
     } else {
-      let closure_name = fresh_runtime_filter_closure_name()
+      let closure_name = fresh_filter_closure_name(runtime)
       closure_args.push(Filter::builtin(closure_name))
       closure_seeds.push({
         name: closure_name,
         arg: args[i],
         env: clone_runtime_env(env),
-        defs: runtime_def_state.current,
-        closures: runtime_filter_closure_state.current,
+        definitions: runtime.current_definitions,
+        closures: runtime.current_filter_closures,
       })
     }
   }
@@ -514,23 +520,23 @@ fn execute_runtime_def_call(
     def_.env,
   )
 
-  let prev_defs = runtime_def_state.current
-  let prev_closures = runtime_filter_closure_state.current
-  runtime_def_state.current = Some(def_)
-  runtime_filter_closure_state.current = append_runtime_filter_closures(
-    runtime_filter_closure_state.current,
+  let previous_definitions = runtime.current_definitions
+  let prev_closures = runtime.current_filter_closures
+  runtime.current_definitions = Some(def_)
+  runtime.current_filter_closures = append_runtime_filter_closures(
+    runtime.current_filter_closures,
     closure_seeds,
   )
-  try execute_with_env(expanded, input, env) catch {
+  try execute_with_runtime(runtime, expanded, input, env) catch {
     err => {
-      runtime_def_state.current = prev_defs
-      runtime_filter_closure_state.current = prev_closures
+      runtime.current_definitions = previous_definitions
+      runtime.current_filter_closures = prev_closures
       raise err
     }
   } noraise {
     values => {
-      runtime_def_state.current = prev_defs
-      runtime_filter_closure_state.current = prev_closures
+      runtime.current_definitions = previous_definitions
+      runtime.current_filter_closures = prev_closures
       values
     }
   }
@@ -539,23 +545,7 @@ fn execute_runtime_def_call(
 ///|
 pub fn execute(filter : Filter, input : Value) -> Array[Value] raise EvalError {
   let env = Map([])
-  let prev_defs = runtime_def_state.current
-  let prev_closures = runtime_filter_closure_state.current
-  runtime_def_state.current = None
-  runtime_filter_closure_state.current = None
-  try execute_with_env(filter, input, env) catch {
-    err => {
-      runtime_def_state.current = prev_defs
-      runtime_filter_closure_state.current = prev_closures
-      raise err
-    }
-  } noraise {
-    values => {
-      runtime_def_state.current = prev_defs
-      runtime_filter_closure_state.current = prev_closures
-      values
-    }
-  }
+  execute_with_runtime(RuntimeContext::make(), filter, input, env)
 }
 
 ///|
@@ -571,7 +561,8 @@ pub fn execute_for_cli(
 }
 
 ///|
-fn execute_with_env(
+fn execute_with_runtime(
+  runtime : RuntimeContext,
   filter : Filter,
   input : Value,
   env : Map[String, Value],
@@ -579,21 +570,23 @@ fn execute_with_env(
   match filter {
     Identity => [input]
     Scope(defs, body) => {
-      let prev_defs = runtime_def_state.current
-      let lowered_defs = lower_scope_defs_with_runtime_context(defs)
-      runtime_def_state.current = append_runtime_defs(
-        runtime_def_state.current,
-        lowered_defs,
+      let previous_definitions = runtime.current_definitions
+      let lowered_definitions = lower_scope_definitions_with_runtime(
+        runtime, defs,
+      )
+      runtime.current_definitions = append_runtime_definitions(
+        runtime.current_definitions,
+        lowered_definitions,
         env,
       )
-      try execute_with_env(body, input, env) catch {
+      try execute_with_runtime(runtime, body, input, env) catch {
         err => {
-          runtime_def_state.current = prev_defs
+          runtime.current_definitions = previous_definitions
           raise err
         }
       } noraise {
         values => {
-          runtime_def_state.current = prev_defs
+          runtime.current_definitions = previous_definitions
           values
         }
       }
@@ -706,10 +699,12 @@ fn execute_with_env(
       }
     As(value, name, body) => {
       let out = []
-      let values = execute_with_env(value, input, env)
+      let values = execute_with_runtime(runtime, value, input, env)
       for v in values {
         let previous = env_bind_temp(env, name, v)
-        let body_values = try execute_with_env(body, input, env) catch {
+        let body_values = try
+          execute_with_runtime(runtime, body, input, env)
+        catch {
           err => {
             env_restore_temp(env, name, previous)
             raise err
@@ -725,7 +720,7 @@ fn execute_with_env(
       out
     }
     Label(name, body) =>
-      try execute_with_env(body, input, env) catch {
+      try execute_with_runtime(runtime, body, input, env) catch {
         err =>
           match err {
             BreakSignal(target, values) =>
@@ -741,7 +736,7 @@ fn execute_with_env(
       }
     Break(name) => raise BreakSignal(name, [])
     Try(inner) =>
-      try execute_with_env(inner, input, env) catch {
+      try execute_with_runtime(runtime, inner, input, env) catch {
         err =>
           match err {
             BreakSignal(_, _) => raise err
@@ -752,14 +747,19 @@ fn execute_with_env(
         values => values
       }
     TryCatch(inner, handler) =>
-      try execute_with_env(inner, input, env) catch {
+      try execute_with_runtime(runtime, inner, input, env) catch {
         err =>
           match err {
             BreakSignal(_, _) => raise err
             _ => {
               let prefix = eval_error_prefix(err)
               let handled = try
-                execute_with_env(handler, eval_error_to_catch_input(err), env)
+                execute_with_runtime(
+                  runtime,
+                  handler,
+                  eval_error_to_catch_input(err),
+                  env,
+                )
               catch {
                 err2 => raise_with_prefix(prefix, err2)
               } noraise {
@@ -773,14 +773,14 @@ fn execute_with_env(
         values => values
       }
     Reduce(source, name, init, update) => {
-      let mut accs = execute_with_env(init, input, env)
-      let items = execute_with_env(source, input, env)
+      let mut accs = execute_with_runtime(runtime, init, input, env)
+      let items = execute_with_runtime(runtime, source, input, env)
       for item in items {
         let previous = env_bind_temp(env, name, item)
         let next_accs = try {
           let next_accs = []
           for acc in accs {
-            for v in execute_with_env(update, acc, env) {
+            for v in execute_with_runtime(runtime, update, acc, env) {
               next_accs.push(v)
             }
           }
@@ -799,8 +799,8 @@ fn execute_with_env(
       accs
     }
     Foreach(source, name, init, update, extract) => {
-      let items = execute_with_env(source, input, env)
-      let accs = execute_with_env(init, input, env)
+      let items = execute_with_runtime(runtime, source, input, env)
+      let accs = execute_with_runtime(runtime, init, input, env)
       let out = []
       for seed in accs {
         let mut states = [seed]
@@ -809,7 +809,9 @@ fn execute_with_env(
           let next_states = try {
             let next_states = []
             for acc in states {
-              let update_values = try execute_with_env(update, acc, env) catch {
+              let update_values = try
+                execute_with_runtime(runtime, update, acc, env)
+              catch {
                 err => raise_with_prefix(out, err)
               } noraise {
                 values => values
@@ -820,7 +822,7 @@ fn execute_with_env(
             }
             for acc in next_states {
               let extract_values = try
-                execute_with_env(extract, acc, env)
+                execute_with_runtime(runtime, extract, acc, env)
               catch {
                 err => raise_with_prefix(out, err)
               } noraise {
@@ -845,13 +847,17 @@ fn execute_with_env(
     }
     Pipe(left, right) => {
       let out = []
-      let left_values = try execute_with_env(left, input, env) catch {
+      let left_values = try
+        execute_with_runtime(runtime, left, input, env)
+      catch {
         err => raise_with_prefix(out, err)
       } noraise {
         values => values
       }
       for v in left_values {
-        let right_values = try execute_with_env(right, v, env) catch {
+        let right_values = try
+          execute_with_runtime(runtime, right, v, env)
+        catch {
           err => raise_with_prefix(out, err)
         } noraise {
           values => values
@@ -862,13 +868,17 @@ fn execute_with_env(
     }
     Comma(left, right) => {
       let out = []
-      let left_values = try execute_with_env(left, input, env) catch {
+      let left_values = try
+        execute_with_runtime(runtime, left, input, env)
+      catch {
         err => raise_with_prefix(out, err)
       } noraise {
         values => values
       }
       append_json_values(out, left_values)
-      let right_values = try execute_with_env(right, input, env) catch {
+      let right_values = try
+        execute_with_runtime(runtime, right, input, env)
+      catch {
         err => raise_with_prefix(out, err)
       } noraise {
         values => values
@@ -879,7 +889,7 @@ fn execute_with_env(
     Array(items) => {
       let out = []
       for f in items {
-        let values = try execute_with_env(f, input, env) catch {
+        let values = try execute_with_runtime(runtime, f, input, env) catch {
           err => raise eval_error_without_prefix(err)
         } noraise {
           values => values
@@ -895,7 +905,7 @@ fn execute_with_env(
       for kv in items {
         let key = kv.0
         let f = kv.1
-        let vals = try execute_with_env(f, input, env) catch {
+        let vals = try execute_with_runtime(runtime, f, input, env) catch {
           err => raise eval_error_without_prefix(err)
         } noraise {
           values => values
@@ -927,30 +937,34 @@ fn execute_with_env(
       out
     }
     Builtin(name) =>
-      match
-        find_runtime_filter_closure(runtime_filter_closure_state.current, name) {
-        Some(closure) => execute_runtime_filter_closure(closure, input)
+      match find_runtime_filter_closure(runtime.current_filter_closures, name) {
+        Some(closure) => execute_runtime_filter_closure(runtime, closure, input)
         None =>
-          match find_runtime_def(runtime_def_state.current, name, 0) {
-            Some(def_) => execute_runtime_def_call(def_, [], input, env)
-            None => builtin_call0(name, input)
+          match find_runtime_definition(runtime.current_definitions, name, 0) {
+            Some(def_) =>
+              execute_runtime_def_call(runtime, def_, [], input, env)
+            None => dispatch_nullary_builtin(runtime, name, input)
           }
       }
     Call(name, args) =>
-      match
-        find_runtime_filter_closure(runtime_filter_closure_state.current, name) {
+      match find_runtime_filter_closure(runtime.current_filter_closures, name) {
         Some(closure) if args.length() == 0 =>
-          execute_runtime_filter_closure(closure, input)
+          execute_runtime_filter_closure(runtime, closure, input)
         _ =>
           match
-            find_runtime_def(runtime_def_state.current, name, args.length()) {
-            Some(def_) => execute_runtime_def_call(def_, args, input, env)
-            None => builtin_call(name, args, input, env)
+            find_runtime_definition(
+              runtime.current_definitions,
+              name,
+              args.length(),
+            ) {
+            Some(def_) =>
+              execute_runtime_def_call(runtime, def_, args, input, env)
+            None => dispatch_builtin_call(runtime, name, args, input, env)
           }
       }
     Eq(left, right) => {
-      let l = execute_with_env(left, input, env)
-      let r = execute_with_env(right, input, env)
+      let l = execute_with_runtime(runtime, left, input, env)
+      let r = execute_with_runtime(runtime, right, input, env)
       let out = []
       for j in 0..<r.length() {
         let b = r[j]
@@ -962,8 +976,8 @@ fn execute_with_env(
       out
     }
     Neq(left, right) => {
-      let l = execute_with_env(left, input, env)
-      let r = execute_with_env(right, input, env)
+      let l = execute_with_runtime(runtime, left, input, env)
+      let r = execute_with_runtime(runtime, right, input, env)
       let out = []
       for j in 0..<r.length() {
         let b = r[j]
@@ -974,15 +988,15 @@ fn execute_with_env(
       }
       out
     }
-    Lt(left, right) => execute_compare("<", left, right, input, env)
-    Lte(left, right) => execute_compare("<=", left, right, input, env)
-    Gt(left, right) => execute_compare(">", left, right, input, env)
-    Gte(left, right) => execute_compare(">=", left, right, input, env)
+    Lt(left, right) => execute_compare(runtime, "<", left, right, input, env)
+    Lte(left, right) => execute_compare(runtime, "<=", left, right, input, env)
+    Gt(left, right) => execute_compare(runtime, ">", left, right, input, env)
+    Gte(left, right) => execute_compare(runtime, ">=", left, right, input, env)
     And(left, right) => {
       let out = []
-      for l in execute_with_env(left, input, env) {
+      for l in execute_with_runtime(runtime, left, input, env) {
         if is_truthy(l) {
-          for r in execute_with_env(right, input, env) {
+          for r in execute_with_runtime(runtime, right, input, env) {
             out.push(Value::boolean(is_truthy(r)))
           }
         } else {
@@ -993,11 +1007,11 @@ fn execute_with_env(
     }
     Or(left, right) => {
       let out = []
-      for l in execute_with_env(left, input, env) {
+      for l in execute_with_runtime(runtime, left, input, env) {
         if is_truthy(l) {
           out.push(Value::boolean(true))
         } else {
-          for r in execute_with_env(right, input, env) {
+          for r in execute_with_runtime(runtime, right, input, env) {
             out.push(Value::boolean(is_truthy(r)))
           }
         }
@@ -1006,25 +1020,25 @@ fn execute_with_env(
     }
     Not(inner) => {
       let out = []
-      for v in execute_with_env(inner, input, env) {
+      for v in execute_with_runtime(runtime, inner, input, env) {
         out.push(Value::boolean(!is_truthy(v)))
       }
       out
     }
-    Add(left, right) => execute_add(left, right, input, env)
-    Sub(left, right) => execute_arith("-", left, right, input, env)
-    Mul(left, right) => execute_arith("*", left, right, input, env)
-    Div(left, right) => execute_arith("/", left, right, input, env)
-    Mod(left, right) => execute_arith("%", left, right, input, env)
+    Add(left, right) => execute_add(runtime, left, right, input, env)
+    Sub(left, right) => execute_arith(runtime, "-", left, right, input, env)
+    Mul(left, right) => execute_arith(runtime, "*", left, right, input, env)
+    Div(left, right) => execute_arith(runtime, "/", left, right, input, env)
+    Mod(left, right) => execute_arith(runtime, "%", left, right, input, env)
     IfElse(cond, then_branch, else_branch) => {
       let out = []
-      for cond_value in execute_with_env(cond, input, env) {
+      for cond_value in execute_with_runtime(runtime, cond, input, env) {
         if is_truthy(cond_value) {
-          for v in execute_with_env(then_branch, input, env) {
+          for v in execute_with_runtime(runtime, then_branch, input, env) {
             out.push(v)
           }
         } else {
-          for v in execute_with_env(else_branch, input, env) {
+          for v in execute_with_runtime(runtime, else_branch, input, env) {
             out.push(v)
           }
         }
@@ -1032,7 +1046,7 @@ fn execute_with_env(
       out
     }
     Fallback(left, right) => {
-      let l = execute_with_env(left, input, env)
+      let l = execute_with_runtime(runtime, left, input, env)
       let truthy_values = []
       for v in l {
         if is_truthy(v) {
@@ -1042,7 +1056,7 @@ fn execute_with_env(
       if truthy_values.length() > 0 {
         truthy_values
       } else {
-        execute_with_env(right, input, env)
+        execute_with_runtime(runtime, right, input, env)
       }
     }
     Empty => []
@@ -1050,7 +1064,8 @@ fn execute_with_env(
 }
 
 ///|
-fn execute_with_env_prefix(
+fn execute_prefix_with_runtime(
+  runtime : RuntimeContext,
   filter : Filter,
   input : Value,
   env : Map[String, Value],
@@ -1073,7 +1088,7 @@ fn execute_with_env_prefix(
         }
       }
       Pipe(left, right) => {
-        let left_values = execute_with_env(left, value, env)
+        let left_values = execute_with_runtime(runtime, left, value, env)
         for next in left_values {
           if out.length() >= max_count {
             break
@@ -1082,7 +1097,7 @@ fn execute_with_env_prefix(
         }
       }
       _ => {
-        let values = execute_with_env(current, value, env)
+        let values = execute_with_runtime(runtime, current, value, env)
         for v in values {
           if out.length() >= max_count {
             break

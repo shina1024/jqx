@@ -12,7 +12,8 @@ fn by_key_from_values(values : Array[Value]) -> Value {
 }
 
 ///|
-fn builtin_call_collection(
+fn dispatch_collection_builtin(
+  runtime : RuntimeContext,
   name : String,
   args : Array[Filter],
   input : Value,
@@ -24,7 +25,7 @@ fn builtin_call_collection(
         raise UnknownFunction("contains")
       } else {
         let target = args[0]
-        let needles = execute_with_env(target, input, env)
+        let needles = execute_with_runtime(runtime, target, input, env)
         let out = []
         for needle in needles {
           out.push(Value::boolean(contains_checked(input, needle)))
@@ -36,7 +37,7 @@ fn builtin_call_collection(
         raise UnknownFunction("inside")
       } else {
         let target = args[0]
-        let haystacks = execute_with_env(target, input, env)
+        let haystacks = execute_with_runtime(runtime, target, input, env)
         let out = []
         for haystack in haystacks {
           out.push(Value::boolean(contains_checked(haystack, input)))
@@ -48,7 +49,7 @@ fn builtin_call_collection(
         raise UnknownFunction("has")
       } else {
         let key_filter = args[0]
-        let keys = execute_with_env(key_filter, input, env)
+        let keys = execute_with_runtime(runtime, key_filter, input, env)
         let out = []
         for key in keys {
           out.push(Value::boolean(has_key(input, key)))
@@ -60,7 +61,9 @@ fn builtin_call_collection(
         raise UnknownFunction("in")
       } else {
         let collection_filter = args[0]
-        let collections = execute_with_env(collection_filter, input, env)
+        let collections = execute_with_runtime(
+          runtime, collection_filter, input, env,
+        )
         let out = []
         for collection in collections {
           out.push(Value::boolean(has_key(collection, input)))
@@ -69,7 +72,7 @@ fn builtin_call_collection(
       }
     "IN" =>
       if args.length() == 1 {
-        let candidates = execute_with_env(args[0], input, env)
+        let candidates = execute_with_runtime(runtime, args[0], input, env)
         let mut found = false
         for candidate in candidates {
           if candidate == input {
@@ -79,8 +82,8 @@ fn builtin_call_collection(
         }
         Some([Value::boolean(found)])
       } else if args.length() == 2 {
-        let haystack = execute_with_env(args[0], input, env)
-        let needles = execute_with_env(args[1], input, env)
+        let haystack = execute_with_runtime(runtime, args[0], input, env)
+        let needles = execute_with_runtime(runtime, args[1], input, env)
         let mut found = false
         for needle in needles {
           for candidate in haystack {
@@ -101,11 +104,11 @@ fn builtin_call_collection(
       if args.length() != 2 {
         raise UnknownFunction("INDEX")
       } else {
-        let values = execute_with_env(args[0], input, env)
+        let values = execute_with_runtime(runtime, args[0], input, env)
         let out = Map([])
         let out_order = []
         for value in values {
-          let keys = execute_with_env(args[1], value, env)
+          let keys = execute_with_runtime(runtime, args[1], value, env)
           for key in keys {
             let object_key = index_object_key(key)
             if !out.contains(object_key) {
@@ -120,7 +123,7 @@ fn builtin_call_collection(
       if args.length() != 2 {
         raise UnknownFunction("JOIN")
       } else {
-        let indices = execute_with_env(args[0], input, env)
+        let indices = execute_with_runtime(runtime, args[0], input, env)
         let rows = match input {
           Array(items) => items
           _ => [input]
@@ -132,7 +135,7 @@ fn builtin_call_collection(
             Object(index_obj) => {
               let joined = []
               for row in rows {
-                let keys = execute_with_env(key_filter, row, env)
+                let keys = execute_with_runtime(runtime, key_filter, row, env)
                 for key in keys {
                   let object_key = index_object_key(key)
                   let value = match index_obj.get(object_key) {
@@ -158,7 +161,7 @@ fn builtin_call_collection(
             let keyed = []
             let key_filter = args[0]
             for v in a {
-              let key_values = execute_with_env(key_filter, v, env)
+              let key_values = execute_with_runtime(runtime, key_filter, v, env)
               let key = by_key_from_values(key_values)
               keyed.push((key, v))
             }
@@ -184,7 +187,7 @@ fn builtin_call_collection(
             let keyed = []
             let key_filter = args[0]
             for v in a {
-              let key_values = execute_with_env(key_filter, v, env)
+              let key_values = execute_with_runtime(runtime, key_filter, v, env)
               let key = by_key_from_values(key_values)
               keyed.push((key, v))
             }
@@ -221,7 +224,9 @@ fn builtin_call_collection(
       } else {
         match input {
           Array(a) =>
-            Some([minmax_by_json_array(a, args[0], env, choose_max=false)])
+            Some([
+              minmax_by_json_array(runtime, a, args[0], env, choose_max=false),
+            ])
           _ =>
             raise TypeError(
               "Cannot iterate over " + json_type_with_value(input),
@@ -234,7 +239,9 @@ fn builtin_call_collection(
       } else {
         match input {
           Array(a) =>
-            Some([minmax_by_json_array(a, args[0], env, choose_max=true)])
+            Some([
+              minmax_by_json_array(runtime, a, args[0], env, choose_max=true),
+            ])
           _ =>
             raise TypeError(
               "Cannot iterate over " + json_type_with_value(input),
@@ -250,7 +257,7 @@ fn builtin_call_collection(
             let keyed = []
             let key_filter = args[0]
             for v in a {
-              let key_values = execute_with_env(key_filter, v, env)
+              let key_values = execute_with_runtime(runtime, key_filter, v, env)
               let key = by_key_from_values(key_values)
               keyed.push((key, v))
             }
@@ -277,7 +284,7 @@ fn builtin_call_collection(
       if args.length() != 1 {
         raise UnknownFunction("bsearch")
       } else {
-        let needles = execute_with_env(args[0], input, env)
+        let needles = execute_with_runtime(runtime, args[0], input, env)
         let out = []
         for needle in needles {
           match input {

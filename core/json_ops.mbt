@@ -210,11 +210,12 @@ fn is_truthy(j : Value) -> Bool {
 
 ///|
 fn execute_to_bool(
+  runtime : RuntimeContext,
   filter : Filter,
   input : Value,
   env : Map[String, Value],
 ) -> Bool raise EvalError {
-  let results = execute_with_env(filter, input, env)
+  let results = execute_with_runtime(runtime, filter, input, env)
   for v in results {
     if is_truthy(v) {
       return true
@@ -235,14 +236,15 @@ fn compare_ok(op : String, cmp : Int) -> Bool {
 
 ///|
 fn execute_compare(
+  runtime : RuntimeContext,
   op : String,
   left : Filter,
   right : Filter,
   input : Value,
   env : Map[String, Value],
 ) -> Array[Value] raise EvalError {
-  let l = execute_with_env(left, input, env)
-  let r = execute_with_env(right, input, env)
+  let l = execute_with_runtime(runtime, left, input, env)
+  let r = execute_with_runtime(runtime, right, input, env)
   let out = []
   for j in 0..<r.length() {
     let b = r[j]
@@ -289,14 +291,15 @@ fn arith_type_error_message(op : String, left : Value, right : Value) -> String 
 
 ///|
 fn execute_arith(
+  runtime : RuntimeContext,
   op : String,
   left : Filter,
   right : Filter,
   input : Value,
   env : Map[String, Value],
 ) -> Array[Value] raise EvalError {
-  let l = execute_with_env(left, input, env)
-  let r = execute_with_env(right, input, env)
+  let l = execute_with_runtime(runtime, left, input, env)
+  let r = execute_with_runtime(runtime, right, input, env)
   let out = []
   for j in 0..<r.length() {
     let b = r[j]
@@ -447,13 +450,14 @@ fn merge_objects_recursive(left : JsonObject, right : JsonObject) -> JsonObject 
 
 ///|
 fn execute_add(
+  runtime : RuntimeContext,
   left : Filter,
   right : Filter,
   input : Value,
   env : Map[String, Value],
 ) -> Array[Value] raise EvalError {
-  let l = execute_with_env(left, input, env)
-  let r = execute_with_env(right, input, env)
+  let l = execute_with_runtime(runtime, left, input, env)
+  let r = execute_with_runtime(runtime, right, input, env)
   let out = []
   for j in 0..<r.length() {
     let b = r[j]

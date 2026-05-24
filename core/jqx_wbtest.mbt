@@ -1,5 +1,5 @@
 ///|
-// Source under test: core/jqx.mbt
+// Source under test: core/json_value.mbt, core/json_format.mbt
 
 ///|
 test "object_keys_in_order normalizes duplicates and missing keys" {

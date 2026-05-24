@@ -1,5 +1,5 @@
 ///|
-// Source under test: core/jqx.mbt
+// Source under test: core/json_parse.mbt, core/json_runtime.mbt
 
 ///|
 fn nested_json_array_text(depth : Int, leaf : String) -> String {

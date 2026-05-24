@@ -16,6 +16,12 @@ priv struct ModuleSearchPathState {
 }
 
 ///|
+priv struct CompileContext {
+  module_sources : Map[String, String]
+  module_search_paths : Array[String]
+}
+
+///|
 let module_source_state : ModuleSourceState = { sources: Map([]) }
 
 ///|
@@ -53,8 +59,25 @@ pub fn set_module_search_paths(paths : Array[String]) -> Unit {
 }
 
 ///|
-fn module_default_search_paths() -> Array[String] {
+fn clone_module_search_paths() -> Array[String] {
   module_search_path_state.search_paths.copy()
+}
+
+///|
+fn clone_module_sources() -> Map[String, String] {
+  let out = Map([])
+  for kv in module_source_state.sources {
+    out[kv.0] = kv.1
+  }
+  out
+}
+
+///|
+fn default_compile_context() -> CompileContext {
+  {
+    module_sources: clone_module_sources(),
+    module_search_paths: clone_module_search_paths(),
+  }
 }
 
 ///|
@@ -1372,17 +1395,26 @@ fn FilterCursor::parse_definition_prefix(
     let params = parse_params()
     ctx.expect_char(':')
     let body_source = ctx.read_until_top_level_semicolon()
-    defs.push((name, params, parse_filter(body_source)))
+    defs.push(
+      (
+        name,
+        params,
+        parse_filter_ast_with_compile_context(body_source, ctx.compile_context),
+      ),
+    )
     ctx.skip_ws()
   }
   defs
 }
 
 ///|
-fn module_source_lookup_in_registry(module_name : String) -> String? {
-  match module_source_state.sources.get(module_name) {
+fn lookup_module_source_in_registry(
+  compile_context : CompileContext,
+  module_name : String,
+) -> String? {
+  match compile_context.module_sources.get(module_name) {
     Some(source) => Some(source)
-    None => module_source_state.sources.get(module_name + ".jq")
+    None => compile_context.module_sources.get(module_name + ".jq")
   }
 }
 
@@ -1404,11 +1436,12 @@ fn module_search_dirs_with_front(
 }
 
 ///|
-fn module_source_lookup(
+fn lookup_module_source(
+  compile_context : CompileContext,
   module_name : String,
   search_dirs : Array[String],
 ) -> (String, String?)? {
-  match module_source_lookup_in_registry(module_name) {
+  match lookup_module_source_in_registry(compile_context, module_name) {
     Some(source) => Some((source, None))
     None =>
       match load_module_source_from_filesystem(module_name, search_dirs) {
@@ -1706,7 +1739,8 @@ fn FilterCursor::parse_optional_module_declaration(
 }
 
 ///|
-fn load_module_defs(
+fn FilterCursor::load_module_definitions(
+  ctx : FilterCursor,
   module_name : String,
   loading_stack : Array[String],
   search_dirs : Array[String],
@@ -1714,7 +1748,7 @@ fn load_module_defs(
   if loading_stack.contains(module_name) {
     return Missing(module_name)
   }
-  match module_source_lookup(module_name, search_dirs) {
+  match lookup_module_source(ctx.compile_context, module_name, search_dirs) {
     None => Missing(module_name)
     Some((source, source_dir)) => {
       let nested_stack = loading_stack.copy()
@@ -1723,7 +1757,10 @@ fn load_module_defs(
         Some(dir) => module_search_dirs_with_front(dir, search_dirs)
         None => search_dirs
       }
-      let module_ctx = FilterCursor::make(source.view())
+      let module_ctx = FilterCursor::make_with_compile_context(
+        source.view(),
+        ctx.compile_context,
+      )
       module_ctx.parse_optional_module_declaration()
       let (imported_defs, missing_module) = module_ctx.parse_module_prefix_with_stack(
         nested_stack, nested_search_dirs,
@@ -1749,7 +1786,10 @@ fn load_module_defs(
 fn FilterCursor::parse_module_prefix(
   ctx : FilterCursor,
 ) -> (Array[(String, Array[String], Filter)], String?) raise FilterError {
-  ctx.parse_module_prefix_with_stack([], module_default_search_paths())
+  ctx.parse_module_prefix_with_stack(
+    [],
+    ctx.compile_context.module_search_paths.copy(),
+  )
 }
 
 ///|
@@ -1783,7 +1823,8 @@ fn FilterCursor::parse_module_prefix_with_stack(
       }
       ctx.skip_ws()
       ctx.expect_char(';')
-      match load_module_defs(module_name, loading_stack, search_dirs) {
+      match
+        ctx.load_module_definitions(module_name, loading_stack, search_dirs) {
         Loaded(defs) =>
           append_defs(imported_defs, prefix_module_defs(module_alias, defs))
         Missing(missing_name) => missing_module = Some(missing_name)
@@ -1801,7 +1842,8 @@ fn FilterCursor::parse_module_prefix_with_stack(
       }
       ctx.skip_ws()
       ctx.expect_char(';')
-      match load_module_defs(module_name, loading_stack, search_dirs) {
+      match
+        ctx.load_module_definitions(module_name, loading_stack, search_dirs) {
         Loaded(defs) => append_defs(imported_defs, defs)
         Missing(missing_name) => missing_module = Some(missing_name)
       }

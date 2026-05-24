@@ -48,14 +48,6 @@ priv struct CompiledRegexPattern {
 }
 
 ///|
-priv struct RegexCompileCacheState {
-  entries : Map[String, CompiledRegexPattern]
-}
-
-///|
-let regex_compile_cache_state : RegexCompileCacheState = { entries: Map([]) }
-
-///|
 priv struct RegexMatchData {
   start : Int
   end_ : Int
@@ -298,15 +290,16 @@ fn regex_compile_cache_key(pattern : String, flags : String) -> String {
 
 ///|
 fn regex_compile_pattern(
+  runtime : RuntimeContext,
   pattern : String,
   flags : String,
 ) -> CompiledRegexPattern raise EvalError {
   let key = regex_compile_cache_key(pattern, flags)
-  match regex_compile_cache_state.entries.get(key) {
+  match runtime.regex_compile_cache.get(key) {
     Some(compiled) => compiled
     None => {
       let compiled = regex_compile_pattern_uncached(pattern, flags)
-      regex_compile_cache_state.entries[key] = compiled
+      runtime.regex_compile_cache[key] = compiled
       compiled
     }
   }
@@ -487,21 +480,23 @@ fn regex_next_search_start(
 
 ///|
 fn regex_has_match(
+  runtime : RuntimeContext,
   s : String,
   pattern : String,
   flags : String,
 ) -> Bool raise EvalError {
-  let compiled = regex_compile_pattern(pattern, flags)
+  let compiled = regex_compile_pattern(runtime, pattern, flags)
   regex_find_next_match(compiled, s, 0) is Some(_)
 }
 
 ///|
 fn regex_scan_values(
+  runtime : RuntimeContext,
   s : String,
   pattern : String,
   flags : String,
 ) -> Array[Value] raise EvalError {
-  let compiled = regex_compile_pattern(pattern, flags)
+  let compiled = regex_compile_pattern(runtime, pattern, flags)
   let mut search_start = 0
   let len = s.length()
   let has_captures = compiled.group_names.length() > 1
@@ -537,11 +532,12 @@ fn regex_scan_values(
 
 ///|
 fn regex_match_objects(
+  runtime : RuntimeContext,
   s : String,
   pattern : String,
   flags : String,
 ) -> Array[Value] raise EvalError {
-  let compiled = regex_compile_pattern(pattern, flags)
+  let compiled = regex_compile_pattern(runtime, pattern, flags)
   let global = split_regex_flag_enabled(flags, 'g')
   let mut search_start = 0
   let len = s.length()
@@ -586,11 +582,12 @@ fn regex_match_objects(
 
 ///|
 fn regex_capture_objects(
+  runtime : RuntimeContext,
   s : String,
   pattern : String,
   flags : String,
 ) -> Array[Value] raise EvalError {
-  let compiled = regex_compile_pattern(pattern, flags)
+  let compiled = regex_compile_pattern(runtime, pattern, flags)
   let global = split_regex_flag_enabled(flags, 'g')
   let mut search_start = 0
   let len = s.length()
@@ -668,6 +665,7 @@ fn regex_join_chunks(chunks : Array[String]) -> String {
 
 ///|
 fn regex_substitute_values(
+  runtime : RuntimeContext,
   s : String,
   pattern : String,
   replacement_filter : Filter,
@@ -676,7 +674,7 @@ fn regex_substitute_values(
   global~ : Bool,
   replacement_error : String,
 ) -> Array[String] raise EvalError {
-  let compiled = regex_compile_pattern(pattern, flags)
+  let compiled = regex_compile_pattern(runtime, pattern, flags)
   let len = s.length()
   let mut search_start = 0
   let mut token_start = 0
@@ -695,8 +693,8 @@ fn regex_substitute_values(
           found.result,
           compiled.group_names,
         )
-        let replacement_values_json = execute_with_env(
-          replacement_filter, replacement_input, env,
+        let replacement_values_json = execute_with_runtime(
+          runtime, replacement_filter, replacement_input, env,
         )
         let replacement_values = []
         for value in replacement_values_json {

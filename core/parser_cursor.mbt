@@ -4,6 +4,7 @@ priv struct FilterCursor {
   input : StringView
   end_offset : Int
   mut gensym : Int
+  compile_context : CompileContext
 }
 
 ///|
@@ -32,8 +33,11 @@ priv struct AsObjectPatternEntry {
 }
 
 ///|
-fn FilterCursor::make(input : StringView) -> FilterCursor {
-  { offset: 0, input, end_offset: input.length(), gensym: 0 }
+fn FilterCursor::make_with_compile_context(
+  input : StringView,
+  compile_context : CompileContext,
+) -> FilterCursor {
+  { offset: 0, input, end_offset: input.length(), gensym: 0, compile_context }
 }
 
 ///|

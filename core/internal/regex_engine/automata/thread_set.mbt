@@ -110,17 +110,13 @@ fn ThreadSet::make_node(
 }
 
 ///|
-let rand_state : Ref[Int] = { val: 0 }
-
-///|
-fn rand_int() -> Int {
-  rand_state.val = rand_state.val * 1664525 + 1013904223
-  rand_state.val
+fn thread_priority(t : Thread) -> Int {
+  t.hash() * 1664525 + 1013904223
 }
 
 ///|
 fn ThreadSet::singleton(t : Thread) -> ThreadSet {
-  ThreadSet::make_node(Empty, t, Empty, p=rand_int())
+  ThreadSet::make_node(Empty, t, Empty, p=thread_priority(t))
 }
 
 ///|

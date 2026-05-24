@@ -51,7 +51,8 @@ fn pick_static_path_segments(filter : Filter) -> Array[Value]? {
 }
 
 ///|
-fn builtin_call_path(
+fn dispatch_path_builtin(
+  runtime : RuntimeContext,
   name : String,
   args : Array[Filter],
   input : Value,
@@ -62,7 +63,7 @@ fn builtin_call_path(
       if args.length() != 1 {
         raise UnknownFunction("getpath")
       } else {
-        let paths = execute_with_env(args[0], input, env)
+        let paths = execute_with_runtime(runtime, args[0], input, env)
         let out = []
         for path in paths {
           out.push(getpath_on_input(input, path))
@@ -73,11 +74,11 @@ fn builtin_call_path(
       if args.length() != 2 {
         raise UnknownFunction("setpath")
       } else {
-        let values = execute_with_env(args[1], input, env)
+        let values = execute_with_runtime(runtime, args[1], input, env)
         if values.length() == 0 {
           Some([])
         } else {
-          let paths = execute_with_env(args[0], input, env)
+          let paths = execute_with_runtime(runtime, args[0], input, env)
           let out = []
           for value in values {
             for path in paths {
@@ -92,7 +93,7 @@ fn builtin_call_path(
       if args.length() != 1 {
         raise UnknownFunction("delpaths")
       } else {
-        let pathsets = execute_with_env(args[0], input, env)
+        let pathsets = execute_with_runtime(runtime, args[0], input, env)
         let out = []
         for pathset in pathsets {
           let normalized = normalize_delpaths_arg(pathset)
@@ -104,14 +105,14 @@ fn builtin_call_path(
       if args.length() != 1 {
         raise UnknownFunction("path")
       } else {
-        Some(path_expression(args[0], input, env))
+        Some(path_expression(runtime, args[0], input, env))
       }
     "_slice" =>
       if args.length() != 2 {
         raise UnknownFunction("_slice")
       } else {
-        let starts = execute_with_env(args[0], input, env)
-        let ends = execute_with_env(args[1], input, env)
+        let starts = execute_with_runtime(runtime, args[0], input, env)
+        let ends = execute_with_runtime(runtime, args[1], input, env)
         let out = []
         for start_value in starts {
           let start = call_parse_slice_index(start_value)
@@ -128,9 +129,9 @@ fn builtin_call_path(
       if args.length() != 3 {
         raise UnknownFunction("_set_slice")
       } else {
-        let starts = execute_with_env(args[0], input, env)
-        let ends = execute_with_env(args[1], input, env)
-        let values = execute_with_env(args[2], input, env)
+        let starts = execute_with_runtime(runtime, args[0], input, env)
+        let ends = execute_with_runtime(runtime, args[1], input, env)
+        let values = execute_with_runtime(runtime, args[2], input, env)
         let out = []
         for start_value in starts {
           let start = call_parse_slice_index(start_value)
@@ -149,7 +150,7 @@ fn builtin_call_path(
       } else {
         let normalized_paths = []
         for arg in args {
-          for path_json in path_expression(arg, input, env) {
+          for path_json in path_expression(runtime, arg, input, env) {
             match path_json {
               Array(parts) => normalized_paths.push(parts)
               _ => raise TypeError("Path must be specified as an array")
@@ -168,7 +169,9 @@ fn builtin_call_path(
       } else {
         let normalized_paths = []
         for arg in args {
-          let path_values = try path_expression(arg, input, env) catch {
+          let path_values = try
+            path_expression(runtime, arg, input, env)
+          catch {
             err =>
               match pick_static_path_segments(arg) {
                 Some(parts) => [Value::array(parts)]
@@ -195,7 +198,7 @@ fn builtin_call_path(
       if args.length() != 1 {
         raise UnknownFunction("paths")
       } else {
-        Some(collect_paths(input, [], Some(args[0]), env))
+        Some(collect_paths(runtime, input, [], Some(args[0]), env))
       }
     _ => None
   }

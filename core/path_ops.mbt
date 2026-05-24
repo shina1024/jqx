@@ -317,6 +317,7 @@ fn delpaths_on_input(
 
 ///|
 fn collect_paths(
+  runtime : RuntimeContext,
   input : Value,
   prefix : Array[Value],
   predicate : Filter?,
@@ -325,7 +326,7 @@ fn collect_paths(
   let out = []
   fn include_node(v : Value) -> Bool raise EvalError {
     match predicate {
-      Some(pred) => execute_to_bool(pred, v, env)
+      Some(pred) => execute_to_bool(runtime, pred, v, env)
       None => true
     }
   }
@@ -340,7 +341,7 @@ fn collect_paths(
         if include_node(value) {
           out.push(Value::array(p))
         }
-        for child in collect_paths(value, p, predicate, env) {
+        for child in collect_paths(runtime, value, p, predicate, env) {
           out.push(child)
         }
       }
@@ -352,7 +353,7 @@ fn collect_paths(
         if include_node(value) {
           out.push(Value::array(p))
         }
-        for child in collect_paths(value, p, predicate, env) {
+        for child in collect_paths(runtime, value, p, predicate, env) {
           out.push(child)
         }
       }
@@ -400,11 +401,12 @@ fn path_invalid_iter_message(value : Value) -> String {
 
 ///|
 fn path_fallback_states(
+  runtime : RuntimeContext,
   filter : Filter,
   state : PathEvalState,
   env : Map[String, Value],
 ) -> Array[PathEvalState] raise EvalError {
-  let values = execute_with_env(filter, state.value, env)
+  let values = execute_with_runtime(runtime, filter, state.value, env)
   let out = []
   for value in values {
     out.push(path_eval_state(value, state.path.copy(), false))
@@ -628,15 +630,18 @@ fn path_getpath_states(
 
 ///|
 fn path_as_value_states(
+  runtime : RuntimeContext,
   value : Filter,
   state : PathEvalState,
   env : Map[String, Value],
   bindings : Map[String, PathEvalState],
 ) -> Array[PathEvalState] raise EvalError {
-  try path_filter_state_with_bindings(value, state, env, bindings) catch {
+  try
+    path_filter_state_with_bindings(runtime, value, state, env, bindings)
+  catch {
     _ => {
       let out = []
-      let values = execute_with_env(value, state.value, env)
+      let values = execute_with_runtime(runtime, value, state.value, env)
       for v in values {
         out.push(path_eval_state(v, state.path.copy(), false))
       }
@@ -705,24 +710,27 @@ fn path_restore_runtime_def_env(
 
 ///|
 fn path_eval_runtime_def_no_args(
-  def_ : RuntimeDef,
+  runtime : RuntimeContext,
+  def_ : RuntimeDefinition,
   state : PathEvalState,
   env : Map[String, Value],
   bindings : Map[String, PathEvalState],
 ) -> Array[PathEvalState] raise EvalError {
-  let prev_defs = runtime_def_state.current
-  runtime_def_state.current = Some(def_)
+  let previous_definitions = runtime.current_definitions
+  runtime.current_definitions = Some(def_)
   let saved_env = path_bind_runtime_def_env(env, def_.env)
-  try path_filter_state_with_bindings(def_.body, state, env, bindings) catch {
+  try
+    path_filter_state_with_bindings(runtime, def_.body, state, env, bindings)
+  catch {
     err => {
       path_restore_runtime_def_env(env, saved_env)
-      runtime_def_state.current = prev_defs
+      runtime.current_definitions = previous_definitions
       raise err
     }
   } noraise {
     states => {
       path_restore_runtime_def_env(env, saved_env)
-      runtime_def_state.current = prev_defs
+      runtime.current_definitions = previous_definitions
       states
     }
   }
@@ -730,6 +738,7 @@ fn path_eval_runtime_def_no_args(
 
 ///|
 fn path_filter_state_with_bindings(
+  runtime : RuntimeContext,
   filter : Filter,
   state : PathEvalState,
   env : Map[String, Value],
@@ -741,11 +750,11 @@ fn path_filter_state_with_bindings(
       let out = []
       for
         left_state in path_filter_state_with_bindings(
-          left, state, env, bindings,
+          runtime, left, state, env, bindings,
         ) {
         for
           right_state in path_filter_state_with_bindings(
-            right, left_state, env, bindings,
+            runtime, right, left_state, env, bindings,
           ) {
           out.push(right_state)
         }
@@ -753,33 +762,36 @@ fn path_filter_state_with_bindings(
       out
     }
     Comma(left, right) => {
-      let out = path_filter_state_with_bindings(left, state, env, bindings)
+      let out = path_filter_state_with_bindings(
+        runtime, left, state, env, bindings,
+      )
       for
         right_state in path_filter_state_with_bindings(
-          right, state, env, bindings,
+          runtime, right, state, env, bindings,
         ) {
         out.push(right_state)
       }
       out
     }
     Builtin(name) =>
-      match find_runtime_def(runtime_def_state.current, name, 0) {
-        Some(def_) => path_eval_runtime_def_no_args(def_, state, env, bindings)
-        None => path_fallback_states(filter, state, env)
+      match find_runtime_definition(runtime.current_definitions, name, 0) {
+        Some(def_) =>
+          path_eval_runtime_def_no_args(runtime, def_, state, env, bindings)
+        None => path_fallback_states(runtime, filter, state, env)
       }
     Var(name) =>
       match bindings.get(name) {
         Some(bound_state) => [bound_state]
-        None => path_fallback_states(filter, state, env)
+        None => path_fallback_states(runtime, filter, state, env)
       }
     As(value, name, body) => {
       let out = []
-      let values = path_as_value_states(value, state, env, bindings)
+      let values = path_as_value_states(runtime, value, state, env, bindings)
       for v in values {
         let previous_env = env_bind_temp(env, name, v.value)
         let previous_binding = path_binding_bind_temp(bindings, name, v)
         let body_states = try
-          path_filter_state_with_bindings(body, state, env, bindings)
+          path_filter_state_with_bindings(runtime, body, state, env, bindings)
         catch {
           err => {
             env_restore_temp(env, name, previous_env)
@@ -818,7 +830,12 @@ fn path_filter_state_with_bindings(
         raise UnknownFunction("getpath")
       } else {
         let out = []
-        let path_values = execute_with_env(args[0], state.value, env)
+        let path_values = execute_with_runtime(
+          runtime,
+          args[0],
+          state.value,
+          env,
+        )
         for path in path_values {
           for next_state in path_getpath_states(state, path) {
             out.push(next_state)
@@ -829,42 +846,49 @@ fn path_filter_state_with_bindings(
     Call("select", args) =>
       if args.length() != 1 {
         raise UnknownFunction("select")
-      } else if execute_to_bool(args[0], state.value, env) {
+      } else if execute_to_bool(runtime, args[0], state.value, env) {
         [state]
       } else {
         []
       }
     Call(name, args) =>
       if args.length() == 0 {
-        match find_runtime_def(runtime_def_state.current, name, 0) {
+        match find_runtime_definition(runtime.current_definitions, name, 0) {
           Some(def_) =>
-            path_eval_runtime_def_no_args(def_, state, env, bindings)
-          None => path_fallback_states(filter, state, env)
+            path_eval_runtime_def_no_args(runtime, def_, state, env, bindings)
+          None => path_fallback_states(runtime, filter, state, env)
         }
       } else {
-        path_fallback_states(filter, state, env)
+        path_fallback_states(runtime, filter, state, env)
       }
     Empty => []
-    _ => path_fallback_states(filter, state, env)
+    _ => path_fallback_states(runtime, filter, state, env)
   }
 }
 
 ///|
 fn path_filter_state(
+  runtime : RuntimeContext,
   filter : Filter,
   state : PathEvalState,
   env : Map[String, Value],
 ) -> Array[PathEvalState] raise EvalError {
-  path_filter_state_with_bindings(filter, state, env, Map([]))
+  path_filter_state_with_bindings(runtime, filter, state, env, Map([]))
 }
 
 ///|
 fn path_expression(
+  runtime : RuntimeContext,
   filter : Filter,
   input : Value,
   env : Map[String, Value],
 ) -> Array[Value] raise EvalError {
-  let states = path_filter_state(filter, path_eval_state(input, [], true), env)
+  let states = path_filter_state(
+    runtime,
+    filter,
+    path_eval_state(input, [], true),
+    env,
+  )
   let out = []
   for state in states {
     if !state.valid {

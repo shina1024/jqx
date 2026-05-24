@@ -46,8 +46,11 @@ pub impl Show for FilterError with fn output(self, logger) {
 ///|
 
 ///|
-fn parse_filter_ast(input : StringView) -> Filter raise FilterError {
-  let ctx = FilterCursor::make(input)
+fn parse_filter_ast_with_compile_context(
+  input : StringView,
+  compile_context : CompileContext,
+) -> Filter raise FilterError {
+  let ctx = FilterCursor::make_with_compile_context(input, compile_context)
   let filter = ctx.parse_scoped()
   ctx.skip_ws()
   if ctx.offset >= ctx.end_offset {
@@ -66,6 +69,11 @@ fn parse_filter_ast(input : StringView) -> Filter raise FilterError {
       _ => ctx.invalid_char()
     }
   }
+}
+
+///|
+fn parse_filter_ast(input : StringView) -> Filter raise FilterError {
+  parse_filter_ast_with_compile_context(input, default_compile_context())
 }
 
 ///|

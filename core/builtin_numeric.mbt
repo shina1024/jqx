@@ -514,7 +514,8 @@ fn mktime_json(input : Value) -> Value raise EvalError {
 }
 
 ///|
-fn builtin_call_numeric(
+fn dispatch_numeric_builtin(
+  runtime : RuntimeContext,
   name : String,
   args : Array[Filter],
   input : Value,
@@ -525,7 +526,7 @@ fn builtin_call_numeric(
       if args.length() != 1 {
         raise UnknownFunction("__neg")
       } else {
-        let values = execute_with_env(args[0], input, env)
+        let values = execute_with_runtime(runtime, args[0], input, env)
         let out = []
         for value in values {
           match value {
@@ -546,8 +547,8 @@ fn builtin_call_numeric(
       if args.length() != 2 {
         raise UnknownFunction("pow")
       } else {
-        let bases = execute_with_env(args[0], input, env)
-        let exponents = execute_with_env(args[1], input, env)
+        let bases = execute_with_runtime(runtime, args[0], input, env)
+        let exponents = execute_with_runtime(runtime, args[1], input, env)
         let out = []
         for base_value in bases {
           let base = call_require_number("pow", base_value)
@@ -562,7 +563,7 @@ fn builtin_call_numeric(
       if args.length() != 1 {
         raise UnknownFunction("strftime")
       } else {
-        let formats = execute_with_env(args[0], input, env)
+        let formats = execute_with_runtime(runtime, args[0], input, env)
         let (year, month, day, hour, minute, second, day_of_week, day_of_year) = datetime_input_to_format_components(
           input, "strftime/1",
         )
@@ -584,7 +585,7 @@ fn builtin_call_numeric(
       if args.length() != 1 {
         raise UnknownFunction("strflocaltime")
       } else {
-        let formats = execute_with_env(args[0], input, env)
+        let formats = execute_with_runtime(runtime, args[0], input, env)
         let (year, month, day, hour, minute, second, day_of_week, day_of_year) = datetime_input_to_format_components(
           input, "strflocaltime/1",
         )
@@ -610,7 +611,7 @@ fn builtin_call_numeric(
           String(s) => s
           _ => raise TypeError("strptime/1 requires string inputs")
         }
-        let formats = execute_with_env(args[0], input, env)
+        let formats = execute_with_runtime(runtime, args[0], input, env)
         let out = []
         for format_value in formats {
           match format_value {
@@ -672,15 +673,15 @@ fn builtin_call_numeric(
         let starts = if args.length() == 1 {
           [Value::number(0.0)]
         } else {
-          execute_with_env(args[0], input, env)
+          execute_with_runtime(runtime, args[0], input, env)
         }
         let ends = if args.length() == 1 {
-          execute_with_env(args[0], input, env)
+          execute_with_runtime(runtime, args[0], input, env)
         } else {
-          execute_with_env(args[1], input, env)
+          execute_with_runtime(runtime, args[1], input, env)
         }
         let steps = if args.length() >= 3 {
-          execute_with_env(args[2], input, env)
+          execute_with_runtime(runtime, args[2], input, env)
         } else {
           [Value::number(1.0)]
         }
