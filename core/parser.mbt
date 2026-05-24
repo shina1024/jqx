@@ -82,9 +82,3 @@ pub fn compile(input : StringView) -> Filter raise FilterError {
   validate_filter_compile_diagnostics(filter, input)
   filter
 }
-
-///|
-/// Legacy alias. Prefer `compile` for jq-aligned naming.
-pub fn parse_filter(input : StringView) -> Filter raise FilterError {
-  parse_filter_ast(input)
-}

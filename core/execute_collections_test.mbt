@@ -4,51 +4,49 @@
 ///|
 test "execute contains jq semantics" {
   let array_input = must_parse("[1,{\"x\":2},3]")
-  @debug.assert_eq(must_execute(parse_filter("contains([1,3])"), array_input), [
+  @debug.assert_eq(must_execute(compile("contains([1,3])"), array_input), [
     Value::boolean(true),
   ])
   @debug.assert_eq(
-    must_execute(parse_filter("contains([{\"x\":2}])"), array_input),
+    must_execute(compile("contains([{\"x\":2}])"), array_input),
     [Value::boolean(true)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("contains([{\"x\":9}])"), array_input),
+    must_execute(compile("contains([{\"x\":9}])"), array_input),
     [Value::boolean(false)],
   )
-  @debug.assert_eq(
-    must_execute(parse_filter("contains(([],[3]))"), array_input),
-    [Value::boolean(true), Value::boolean(true)],
-  )
+  @debug.assert_eq(must_execute(compile("contains(([],[3]))"), array_input), [
+    Value::boolean(true),
+    Value::boolean(true),
+  ])
   let repeated_input = must_parse("[1]")
-  @debug.assert_eq(
-    must_execute(parse_filter("contains([1,1])"), repeated_input),
-    [Value::boolean(true)],
-  )
+  @debug.assert_eq(must_execute(compile("contains([1,1])"), repeated_input), [
+    Value::boolean(true),
+  ])
   let object_input = must_parse("{\"a\":1,\"b\":{\"c\":2,\"d\":3}}")
   @debug.assert_eq(
-    must_execute(parse_filter("contains({\"b\":{\"c\":2}})"), object_input),
+    must_execute(compile("contains({\"b\":{\"c\":2}})"), object_input),
     [Value::boolean(true)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("contains({\"b\":{\"c\":9}})"), object_input),
+    must_execute(compile("contains({\"b\":{\"c\":9}})"), object_input),
     [Value::boolean(false)],
   )
-  @debug.assert_eq(
-    must_execute(parse_filter("contains({\"z\":1})"), object_input),
-    [Value::boolean(false)],
-  )
-  @debug.assert_eq(must_execute(parse_filter("contains(1)"), must_parse("1")), [
+  @debug.assert_eq(must_execute(compile("contains({\"z\":1})"), object_input), [
+    Value::boolean(false),
+  ])
+  @debug.assert_eq(must_execute(compile("contains(1)"), must_parse("1")), [
     Value::boolean(true),
   ])
-  @debug.assert_eq(must_execute(parse_filter("contains(2)"), must_parse("1")), [
+  @debug.assert_eq(must_execute(compile("contains(2)"), must_parse("1")), [
     Value::boolean(false),
   ])
   @debug.assert_eq(
-    must_execute(parse_filter("contains(true)"), must_parse("true")),
+    must_execute(compile("contains(true)"), must_parse("true")),
     [Value::boolean(true)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("contains(null)"), must_parse("null")),
+    must_execute(compile("contains(null)"), must_parse("null")),
     [Value::boolean(true)],
   )
 }
@@ -56,28 +54,28 @@ test "execute contains jq semantics" {
 ///|
 test "execute contains/startswith/endswith type errors" {
   let array_input = must_parse("[1,2,3]")
-  guard (try? execute(parse_filter("contains(2)"), array_input)) is Err(err) &&
+  guard (try? execute(compile("contains(2)"), array_input)) is Err(err) &&
     err.to_string() ==
     "array ([1,2,3]) and number (2) cannot have their containment checked" else {
     fail("expected jq-compatible contains type error for array/number")
   }
-  guard (try? execute(parse_filter("contains(false)"), must_parse("true")))
+  guard (try? execute(compile("contains(false)"), must_parse("true")))
     is Err(err) &&
     err.to_string() ==
     "boolean (true) and boolean (false) cannot have their containment checked" else {
     fail("expected jq-compatible contains type error for boolean mismatch")
   }
   let s = must_parse("\"hello\"")
-  guard (try? execute(parse_filter("startswith(1)"), s)) is Err(err) &&
+  guard (try? execute(compile("startswith(1)"), s)) is Err(err) &&
     err.to_string() == "startswith() requires string inputs" else {
     fail("expected startswith type error")
   }
-  guard (try? execute(parse_filter("endswith(1)"), s)) is Err(err) &&
+  guard (try? execute(compile("endswith(1)"), s)) is Err(err) &&
     err.to_string() == "endswith() requires string inputs" else {
     fail("expected endswith type error")
   }
   let n = must_parse("1")
-  guard (try? execute(parse_filter("startswith(\"1\")"), n)) is Err(err) &&
+  guard (try? execute(compile("startswith(\"1\")"), n)) is Err(err) &&
     err.to_string() == "startswith() requires string inputs" else {
     fail("expected startswith type error for non-string input")
   }
@@ -85,62 +83,52 @@ test "execute contains/startswith/endswith type errors" {
 
 ///|
 test "execute inside jq semantics" {
-  @debug.assert_eq(must_execute(parse_filter("inside(1)"), must_parse("1")), [
+  @debug.assert_eq(must_execute(compile("inside(1)"), must_parse("1")), [
     Value::boolean(true),
   ])
-  @debug.assert_eq(must_execute(parse_filter("inside(2)"), must_parse("1")), [
+  @debug.assert_eq(must_execute(compile("inside(2)"), must_parse("1")), [
     Value::boolean(false),
   ])
   @debug.assert_eq(
-    must_execute(parse_filter("inside([0,1,2,3])"), must_parse("[1,2]")),
+    must_execute(compile("inside([0,1,2,3])"), must_parse("[1,2]")),
     [Value::boolean(true)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("inside([0,1,2,3])"), must_parse("[1,4]")),
+    must_execute(compile("inside([0,1,2,3])"), must_parse("[1,4]")),
     [Value::boolean(false)],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("inside({\"a\":1,\"b\":2})"),
-      must_parse("{\"a\":1}"),
-    ),
+    must_execute(compile("inside({\"a\":1,\"b\":2})"), must_parse("{\"a\":1}")),
     [Value::boolean(true)],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("inside({\"a\":1,\"b\":2})"),
-      must_parse("{\"a\":2}"),
-    ),
+    must_execute(compile("inside({\"a\":1,\"b\":2})"), must_parse("{\"a\":2}")),
     [Value::boolean(false)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("inside(\"hello\")"), must_parse("\"ell\"")),
+    must_execute(compile("inside(\"hello\")"), must_parse("\"ell\"")),
     [Value::boolean(true)],
   )
-  @debug.assert_eq(
-    must_execute(parse_filter("inside((1,2))"), must_parse("1")),
-    [Value::boolean(true), Value::boolean(false)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("inside(empty)"), must_parse("1")),
-    [],
-  )
+  @debug.assert_eq(must_execute(compile("inside((1,2))"), must_parse("1")), [
+    Value::boolean(true),
+    Value::boolean(false),
+  ])
+  @debug.assert_eq(must_execute(compile("inside(empty)"), must_parse("1")), [])
 }
 
 ///|
 test "execute inside type errors" {
-  guard (try? execute(parse_filter("inside(false)"), must_parse("true")))
-    is Err(err) &&
+  guard (try? execute(compile("inside(false)"), must_parse("true"))) is Err(err) &&
     err.to_string() ==
     "boolean (false) and boolean (true) cannot have their containment checked" else {
     fail("expected inside boolean mismatch error")
   }
-  guard (try? execute(parse_filter("inside(1)"), must_parse("[1]"))) is Err(err) &&
+  guard (try? execute(compile("inside(1)"), must_parse("[1]"))) is Err(err) &&
     err.to_string() ==
     "number (1) and array ([1]) cannot have their containment checked" else {
     fail("expected inside number/array mismatch error")
   }
-  guard (try? execute(parse_filter("inside([1])"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("inside([1])"), must_parse("1"))) is Err(err) &&
     err.to_string() ==
     "array ([1]) and number (1) cannot have their containment checked" else {
     fail("expected inside array/number mismatch error")
@@ -150,32 +138,28 @@ test "execute inside type errors" {
 ///|
 test "execute has jq semantics" {
   let obj = must_parse("{\"a\":1}")
-  @debug.assert_eq(must_execute(parse_filter("has(\"a\")"), obj), [
+  @debug.assert_eq(must_execute(compile("has(\"a\")"), obj), [
     Value::boolean(true),
   ])
-  @debug.assert_eq(must_execute(parse_filter("has(\"z\")"), obj), [
+  @debug.assert_eq(must_execute(compile("has(\"z\")"), obj), [
     Value::boolean(false),
   ])
-  @debug.assert_eq(must_execute(parse_filter("has((\"a\",\"z\"))"), obj), [
+  @debug.assert_eq(must_execute(compile("has((\"a\",\"z\"))"), obj), [
     Value::boolean(true),
     Value::boolean(false),
   ])
-  @debug.assert_eq(must_execute(parse_filter("has(empty)"), obj), [])
+  @debug.assert_eq(must_execute(compile("has(empty)"), obj), [])
   let arr = must_parse("[1,2]")
-  @debug.assert_eq(must_execute(parse_filter("has(0)"), arr), [
-    Value::boolean(true),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("has(2)"), arr), [
-    Value::boolean(false),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("has((-1,1.9,-0.9))"), arr), [
+  @debug.assert_eq(must_execute(compile("has(0)"), arr), [Value::boolean(true)])
+  @debug.assert_eq(must_execute(compile("has(2)"), arr), [Value::boolean(false)])
+  @debug.assert_eq(must_execute(compile("has((-1,1.9,-0.9))"), arr), [
     Value::boolean(false),
     Value::boolean(true),
     Value::boolean(true),
   ])
-  @debug.assert_eq(must_execute(parse_filter("has(empty)"), arr), [])
+  @debug.assert_eq(must_execute(compile("has(empty)"), arr), [])
   let n = must_parse("null")
-  @debug.assert_eq(must_execute(parse_filter("has((0,\"a\",true))"), n), [
+  @debug.assert_eq(must_execute(compile("has((0,\"a\",true))"), n), [
     Value::boolean(false),
     Value::boolean(false),
     Value::boolean(false),
@@ -185,17 +169,17 @@ test "execute has jq semantics" {
 ///|
 test "execute has type errors" {
   let obj = must_parse("{\"a\":1}")
-  guard (try? execute(parse_filter("has(0)"), obj)) is Err(err) &&
+  guard (try? execute(compile("has(0)"), obj)) is Err(err) &&
     err.to_string() == "Cannot check whether object has a number key" else {
     fail("expected object has(number) type error")
   }
   let arr = must_parse("[1,2]")
-  guard (try? execute(parse_filter("has(\"0\")"), arr)) is Err(err) &&
+  guard (try? execute(compile("has(\"0\")"), arr)) is Err(err) &&
     err.to_string() == "Cannot check whether array has a string key" else {
     fail("expected array has(string) type error")
   }
   let s = must_parse("\"abc\"")
-  guard (try? execute(parse_filter("has(0)"), s)) is Err(err) &&
+  guard (try? execute(compile("has(0)"), s)) is Err(err) &&
     err.to_string() == "Cannot check whether string has a number key" else {
     fail("expected string has(number) type error")
   }
@@ -204,43 +188,38 @@ test "execute has type errors" {
 ///|
 test "execute in jq semantics" {
   @debug.assert_eq(
-    must_execute(parse_filter("\"a\" | in({\"a\":1})"), must_parse("null")),
+    must_execute(compile("\"a\" | in({\"a\":1})"), must_parse("null")),
     [Value::boolean(true)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("2 | in([10,20])"), must_parse("null")),
+    must_execute(compile("2 | in([10,20])"), must_parse("null")),
     [Value::boolean(false)],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("\"a\" | in(({\"a\":1},{\"b\":2}))"),
+      compile("\"a\" | in(({\"a\":1},{\"b\":2}))"),
       must_parse("null"),
     ),
     [Value::boolean(true), Value::boolean(false)],
   )
-  @debug.assert_eq(
-    must_execute(parse_filter("0 | in(null)"), must_parse("null")),
-    [Value::boolean(false)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("0 | in(empty)"), must_parse("null")),
-    [],
-  )
+  @debug.assert_eq(must_execute(compile("0 | in(null)"), must_parse("null")), [
+    Value::boolean(false),
+  ])
+  @debug.assert_eq(must_execute(compile("0 | in(empty)"), must_parse("null")), [])
 }
 
 ///|
 test "execute in type errors" {
-  guard (try? execute(parse_filter("\"a\" | in(1)"), must_parse("null")))
-    is Err(err) &&
+  guard (try? execute(compile("\"a\" | in(1)"), must_parse("null"))) is Err(err) &&
     err.to_string() == "Cannot check whether number has a string key" else {
     fail("expected in(number, string) type error")
   }
-  guard (try? execute(parse_filter("1 | in({\"a\":1})"), must_parse("null")))
+  guard (try? execute(compile("1 | in({\"a\":1})"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "Cannot check whether object has a number key" else {
     fail("expected in(object, number) type error")
   }
-  guard (try? execute(parse_filter("\"a\" | in([1,2])"), must_parse("null")))
+  guard (try? execute(compile("\"a\" | in([1,2])"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "Cannot check whether array has a string key" else {
     fail("expected in(array, string) type error")
@@ -250,7 +229,7 @@ test "execute in type errors" {
 ///|
 test "execute iter non-array errors" {
   let j = must_parse("1")
-  let f = parse_filter(".[]")
+  let f = compile(".[]")
   guard (try? execute(f, j)) is Err(_) else {
     fail("expected error for iter over non-array/object")
   }
@@ -259,55 +238,51 @@ test "execute iter non-array errors" {
 ///|
 test "execute index negative" {
   let j = must_parse("[1,2]")
-  @debug.assert_eq(must_execute(parse_filter(".[-1]"), j), [Value::number(2.0)])
-  @debug.assert_eq(must_execute(parse_filter(".[-1]?"), j), [Value::number(2.0)])
-  @debug.assert_eq(must_execute(parse_filter(".[-3]"), j), [Value::null()])
+  @debug.assert_eq(must_execute(compile(".[-1]"), j), [Value::number(2.0)])
+  @debug.assert_eq(must_execute(compile(".[-1]?"), j), [Value::number(2.0)])
+  @debug.assert_eq(must_execute(compile(".[-3]"), j), [Value::null()])
 }
 
 ///|
 test "execute slice compatibility" {
   let arr = must_parse("[1,2,3]")
-  @debug.assert_eq(must_execute(parse_filter(".[1:2]"), arr), [
+  @debug.assert_eq(must_execute(compile(".[1:2]"), arr), [
     Value::array([Value::number(2.0)]),
   ])
-  @debug.assert_eq(must_execute(parse_filter(".[1:9]"), arr), [
+  @debug.assert_eq(must_execute(compile(".[1:9]"), arr), [
     Value::array([Value::number(2.0), Value::number(3.0)]),
   ])
-  @debug.assert_eq(must_execute(parse_filter(".[-2:]"), arr), [
+  @debug.assert_eq(must_execute(compile(".[-2:]"), arr), [
     Value::array([Value::number(2.0), Value::number(3.0)]),
   ])
-  @debug.assert_eq(must_execute(parse_filter(".[:2]"), arr), [
+  @debug.assert_eq(must_execute(compile(".[:2]"), arr), [
     Value::array([Value::number(1.0), Value::number(2.0)]),
   ])
   let s = must_parse("\"abcd\"")
-  @debug.assert_eq(must_execute(parse_filter(".[1:3]"), s), [
-    Value::string("bc"),
-  ])
-  @debug.assert_eq(must_execute(parse_filter(".[-2:]"), s), [
-    Value::string("cd"),
-  ])
-  @debug.assert_eq(must_execute(parse_filter(".[:2]"), s), [Value::string("ab")])
-  @debug.assert_eq(must_execute(parse_filter(".[2:2]"), s), [Value::string("")])
+  @debug.assert_eq(must_execute(compile(".[1:3]"), s), [Value::string("bc")])
+  @debug.assert_eq(must_execute(compile(".[-2:]"), s), [Value::string("cd")])
+  @debug.assert_eq(must_execute(compile(".[:2]"), s), [Value::string("ab")])
+  @debug.assert_eq(must_execute(compile(".[2:2]"), s), [Value::string("")])
   let n = must_parse("null")
-  @debug.assert_eq(must_execute(parse_filter(".[1:2]"), n), [Value::null()])
-  @debug.assert_eq(must_execute(parse_filter(".[1:2]?"), n), [Value::null()])
+  @debug.assert_eq(must_execute(compile(".[1:2]"), n), [Value::null()])
+  @debug.assert_eq(must_execute(compile(".[1:2]?"), n), [Value::null()])
   let num = must_parse("1")
-  guard (try? execute(parse_filter(".[1:2]"), num)) is Err(err) &&
+  guard (try? execute(compile(".[1:2]"), num)) is Err(err) &&
     err.to_string() == "Cannot index number with object" else {
     fail("expected type error for number slice")
   }
-  @debug.assert_eq(must_execute(parse_filter(".[1:2]?"), num), [])
+  @debug.assert_eq(must_execute(compile(".[1:2]?"), num), [])
 }
 
 ///|
 test "execute dynamic slice compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter(".[:rindex(\"x\")]"), must_parse("\"正xyz\"")),
+    must_execute(compile(".[:rindex(\"x\")]"), must_parse("\"正xyz\"")),
     [Value::string("正")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("map([1,2][0:.])"),
+      compile("map([1,2][0:.])"),
       must_parse("[-1, 1, 2, 3, 1000000000000000000]"),
     ),
     [
@@ -321,17 +296,14 @@ test "execute dynamic slice compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[range(3)] | .[nan:1]"), must_parse("null")),
+    must_execute(compile("[range(3)] | .[nan:1]"), must_parse("null")),
     [Value::array([Value::number(0.0)])],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[range(3)] | .[1:nan]"), must_parse("null")),
+    must_execute(compile("[range(3)] | .[1:nan]"), must_parse("null")),
     [Value::array([Value::number(1.0), Value::number(2.0)])],
   )
-  guard (try? execute(
-      parse_filter("[range(3)] | .[\"x\":1]"),
-      must_parse("null"),
-    ))
+  guard (try? execute(compile("[range(3)] | .[\"x\":1]"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "Array/string slice indices must be integers" else {
     fail("expected dynamic slice endpoint type error")
@@ -340,13 +312,13 @@ test "execute dynamic slice compatibility" {
 
 ///|
 test "execute length compatibility" {
-  @debug.assert_eq(must_execute(parse_filter("length"), must_parse("null")), [
+  @debug.assert_eq(must_execute(compile("length"), must_parse("null")), [
     Value::number(0.0),
   ])
-  @debug.assert_eq(must_execute(parse_filter("length"), must_parse("-3")), [
+  @debug.assert_eq(must_execute(compile("length"), must_parse("-3")), [
     Value::number(3.0),
   ])
-  @debug.assert_eq(must_execute(parse_filter("length"), must_parse("3.14")), [
+  @debug.assert_eq(must_execute(compile("length"), must_parse("3.14")), [
     Value::number(3.14),
   ])
 }
@@ -354,7 +326,7 @@ test "execute length compatibility" {
 ///|
 test "execute keys array compatibility" {
   let j = must_parse("[10,20]")
-  @debug.assert_eq(must_execute(parse_filter("keys"), j), [
+  @debug.assert_eq(must_execute(compile("keys"), j), [
     Value::array([Value::number(0.0), Value::number(1.0)]),
   ])
 }

@@ -24,8 +24,6 @@ pub fn execute_json(Filter, Json) -> Array[Json] raise EvalError
 
 pub fn parse(StringView, max_nesting_depth? : Int) -> Value raise ParseError
 
-pub fn parse_filter(StringView) -> Filter raise FilterError
-
 pub fn parse_json(StringView, max_nesting_depth? : Int) -> Json raise ParseError
 
 pub fn register_module_source(String, String) -> Unit

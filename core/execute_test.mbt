@@ -4,7 +4,7 @@
 ///|
 test "execute identity" {
   let j = must_parse("{\"a\":1}")
-  let f = parse_filter(".")
+  let f = compile(".")
   let out = must_execute(f, j)
   @debug.assert_eq(out, [j])
 }
@@ -12,9 +12,9 @@ test "execute identity" {
 ///|
 test "execute field and missing field" {
   let j = must_parse("{\"a\":1}")
-  let f1 = parse_filter(".a")
-  let f2 = parse_filter(".b")
-  let f3 = parse_filter(".\"a\"")
+  let f1 = compile(".a")
+  let f2 = compile(".b")
+  let f3 = compile(".\"a\"")
   @debug.assert_eq(must_execute(f1, j), [Value::number(1.0)])
   @debug.assert_eq(must_execute(f2, j), [Value::null()])
   @debug.assert_eq(must_execute(f3, j), [Value::number(1.0)])
@@ -26,46 +26,38 @@ test "execute field/index type errors and optional suppression" {
   let array_json = must_parse("[1,2]")
   let object_json = must_parse("{\"a\":1}")
   let null_json = must_parse("null")
-  guard (try? execute(parse_filter(".foo"), number_json)) is Err(err) &&
+  guard (try? execute(compile(".foo"), number_json)) is Err(err) &&
     err.to_string() == "Cannot index number with string \"foo\"" else {
     fail("expected type error for number .foo")
   }
-  guard (try? execute(parse_filter(".foo"), array_json)) is Err(err) &&
+  guard (try? execute(compile(".foo"), array_json)) is Err(err) &&
     err.to_string() == "Cannot index array with string \"foo\"" else {
     fail("expected type error for array .foo")
   }
-  guard (try? execute(parse_filter(".[0]"), number_json)) is Err(err) &&
+  guard (try? execute(compile(".[0]"), number_json)) is Err(err) &&
     err.to_string() == "Cannot index number with number" else {
     fail("expected type error for number .[0]")
   }
-  guard (try? execute(parse_filter(".[0]"), object_json)) is Err(err) &&
+  guard (try? execute(compile(".[0]"), object_json)) is Err(err) &&
     err.to_string() == "Cannot index object with number" else {
     fail("expected type error for object .[0]")
   }
-  @debug.assert_eq(must_execute(parse_filter(".foo?"), number_json), [])
-  @debug.assert_eq(must_execute(parse_filter(".foo?"), array_json), [])
-  @debug.assert_eq(must_execute(parse_filter(".[0]?"), number_json), [])
-  @debug.assert_eq(must_execute(parse_filter(".[0]?"), object_json), [])
-  @debug.assert_eq(must_execute(parse_filter(".foo"), null_json), [
-    Value::null(),
-  ])
-  @debug.assert_eq(must_execute(parse_filter(".foo?"), null_json), [
-    Value::null(),
-  ])
-  @debug.assert_eq(must_execute(parse_filter(".[0]"), null_json), [
-    Value::null(),
-  ])
-  @debug.assert_eq(must_execute(parse_filter(".[0]?"), null_json), [
-    Value::null(),
-  ])
+  @debug.assert_eq(must_execute(compile(".foo?"), number_json), [])
+  @debug.assert_eq(must_execute(compile(".foo?"), array_json), [])
+  @debug.assert_eq(must_execute(compile(".[0]?"), number_json), [])
+  @debug.assert_eq(must_execute(compile(".[0]?"), object_json), [])
+  @debug.assert_eq(must_execute(compile(".foo"), null_json), [Value::null()])
+  @debug.assert_eq(must_execute(compile(".foo?"), null_json), [Value::null()])
+  @debug.assert_eq(must_execute(compile(".[0]"), null_json), [Value::null()])
+  @debug.assert_eq(must_execute(compile(".[0]?"), null_json), [Value::null()])
 }
 
 ///|
 test "execute index and iter" {
   let j = must_parse("[1,2,3]")
-  let f1 = parse_filter(".[1]")
-  let f2 = parse_filter(".[]")
-  let f3 = parse_filter(".[1,2]")
+  let f1 = compile(".[1]")
+  let f2 = compile(".[]")
+  let f3 = compile(".[1,2]")
   @debug.assert_eq(must_execute(f1, j), [Value::number(2.0)])
   @debug.assert_eq(must_execute(f2, j), [
     Value::number(1.0),
@@ -74,15 +66,15 @@ test "execute index and iter" {
   ])
   @debug.assert_eq(must_execute(f3, j), [Value::number(2.0), Value::number(3.0)])
   @debug.assert_eq(
-    must_execute(parse_filter("[range(10)] | .[1.2:3.5]"), must_parse("null")),
+    must_execute(compile("[range(10)] | .[1.2:3.5]"), must_parse("null")),
     [Value::array([Value::number(1.0), Value::number(2.0), Value::number(3.0)])],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[range(10)] | .[1.5:3.5]"), must_parse("null")),
+    must_execute(compile("[range(10)] | .[1.5:3.5]"), must_parse("null")),
     [Value::array([Value::number(1.0), Value::number(2.0), Value::number(3.0)])],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[range(10)] | .[1.7:3.5]"), must_parse("null")),
+    must_execute(compile("[range(10)] | .[1.7:3.5]"), must_parse("null")),
     [Value::array([Value::number(1.0), Value::number(2.0), Value::number(3.0)])],
   )
 }
@@ -90,8 +82,8 @@ test "execute index and iter" {
 ///|
 test "execute chained index without extra dot" {
   let j = must_parse("{\"a\":[10,20,30]}")
-  @debug.assert_eq(must_execute(parse_filter(".a[1]"), j), [Value::number(20.0)])
-  @debug.assert_eq(must_execute(parse_filter(".a[1:3]"), j), [
+  @debug.assert_eq(must_execute(compile(".a[1]"), j), [Value::number(20.0)])
+  @debug.assert_eq(must_execute(compile(".a[1:3]"), j), [
     Value::array([Value::number(20.0), Value::number(30.0)]),
   ])
 }
@@ -99,39 +91,39 @@ test "execute chained index without extra dot" {
 ///|
 test "execute string index jq compatibility" {
   let s = must_parse("\"abc\"")
-  guard (try? execute(parse_filter(".[0]"), s)) is Err(err) &&
+  guard (try? execute(compile(".[0]"), s)) is Err(err) &&
     err.to_string() == "Cannot index string with number" else {
     fail("expected string index type error")
   }
-  guard (try? execute(parse_filter(".[-1]"), s)) is Err(err) &&
+  guard (try? execute(compile(".[-1]"), s)) is Err(err) &&
     err.to_string() == "Cannot index string with number" else {
     fail("expected string negative index type error")
   }
-  @debug.assert_eq(must_execute(parse_filter(".[0]?"), s), [])
-  @debug.assert_eq(must_execute(parse_filter(".[-1]?"), s), [])
+  @debug.assert_eq(must_execute(compile(".[0]?"), s), [])
+  @debug.assert_eq(must_execute(compile(".[-1]?"), s), [])
 }
 
 ///|
 test "execute optional access" {
   let j = must_parse("[1,2,3]")
-  @debug.assert_eq(must_execute(parse_filter(".[]?"), j), [
+  @debug.assert_eq(must_execute(compile(".[]?"), j), [
     Value::number(1.0),
     Value::number(2.0),
     Value::number(3.0),
   ])
   let j2 = must_parse("1")
-  @debug.assert_eq(must_execute(parse_filter(".[]?"), j2), [])
-  @debug.assert_eq(must_execute(parse_filter(".foo?"), j2), [])
-  @debug.assert_eq(must_execute(parse_filter(".[0]?"), j2), [])
+  @debug.assert_eq(must_execute(compile(".[]?"), j2), [])
+  @debug.assert_eq(must_execute(compile(".foo?"), j2), [])
+  @debug.assert_eq(must_execute(compile(".[0]?"), j2), [])
 }
 
 ///|
 test "execute pipe and comma" {
   let j = must_parse("{\"a\":{\"b\":2},\"c\":3}")
-  let f = parse_filter(".a | .b, .c")
+  let f = compile(".a | .b, .c")
   @debug.assert_eq(must_execute(f, j), [Value::number(2.0), Value::null()])
   @debug.assert_eq(
-    must_execute(parse_filter("{x:(1,2)},{x:3} | .x"), must_parse("null")),
+    must_execute(compile("{x:(1,2)},{x:3} | .x"), must_parse("null")),
     [Value::number(1.0), Value::number(2.0), Value::number(3.0)],
   )
 }
@@ -139,12 +131,12 @@ test "execute pipe and comma" {
 ///|
 test "execute update assignment precedence" {
   let j1 = must_parse("{\"a\":0}")
-  @debug.assert_eq(must_execute(parse_filter(".a = 1 | .a"), j1), [
+  @debug.assert_eq(must_execute(compile(".a = 1 | .a"), j1), [
     Value::number(1.0),
   ])
 
   let j2 = must_parse("{\"a\":0}")
-  @debug.assert_eq(must_execute(parse_filter(".a = 1 // 2 | .a"), j2), [
+  @debug.assert_eq(must_execute(compile(".a = 1 // 2 | .a"), j2), [
     Value::number(1.0),
   ])
 
@@ -153,7 +145,7 @@ test "execute update assignment precedence" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("reduce .[] as {$x,$y} (null; .x += $x | .y += [$y])"),
+      compile("reduce .[] as {$x,$y} (null; .x += $x | .y += [$y])"),
       j3,
     ),
     [
@@ -172,17 +164,17 @@ test "execute update assignment precedence" {
 ///|
 test "execute literal" {
   let j = must_parse("null")
-  let f = parse_filter("\"hi\"")
+  let f = compile("\"hi\"")
   @debug.assert_eq(must_execute(f, j), [Value::string("hi")])
 }
 
 ///|
 test "execute array and object literals" {
   let j = must_parse("{\"a\":1,\"b\":2}")
-  let f1 = parse_filter("[.a, .b]")
-  let f2 = parse_filter("{\"x\": .a, y: .b}")
-  let f3 = parse_filter("{a, \"b\"}")
-  let f4 = parse_filter("1 as $x | \"dyn\" as $k | { $x, $k: .b, a }")
+  let f1 = compile("[.a, .b]")
+  let f2 = compile("{\"x\": .a, y: .b}")
+  let f3 = compile("{a, \"b\"}")
+  let f4 = compile("1 as $x | \"dyn\" as $k | { $x, $k: .b, a }")
   @debug.assert_eq(must_execute(f1, j), [
     Value::array([Value::number(1.0), Value::number(2.0)]),
   ])
@@ -206,19 +198,11 @@ test "execute builtins" {
   let j1 = must_parse("[1,2,3]")
   let j2 = must_parse("{\"a\":1,\"b\":2}")
   let j3 = must_parse("\"hi\"")
-  @debug.assert_eq(must_execute(parse_filter("length"), j1), [
-    Value::number(3.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("length"), j2), [
-    Value::number(2.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("length"), j3), [
-    Value::number(2.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("type"), j2), [
-    Value::string("object"),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("keys"), j2), [
+  @debug.assert_eq(must_execute(compile("length"), j1), [Value::number(3.0)])
+  @debug.assert_eq(must_execute(compile("length"), j2), [Value::number(2.0)])
+  @debug.assert_eq(must_execute(compile("length"), j3), [Value::number(2.0)])
+  @debug.assert_eq(must_execute(compile("type"), j2), [Value::string("object")])
+  @debug.assert_eq(must_execute(compile("keys"), j2), [
     Value::array([Value::string("a"), Value::string("b")]),
   ])
 }
@@ -226,44 +210,39 @@ test "execute builtins" {
 ///|
 test "execute def no-arg minimal" {
   let j = must_parse("1")
-  @debug.assert_eq(must_execute(parse_filter("def inc: . + 1; . | inc"), j), [
+  @debug.assert_eq(must_execute(compile("def inc: . + 1; . | inc"), j), [
     Value::number(2.0),
   ])
   @debug.assert_eq(
-    must_execute(
-      parse_filter("def inc: . + 1; def twice: inc | inc; . | twice"),
-      j,
-    ),
+    must_execute(compile("def inc: . + 1; def twice: inc | inc; . | twice"), j),
     [Value::number(3.0)],
   )
-  @debug.assert_eq(
-    must_execute(parse_filter("def length: 42; . | length"), j),
-    [Value::number(42.0)],
-  )
+  @debug.assert_eq(must_execute(compile("def length: 42; . | length"), j), [
+    Value::number(42.0),
+  ])
   let obj = must_parse("{\"a\":1,\"b\":2}")
   @debug.assert_eq(
-    must_execute(parse_filter("def add(a;b): a + b; add(.a; .b)"), obj),
+    must_execute(compile("def add(a;b): a + b; add(.a; .b)"), obj),
     [Value::number(3.0)],
   )
   let arr = must_parse("[1,2]")
   @debug.assert_eq(
-    must_execute(parse_filter("def addvalue(f): . + [f]; addvalue(.[0])"), arr),
+    must_execute(compile("def addvalue(f): . + [f]; addvalue(.[0])"), arr),
     [Value::array([Value::number(1.0), Value::number(2.0), Value::number(1.0)])],
   )
-  @debug.assert_eq(
-    must_execute(parse_filter("def plus($x): . + $x; plus(2)"), j),
-    [Value::number(3.0)],
-  )
+  @debug.assert_eq(must_execute(compile("def plus($x): . + $x; plus(2)"), j), [
+    Value::number(3.0),
+  ])
   @debug.assert_eq(
     must_execute(
-      parse_filter("def f: . + 1; def g: def g: . + 100; f | g | f; (f | g), g"),
+      compile("def f: . + 1; def g: def g: . + 100; f | g | f; (f | g), g"),
       must_parse("3"),
     ),
     [Value::number(106.0), Value::number(105.0)],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(
+      compile(
         "def f: .+1; def g: f; def f: .+100; def f(a):a+.+11; [(g|f(20)), f]",
       ),
       must_parse("1"),
@@ -272,7 +251,7 @@ test "execute def no-arg minimal" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(
+      compile(
         "[[20,10][1,0] as $x | def f: (100,200) as $y | def g: [$x + $y, .]; . + $x | g; f[0] | [f][0][1] | f]",
       ),
       must_parse("999999999"),
@@ -296,36 +275,25 @@ test "execute def no-arg minimal" {
 test "execute def edge semantics compatibility" {
   @debug.assert_eq(
     must_execute(
-      parse_filter("10 as $x | def f: $x; 20 as $x | f"),
+      compile("10 as $x | def f: $x; 20 as $x | f"),
       must_parse("null"),
     ),
     [Value::number(10.0)],
   )
-  guard (try? execute(
-      parse_filter("def f: g; def g: . + 1; f"),
-      must_parse("1"),
-    ))
-    is Err(EvalError::UnknownFunction(name)) &&
-    name == "g" else {
-    fail("expected forward def reference to fail")
+  guard (try? compile("def f: g; def g: . + 1; f")) is Err(Diagnostics(_)) else {
+    fail("expected forward def reference to fail at compile time")
   }
-  guard (try? execute(
-      parse_filter("def f(x): g(x); def g(y): y + 1; f(1)"),
-      must_parse("null"),
-    ))
-    is Err(EvalError::UnknownFunction(name)) &&
-    name == "g" else {
-    fail("expected forward def reference with arity to fail")
+  guard (try? compile("def f(x): g(x); def g(y): y + 1; f(1)"))
+    is Err(Diagnostics(_)) else {
+    fail("expected forward def reference with arity to fail at compile time")
   }
-  guard (try? execute(
-      parse_filter(
-        "def even: if . == 0 then true else .-1|odd end; def odd: if . == 0 then false else .-1|even end; 4|even",
-      ),
-      must_parse("null"),
+  guard (try? compile(
+      "def even: if . == 0 then true else .-1|odd end; def odd: if . == 0 then false else .-1|even end; 4|even",
     ))
-    is Err(EvalError::UnknownFunction(name)) &&
-    name == "odd" else {
-    fail("expected mutual recursion without prior definition to fail")
+    is Err(Diagnostics(_)) else {
+    fail(
+      "expected mutual recursion without prior definition to fail at compile time",
+    )
   }
 }
 
@@ -333,7 +301,7 @@ test "execute def edge semantics compatibility" {
 test "execute import/include missing module compatibility" {
   clear_module_sources()
   guard (try? execute(
-      parse_filter("import \"a\" as foo; foo::a"),
+      compile("import \"a\" as foo; foo::a"),
       must_parse("null"),
     ))
     is Err(err) &&
@@ -341,7 +309,7 @@ test "execute import/include missing module compatibility" {
     fail("expected missing module error for import")
   }
   guard (try? execute(
-      parse_filter("include \"shadow1\"; include \"shadow2\"; e"),
+      compile("include \"shadow1\"; include \"shadow2\"; e"),
       must_parse("null"),
     ))
     is Err(err) &&
@@ -359,21 +327,15 @@ test "execute import/include module source compatibility" {
     "util", "import \"math\" as m; def add3: m::inc | m::inc | m::inc;",
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("import \"math\" as m; . | m::twice"),
-      must_parse("1"),
-    ),
+    must_execute(compile("import \"math\" as m; . | m::twice"), must_parse("1")),
     [Value::number(3.0)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("include \"math\"; . | twice"), must_parse("1")),
+    must_execute(compile("include \"math\"; . | twice"), must_parse("1")),
     [Value::number(3.0)],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("import \"util\" as u; . | u::add3"),
-      must_parse("1"),
-    ),
+    must_execute(compile("import \"util\" as u; . | u::add3"), must_parse("1")),
     [Value::number(4.0)],
   )
   clear_module_sources()
@@ -382,83 +344,61 @@ test "execute import/include module source compatibility" {
 ///|
 test "execute first/last/nth compatibility" {
   let arr = must_parse("[1,2,3]")
-  @debug.assert_eq(must_execute(parse_filter("first"), arr), [
-    Value::number(1.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("last"), arr), [Value::number(3.0)])
-  @debug.assert_eq(must_execute(parse_filter("nth(0)"), arr), [
-    Value::number(1.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("nth(-1)"), arr), [
-    Value::number(3.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("nth(9)"), arr), [Value::null()])
-  @debug.assert_eq(must_execute(parse_filter("nth(1.9)"), arr), [
-    Value::number(2.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("nth((0,-1,9))"), arr), [
+  @debug.assert_eq(must_execute(compile("first"), arr), [Value::number(1.0)])
+  @debug.assert_eq(must_execute(compile("last"), arr), [Value::number(3.0)])
+  @debug.assert_eq(must_execute(compile("nth(0)"), arr), [Value::number(1.0)])
+  @debug.assert_eq(must_execute(compile("nth(-1)"), arr), [Value::number(3.0)])
+  @debug.assert_eq(must_execute(compile("nth(9)"), arr), [Value::null()])
+  @debug.assert_eq(must_execute(compile("nth(1.9)"), arr), [Value::number(2.0)])
+  @debug.assert_eq(must_execute(compile("nth((0,-1,9))"), arr), [
     Value::number(1.0),
     Value::number(3.0),
     Value::null(),
   ])
   let empty_arr = must_parse("[]")
-  @debug.assert_eq(must_execute(parse_filter("first"), empty_arr), [
-    Value::null(),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("last"), empty_arr), [
-    Value::null(),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("nth(0)"), empty_arr), [
-    Value::null(),
-  ])
+  @debug.assert_eq(must_execute(compile("first"), empty_arr), [Value::null()])
+  @debug.assert_eq(must_execute(compile("last"), empty_arr), [Value::null()])
+  @debug.assert_eq(must_execute(compile("nth(0)"), empty_arr), [Value::null()])
   let null_json = must_parse("null")
-  @debug.assert_eq(must_execute(parse_filter("first"), null_json), [
-    Value::null(),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("last"), null_json), [
-    Value::null(),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("nth(0)"), null_json), [
-    Value::null(),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("nth(\"a\")"), null_json), [
+  @debug.assert_eq(must_execute(compile("first"), null_json), [Value::null()])
+  @debug.assert_eq(must_execute(compile("last"), null_json), [Value::null()])
+  @debug.assert_eq(must_execute(compile("nth(0)"), null_json), [Value::null()])
+  @debug.assert_eq(must_execute(compile("nth(\"a\")"), null_json), [
     Value::null(),
   ])
   let scalar = must_parse("1")
-  @debug.assert_eq(must_execute(parse_filter("first(empty)"), scalar), [])
-  @debug.assert_eq(must_execute(parse_filter("last(empty)"), scalar), [])
-  @debug.assert_eq(must_execute(parse_filter("nth(empty)"), scalar), [])
-  @debug.assert_eq(must_execute(parse_filter("first((1,2,3))"), scalar), [
+  @debug.assert_eq(must_execute(compile("first(empty)"), scalar), [])
+  @debug.assert_eq(must_execute(compile("last(empty)"), scalar), [])
+  @debug.assert_eq(must_execute(compile("nth(empty)"), scalar), [])
+  @debug.assert_eq(must_execute(compile("first((1,2,3))"), scalar), [
     Value::number(1.0),
   ])
-  @debug.assert_eq(must_execute(parse_filter("last((1,2,3))"), scalar), [
+  @debug.assert_eq(must_execute(compile("last((1,2,3))"), scalar), [
     Value::number(3.0),
   ])
   let null_json2 = must_parse("null")
   @debug.assert_eq(
-    must_execute(parse_filter("nth(1; 0,1,error(\"foo\"))"), null_json2),
+    must_execute(compile("nth(1; 0,1,error(\"foo\"))"), null_json2),
     [Value::number(1.0)],
   )
-  @debug.assert_eq(must_execute(parse_filter("nth(5; empty)"), null_json2), [])
+  @debug.assert_eq(must_execute(compile("nth(5; empty)"), null_json2), [])
 }
 
 ///|
 test "execute first/last/nth errors" {
-  guard (try? execute(parse_filter("first"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("first"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot index number with number" else {
     fail("expected first number index error")
   }
-  guard (try? execute(parse_filter("last"), must_parse("{}"))) is Err(err) &&
+  guard (try? execute(compile("last"), must_parse("{}"))) is Err(err) &&
     err.to_string() == "Cannot index object with number" else {
     fail("expected last object index error")
   }
-  guard (try? execute(parse_filter("nth(\"a\")"), must_parse("[1,2,3]")))
-    is Err(err) &&
+  guard (try? execute(compile("nth(\"a\")"), must_parse("[1,2,3]"))) is Err(err) &&
     err.to_string() == "Cannot index array with string \"a\"" else {
     fail("expected nth array string-key error")
   }
-  guard (try? execute(parse_filter("nth(true)"), must_parse("null")))
-    is Err(err) &&
+  guard (try? execute(compile("nth(true)"), must_parse("null"))) is Err(err) &&
     err.to_string() == "Cannot index null with boolean" else {
     fail("expected nth null boolean-key error")
   }
@@ -467,7 +407,7 @@ test "execute first/last/nth errors" {
 ///|
 test "execute flatten compatibility" {
   let nested = must_parse("[1,[2],[[3,[4]]],5]")
-  @debug.assert_eq(must_execute(parse_filter("flatten"), nested), [
+  @debug.assert_eq(must_execute(compile("flatten"), nested), [
     Value::array([
       Value::number(1.0),
       Value::number(2.0),
@@ -476,7 +416,7 @@ test "execute flatten compatibility" {
       Value::number(5.0),
     ]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("flatten(1)"), nested), [
+  @debug.assert_eq(must_execute(compile("flatten(1)"), nested), [
     Value::array([
       Value::number(1.0),
       Value::number(2.0),
@@ -484,7 +424,7 @@ test "execute flatten compatibility" {
       Value::number(5.0),
     ]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("flatten(2)"), nested), [
+  @debug.assert_eq(must_execute(compile("flatten(2)"), nested), [
     Value::array([
       Value::number(1.0),
       Value::number(2.0),
@@ -493,8 +433,8 @@ test "execute flatten compatibility" {
       Value::number(5.0),
     ]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("flatten(0)"), nested), [nested])
-  @debug.assert_eq(must_execute(parse_filter("flatten(0.1)"), nested), [
+  @debug.assert_eq(must_execute(compile("flatten(0)"), nested), [nested])
+  @debug.assert_eq(must_execute(compile("flatten(0.1)"), nested), [
     Value::array([
       Value::number(1.0),
       Value::number(2.0),
@@ -504,41 +444,41 @@ test "execute flatten compatibility" {
     ]),
   ])
   @debug.assert_eq(
-    must_execute(parse_filter("flatten((0,1))"), must_parse("[1,[2]]")),
+    must_execute(compile("flatten((0,1))"), must_parse("[1,[2]]")),
     [
       Value::array([Value::number(1.0), Value::array([Value::number(2.0)])]),
       Value::array([Value::number(1.0), Value::number(2.0)]),
     ],
   )
-  @debug.assert_eq(must_execute(parse_filter("flatten(empty)"), nested), [])
+  @debug.assert_eq(must_execute(compile("flatten(empty)"), nested), [])
 }
 
 ///|
 test "execute flatten errors" {
-  guard (try? execute(parse_filter("flatten"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("flatten"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected flatten non-array iterate error")
   }
-  guard (try? execute(parse_filter("flatten"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(compile("flatten"), must_parse("null"))) is Err(err) &&
     err.to_string() == "Cannot iterate over null (null)" else {
     fail("expected flatten null iterate error")
   }
-  guard (try? execute(parse_filter("flatten(-1)"), must_parse("[1,[2]]")))
+  guard (try? execute(compile("flatten(-1)"), must_parse("[1,[2]]")))
     is Err(err) &&
     err.to_string() == "flatten depth must not be negative" else {
     fail("expected flatten negative depth error")
   }
-  guard (try? execute(parse_filter("flatten(null)"), must_parse("[1,[2]]")))
+  guard (try? execute(compile("flatten(null)"), must_parse("[1,[2]]")))
     is Err(err) &&
     err.to_string() == "flatten depth must not be negative" else {
     fail("expected flatten null depth error")
   }
-  guard (try? execute(parse_filter("flatten(true)"), must_parse("[1,[2]]")))
+  guard (try? execute(compile("flatten(true)"), must_parse("[1,[2]]")))
     is Err(err) &&
     err.to_string() == "flatten depth must not be negative" else {
     fail("expected flatten bool depth error")
   }
-  guard (try? execute(parse_filter("flatten(\"x\")"), must_parse("[1,[2]]")))
+  guard (try? execute(compile("flatten(\"x\")"), must_parse("[1,[2]]")))
     is Err(err) &&
     err.to_string() == "string (\"x\") and number (1) cannot be subtracted" else {
     fail("expected flatten string depth error")
@@ -548,7 +488,7 @@ test "execute flatten errors" {
 ///|
 test "execute transpose compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("transpose"), must_parse("[[1,2],[3,4]]")),
+    must_execute(compile("transpose"), must_parse("[[1,2],[3,4]]")),
     [
       Value::array([
         Value::array([Value::number(1.0), Value::number(3.0)]),
@@ -557,7 +497,7 @@ test "execute transpose compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("transpose"), must_parse("[[1],[2,3]]")),
+    must_execute(compile("transpose"), must_parse("[[1],[2,3]]")),
     [
       Value::array([
         Value::array([Value::number(1.0), Value::number(2.0)]),
@@ -565,27 +505,24 @@ test "execute transpose compatibility" {
       ]),
     ],
   )
-  @debug.assert_eq(must_execute(parse_filter("transpose"), must_parse("[]")), [
+  @debug.assert_eq(must_execute(compile("transpose"), must_parse("[]")), [
+    Value::array([]),
+  ])
+  @debug.assert_eq(must_execute(compile("transpose"), must_parse("[[],[]]")), [
+    Value::array([]),
+  ])
+  @debug.assert_eq(must_execute(compile("transpose"), must_parse("[[1],[]]")), [
+    Value::array([Value::array([Value::number(1.0), Value::null()])]),
+  ])
+  @debug.assert_eq(must_execute(compile("transpose"), must_parse("[{}]")), [
     Value::array([]),
   ])
   @debug.assert_eq(
-    must_execute(parse_filter("transpose"), must_parse("[[],[]]")),
-    [Value::array([])],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("transpose"), must_parse("[[1],[]]")),
+    must_execute(compile("transpose"), must_parse("[[1],null]")),
     [Value::array([Value::array([Value::number(1.0), Value::null()])])],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("transpose"), must_parse("[{}]")),
-    [Value::array([])],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("transpose"), must_parse("[[1],null]")),
-    [Value::array([Value::array([Value::number(1.0), Value::null()])])],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("transpose"), must_parse("[[1,null],[2]]")),
+    must_execute(compile("transpose"), must_parse("[[1,null],[2]]")),
     [
       Value::array([
         Value::array([Value::number(1.0), Value::number(2.0)]),
@@ -597,31 +534,28 @@ test "execute transpose compatibility" {
 
 ///|
 test "execute transpose errors" {
-  guard (try? execute(parse_filter("transpose"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("transpose"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected transpose non-array iterate error")
   }
-  guard (try? execute(parse_filter("transpose"), must_parse("null")))
-    is Err(err) &&
+  guard (try? execute(compile("transpose"), must_parse("null"))) is Err(err) &&
     err.to_string() == "Cannot iterate over null (null)" else {
     fail("expected transpose null iterate error")
   }
-  guard (try? execute(parse_filter("transpose"), must_parse("[1]"))) is Err(err) &&
+  guard (try? execute(compile("transpose"), must_parse("[1]"))) is Err(err) &&
     err.to_string() == "Cannot index number with number" else {
     fail("expected transpose number index error")
   }
-  guard (try? execute(parse_filter("transpose"), must_parse("[[1],{}]")))
-    is Err(err) &&
+  guard (try? execute(compile("transpose"), must_parse("[[1],{}]"))) is Err(err) &&
     err.to_string() == "Cannot index object with number" else {
     fail("expected transpose object index error")
   }
-  guard (try? execute(parse_filter("transpose"), must_parse("[[1],\"x\"]")))
+  guard (try? execute(compile("transpose"), must_parse("[[1],\"x\"]")))
     is Err(err) &&
     err.to_string() == "Cannot index string with number" else {
     fail("expected transpose string index error")
   }
-  guard (try? execute(parse_filter("transpose"), must_parse("[true]")))
-    is Err(err) &&
+  guard (try? execute(compile("transpose"), must_parse("[true]"))) is Err(err) &&
     err.to_string() == "boolean (true) has no length" else {
     fail("expected transpose boolean length error")
   }
@@ -629,24 +563,15 @@ test "execute transpose errors" {
 
 ///|
 test "execute to_entries/from_entries/with_entries compatibility" {
-  @debug.assert_eq(
-    must_execute(parse_filter("to_entries"), must_parse("[10,20]")),
-    [
-      Value::array([
-        Value::object({
-          "key": Value::number(0.0),
-          "value": Value::number(10.0),
-        }),
-        Value::object({
-          "key": Value::number(1.0),
-          "value": Value::number(20.0),
-        }),
-      ]),
-    ],
-  )
+  @debug.assert_eq(must_execute(compile("to_entries"), must_parse("[10,20]")), [
+    Value::array([
+      Value::object({ "key": Value::number(0.0), "value": Value::number(10.0) }),
+      Value::object({ "key": Value::number(1.0), "value": Value::number(20.0) }),
+    ]),
+  ])
   @debug.assert_eq(
     must_execute(
-      parse_filter("from_entries"),
+      compile("from_entries"),
       must_parse(
         "[{\"key\":\"a\",\"value\":1},{\"Key\":\"b\",\"Value\":2},{\"name\":\"c\",\"value\":3},{\"Name\":\"d\",\"Value\":4}]",
       ),
@@ -661,60 +586,54 @@ test "execute to_entries/from_entries/with_entries compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("from_entries"), must_parse("[{\"key\":\"a\"}]")),
+    must_execute(compile("from_entries"), must_parse("[{\"key\":\"a\"}]")),
     [Value::object({ "a": Value::null() })],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("with_entries({key: (.key + \"_x\"), value: (.value + 10)})"),
+      compile("with_entries({key: (.key + \"_x\"), value: (.value + 10)})"),
       must_parse("{\"a\":1}"),
     ),
     [Value::object({ "a_x": Value::number(11.0) })],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("with_entries(empty)"), must_parse("{\"a\":1}")),
+    must_execute(compile("with_entries(empty)"), must_parse("{\"a\":1}")),
     [Value::object(Map([]))],
   )
 }
 
 ///|
 test "execute to_entries/from_entries/with_entries errors" {
-  guard (try? execute(parse_filter("to_entries"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("to_entries"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) has no keys" else {
     fail("expected to_entries no-keys error")
   }
-  guard (try? execute(parse_filter("from_entries"), must_parse("1")))
-    is Err(err) &&
+  guard (try? execute(compile("from_entries"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected from_entries iterate error")
   }
-  guard (try? execute(parse_filter("from_entries"), must_parse("[1]")))
-    is Err(err) &&
+  guard (try? execute(compile("from_entries"), must_parse("[1]"))) is Err(err) &&
     err.to_string() == "Cannot index number with string \"key\"" else {
     fail("expected from_entries entry index error")
   }
-  guard (try? execute(
-      parse_filter("from_entries"),
-      must_parse("[{\"value\":1}]"),
-    ))
+  guard (try? execute(compile("from_entries"), must_parse("[{\"value\":1}]")))
     is Err(err) &&
     err.to_string() == "Cannot use null (null) as object key" else {
     fail("expected from_entries null key error")
   }
   guard (try? execute(
-      parse_filter("from_entries"),
+      compile("from_entries"),
       must_parse("[{\"key\":1,\"value\":2}]"),
     ))
     is Err(err) &&
     err.to_string() == "Cannot use number (1) as object key" else {
     fail("expected from_entries number key error")
   }
-  guard (try? execute(parse_filter("with_entries(.)"), must_parse("1")))
-    is Err(err) &&
+  guard (try? execute(compile("with_entries(.)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) has no keys" else {
     fail("expected with_entries no-keys error")
   }
-  guard (try? execute(parse_filter("with_entries(.)"), must_parse("[10,20]")))
+  guard (try? execute(compile("with_entries(.)"), must_parse("[10,20]")))
     is Err(err) &&
     err.to_string() == "Cannot use number (0) as object key" else {
     fail("expected with_entries array key type error")
@@ -724,26 +643,25 @@ test "execute to_entries/from_entries/with_entries errors" {
 ///|
 test "execute keys compatibility errors and keys_unsorted" {
   let arr = must_parse("[10,20]")
-  @debug.assert_eq(must_execute(parse_filter("keys_unsorted"), arr), [
+  @debug.assert_eq(must_execute(compile("keys_unsorted"), arr), [
     Value::array([Value::number(0.0), Value::number(1.0)]),
   ])
   let obj = must_parse("{\"b\":2,\"a\":1}")
-  @debug.assert_eq(must_execute(parse_filter("keys_unsorted"), obj), [
+  @debug.assert_eq(must_execute(compile("keys_unsorted"), obj), [
     Value::array([Value::string("b"), Value::string("a")]),
   ])
-  @debug.assert_eq(must_execute(parse_filter(".[]"), obj), [
+  @debug.assert_eq(must_execute(compile(".[]"), obj), [
     Value::number(2.0),
     Value::number(1.0),
   ])
-  @debug.assert_eq(must_execute(parse_filter("tojson"), obj), [
+  @debug.assert_eq(must_execute(compile("tojson"), obj), [
     Value::string("{\"b\":2,\"a\":1}"),
   ])
-  guard (try? execute(parse_filter("keys"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("keys"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) has no keys" else {
     fail("expected jq-compatible keys error")
   }
-  guard (try? execute(parse_filter("keys_unsorted"), must_parse("1")))
-    is Err(err) &&
+  guard (try? execute(compile("keys_unsorted"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) has no keys" else {
     fail("expected jq-compatible keys_unsorted error")
   }
@@ -751,121 +669,106 @@ test "execute keys compatibility errors and keys_unsorted" {
 
 ///|
 test "execute tostring/tonumber compatibility" {
-  @debug.assert_eq(must_execute(parse_filter("tostring"), must_parse("1")), [
+  @debug.assert_eq(must_execute(compile("tostring"), must_parse("1")), [
     Value::string("1"),
   ])
-  @debug.assert_eq(
-    must_execute(parse_filter("tostring"), must_parse("\"x\"")),
-    [Value::string("x")],
-  )
-  @debug.assert_eq(must_execute(parse_filter("tostring"), must_parse("null")), [
+  @debug.assert_eq(must_execute(compile("tostring"), must_parse("\"x\"")), [
+    Value::string("x"),
+  ])
+  @debug.assert_eq(must_execute(compile("tostring"), must_parse("null")), [
     Value::string("null"),
   ])
-  @debug.assert_eq(
-    must_execute(parse_filter("tostring"), must_parse("[1,2]")),
-    [Value::string("[1,2]")],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("tonumber"), must_parse("\"1\"")),
-    [Value::number(1.0)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("tonumber"), must_parse("\"01\"")),
-    [Value::number(1.0)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("tonumber"), must_parse("\"1.25\"")),
-    [Value::number(1.25)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("tonumber"), must_parse("\"123\\u0000456\"")),
-    [Value::number(123.0)],
-  )
-  @debug.assert_eq(must_execute(parse_filter("tonumber"), must_parse("1")), [
+  @debug.assert_eq(must_execute(compile("tostring"), must_parse("[1,2]")), [
+    Value::string("[1,2]"),
+  ])
+  @debug.assert_eq(must_execute(compile("tonumber"), must_parse("\"1\"")), [
     Value::number(1.0),
   ])
-  let nan_number = must_execute(parse_filter("tonumber"), must_parse("\"nan\""))
+  @debug.assert_eq(must_execute(compile("tonumber"), must_parse("\"01\"")), [
+    Value::number(1.0),
+  ])
+  @debug.assert_eq(must_execute(compile("tonumber"), must_parse("\"1.25\"")), [
+    Value::number(1.25),
+  ])
+  @debug.assert_eq(
+    must_execute(compile("tonumber"), must_parse("\"123\\u0000456\"")),
+    [Value::number(123.0)],
+  )
+  @debug.assert_eq(must_execute(compile("tonumber"), must_parse("1")), [
+    Value::number(1.0),
+  ])
+  let nan_number = must_execute(compile("tonumber"), must_parse("\"nan\""))
   @debug.assert_eq(nan_number.length(), 1)
   @debug.assert_eq(nan_number[0].to_json_string(), "null")
-  let huge = must_execute(parse_filter("tonumber"), must_parse("\"1e309\""))
+  let huge = must_execute(compile("tonumber"), must_parse("\"1e309\""))
   @debug.assert_eq(huge.length(), 1)
   @debug.assert_eq(huge[0].to_json_string(), "1e309")
-  let pos_inf = must_execute(
-    parse_filter("tonumber"),
-    must_parse("\"Infinity\""),
-  )
+  let pos_inf = must_execute(compile("tonumber"), must_parse("\"Infinity\""))
   @debug.assert_eq(pos_inf.length(), 1)
   @debug.assert_eq(pos_inf[0].to_json_string(), "1.7976931348623157e+308")
-  let neg_inf = must_execute(
-    parse_filter("tonumber"),
-    must_parse("\"-Infinity\""),
-  )
+  let neg_inf = must_execute(compile("tonumber"), must_parse("\"-Infinity\""))
   @debug.assert_eq(neg_inf.length(), 1)
   @debug.assert_eq(neg_inf[0].to_json_string(), "-1.7976931348623157e+308")
 }
 
 ///|
 test "execute tojson/fromjson compatibility" {
-  @debug.assert_eq(must_execute(parse_filter("tojson"), must_parse("1")), [
+  @debug.assert_eq(must_execute(compile("tojson"), must_parse("1")), [
     Value::string("1"),
   ])
-  @debug.assert_eq(must_execute(parse_filter("tojson"), must_parse("\"x\"")), [
+  @debug.assert_eq(must_execute(compile("tojson"), must_parse("\"x\"")), [
     Value::string("\"x\""),
   ])
-  @debug.assert_eq(must_execute(parse_filter("tojson"), must_parse("[1,2]")), [
+  @debug.assert_eq(must_execute(compile("tojson"), must_parse("[1,2]")), [
     Value::string("[1,2]"),
   ])
-  @debug.assert_eq(
-    must_execute(parse_filter("tojson"), must_parse("{\"a\":1}")),
-    [Value::string("{\"a\":1}")],
-  )
-  @debug.assert_eq(must_execute(parse_filter("tojson"), must_parse("null")), [
+  @debug.assert_eq(must_execute(compile("tojson"), must_parse("{\"a\":1}")), [
+    Value::string("{\"a\":1}"),
+  ])
+  @debug.assert_eq(must_execute(compile("tojson"), must_parse("null")), [
     Value::string("null"),
   ])
-  @debug.assert_eq(must_execute(parse_filter("tojson"), must_parse("true")), [
+  @debug.assert_eq(must_execute(compile("tojson"), must_parse("true")), [
     Value::string("true"),
   ])
   @debug.assert_eq(
     must_execute(
-      parse_filter("tojson"),
+      compile("tojson"),
       must_parse("0.12345678901234567890123456789"),
     ),
     [Value::string("0.12345678901234568")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("tojson"), must_parse("1E-999999999")),
+    must_execute(compile("tojson"), must_parse("1E-999999999")),
     [Value::string("0")],
   )
+  @debug.assert_eq(must_execute(compile("fromjson"), must_parse("\"1\"")), [
+    Value::number(1.0),
+  ])
+  @debug.assert_eq(must_execute(compile("fromjson"), must_parse("\"[1,2]\"")), [
+    Value::array([Value::number(1.0), Value::number(2.0)]),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter("fromjson"), must_parse("\"1\"")),
-    [Value::number(1.0)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("fromjson"), must_parse("\"[1,2]\"")),
-    [Value::array([Value::number(1.0), Value::number(2.0)])],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("fromjson"), must_parse("\"{\\\"a\\\":1}\"")),
+    must_execute(compile("fromjson"), must_parse("\"{\\\"a\\\":1}\"")),
     [Value::object({ "a": Value::number(1.0) })],
   )
+  @debug.assert_eq(must_execute(compile("fromjson"), must_parse("\"null\"")), [
+    Value::null(),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter("fromjson"), must_parse("\"null\"")),
-    [Value::null()],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("fromjson"), must_parse("\" true \"")),
+    must_execute(compile("fromjson"), must_parse("\" true \"")),
     [Value::boolean(true)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("fromjson | isnan"), must_parse("\"nan\"")),
+    must_execute(compile("fromjson | isnan"), must_parse("\"nan\"")),
     [Value::boolean(true)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("fromjson | isinfinite"), must_parse("\"INF\"")),
+    must_execute(compile("fromjson | isinfinite"), must_parse("\"INF\"")),
     [Value::boolean(true)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("fromjson | isinfinite"), must_parse("\"-inf\"")),
+    must_execute(compile("fromjson | isinfinite"), must_parse("\"-inf\"")),
     [Value::boolean(true)],
   )
 }
@@ -874,7 +777,7 @@ test "execute tojson/fromjson compatibility" {
 test "execute format filter compatibility" {
   @debug.assert_eq(
     must_execute(
-      parse_filter(
+      compile(
         "@text,@json,([1,.]|@csv,@tsv),@html,(@uri|.,@urid),@sh,(@base64|.,@base64d)",
       ),
       must_parse("\"!()<>&'\\\"\\t\""),
@@ -893,20 +796,20 @@ test "execute format filter compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("(@uri|@urid)"), must_parse("\"<>&'\\\"\\t\"")),
+    must_execute(compile("(@uri|@urid)"), must_parse("\"<>&'\\\"\\t\"")),
     [Value::string("<>&'\"\t")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("@urid"), must_parse("\"a\\u0000b\\u0000c\"")),
+    must_execute(compile("@urid"), must_parse("\"a\\u0000b\\u0000c\"")),
     [Value::string("a")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("@urid"), must_parse("\"Knäckebröd\"")),
+    must_execute(compile("@urid"), must_parse("\"Knäckebröd\"")),
     [Value::string("Kn\u{fffd}\u{fffd}ckebr\u{fffd}\u{fffd}d")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("@urid | tojson"),
+      compile("@urid | tojson"),
       must_parse(
         "\"%2C-.%2F09%3A%3B%3C%3D%3E%3F%40AZ%5B%5C%5D%5E_%60az%7B%7C%7D~%7F\"",
       ),
@@ -914,53 +817,40 @@ test "execute format filter compatibility" {
     [Value::string("\",-./09:;<=>?@AZ[\\\\]^_`az{|}~\\u007f\"")],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("(@base64|@base64d)"),
-      must_parse("\"<>&'\\\"\\t\""),
-    ),
+    must_execute(compile("(@base64|@base64d)"), must_parse("\"<>&'\\\"\\t\"")),
     [Value::string("<>&'\"\t")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("@html \"<b>\\(.)</b>\""),
+      compile("@html \"<b>\\(.)</b>\""),
       must_parse("\"<script>hax</script>\""),
     ),
     [Value::string("<b>&lt;script&gt;hax&lt;/script&gt;</b>")],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("@sh \"echo \\(.)\""),
-      must_parse("\"O'Hara's Ale\""),
-    ),
+    must_execute(compile("@sh \"echo \\(.)\""), must_parse("\"O'Hara's Ale\"")),
     [Value::string("echo 'O'\\''Hara'\\''s Ale'")],
   )
-  guard (try? execute(
-      parse_filter("@base64d"),
-      must_parse("\"Not base64 data\""),
-    ))
+  guard (try? execute(compile("@base64d"), must_parse("\"Not base64 data\"")))
     is Err(err) &&
     err.to_string() == "string (\"Not base64...) is not valid base64 data" else {
     fail("expected @base64d invalid data error")
   }
-  guard (try? execute(parse_filter("@base64d"), must_parse("\"QUJDa\"")))
-    is Err(err) &&
+  guard (try? execute(compile("@base64d"), must_parse("\"QUJDa\""))) is Err(err) &&
     err.to_string() == "string (\"QUJDa\") trailing base64 byte found" else {
     fail("expected @base64d trailing byte error")
   }
-  @debug.assert_eq(
-    must_execute(parse_filter("@base64d"), must_parse("\"=\"")),
-    [Value::string("")],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("@base64d"), must_parse("\"====\"")),
-    [Value::string("")],
-  )
-  guard (try? execute(parse_filter("@base64d"), must_parse("\"A==\"")))
-    is Err(err) &&
+  @debug.assert_eq(must_execute(compile("@base64d"), must_parse("\"=\"")), [
+    Value::string(""),
+  ])
+  @debug.assert_eq(must_execute(compile("@base64d"), must_parse("\"====\"")), [
+    Value::string(""),
+  ])
+  guard (try? execute(compile("@base64d"), must_parse("\"A==\""))) is Err(err) &&
     err.to_string() == "string (\"A==\") trailing base64 byte found" else {
     fail("expected @base64d trailing byte error for lax padding")
   }
-  guard (try? execute(parse_filter("@urid"), must_parse("\"%FX%9F%98%8E\"")))
+  guard (try? execute(compile("@urid"), must_parse("\"%FX%9F%98%8E\"")))
     is Err(err) &&
     err.to_string() == "string (\"%FX%9F%98%8E\") is not a valid uri encoding" else {
     fail("expected @urid invalid encoding error")
@@ -969,15 +859,15 @@ test "execute format filter compatibility" {
 
 ///|
 test "execute io-control minimal compatibility" {
-  @debug.assert_eq(must_execute(parse_filter("debug"), must_parse("1")), [
+  @debug.assert_eq(must_execute(compile("debug"), must_parse("1")), [
     Value::number(1.0),
     Value::array([Value::string("DEBUG:"), Value::number(1.0)]),
   ])
   @debug.assert_eq(
-    must_execute(parse_filter("try input catch ."), must_parse("null")),
+    must_execute(compile("try input catch ."), must_parse("null")),
     [Value::string("break")],
   )
-  guard (try? execute(parse_filter("input"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(compile("input"), must_parse("null"))) is Err(err) &&
     err.to_string() == "break" else {
     fail("expected input EOF break error")
   }
@@ -986,7 +876,7 @@ test "execute io-control minimal compatibility" {
 ///|
 test "execute recursion builtins minimal compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("[while(.<100; .*2)]"), must_parse("1")),
+    must_execute(compile("[while(.<100; .*2)]"), must_parse("1")),
     [
       Value::array([
         Value::number(1.0),
@@ -1001,14 +891,14 @@ test "execute recursion builtins minimal compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("[.,1]|until(.[0] < 1; [.[0] - 1, .[1] * .[0]])|.[1]"),
+      compile("[.,1]|until(.[0] < 1; [.[0] - 1, .[1] * .[0]])|.[1]"),
       must_parse("4"),
     ),
     [Value::number(24.0)],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("recurse(.foo[])"),
+      compile("recurse(.foo[])"),
       must_parse("{\"foo\":[{\"foo\": []}, {\"foo\":[{\"foo\":[]}]}]}"),
     ),
     [
@@ -1019,7 +909,7 @@ test "execute recursion builtins minimal compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("recurse"), must_parse("{\"a\":0,\"b\":[1]}")),
+    must_execute(compile("recurse"), must_parse("{\"a\":0,\"b\":[1]}")),
     [
       must_parse("{\"a\":0,\"b\":[1]}"),
       Value::number(0.0),
@@ -1028,24 +918,22 @@ test "execute recursion builtins minimal compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("recurse(. * .; . < 20)"), must_parse("2")),
+    must_execute(compile("recurse(. * .; . < 20)"), must_parse("2")),
     [Value::number(2.0), Value::number(4.0), Value::number(16.0)],
   )
+  @debug.assert_eq(must_execute(compile("walk(.)"), must_parse("{\"x\":0}")), [
+    must_parse("{\"x\":0}"),
+  ])
+  @debug.assert_eq(must_execute(compile("walk(1)"), must_parse("{\"x\":0}")), [
+    Value::number(1.0),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter("walk(.)"), must_parse("{\"x\":0}")),
-    [must_parse("{\"x\":0}")],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("walk(1)"), must_parse("{\"x\":0}")),
-    [Value::number(1.0)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("[walk(.,1)]"), must_parse("{\"x\":0}")),
+    must_execute(compile("[walk(.,1)]"), must_parse("{\"x\":0}")),
     [Value::array([must_parse("{\"x\":0}"), Value::number(1.0)])],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("walk(select(IN({}, []) | not))"),
+      compile("walk(select(IN({}, []) | not))"),
       must_parse("{\"a\":1,\"b\":[]}"),
     ),
     [must_parse("{\"a\":1}")],
@@ -1054,34 +942,31 @@ test "execute recursion builtins minimal compatibility" {
 
 ///|
 test "execute fromjson errors" {
-  guard (try? execute(parse_filter("fromjson"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("fromjson"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) only strings can be parsed" else {
     fail("expected fromjson number type error")
   }
-  guard (try? execute(parse_filter("fromjson"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(compile("fromjson"), must_parse("null"))) is Err(err) &&
     err.to_string() == "null (null) only strings can be parsed" else {
     fail("expected fromjson null type error")
   }
-  guard (try? execute(parse_filter("fromjson"), must_parse("{}"))) is Err(err) &&
+  guard (try? execute(compile("fromjson"), must_parse("{}"))) is Err(err) &&
     err.to_string() == "object ({}) only strings can be parsed" else {
     fail("expected fromjson object type error")
   }
-  guard (try? execute(parse_filter("fromjson"), must_parse("\"x\"")))
-    is Err(err) &&
+  guard (try? execute(compile("fromjson"), must_parse("\"x\""))) is Err(err) &&
     err.to_string().contains("while parsing 'x'") else {
     fail("expected fromjson invalid token parse context")
   }
-  guard (try? execute(parse_filter("fromjson"), must_parse("\"\""))) is Err(err) &&
+  guard (try? execute(compile("fromjson"), must_parse("\"\""))) is Err(err) &&
     err.to_string().contains("while parsing ''") else {
     fail("expected fromjson empty parse context")
   }
-  guard (try? execute(parse_filter("fromjson"), must_parse("\"[1,2\"")))
-    is Err(err) &&
+  guard (try? execute(compile("fromjson"), must_parse("\"[1,2\""))) is Err(err) &&
     err.to_string().contains("while parsing '[1,2'") else {
     fail("expected fromjson unfinished array parse context")
   }
-  guard (try? execute(parse_filter("fromjson"), must_parse("\"NaN10\"")))
-    is Err(err) &&
+  guard (try? execute(compile("fromjson"), must_parse("\"NaN10\""))) is Err(err) &&
     err.to_string() ==
     "Invalid numeric literal at EOF at line 1, column 5 (while parsing 'NaN10')" else {
     fail("expected fromjson invalid non-finite suffix parse context")
@@ -1090,16 +975,15 @@ test "execute fromjson errors" {
 
 ///|
 test "execute tonumber errors" {
-  guard (try? execute(parse_filter("tonumber"), must_parse("\"abc\"")))
-    is Err(err) &&
+  guard (try? execute(compile("tonumber"), must_parse("\"abc\""))) is Err(err) &&
     err.to_string() == "string (\"abc\") cannot be parsed as a number" else {
     fail("expected tonumber string parse error")
   }
-  guard (try? execute(parse_filter("tonumber"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(compile("tonumber"), must_parse("null"))) is Err(err) &&
     err.to_string() == "null (null) cannot be parsed as a number" else {
     fail("expected tonumber null parse error")
   }
-  guard (try? execute(parse_filter("tonumber"), must_parse("true"))) is Err(err) &&
+  guard (try? execute(compile("tonumber"), must_parse("true"))) is Err(err) &&
     err.to_string() == "boolean (true) cannot be parsed as a number" else {
     fail("expected tonumber boolean parse error")
   }
@@ -1107,44 +991,41 @@ test "execute tonumber errors" {
 
 ///|
 test "execute reverse compatibility" {
-  @debug.assert_eq(
-    must_execute(parse_filter("reverse"), must_parse("[1,2,3]")),
-    [Value::array([Value::number(3.0), Value::number(2.0), Value::number(1.0)])],
-  )
-  @debug.assert_eq(must_execute(parse_filter("reverse"), must_parse("[]")), [
+  @debug.assert_eq(must_execute(compile("reverse"), must_parse("[1,2,3]")), [
+    Value::array([Value::number(3.0), Value::number(2.0), Value::number(1.0)]),
+  ])
+  @debug.assert_eq(must_execute(compile("reverse"), must_parse("[]")), [
     Value::array([]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("reverse"), must_parse("null")), [
+  @debug.assert_eq(must_execute(compile("reverse"), must_parse("null")), [
     Value::array([]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("reverse"), must_parse("{}")), [
+  @debug.assert_eq(must_execute(compile("reverse"), must_parse("{}")), [
     Value::array([]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("reverse"), must_parse("\"\"")), [
+  @debug.assert_eq(must_execute(compile("reverse"), must_parse("\"\"")), [
     Value::array([]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("reverse"), must_parse("0")), [
+  @debug.assert_eq(must_execute(compile("reverse"), must_parse("0")), [
     Value::array([]),
   ])
 }
 
 ///|
 test "execute reverse errors" {
-  guard (try? execute(parse_filter("reverse"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("reverse"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot index number with number" else {
     fail("expected reverse number index error")
   }
-  guard (try? execute(parse_filter("reverse"), must_parse("\"abc\"")))
-    is Err(err) &&
+  guard (try? execute(compile("reverse"), must_parse("\"abc\""))) is Err(err) &&
     err.to_string() == "Cannot index string with number" else {
     fail("expected reverse string index error")
   }
-  guard (try? execute(parse_filter("reverse"), must_parse("{\"a\":1}")))
-    is Err(err) &&
+  guard (try? execute(compile("reverse"), must_parse("{\"a\":1}"))) is Err(err) &&
     err.to_string() == "Cannot index object with number" else {
     fail("expected reverse object index error")
   }
-  guard (try? execute(parse_filter("reverse"), must_parse("false"))) is Err(err) &&
+  guard (try? execute(compile("reverse"), must_parse("false"))) is Err(err) &&
     err.to_string() == "boolean (false) has no length" else {
     fail("expected reverse boolean length error")
   }
@@ -1153,52 +1034,46 @@ test "execute reverse errors" {
 ///|
 test "execute join compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("join(\",\")"), must_parse("[\"a\",1,true,null]")),
+    must_execute(compile("join(\",\")"), must_parse("[\"a\",1,true,null]")),
     [Value::string("a,1,true,")],
   )
+  @debug.assert_eq(must_execute(compile("join(\",\")"), must_parse("[]")), [
+    Value::string(""),
+  ])
+  @debug.assert_eq(must_execute(compile("join(\",\")"), must_parse("[1,2]")), [
+    Value::string("1,2"),
+  ])
+  @debug.assert_eq(must_execute(compile("join(1)"), must_parse("[\"a\"]")), [
+    Value::string("a"),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter("join(\",\")"), must_parse("[]")),
-    [Value::string("")],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("join(\",\")"), must_parse("[1,2]")),
-    [Value::string("1,2")],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("join(1)"), must_parse("[\"a\"]")),
-    [Value::string("a")],
-  )
-  @debug.assert_eq(
-    must_execute(
-      parse_filter("join((\",\", \":\"))"),
-      must_parse("[\"a\",\"b\"]"),
-    ),
+    must_execute(compile("join((\",\", \":\"))"), must_parse("[\"a\",\"b\"]")),
     [Value::string("a,b"), Value::string("a:b")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("join(empty)"), must_parse("[\"a\"]")),
+    must_execute(compile("join(empty)"), must_parse("[\"a\"]")),
     [],
   )
 }
 
 ///|
 test "execute join errors" {
-  guard (try? execute(parse_filter("join(\",\")"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("join(\",\")"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected join iterate error")
   }
-  guard (try? execute(parse_filter("join(1)"), must_parse("[\"a\",\"b\"]")))
+  guard (try? execute(compile("join(1)"), must_parse("[\"a\",\"b\"]")))
     is Err(err) &&
     err.to_string() == "string (\"a\") and number (1) cannot be added" else {
     fail("expected join separator type error")
   }
-  guard (try? execute(parse_filter("join(\",\")"), must_parse("[{\"x\":1}]")))
+  guard (try? execute(compile("join(\",\")"), must_parse("[{\"x\":1}]")))
     is Err(err) &&
     err.to_string() == "string (\"\") and object ({\"x\":1}) cannot be added" else {
     fail("expected join object element type error")
   }
   guard (try? execute(
-      parse_filter("join(\",\")"),
+      compile("join(\",\")"),
       must_parse("[\"1\",\"2\",{\"a\":{\"b\":{\"c\":33}}}]"),
     ))
     is Err(err) &&
@@ -1211,41 +1086,33 @@ test "execute join errors" {
 ///|
 test "execute split compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("split(\",\")"), must_parse("\"a,b,c\"")),
+    must_execute(compile("split(\",\")"), must_parse("\"a,b,c\"")),
     [Value::array([Value::string("a"), Value::string("b"), Value::string("c")])],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("split(\"\")"), must_parse("\"abc\"")),
+    must_execute(compile("split(\"\")"), must_parse("\"abc\"")),
     [Value::array([Value::string("a"), Value::string("b"), Value::string("c")])],
   )
+  @debug.assert_eq(must_execute(compile("split(\"\")"), must_parse("\"\"")), [
+    Value::array([]),
+  ])
+  @debug.assert_eq(must_execute(compile("split(\",\")"), must_parse("\"\"")), [
+    Value::array([]),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter("split(\"\")"), must_parse("\"\"")),
-    [Value::array([])],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("split(\",\")"), must_parse("\"\"")),
-    [Value::array([])],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("split((\",\", \"\"))"), must_parse("\"abc\"")),
+    must_execute(compile("split((\",\", \"\"))"), must_parse("\"abc\"")),
     [
       Value::array([Value::string("abc")]),
       Value::array([Value::string("a"), Value::string("b"), Value::string("c")]),
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("split(\"a\")"), must_parse("\"aa\"")),
+    must_execute(compile("split(\"a\")"), must_parse("\"aa\"")),
     [Value::array([Value::string(""), Value::string(""), Value::string("")])],
   )
+  @debug.assert_eq(must_execute(compile("split(empty)"), must_parse("\"a\"")), [])
   @debug.assert_eq(
-    must_execute(parse_filter("split(empty)"), must_parse("\"a\"")),
-    [],
-  )
-  @debug.assert_eq(
-    must_execute(
-      parse_filter("split(\", *\"; null)"),
-      must_parse("\"ab,cd, ef\""),
-    ),
+    must_execute(compile("split(\", *\"; null)"), must_parse("\"ab,cd, ef\"")),
     [
       Value::array([
         Value::string("ab"),
@@ -1255,7 +1122,7 @@ test "execute split compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[splits(\"\")]"), must_parse("\"ab\"")),
+    must_execute(compile("[splits(\"\")]"), must_parse("\"ab\"")),
     [
       Value::array([
         Value::string(""),
@@ -1267,7 +1134,7 @@ test "execute split compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("[splits(\"a+\"; \"i\")]"),
+      compile("[splits(\"a+\"; \"i\")]"),
       must_parse("\"abAABBabA\""),
     ),
     [
@@ -1282,7 +1149,7 @@ test "execute split compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("[splits(\",? *\"; \"n\")]"),
+      compile("[splits(\",? *\"; \"n\")]"),
       must_parse("\"ab,cd ef,  gh\""),
     ),
     [
@@ -1299,27 +1166,27 @@ test "execute split compatibility" {
 ///|
 test "execute test regex compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("test(\"a\")"), must_parse("\"abc\"")),
+    must_execute(compile("test(\"a\")"), must_parse("\"abc\"")),
     [Value::boolean(true)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("test(\"A\")"), must_parse("\"abc\"")),
+    must_execute(compile("test(\"A\")"), must_parse("\"abc\"")),
     [Value::boolean(false)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("test(\"A\"; \"i\")"), must_parse("\"abc\"")),
+    must_execute(compile("test(\"A\"; \"i\")"), must_parse("\"abc\"")),
     [Value::boolean(true)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("test(\"a+\"; null)"), must_parse("\"aaab\"")),
+    must_execute(compile("test(\"a+\"; null)"), must_parse("\"aaab\"")),
     [Value::boolean(true)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("test(empty)"), must_parse("\"abc\"")),
+    must_execute(compile("test(empty)"), must_parse("\"abc\"")),
     [],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("test(\"\"; \"n\")"), must_parse("\"abc\"")),
+    must_execute(compile("test(\"\"; \"n\")"), must_parse("\"abc\"")),
     [Value::boolean(false)],
   )
 }
@@ -1327,26 +1194,23 @@ test "execute test regex compatibility" {
 ///|
 test "execute scan regex compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("[scan(\"a+\")]"), must_parse("\"baaaac\"")),
+    must_execute(compile("[scan(\"a+\")]"), must_parse("\"baaaac\"")),
     [Value::array([Value::string("aaaa")])],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("[scan(\"A+\"; \"i\")]"),
-      must_parse("\"baAaAc\""),
-    ),
+    must_execute(compile("[scan(\"A+\"; \"i\")]"), must_parse("\"baAaAc\"")),
     [Value::array([Value::string("aAaA")])],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[scan(\"\")]"), must_parse("\"ab\"")),
+    must_execute(compile("[scan(\"\")]"), must_parse("\"ab\"")),
     [Value::array([Value::string(""), Value::string(""), Value::string("")])],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[scan(\"\"; \"n\")]"), must_parse("\"ab\"")),
+    must_execute(compile("[scan(\"\"; \"n\")]"), must_parse("\"ab\"")),
     [Value::array([])],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[scan(empty)]"), must_parse("\"ab\"")),
+    must_execute(compile("[scan(empty)]"), must_parse("\"ab\"")),
     [Value::array([])],
   )
 }
@@ -1354,7 +1218,7 @@ test "execute scan regex compatibility" {
 ///|
 test "execute match regex compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("match(\"a+\")"), must_parse("\"baaaac\"")),
+    must_execute(compile("match(\"a+\")"), must_parse("\"baaaac\"")),
     [
       must_parse(
         "{\"offset\":1,\"length\":4,\"string\":\"aaaa\",\"captures\":[]}",
@@ -1362,7 +1226,7 @@ test "execute match regex compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("match(\"A+\"; \"i\")"), must_parse("\"baAaAc\"")),
+    must_execute(compile("match(\"A+\"; \"i\")"), must_parse("\"baAaAc\"")),
     [
       must_parse(
         "{\"offset\":1,\"length\":4,\"string\":\"aAaA\",\"captures\":[]}",
@@ -1371,7 +1235,7 @@ test "execute match regex compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("match(\".+?\\\\b\")"),
+      compile("match(\".+?\\\\b\")"),
       must_parse("\"a\\u0304 two-codepoint grapheme\""),
     ),
     [
@@ -1380,16 +1244,15 @@ test "execute match regex compatibility" {
       ),
     ],
   )
+  @debug.assert_eq(must_execute(compile("match(\"\")"), must_parse("\"ab\"")), [
+    must_parse("{\"offset\":0,\"length\":0,\"string\":\"\",\"captures\":[]}"),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter("match(\"\")"), must_parse("\"ab\"")),
-    [must_parse("{\"offset\":0,\"length\":0,\"string\":\"\",\"captures\":[]}")],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("match(\"\"; \"n\")"), must_parse("\"ab\"")),
+    must_execute(compile("match(\"\"; \"n\")"), must_parse("\"ab\"")),
     [],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[match(\"a\"; \"g\")]"), must_parse("\"abac\"")),
+    must_execute(compile("[match(\"a\"; \"g\")]"), must_parse("\"abac\"")),
     [
       must_parse(
         "[{\"offset\":0,\"length\":1,\"string\":\"a\",\"captures\":[]},{\"offset\":2,\"length\":1,\"string\":\"a\",\"captures\":[]}]",
@@ -1397,7 +1260,7 @@ test "execute match regex compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[match(empty)]"), must_parse("\"ab\"")),
+    must_execute(compile("[match(empty)]"), must_parse("\"ab\"")),
     [Value::array([])],
   )
 }
@@ -1405,15 +1268,15 @@ test "execute match regex compatibility" {
 ///|
 test "execute regex alternation sequence merge compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("match(\"a|ab\")"), must_parse("\"ab\"")),
+    must_execute(compile("match(\"a|ab\")"), must_parse("\"ab\"")),
     [must_parse("{\"offset\":0,\"length\":1,\"string\":\"a\",\"captures\":[]}")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("match(\"ab|[ac]|ac\")"), must_parse("\"ac\"")),
+    must_execute(compile("match(\"ab|[ac]|ac\")"), must_parse("\"ac\"")),
     [must_parse("{\"offset\":0,\"length\":1,\"string\":\"a\",\"captures\":[]}")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("match(\"ab|ac\")"), must_parse("\"ac\"")),
+    must_execute(compile("match(\"ab|ac\")"), must_parse("\"ac\"")),
     [
       must_parse(
         "{\"offset\":0,\"length\":2,\"string\":\"ac\",\"captures\":[]}",
@@ -1421,10 +1284,7 @@ test "execute regex alternation sequence merge compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("match(\"あい|あう\")"),
-      must_parse("\"あう\""),
-    ),
+    must_execute(compile("match(\"あい|あう\")"), must_parse("\"あう\"")),
     [
       must_parse(
         "{\"offset\":0,\"length\":2,\"string\":\"あう\",\"captures\":[]}",
@@ -1436,30 +1296,27 @@ test "execute regex alternation sequence merge compatibility" {
 ///|
 test "execute capture regex compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("capture(\"a+\")"), must_parse("\"baaaac\"")),
+    must_execute(compile("capture(\"a+\")"), must_parse("\"baaaac\"")),
     [Value::object(Map([]))],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("capture(\"A+\"; \"i\")"),
-      must_parse("\"baAaAc\""),
-    ),
+    must_execute(compile("capture(\"A+\"; \"i\")"), must_parse("\"baAaAc\"")),
     [Value::object(Map([]))],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("capture(\"a+\")"), must_parse("\"xyz\"")),
+    must_execute(compile("capture(\"a+\")"), must_parse("\"xyz\"")),
     [],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("capture(\"\")"), must_parse("\"ab\"")),
+    must_execute(compile("capture(\"\")"), must_parse("\"ab\"")),
     [Value::object(Map([]))],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("capture(\"\"; \"n\")"), must_parse("\"ab\"")),
+    must_execute(compile("capture(\"\"; \"n\")"), must_parse("\"ab\"")),
     [],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[capture(empty)]"), must_parse("\"ab\"")),
+    must_execute(compile("[capture(empty)]"), must_parse("\"ab\"")),
     [Value::array([])],
   )
 }
@@ -1467,75 +1324,63 @@ test "execute capture regex compatibility" {
 ///|
 test "execute sub/gsub regex compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("sub(\"a\"; \"X\")"), must_parse("\"abac\"")),
+    must_execute(compile("sub(\"a\"; \"X\")"), must_parse("\"abac\"")),
     [Value::string("Xbac")],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("sub(\"a\"; \"X\"; \"g\")"),
-      must_parse("\"abac\""),
-    ),
+    must_execute(compile("sub(\"a\"; \"X\"; \"g\")"), must_parse("\"abac\"")),
     [Value::string("XbXc")],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("sub(\"A\"; \"X\"; \"i\")"),
-      must_parse("\"abAc\""),
-    ),
+    must_execute(compile("sub(\"A\"; \"X\"; \"i\")"), must_parse("\"abAc\"")),
     [Value::string("XbAc")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("sub(\"\"; \"X\")"), must_parse("\"ab\"")),
+    must_execute(compile("sub(\"\"; \"X\")"), must_parse("\"ab\"")),
     [Value::string("Xab")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("sub(\"z\"; \"X\")"), must_parse("\"ab\"")),
+    must_execute(compile("sub(\"z\"; \"X\")"), must_parse("\"ab\"")),
     [Value::string("ab")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("sub(\"^_+\"; \"\")"), must_parse("\"_ab\"")),
+    must_execute(compile("sub(\"^_+\"; \"\")"), must_parse("\"_ab\"")),
     [Value::string("ab")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("sub(\"_+$\"; \"\")"), must_parse("\"ab__\"")),
+    must_execute(compile("sub(\"_+$\"; \"\")"), must_parse("\"ab__\"")),
     [Value::string("ab")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("gsub(\"a\"; \"X\")"), must_parse("\"abac\"")),
+    must_execute(compile("gsub(\"a\"; \"X\")"), must_parse("\"abac\"")),
     [Value::string("XbXc")],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("gsub(\"a\"; \"X\"; null)"),
-      must_parse("\"abac\""),
-    ),
+    must_execute(compile("gsub(\"a\"; \"X\"; null)"), must_parse("\"abac\"")),
     [Value::string("XbXc")],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("gsub(\"A\"; \"X\"; \"i\")"),
-      must_parse("\"abAc\""),
-    ),
+    must_execute(compile("gsub(\"A\"; \"X\"; \"i\")"), must_parse("\"abAc\"")),
     [Value::string("XbXc")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("gsub(\"\"; \"X\")"), must_parse("\"ab\"")),
+    must_execute(compile("gsub(\"\"; \"X\")"), must_parse("\"ab\"")),
     [Value::string("XaXbX")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("gsub(\"$\"; \"a\"; \"g\")"), must_parse("\"a\"")),
+    must_execute(compile("gsub(\"$\"; \"a\"; \"g\")"), must_parse("\"a\"")),
     [Value::string("aa")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("gsub(\"(?=u)\"; \"u\")"), must_parse("\"qux\"")),
+    must_execute(compile("gsub(\"(?=u)\"; \"u\")"), must_parse("\"qux\"")),
     [Value::string("quux")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("gsub(\"\"; \"X\"; \"n\")"), must_parse("\"ab\"")),
+    must_execute(compile("gsub(\"\"; \"X\"; \"n\")"), must_parse("\"ab\"")),
     [Value::string("ab")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[gsub(empty; \"X\")]"), must_parse("\"ab\"")),
+    must_execute(compile("[gsub(empty; \"X\")]"), must_parse("\"ab\"")),
     [Value::array([])],
   )
 }
@@ -1544,17 +1389,17 @@ test "execute sub/gsub regex compatibility" {
 test "execute regex named capture compatibility" {
   @debug.assert_eq(
     must_execute(
-      parse_filter("capture(\"(?<a>[a-z]+)-(?<n>[0-9]+)\")"),
+      compile("capture(\"(?<a>[a-z]+)-(?<n>[0-9]+)\")"),
       must_parse("\"xyzzy-14\""),
     ),
     [must_parse("{\"a\":\"xyzzy\",\"n\":\"14\"}")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("capture(\"(?<x>a)?b?\")"), must_parse("\"b\"")),
+    must_execute(compile("capture(\"(?<x>a)?b?\")"), must_parse("\"b\"")),
     [must_parse("{\"x\":null}")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("match(\"(?<x>a)?b?\")"), must_parse("\"b\"")),
+    must_execute(compile("match(\"(?<x>a)?b?\")"), must_parse("\"b\"")),
     [
       must_parse(
         "{\"offset\":0,\"length\":1,\"string\":\"b\",\"captures\":[{\"offset\":-1,\"string\":null,\"length\":0,\"name\":\"x\"}]}",
@@ -1563,7 +1408,7 @@ test "execute regex named capture compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("match(\"(?<a>[a-z]+)-(?<n>[0-9]+)\")"),
+      compile("match(\"(?<a>[a-z]+)-(?<n>[0-9]+)\")"),
       must_parse("\"xyzzy-14\""),
     ),
     [
@@ -1574,7 +1419,7 @@ test "execute regex named capture compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("[match([\"foo\", \"ig\"])]"),
+      compile("[match([\"foo\", \"ig\"])]"),
       must_parse("\"foo bar FOO\""),
     ),
     [
@@ -1585,28 +1430,28 @@ test "execute regex named capture compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("[scan(\"(a+)(b+)\")]"),
+      compile("[scan(\"(a+)(b+)\")]"),
       must_parse("\"abaabbaaabbb\""),
     ),
     [must_parse("[[\"a\",\"b\"],[\"aa\",\"bb\"],[\"aaa\",\"bbb\"]]")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("sub(\"^(?<head>.)\"; \"Head=\\(.head) Tail=\")"),
+      compile("sub(\"^(?<head>.)\"; \"Head=\\(.head) Tail=\")"),
       must_parse("\"abcdef\""),
     ),
     [Value::string("Head=a Tail=bcdef")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("gsub(\"(?<d>\\\\d)\"; \":\\(.d);\")"),
+      compile("gsub(\"(?<d>\\\\d)\"; \":\\(.d);\")"),
       must_parse("\"a1b2\""),
     ),
     [Value::string("a:1;b:2;")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(
+      compile(
         "[sub(\"(?<a>.)\"; \"\\(.a|ascii_upcase)\", \"\\(.a|ascii_downcase)\", \"c\")]",
       ),
       must_parse("\"aB\""),
@@ -1617,27 +1462,24 @@ test "execute regex named capture compatibility" {
 
 ///|
 test "execute split errors" {
-  guard (try? execute(parse_filter("split(\",\")"), must_parse("1")))
-    is Err(err) &&
+  guard (try? execute(compile("split(\",\")"), must_parse("1"))) is Err(err) &&
     err.to_string() == "split input and separator must be strings" else {
     fail("expected split input type error")
   }
-  guard (try? execute(parse_filter("split(1)"), must_parse("\"a\"")))
-    is Err(err) &&
+  guard (try? execute(compile("split(1)"), must_parse("\"a\""))) is Err(err) &&
     err.to_string() == "split input and separator must be strings" else {
     fail("expected split separator type error")
   }
-  guard (try? execute(parse_filter("split(\",\"; 1)"), must_parse("\"a\"")))
+  guard (try? execute(compile("split(\",\"; 1)"), must_parse("\"a\"")))
     is Err(err) &&
     err.to_string() == "split flags must be a string or null" else {
     fail("expected split flags type error")
   }
-  guard (try? execute(parse_filter("splits(1)"), must_parse("\"a\"")))
-    is Err(err) &&
+  guard (try? execute(compile("splits(1)"), must_parse("\"a\""))) is Err(err) &&
     err.to_string() == "splits input and separator must be strings" else {
     fail("expected splits separator type error")
   }
-  guard (try? execute(parse_filter("split(\"a\"; \"z\")"), must_parse("\"a\"")))
+  guard (try? execute(compile("split(\"a\"; \"z\")"), must_parse("\"a\"")))
     is Err(err) &&
     err.to_string() == "zg is not a valid modifier string" else {
     fail("expected split invalid flags error")
@@ -1646,21 +1488,20 @@ test "execute split errors" {
 
 ///|
 test "execute test regex errors" {
-  guard (try? execute(parse_filter("test(\"a\")"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("test(\"a\")"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) cannot be matched, as it is not a string" else {
     fail("expected test input type error")
   }
-  guard (try? execute(parse_filter("test(1)"), must_parse("\"abc\"")))
-    is Err(err) &&
+  guard (try? execute(compile("test(1)"), must_parse("\"abc\""))) is Err(err) &&
     err.to_string() == "number not a string or array" else {
     fail("expected test pattern type error")
   }
-  guard (try? execute(parse_filter("test(\"a\"; 1)"), must_parse("\"abc\"")))
+  guard (try? execute(compile("test(\"a\"; 1)"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "test flags must be a string or null" else {
     fail("expected test flags type error")
   }
-  guard (try? execute(parse_filter("test(\"a\"; \"z\")"), must_parse("\"abc\"")))
+  guard (try? execute(compile("test(\"a\"; \"z\")"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "z is not a valid modifier string" else {
     fail("expected test invalid flags error")
@@ -1669,21 +1510,20 @@ test "execute test regex errors" {
 
 ///|
 test "execute scan regex errors" {
-  guard (try? execute(parse_filter("scan(\"a\")"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("scan(\"a\")"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) cannot be matched, as it is not a string" else {
     fail("expected scan input type error")
   }
-  guard (try? execute(parse_filter("scan(1)"), must_parse("\"abc\"")))
-    is Err(err) &&
+  guard (try? execute(compile("scan(1)"), must_parse("\"abc\""))) is Err(err) &&
     err.to_string() == "number not a string or array" else {
     fail("expected scan pattern type error")
   }
-  guard (try? execute(parse_filter("scan(\"a\"; 1)"), must_parse("\"abc\"")))
+  guard (try? execute(compile("scan(\"a\"; 1)"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "scan flags must be a string or null" else {
     fail("expected scan flags type error")
   }
-  guard (try? execute(parse_filter("scan(\"a\"; \"z\")"), must_parse("\"abc\"")))
+  guard (try? execute(compile("scan(\"a\"; \"z\")"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "z is not a valid modifier string" else {
     fail("expected scan invalid flags error")
@@ -1692,25 +1532,20 @@ test "execute scan regex errors" {
 
 ///|
 test "execute match regex errors" {
-  guard (try? execute(parse_filter("match(\"a\")"), must_parse("1")))
-    is Err(err) &&
+  guard (try? execute(compile("match(\"a\")"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) cannot be matched, as it is not a string" else {
     fail("expected match input type error")
   }
-  guard (try? execute(parse_filter("match(1)"), must_parse("\"abc\"")))
-    is Err(err) &&
+  guard (try? execute(compile("match(1)"), must_parse("\"abc\""))) is Err(err) &&
     err.to_string() == "number not a string or array" else {
     fail("expected match pattern type error")
   }
-  guard (try? execute(parse_filter("match(\"a\"; 1)"), must_parse("\"abc\"")))
+  guard (try? execute(compile("match(\"a\"; 1)"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "match flags must be a string or null" else {
     fail("expected match flags type error")
   }
-  guard (try? execute(
-      parse_filter("match(\"a\"; \"z\")"),
-      must_parse("\"abc\""),
-    ))
+  guard (try? execute(compile("match(\"a\"; \"z\")"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "z is not a valid modifier string" else {
     fail("expected match invalid flags error")
@@ -1719,25 +1554,20 @@ test "execute match regex errors" {
 
 ///|
 test "execute capture regex errors" {
-  guard (try? execute(parse_filter("capture(\"a\")"), must_parse("1")))
-    is Err(err) &&
+  guard (try? execute(compile("capture(\"a\")"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) cannot be matched, as it is not a string" else {
     fail("expected capture input type error")
   }
-  guard (try? execute(parse_filter("capture(1)"), must_parse("\"abc\"")))
-    is Err(err) &&
+  guard (try? execute(compile("capture(1)"), must_parse("\"abc\""))) is Err(err) &&
     err.to_string() == "number not a string or array" else {
     fail("expected capture pattern type error")
   }
-  guard (try? execute(parse_filter("capture(\"a\"; 1)"), must_parse("\"abc\"")))
+  guard (try? execute(compile("capture(\"a\"; 1)"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "capture flags must be a string or null" else {
     fail("expected capture flags type error")
   }
-  guard (try? execute(
-      parse_filter("capture(\"a\"; \"z\")"),
-      must_parse("\"abc\""),
-    ))
+  guard (try? execute(compile("capture(\"a\"; \"z\")"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "z is not a valid modifier string" else {
     fail("expected capture invalid flags error")
@@ -1746,62 +1576,56 @@ test "execute capture regex errors" {
 
 ///|
 test "execute sub/gsub regex errors" {
-  guard (try? execute(parse_filter("sub(\"a\"; \"x\")"), must_parse("1")))
+  guard (try? execute(compile("sub(\"a\"; \"x\")"), must_parse("1")))
     is Err(err) &&
     err.to_string() == "number (1) cannot be matched, as it is not a string" else {
     fail("expected sub input type error")
   }
-  guard (try? execute(parse_filter("sub(1; \"x\")"), must_parse("\"abc\"")))
+  guard (try? execute(compile("sub(1; \"x\")"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "number not a string or array" else {
     fail("expected sub pattern type error")
   }
-  guard (try? execute(parse_filter("sub(\"a\"; 1)"), must_parse("\"abc\"")))
+  guard (try? execute(compile("sub(\"a\"; 1)"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "sub replacement must be a string" else {
     fail("expected sub replacement type error")
   }
-  guard (try? execute(
-      parse_filter("sub(\"a\"; \"x\"; 1)"),
-      must_parse("\"abc\""),
-    ))
+  guard (try? execute(compile("sub(\"a\"; \"x\"; 1)"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "sub flags must be a string or null" else {
     fail("expected sub flags type error")
   }
   guard (try? execute(
-      parse_filter("sub(\"a\"; \"x\"; \"z\")"),
+      compile("sub(\"a\"; \"x\"; \"z\")"),
       must_parse("\"abc\""),
     ))
     is Err(err) &&
     err.to_string() == "z is not a valid modifier string" else {
     fail("expected sub invalid flags error")
   }
-  guard (try? execute(parse_filter("gsub(\"a\"; \"x\")"), must_parse("1")))
+  guard (try? execute(compile("gsub(\"a\"; \"x\")"), must_parse("1")))
     is Err(err) &&
     err.to_string() == "number (1) cannot be matched, as it is not a string" else {
     fail("expected gsub input type error")
   }
-  guard (try? execute(parse_filter("gsub(1; \"x\")"), must_parse("\"abc\"")))
+  guard (try? execute(compile("gsub(1; \"x\")"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "number not a string or array" else {
     fail("expected gsub pattern type error")
   }
-  guard (try? execute(parse_filter("gsub(\"a\"; 1)"), must_parse("\"abc\"")))
+  guard (try? execute(compile("gsub(\"a\"; 1)"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "gsub replacement must be a string" else {
     fail("expected gsub replacement type error")
   }
-  guard (try? execute(
-      parse_filter("gsub(\"a\"; \"x\"; 1)"),
-      must_parse("\"abc\""),
-    ))
+  guard (try? execute(compile("gsub(\"a\"; \"x\"; 1)"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "gsub flags must be a string or null" else {
     fail("expected gsub flags type error")
   }
   guard (try? execute(
-      parse_filter("gsub(\"a\"; \"x\"; \"z\")"),
+      compile("gsub(\"a\"; \"x\"; \"z\")"),
       must_parse("\"abc\""),
     ))
     is Err(err) &&
@@ -1813,7 +1637,7 @@ test "execute sub/gsub regex errors" {
 ///|
 test "execute combinations/date/env/stream compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("combinations"), must_parse("[[1,2], [3,4]]")),
+    must_execute(compile("combinations"), must_parse("[[1,2], [3,4]]")),
     [
       Value::array([Value::number(1.0), Value::number(3.0)]),
       Value::array([Value::number(1.0), Value::number(4.0)]),
@@ -1822,7 +1646,7 @@ test "execute combinations/date/env/stream compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("combinations(2)"), must_parse("[0,1]")),
+    must_execute(compile("combinations(2)"), must_parse("[0,1]")),
     [
       Value::array([Value::number(0.0), Value::number(0.0)]),
       Value::array([Value::number(0.0), Value::number(1.0)]),
@@ -1831,19 +1655,15 @@ test "execute combinations/date/env/stream compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("fromdate"),
-      must_parse("\"2015-03-05T23:51:47Z\""),
-    ),
+    must_execute(compile("fromdate"), must_parse("\"2015-03-05T23:51:47Z\"")),
     [Value::number(1425599507.0)],
   )
-  @debug.assert_eq(
-    must_execute(parse_filter("env.PAGER"), must_parse("null")),
-    [Value::null()],
-  )
+  @debug.assert_eq(must_execute(compile("env.PAGER"), must_parse("null")), [
+    Value::null(),
+  ])
   @debug.assert_eq(
     must_execute(
-      parse_filter("truncate_stream([[0],\"a\"],[[1,0],\"b\"],[[1,0]],[[1]])"),
+      compile("truncate_stream([[0],\"a\"],[[1,0],\"b\"],[[1,0]],[[1]])"),
       must_parse("1"),
     ),
     [
@@ -1853,7 +1673,7 @@ test "execute combinations/date/env/stream compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(
+      compile(
         "fromstream(1|truncate_stream([[0],\"a\"],[[1,0],\"b\"],[[1,0]],[[1]]))",
       ),
       must_parse("null"),
@@ -1862,7 +1682,7 @@ test "execute combinations/date/env/stream compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(". as $dot|fromstream($dot|tostream)|.==$dot"),
+      compile(". as $dot|fromstream($dot|tostream)|.==$dot"),
       must_parse("[0,[1,{\"a\":1},{\"b\":2}]]"),
     ),
     [Value::boolean(true)],
@@ -1871,34 +1691,30 @@ test "execute combinations/date/env/stream compatibility" {
 
 ///|
 test "execute time builtins minimal compatibility" {
-  @debug.assert_eq(
-    must_execute(parse_filter("gmtime"), must_parse("1425599507")),
-    [
-      Value::array([
-        Value::number(2015.0),
-        Value::number(2.0),
-        Value::number(5.0),
-        Value::number(23.0),
-        Value::number(51.0),
-        Value::number(47.0),
-        Value::number(4.0),
-        Value::number(63.0),
-      ]),
-    ],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("mktime"), must_parse("[2024,8,21]")),
-    [Value::number(1726876800.0)],
-  )
+  @debug.assert_eq(must_execute(compile("gmtime"), must_parse("1425599507")), [
+    Value::array([
+      Value::number(2015.0),
+      Value::number(2.0),
+      Value::number(5.0),
+      Value::number(23.0),
+      Value::number(51.0),
+      Value::number(47.0),
+      Value::number(4.0),
+      Value::number(63.0),
+    ]),
+  ])
+  @debug.assert_eq(must_execute(compile("mktime"), must_parse("[2024,8,21]")), [
+    Value::number(1726876800.0),
+  ])
   @debug.assert_eq(
     must_execute(
-      parse_filter("strftime(\"%Y-%m-%dT%H:%M:%SZ\")"),
+      compile("strftime(\"%Y-%m-%dT%H:%M:%SZ\")"),
       must_parse("[2024,2,15]"),
     ),
     [Value::string("2024-03-15T00:00:00Z")],
   )
   let localized = must_execute(
-    parse_filter("strftime(\"%A, %B %d, %Y\")"),
+    compile("strftime(\"%A, %B %d, %Y\")"),
     must_parse("1435677542.822351"),
   )
   guard localized.length() == 1 else { fail("expected single strftime output") }
@@ -1911,7 +1727,7 @@ test "execute time builtins minimal compatibility" {
   }
   @debug.assert_eq(
     must_execute(
-      parse_filter("strptime(\"%Y-%m-%dT%H:%M:%SZ\")"),
+      compile("strptime(\"%Y-%m-%dT%H:%M:%SZ\")"),
       must_parse("\"2015-03-05T23:51:47Z\""),
     ),
     [
@@ -1929,35 +1745,35 @@ test "execute time builtins minimal compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("strptime(\"%Y-%m-%dT%H:%M:%SZ\")|mktime"),
+      compile("strptime(\"%Y-%m-%dT%H:%M:%SZ\")|mktime"),
       must_parse("\"2015-03-05T23:51:47Z\""),
     ),
     [Value::number(1425599507.0)],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("try strftime(\"%Y-%m-%dT%H:%M:%SZ\") catch ."),
+      compile("try strftime(\"%Y-%m-%dT%H:%M:%SZ\") catch ."),
       must_parse("[\"a\",1,2,3,4,5,6,7]"),
     ),
     [Value::string("strftime/1 requires parsed datetime inputs")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("try strflocaltime(\"%Y-%m-%dT%H:%M:%SZ\") catch ."),
+      compile("try strflocaltime(\"%Y-%m-%dT%H:%M:%SZ\") catch ."),
       must_parse("[\"a\",1,2,3,4,5,6,7]"),
     ),
     [Value::string("strflocaltime/1 requires parsed datetime inputs")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("try mktime catch ."),
+      compile("try mktime catch ."),
       must_parse("[\"a\",1,2,3,4,5,6,7]"),
     ),
     [Value::string("mktime requires parsed datetime inputs")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("try [\"OK\", strftime([])] catch [\"KO\", .]"),
+      compile("try [\"OK\", strftime([])] catch [\"KO\", .]"),
       must_parse("0"),
     ),
     [
@@ -1969,7 +1785,7 @@ test "execute time builtins minimal compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("try [\"OK\", strflocaltime({})] catch [\"KO\", .]"),
+      compile("try [\"OK\", strflocaltime({})] catch [\"KO\", .]"),
       must_parse("0"),
     ),
     [
@@ -1980,64 +1796,52 @@ test "execute time builtins minimal compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("strflocaltime(\"\" | ., @uri)"), must_parse("0")),
+    must_execute(compile("strflocaltime(\"\" | ., @uri)"), must_parse("0")),
     [Value::string(""), Value::string("")],
   )
 }
 
 ///|
 test "execute explode/implode compatibility" {
-  @debug.assert_eq(
-    must_execute(parse_filter("explode"), must_parse("\"abc\"")),
-    [
-      Value::array([
-        Value::number(97.0),
-        Value::number(98.0),
-        Value::number(99.0),
-      ]),
-    ],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("explode"), must_parse("\"あ\"")),
-    [Value::array([Value::number(12354.0)])],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("implode"), must_parse("[97,98,99]")),
-    [Value::string("abc")],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("implode"), must_parse("[12354]")),
-    [Value::string("あ")],
-  )
-  @debug.assert_eq(must_execute(parse_filter("implode"), must_parse("[]")), [
+  @debug.assert_eq(must_execute(compile("explode"), must_parse("\"abc\"")), [
+    Value::array([Value::number(97.0), Value::number(98.0), Value::number(99.0)]),
+  ])
+  @debug.assert_eq(must_execute(compile("explode"), must_parse("\"あ\"")), [
+    Value::array([Value::number(12354.0)]),
+  ])
+  @debug.assert_eq(must_execute(compile("implode"), must_parse("[97,98,99]")), [
+    Value::string("abc"),
+  ])
+  @debug.assert_eq(must_execute(compile("implode"), must_parse("[12354]")), [
+    Value::string("あ"),
+  ])
+  @debug.assert_eq(must_execute(compile("implode"), must_parse("[]")), [
     Value::string(""),
   ])
-  @debug.assert_eq(must_execute(parse_filter("implode"), must_parse("[-1]")), [
+  @debug.assert_eq(must_execute(compile("implode"), must_parse("[-1]")), [
     Value::string("\u{fffd}"),
   ])
-  @debug.assert_eq(
-    must_execute(parse_filter("implode"), must_parse("[97.9]")),
-    [Value::string("a")],
-  )
+  @debug.assert_eq(must_execute(compile("implode"), must_parse("[97.9]")), [
+    Value::string("a"),
+  ])
 }
 
 ///|
 test "execute explode/implode errors" {
-  guard (try? execute(parse_filter("explode"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("explode"), must_parse("1"))) is Err(err) &&
     err.to_string() == "explode input must be a string" else {
     fail("expected explode input type error")
   }
-  guard (try? execute(parse_filter("implode"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("implode"), must_parse("1"))) is Err(err) &&
     err.to_string() == "implode input must be an array" else {
     fail("expected implode input type error")
   }
-  guard (try? execute(parse_filter("implode"), must_parse("[\"a\"]")))
-    is Err(err) &&
+  guard (try? execute(compile("implode"), must_parse("[\"a\"]"))) is Err(err) &&
     err.to_string() ==
     "string (\"a\") can't be imploded, unicode codepoint needs to be numeric" else {
     fail("expected implode element type error")
   }
-  guard (try? execute(parse_filter("[nan] | implode"), must_parse("null")))
+  guard (try? execute(compile("[nan] | implode"), must_parse("null")))
     is Err(err) &&
     err.to_string() ==
     "number (null) can't be imploded, unicode codepoint needs to be numeric" else {
@@ -2048,38 +1852,35 @@ test "execute explode/implode errors" {
 ///|
 test "execute index/rindex/indices compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("index(\"l\")"), must_parse("\"hello\"")),
+    must_execute(compile("index(\"l\")"), must_parse("\"hello\"")),
     [Value::number(2.0)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("rindex(\"l\")"), must_parse("\"hello\"")),
+    must_execute(compile("rindex(\"l\")"), must_parse("\"hello\"")),
     [Value::number(3.0)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("indices(\"l\")"), must_parse("\"hello\"")),
+    must_execute(compile("indices(\"l\")"), must_parse("\"hello\"")),
     [Value::array([Value::number(2.0), Value::number(3.0)])],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("index(\"z\")"), must_parse("\"hello\"")),
+    must_execute(compile("index(\"z\")"), must_parse("\"hello\"")),
     [Value::null()],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("indices(\"z\")"), must_parse("\"hello\"")),
+    must_execute(compile("indices(\"z\")"), must_parse("\"hello\"")),
     [Value::array([])],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("indices(\"aa\")"), must_parse("\"aaa\"")),
+    must_execute(compile("indices(\"aa\")"), must_parse("\"aaa\"")),
     [Value::array([Value::number(0.0), Value::number(1.0)])],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("indices(\"o\")"), must_parse("\"🇬🇧oo\"")),
+    must_execute(compile("indices(\"o\")"), must_parse("\"🇬🇧oo\"")),
     [Value::array([Value::number(2.0), Value::number(3.0)])],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("_strindices(\"aba\")"),
-      must_parse("\"xababababax\""),
-    ),
+    must_execute(compile("_strindices(\"aba\")"), must_parse("\"xababababax\"")),
     [
       Value::array([
         Value::number(1.0),
@@ -2090,62 +1891,55 @@ test "execute index/rindex/indices compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("index((\"l\",\"e\"))"), must_parse("\"hello\"")),
+    must_execute(compile("index((\"l\",\"e\"))"), must_parse("\"hello\"")),
     [Value::number(2.0), Value::number(1.0)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("index(empty)"), must_parse("\"hello\"")),
+    must_execute(compile("index(empty)"), must_parse("\"hello\"")),
     [],
   )
   let arr = must_parse("[1,2,1,3]")
-  @debug.assert_eq(must_execute(parse_filter("index(1)"), arr), [
-    Value::number(0.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("rindex(1)"), arr), [
-    Value::number(2.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("indices(1)"), arr), [
+  @debug.assert_eq(must_execute(compile("index(1)"), arr), [Value::number(0.0)])
+  @debug.assert_eq(must_execute(compile("rindex(1)"), arr), [Value::number(2.0)])
+  @debug.assert_eq(must_execute(compile("indices(1)"), arr), [
     Value::array([Value::number(0.0), Value::number(2.0)]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("index([1,3])"), arr), [
+  @debug.assert_eq(must_execute(compile("index([1,3])"), arr), [
     Value::number(2.0),
   ])
-  @debug.assert_eq(must_execute(parse_filter("indices([1,3])"), arr), [
+  @debug.assert_eq(must_execute(compile("indices([1,3])"), arr), [
     Value::array([Value::number(2.0)]),
   ])
+  @debug.assert_eq(must_execute(compile("index(\"1\")"), must_parse("[1,2]")), [
+    Value::null(),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter("index(\"1\")"), must_parse("[1,2]")),
-    [Value::null()],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("indices([])"), must_parse("[1,2,3]")),
+    must_execute(compile("indices([])"), must_parse("[1,2,3]")),
     [Value::array([])],
   )
 }
 
 ///|
 test "execute index/rindex/indices errors" {
-  guard (try? execute(parse_filter("index(1)"), must_parse("\"hello\"")))
-    is Err(err) &&
+  guard (try? execute(compile("index(1)"), must_parse("\"hello\""))) is Err(err) &&
     err.to_string() == "Cannot index string with number" else {
     fail("expected string index(number) type error")
   }
-  guard (try? execute(parse_filter("index(true)"), must_parse("\"hello\"")))
+  guard (try? execute(compile("index(true)"), must_parse("\"hello\"")))
     is Err(err) &&
     err.to_string() == "Cannot index string with boolean" else {
     fail("expected string index(boolean) type error")
   }
-  guard (try? execute(parse_filter("index(\"a\")"), must_parse("1")))
-    is Err(err) &&
+  guard (try? execute(compile("index(\"a\")"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot index number with string \"a\"" else {
     fail("expected number index(string) type error")
   }
-  guard (try? execute(parse_filter("_strindices(\"abc\")"), must_parse("123")))
+  guard (try? execute(compile("_strindices(\"abc\")"), must_parse("123")))
     is Err(err) &&
     err.to_string() == "number (123) cannot be searched, as it is not a string" else {
     fail("expected _strindices input type error")
   }
-  guard (try? execute(parse_filter("_strindices(123)"), must_parse("\"abc\"")))
+  guard (try? execute(compile("_strindices(123)"), must_parse("\"abc\"")))
     is Err(err) &&
     err.to_string() == "number (123) is not a string" else {
     fail("expected _strindices pattern type error")
@@ -2154,50 +1948,44 @@ test "execute index/rindex/indices errors" {
 
 ///|
 test "execute bsearch compatibility" {
-  @debug.assert_eq(
-    must_execute(parse_filter("bsearch(1)"), must_parse("[1,3,5]")),
-    [Value::number(0.0)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("bsearch(2)"), must_parse("[1,3,5]")),
-    [Value::number(-2.0)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("bsearch(5)"), must_parse("[1,3,5]")),
-    [Value::number(2.0)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("bsearch(6)"), must_parse("[1,3,5]")),
-    [Value::number(-4.0)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("bsearch(0)"), must_parse("[1,3,5]")),
-    [Value::number(-1.0)],
-  )
-  @debug.assert_eq(must_execute(parse_filter("bsearch(1)"), must_parse("[]")), [
+  @debug.assert_eq(must_execute(compile("bsearch(1)"), must_parse("[1,3,5]")), [
+    Value::number(0.0),
+  ])
+  @debug.assert_eq(must_execute(compile("bsearch(2)"), must_parse("[1,3,5]")), [
+    Value::number(-2.0),
+  ])
+  @debug.assert_eq(must_execute(compile("bsearch(5)"), must_parse("[1,3,5]")), [
+    Value::number(2.0),
+  ])
+  @debug.assert_eq(must_execute(compile("bsearch(6)"), must_parse("[1,3,5]")), [
+    Value::number(-4.0),
+  ])
+  @debug.assert_eq(must_execute(compile("bsearch(0)"), must_parse("[1,3,5]")), [
     Value::number(-1.0),
   ])
+  @debug.assert_eq(must_execute(compile("bsearch(1)"), must_parse("[]")), [
+    Value::number(-1.0),
+  ])
+  @debug.assert_eq(must_execute(compile("bsearch(1)"), must_parse("[1,1,1]")), [
+    Value::number(1.0),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter("bsearch(1)"), must_parse("[1,1,1]")),
-    [Value::number(1.0)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("bsearch((2,5))"), must_parse("[1,3,5]")),
+    must_execute(compile("bsearch((2,5))"), must_parse("[1,3,5]")),
     [Value::number(-2.0), Value::number(2.0)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("bsearch(empty)"), must_parse("[1,3,5]")),
+    must_execute(compile("bsearch(empty)"), must_parse("[1,3,5]")),
     [],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("bsearch(\"a\")"),
+      compile("bsearch(\"a\")"),
       must_parse("[null,false,true,1,\"a\",[],{}]"),
     ),
     [Value::number(4.0)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("bsearch([2])"), must_parse("[1,3,5]")),
+    must_execute(compile("bsearch([2])"), must_parse("[1,3,5]")),
     [Value::number(-4.0)],
   )
 }
@@ -2205,7 +1993,7 @@ test "execute bsearch compatibility" {
 ///|
 test "execute range/limit/skip/IN compatibility" {
   let null_json = must_parse("null")
-  @debug.assert_eq(must_execute(parse_filter("[range(0;10)]"), null_json), [
+  @debug.assert_eq(must_execute(compile("[range(0;10)]"), null_json), [
     Value::array([
       Value::number(0.0),
       Value::number(1.0),
@@ -2219,7 +2007,7 @@ test "execute range/limit/skip/IN compatibility" {
       Value::number(9.0),
     ]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("[range(0;10;3)]"), null_json), [
+  @debug.assert_eq(must_execute(compile("[range(0;10;3)]"), null_json), [
     Value::array([
       Value::number(0.0),
       Value::number(3.0),
@@ -2227,7 +2015,7 @@ test "execute range/limit/skip/IN compatibility" {
       Value::number(9.0),
     ]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("[range(3,5)]"), null_json), [
+  @debug.assert_eq(must_execute(compile("[range(3,5)]"), null_json), [
     Value::array([
       Value::number(0.0),
       Value::number(1.0),
@@ -2242,7 +2030,7 @@ test "execute range/limit/skip/IN compatibility" {
 
   @debug.assert_eq(
     must_execute(
-      parse_filter("[limit(3; .[])]"),
+      compile("[limit(3; .[])]"),
       must_parse("[11,22,33,44,55,66,77,88,99]"),
     ),
     [
@@ -2253,19 +2041,16 @@ test "execute range/limit/skip/IN compatibility" {
       ]),
     ],
   )
-  @debug.assert_eq(must_execute(parse_filter("[limit(0; error)]"), null_json), [
+  @debug.assert_eq(must_execute(compile("[limit(0; error)]"), null_json), [
     Value::array([]),
   ])
   @debug.assert_eq(
-    must_execute(parse_filter("[limit(1; 1,error(\"foo\"))]"), null_json),
+    must_execute(compile("[limit(1; 1,error(\"foo\"))]"), null_json),
     [Value::array([Value::number(1.0)])],
   )
 
   @debug.assert_eq(
-    must_execute(
-      parse_filter("[skip(3; .[])]"),
-      must_parse("[1,2,3,4,5,6,7,8,9]"),
-    ),
+    must_execute(compile("[skip(3; .[])]"), must_parse("[1,2,3,4,5,6,7,8,9]")),
     [
       Value::array([
         Value::number(4.0),
@@ -2279,7 +2064,7 @@ test "execute range/limit/skip/IN compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("[skip(0,2,3,4; .[])]"),
+      compile("[skip(0,2,3,4; .[])]"),
       must_parse("[1,2,3,4,5,6,7,8,9]"),
     ),
     [
@@ -2316,7 +2101,7 @@ test "execute range/limit/skip/IN compatibility" {
   )
 
   @debug.assert_eq(
-    must_execute(parse_filter("range(5;10)|IN(range(10))"), null_json),
+    must_execute(compile("range(5;10)|IN(range(10))"), null_json),
     [
       Value::boolean(true),
       Value::boolean(true),
@@ -2326,18 +2111,15 @@ test "execute range/limit/skip/IN compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("IN(range(10;20); range(10))"), null_json),
+    must_execute(compile("IN(range(10;20); range(10))"), null_json),
     [Value::boolean(false)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("IN(range(5;20); range(10))"), null_json),
+    must_execute(compile("IN(range(5;20); range(10))"), null_json),
     [Value::boolean(true)],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("INDEX(range(5)|[., \"foo\\(.)\"]; .[0])"),
-      null_json,
-    ),
+    must_execute(compile("INDEX(range(5)|[., \"foo\\(.)\"]; .[0])"), null_json),
     [
       Value::object({
         "0": Value::array([Value::number(0.0), Value::string("foo0")]),
@@ -2350,7 +2132,7 @@ test "execute range/limit/skip/IN compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(
+      compile(
         "JOIN({\"0\":[0,\"abc\"],\"1\":[1,\"bcd\"],\"2\":[2,\"def\"],\"3\":[3,\"efg\"],\"4\":[4,\"fgh\"]}; .[0]|tostring)",
       ),
       must_parse("[[5,\"foo\"],[3,\"bar\"],[1,\"foobar\"]]"),
@@ -2367,7 +2149,7 @@ test "execute range/limit/skip/IN compatibility" {
 test "execute label/break compatibility" {
   @debug.assert_eq(
     must_execute(
-      parse_filter(
+      compile(
         "[(label $here | .[] | if .>1 then break $here else . end), \"hi!\"]",
       ),
       must_parse("[0,1,2]"),
@@ -2376,7 +2158,7 @@ test "execute label/break compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(
+      compile(
         "[(label $here | .[] | if .>1 then break $here else . end), \"hi!\"]",
       ),
       must_parse("[0,2,1]"),
@@ -2385,7 +2167,7 @@ test "execute label/break compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(
+      compile(
         "[label $out | foreach .[] as $item ([3, null]; if .[0] < 1 then break $out else [.[0] -1, $item] end; .[1])]",
       ),
       must_parse("[11,22,33,44,55,66,77,88,99]"),
@@ -2394,9 +2176,7 @@ test "execute label/break compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(
-        "[ label $if | range(10) | ., (select(. == 5) | break $if) ]",
-      ),
+      compile("[ label $if | range(10) | ., (select(. == 5) | break $if) ]"),
       must_parse("null"),
     ),
     [must_parse("[0,1,2,3,4,5]")],
@@ -2406,18 +2186,17 @@ test "execute label/break compatibility" {
 ///|
 test "execute range/limit/skip/nth stream errors" {
   let null_json = must_parse("null")
-  guard (try? execute(parse_filter("limit(-1; .[])"), must_parse("[1,2,3]")))
+  guard (try? execute(compile("limit(-1; .[])"), must_parse("[1,2,3]")))
     is Err(err) &&
     err.to_string() == "limit doesn't support negative count" else {
     fail("expected limit negative count error")
   }
-  guard (try? execute(parse_filter("skip(-1; .[])"), must_parse("[1,2,3]")))
+  guard (try? execute(compile("skip(-1; .[])"), must_parse("[1,2,3]")))
     is Err(err) &&
     err.to_string() == "skip doesn't support negative count" else {
     fail("expected skip negative count error")
   }
-  guard (try? execute(parse_filter("nth(-1; range(10))"), null_json))
-    is Err(err) &&
+  guard (try? execute(compile("nth(-1; range(10))"), null_json)) is Err(err) &&
     err.to_string() == "nth doesn't support negative indices" else {
     fail("expected nth negative index error")
   }
@@ -2425,40 +2204,34 @@ test "execute range/limit/skip/nth stream errors" {
 
 ///|
 test "execute bsearch errors" {
-  guard (try? execute(parse_filter("bsearch(1)"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("bsearch(1)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "number (1) cannot be searched from" else {
     fail("expected bsearch number input error")
   }
-  guard (try? execute(parse_filter("bsearch(1)"), must_parse("null")))
-    is Err(err) &&
+  guard (try? execute(compile("bsearch(1)"), must_parse("null"))) is Err(err) &&
     err.to_string() == "null (null) cannot be searched from" else {
     fail("expected bsearch null input error")
   }
-  guard (try? execute(parse_filter("bsearch(1)"), must_parse("\"a\"")))
-    is Err(err) &&
+  guard (try? execute(compile("bsearch(1)"), must_parse("\"a\""))) is Err(err) &&
     err.to_string() == "string (\"a\") cannot be searched from" else {
     fail("expected bsearch string input error")
   }
-  guard (try? execute(parse_filter("bsearch(1)"), must_parse("{}"))) is Err(err) &&
+  guard (try? execute(compile("bsearch(1)"), must_parse("{}"))) is Err(err) &&
     err.to_string() == "object ({}) cannot be searched from" else {
     fail("expected bsearch object input error")
   }
-  guard (try? execute(parse_filter("bsearch(1)"), must_parse("true")))
-    is Err(err) &&
+  guard (try? execute(compile("bsearch(1)"), must_parse("true"))) is Err(err) &&
     err.to_string() == "boolean (true) cannot be searched from" else {
     fail("expected bsearch boolean input error")
   }
-  @debug.assert_eq(
-    must_execute(parse_filter("bsearch(empty)"), must_parse("1")),
-    [],
-  )
+  @debug.assert_eq(must_execute(compile("bsearch(empty)"), must_parse("1")), [])
 }
 
 ///|
 test "execute select" {
   let j = must_parse("{\"a\":1,\"b\":null}")
-  let f1 = parse_filter("select(.a)")
-  let f2 = parse_filter("select(.b)")
+  let f1 = compile("select(.a)")
+  let f2 = compile("select(.b)")
   @debug.assert_eq(must_execute(f1, j), [j])
   @debug.assert_eq(must_execute(f2, j), [])
 }
@@ -2466,18 +2239,16 @@ test "execute select" {
 ///|
 test "execute select stream compatibility" {
   let j = must_parse("1")
-  @debug.assert_eq(must_execute(parse_filter("select((false,true,true))"), j), [
-    j, j,
-  ])
-  @debug.assert_eq(must_execute(parse_filter("select((false,false))"), j), [])
-  @debug.assert_eq(must_execute(parse_filter("select(empty)"), j), [])
+  @debug.assert_eq(must_execute(compile("select((false,true,true))"), j), [j, j])
+  @debug.assert_eq(must_execute(compile("select((false,false))"), j), [])
+  @debug.assert_eq(must_execute(compile("select(empty)"), j), [])
 }
 
 ///|
 test "execute compare" {
   let j = must_parse("{\"a\":1,\"b\":2}")
-  let f1 = parse_filter(".a == 1")
-  let f2 = parse_filter(".a != .b")
+  let f1 = compile(".a == 1")
+  let f2 = compile(".a != .b")
   @debug.assert_eq(must_execute(f1, j), [Value::boolean(true)])
   @debug.assert_eq(must_execute(f2, j), [Value::boolean(true)])
 }
@@ -2485,72 +2256,53 @@ test "execute compare" {
 ///|
 test "execute compare stream cross product" {
   let j = must_parse("null")
-  @debug.assert_eq(must_execute(parse_filter("(1,2) == (1,2)"), j), [
+  @debug.assert_eq(must_execute(compile("(1,2) == (1,2)"), j), [
     Value::boolean(true),
     Value::boolean(false),
     Value::boolean(false),
     Value::boolean(true),
   ])
-  @debug.assert_eq(must_execute(parse_filter("(empty) == 1"), j), [])
+  @debug.assert_eq(must_execute(compile("(empty) == 1"), j), [])
 }
 
 ///|
 test "execute compare order and logical" {
   let j = must_parse("{\"a\":1,\"b\":2}")
-  @debug.assert_eq(must_execute(parse_filter(".a < .b"), j), [
-    Value::boolean(true),
-  ])
-  @debug.assert_eq(must_execute(parse_filter(".a >= .b"), j), [
+  @debug.assert_eq(must_execute(compile(".a < .b"), j), [Value::boolean(true)])
+  @debug.assert_eq(must_execute(compile(".a >= .b"), j), [Value::boolean(false)])
+  @debug.assert_eq(must_execute(compile("null >= 0"), j), [
     Value::boolean(false),
   ])
-  @debug.assert_eq(must_execute(parse_filter("null >= 0"), j), [
-    Value::boolean(false),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("null < false"), j), [
+  @debug.assert_eq(must_execute(compile("null < false"), j), [
     Value::boolean(true),
   ])
-  @debug.assert_eq(must_execute(parse_filter("true < 0"), j), [
-    Value::boolean(true),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("\"a\" > 0"), j), [
-    Value::boolean(true),
-  ])
+  @debug.assert_eq(must_execute(compile("true < 0"), j), [Value::boolean(true)])
+  @debug.assert_eq(must_execute(compile("\"a\" > 0"), j), [Value::boolean(true)])
   @debug.assert_eq(
-    must_execute(parse_filter("select(. >= 0)"), must_parse("null")),
+    must_execute(compile("select(. >= 0)"), must_parse("null")),
     [],
   )
-  @debug.assert_eq(
-    must_execute(parse_filter(". > .00005"), must_parse("0.0001")),
-    [Value::boolean(true)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter(". > .00005"), must_parse("0.0")),
-    [Value::boolean(false)],
-  )
-  @debug.assert_eq(must_execute(parse_filter(".a and .b"), j), [
+  @debug.assert_eq(must_execute(compile(". > .00005"), must_parse("0.0001")), [
     Value::boolean(true),
   ])
-  @debug.assert_eq(must_execute(parse_filter("not .b"), j), [
+  @debug.assert_eq(must_execute(compile(". > .00005"), must_parse("0.0")), [
     Value::boolean(false),
   ])
-  @debug.assert_eq(must_execute(parse_filter(".a or .b"), j), [
-    Value::boolean(true),
-  ])
+  @debug.assert_eq(must_execute(compile(".a and .b"), j), [Value::boolean(true)])
+  @debug.assert_eq(must_execute(compile("not .b"), j), [Value::boolean(false)])
+  @debug.assert_eq(must_execute(compile(".a or .b"), j), [Value::boolean(true)])
   let n = must_parse("null")
-  @debug.assert_eq(must_execute(parse_filter("(true, false) or false"), n), [
+  @debug.assert_eq(must_execute(compile("(true, false) or false"), n), [
     Value::boolean(true),
     Value::boolean(false),
   ])
-  @debug.assert_eq(
-    must_execute(parse_filter("(true, true) and (true, false)"), n),
-    [
-      Value::boolean(true),
-      Value::boolean(false),
-      Value::boolean(true),
-      Value::boolean(false),
-    ],
-  )
-  @debug.assert_eq(must_execute(parse_filter("not (true,false)"), n), [
+  @debug.assert_eq(must_execute(compile("(true, true) and (true, false)"), n), [
+    Value::boolean(true),
+    Value::boolean(false),
+    Value::boolean(true),
+    Value::boolean(false),
+  ])
+  @debug.assert_eq(must_execute(compile("not (true,false)"), n), [
     Value::boolean(false),
     Value::boolean(true),
   ])
@@ -2559,31 +2311,23 @@ test "execute compare order and logical" {
 ///|
 test "execute arithmetic" {
   let j = must_parse("{\"a\":1,\"b\":2,\"c\":3}")
-  @debug.assert_eq(must_execute(parse_filter(".a + .b"), j), [
-    Value::number(3.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter(".c - .a"), j), [
-    Value::number(2.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter(".a * .b"), j), [
-    Value::number(2.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter(".c / .a"), j), [
-    Value::number(3.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("\"a,b,c\" / \",\""), j), [
+  @debug.assert_eq(must_execute(compile(".a + .b"), j), [Value::number(3.0)])
+  @debug.assert_eq(must_execute(compile(".c - .a"), j), [Value::number(2.0)])
+  @debug.assert_eq(must_execute(compile(".a * .b"), j), [Value::number(2.0)])
+  @debug.assert_eq(must_execute(compile(".c / .a"), j), [Value::number(3.0)])
+  @debug.assert_eq(must_execute(compile("\"a,b,c\" / \",\""), j), [
     Value::array([Value::string("a"), Value::string("b"), Value::string("c")]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("\"a, b,c,d, e\" / \", \""), j), [
+  @debug.assert_eq(must_execute(compile("\"a, b,c,d, e\" / \", \""), j), [
     Value::array([
       Value::string("a"),
       Value::string("b,c,d"),
       Value::string("e"),
     ]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("10 % 3"), j), [Value::number(1.0)])
+  @debug.assert_eq(must_execute(compile("10 % 3"), j), [Value::number(1.0)])
   @debug.assert_eq(
-    must_execute(parse_filter("[(infinite, -infinite) % (1, -1, infinite)]"), j),
+    must_execute(compile("[(infinite, -infinite) % (1, -1, infinite)]"), j),
     [
       Value::array([
         Value::number(0.0),
@@ -2595,12 +2339,12 @@ test "execute arithmetic" {
       ]),
     ],
   )
-  @debug.assert_eq(must_execute(parse_filter("(1 / 1e-17) | tojson"), j), [
+  @debug.assert_eq(must_execute(compile("(1 / 1e-17) | tojson"), j), [
     Value::string("1e+17"),
   ])
   @debug.assert_eq(
     must_execute(
-      parse_filter(
+      compile(
         "(9E999999999|tojson), (9999999999E999999990|tojson), (1E-999999999|tojson), (0.000000001E-999999990|tojson)",
       ),
       j,
@@ -2612,23 +2356,23 @@ test "execute arithmetic" {
       Value::string("0"),
     ],
   )
-  @debug.assert_eq(must_execute(parse_filter("-."), must_parse("3")), [
+  @debug.assert_eq(must_execute(compile("-."), must_parse("3")), [
     Value::number(-3.0),
   ])
-  let inf_out = must_execute(parse_filter(". + 1"), must_parse("1e309"))
+  let inf_out = must_execute(compile(". + 1"), must_parse("1e309"))
   @debug.assert_eq(inf_out.length(), 1)
   @debug.assert_eq(inf_out[0].to_json_string(), "1.7976931348623157e+308")
-  let nan_out = must_execute(parse_filter(". - ."), must_parse("1e309"))
+  let nan_out = must_execute(compile(". - ."), must_parse("1e309"))
   @debug.assert_eq(nan_out.length(), 1)
   @debug.assert_eq(nan_out[0].to_json_string(), "null")
   let null_input = must_parse("null")
-  let literal_inf_out = must_execute(parse_filter("1e309 + 1"), null_input)
+  let literal_inf_out = must_execute(compile("1e309 + 1"), null_input)
   @debug.assert_eq(literal_inf_out.length(), 1)
   @debug.assert_eq(
     literal_inf_out[0].to_json_string(),
     "1.7976931348623157e+308",
   )
-  let literal_nan_out = must_execute(parse_filter("1e309 - 1e309"), null_input)
+  let literal_nan_out = must_execute(compile("1e309 - 1e309"), null_input)
   @debug.assert_eq(literal_nan_out.length(), 1)
   @debug.assert_eq(literal_nan_out[0].to_json_string(), "null")
 }
@@ -2636,32 +2380,29 @@ test "execute arithmetic" {
 ///|
 test "execute multiply compatibility" {
   let j = must_parse("null")
-  @debug.assert_eq(must_execute(parse_filter("\"ab\" * 2"), j), [
+  @debug.assert_eq(must_execute(compile("\"ab\" * 2"), j), [
     Value::string("abab"),
   ])
-  @debug.assert_eq(must_execute(parse_filter("2 * \"ab\""), j), [
+  @debug.assert_eq(must_execute(compile("2 * \"ab\""), j), [
     Value::string("abab"),
   ])
-  @debug.assert_eq(must_execute(parse_filter("\"ab\" * 2.9"), j), [
+  @debug.assert_eq(must_execute(compile("\"ab\" * 2.9"), j), [
     Value::string("abab"),
   ])
-  @debug.assert_eq(must_execute(parse_filter("\"ab\" * 0"), j), [
-    Value::string(""),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("\"ab\" * -1"), j), [Value::null()])
+  @debug.assert_eq(must_execute(compile("\"ab\" * 0"), j), [Value::string("")])
+  @debug.assert_eq(must_execute(compile("\"ab\" * -1"), j), [Value::null()])
   @debug.assert_eq(
-    must_execute(parse_filter("{\"a\":{\"x\":1}} * {\"a\":{\"y\":2}}"), j),
+    must_execute(compile("{\"a\":{\"x\":1}} * {\"a\":{\"y\":2}}"), j),
     [
       Value::object({
         "a": Value::object({ "x": Value::number(1.0), "y": Value::number(2.0) }),
       }),
     ],
   )
-  @debug.assert_eq(
-    must_execute(parse_filter("{\"a\":{\"x\":1}} * {\"a\":2}"), j),
-    [Value::object({ "a": Value::number(2.0) })],
-  )
-  @debug.assert_eq(must_execute(parse_filter("{\"a\":1} * {\"b\":2}"), j), [
+  @debug.assert_eq(must_execute(compile("{\"a\":{\"x\":1}} * {\"a\":2}"), j), [
+    Value::object({ "a": Value::number(2.0) }),
+  ])
+  @debug.assert_eq(must_execute(compile("{\"a\":1} * {\"b\":2}"), j), [
     Value::object({ "a": Value::number(1.0), "b": Value::number(2.0) }),
   ])
 }
@@ -2669,7 +2410,7 @@ test "execute multiply compatibility" {
 ///|
 test "execute multiply repeat too long error" {
   let j = must_parse("null")
-  guard (try? execute(parse_filter("\"x\" * 1000000000000"), j)) is Err(err) &&
+  guard (try? execute(compile("\"x\" * 1000000000000"), j)) is Err(err) &&
     err.to_string() == "Repeat string result too long" else {
     fail("expected repeat-too-long error")
   }
@@ -2678,24 +2419,23 @@ test "execute multiply repeat too long error" {
 ///|
 test "execute array subtraction compatibility" {
   let j = must_parse("null")
-  @debug.assert_eq(must_execute(parse_filter("[1,2,2,3] - [2]"), j), [
+  @debug.assert_eq(must_execute(compile("[1,2,2,3] - [2]"), j), [
     Value::array([Value::number(1.0), Value::number(3.0)]),
   ])
-  @debug.assert_eq(
-    must_execute(parse_filter("[1,{\"a\":1}] - [{\"a\":1}]"), j),
-    [Value::array([Value::number(1.0)])],
-  )
+  @debug.assert_eq(must_execute(compile("[1,{\"a\":1}] - [{\"a\":1}]"), j), [
+    Value::array([Value::number(1.0)]),
+  ])
 }
 
 ///|
 test "execute division by zero compatibility" {
   let j = must_parse("null")
-  guard (try? execute(parse_filter("1 / 0"), j)) is Err(err) &&
+  guard (try? execute(compile("1 / 0"), j)) is Err(err) &&
     err.to_string() ==
     "number (1) and number (0) cannot be divided because the divisor is zero" else {
     fail("expected jq-compatible division by zero error")
   }
-  guard (try? execute(parse_filter("1 % 0"), j)) is Err(err) &&
+  guard (try? execute(compile("1 % 0"), j)) is Err(err) &&
     err.to_string() ==
     "number (1) and number (0) cannot be divided (remainder) because the divisor is zero" else {
     fail("expected jq-compatible modulo by zero error")
@@ -2705,12 +2445,12 @@ test "execute division by zero compatibility" {
 ///|
 test "execute arithmetic type errors include full json values" {
   let j = must_parse("null")
-  guard (try? execute(parse_filter("[1,2,3] + {\"a\":[1,2,3]}"), j)) is Err(err) &&
+  guard (try? execute(compile("[1,2,3] + {\"a\":[1,2,3]}"), j)) is Err(err) &&
     err.to_string() ==
     "array ([1,2,3]) and object ({\"a\":[1,2,3]}) cannot be added" else {
     fail("expected full-value add type error")
   }
-  guard (try? execute(parse_filter("[1,2,3] / {\"a\":[1,2,3]}"), j)) is Err(err) &&
+  guard (try? execute(compile("[1,2,3] / {\"a\":[1,2,3]}"), j)) is Err(err) &&
     err.to_string() ==
     "array ([1,2,3]) and object ({\"a\":[1,2,3]}) cannot be divided" else {
     fail("expected full-value divide type error")
@@ -2720,22 +2460,22 @@ test "execute arithmetic type errors include full json values" {
 ///|
 test "execute arithmetic stream cross product" {
   let j = must_parse("null")
-  @debug.assert_eq(must_execute(parse_filter("(1,2) + (10,20)"), j), [
+  @debug.assert_eq(must_execute(compile("(1,2) + (10,20)"), j), [
     Value::number(11.0),
     Value::number(12.0),
     Value::number(21.0),
     Value::number(22.0),
   ])
-  @debug.assert_eq(must_execute(parse_filter("(empty) + 1"), j), [])
+  @debug.assert_eq(must_execute(compile("(empty) + 1"), j), [])
 }
 
 ///|
 test "execute add arrays and objects" {
   let j = must_parse("{\"a\":[1],\"b\":[2],\"x\":{\"k\":1},\"y\":{\"k\":2}}")
-  @debug.assert_eq(must_execute(parse_filter(".a + .b"), j), [
+  @debug.assert_eq(must_execute(compile(".a + .b"), j), [
     Value::array([Value::number(1.0), Value::number(2.0)]),
   ])
-  @debug.assert_eq(must_execute(parse_filter(".x + .y"), j), [
+  @debug.assert_eq(must_execute(compile(".x + .y"), j), [
     Value::object({ "k": Value::number(2.0) }),
   ])
 }
@@ -2743,20 +2483,16 @@ test "execute add arrays and objects" {
 ///|
 test "execute add null identity compatibility" {
   let j = must_parse("null")
-  @debug.assert_eq(must_execute(parse_filter("null + 1"), j), [
-    Value::number(1.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("1 + null"), j), [
-    Value::number(1.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("null + null"), j), [Value::null()])
-  @debug.assert_eq(must_execute(parse_filter("true + null"), j), [
+  @debug.assert_eq(must_execute(compile("null + 1"), j), [Value::number(1.0)])
+  @debug.assert_eq(must_execute(compile("1 + null"), j), [Value::number(1.0)])
+  @debug.assert_eq(must_execute(compile("null + null"), j), [Value::null()])
+  @debug.assert_eq(must_execute(compile("true + null"), j), [
     Value::boolean(true),
   ])
-  @debug.assert_eq(must_execute(parse_filter("null + [1]"), j), [
+  @debug.assert_eq(must_execute(compile("null + [1]"), j), [
     Value::array([Value::number(1.0)]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("{\"a\":1} + null"), j), [
+  @debug.assert_eq(must_execute(compile("{\"a\":1} + null"), j), [
     Value::object({ "a": Value::number(1.0) }),
   ])
 }
@@ -2764,70 +2500,58 @@ test "execute add null identity compatibility" {
 ///|
 test "execute update assignment compatibility" {
   let obj = must_parse("{\"a\":1,\"b\":2}")
-  @debug.assert_eq(must_execute(parse_filter(".a |= . + 1"), obj), [
+  @debug.assert_eq(must_execute(compile(".a |= . + 1"), obj), [
     Value::object({ "a": Value::number(2.0), "b": Value::number(2.0) }),
   ])
+  @debug.assert_eq(must_execute(compile(".a += 4"), must_parse("{\"a\":1}")), [
+    Value::object({ "a": Value::number(5.0) }),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter(".a += 4"), must_parse("{\"a\":1}")),
-    [Value::object({ "a": Value::number(5.0) })],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter(".a //= 9"), must_parse("{\"a\":null}")),
+    must_execute(compile(".a //= 9"), must_parse("{\"a\":null}")),
     [Value::object({ "a": Value::number(9.0) })],
   )
+  @debug.assert_eq(must_execute(compile(".[1] *= 10"), must_parse("[1,2,3]")), [
+    Value::array([Value::number(1.0), Value::number(20.0), Value::number(3.0)]),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter(".[1] *= 10"), must_parse("[1,2,3]")),
-    [
-      Value::array([Value::number(1.0), Value::number(20.0), Value::number(3.0)]),
-    ],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter(".a.b |= . + 1"), must_parse("{\"a\":{\"b\":1}}")),
+    must_execute(compile(".a.b |= . + 1"), must_parse("{\"a\":{\"b\":1}}")),
     [Value::object({ "a": Value::object({ "b": Value::number(2.0) }) })],
   )
   @debug.assert_eq(
-    must_execute(parse_filter(".a.b //= 9"), must_parse("{\"a\":{}}")),
+    must_execute(compile(".a.b //= 9"), must_parse("{\"a\":{}}")),
     [Value::object({ "a": Value::object({ "b": Value::number(9.0) }) })],
   )
   @debug.assert_eq(
-    must_execute(parse_filter(".a |= select(. >= 0)"), must_parse("null")),
+    must_execute(compile(".a |= select(. >= 0)"), must_parse("null")),
     [Value::null()],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter(".a |= select(. >= 0)"),
-      must_parse("{\"a\":null}"),
-    ),
+    must_execute(compile(".a |= select(. >= 0)"), must_parse("{\"a\":null}")),
     [Value::object({})],
   )
-  @debug.assert_eq(must_execute(parse_filter(".[2] += 5"), must_parse("[]")), [
+  @debug.assert_eq(must_execute(compile(".[2] += 5"), must_parse("[]")), [
     Value::array([Value::null(), Value::null(), Value::number(5.0)]),
   ])
+  @debug.assert_eq(must_execute(compile(".[-1] += 1"), must_parse("[1,2,3]")), [
+    Value::array([Value::number(1.0), Value::number(2.0), Value::number(4.0)]),
+  ])
+  @debug.assert_eq(must_execute(compile(".a = 9"), must_parse("{\"a\":1}")), [
+    Value::object({ "a": Value::number(9.0) }),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter(".[-1] += 1"), must_parse("[1,2,3]")),
-    [Value::array([Value::number(1.0), Value::number(2.0), Value::number(4.0)])],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter(".a = 9"), must_parse("{\"a\":1}")),
-    [Value::object({ "a": Value::number(9.0) })],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter(".foo = .bar"), must_parse("{\"bar\":42}")),
+    must_execute(compile(".foo = .bar"), must_parse("{\"bar\":42}")),
     [Value::object({ "bar": Value::number(42.0), "foo": Value::number(42.0) })],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter(".a = .b"),
-      must_parse("{\"a\":{\"b\":10},\"b\":20}"),
-    ),
+    must_execute(compile(".a = .b"), must_parse("{\"a\":{\"b\":10},\"b\":20}")),
     [Value::object({ "a": Value::number(20.0), "b": Value::number(20.0) })],
   )
   @debug.assert_eq(
-    must_execute(parse_filter(".foo += .foo"), must_parse("{\"foo\":2}")),
+    must_execute(compile(".foo += .foo"), must_parse("{\"foo\":2}")),
     [Value::object({ "foo": Value::number(4.0) })],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("(.a,.b) = range(3)"), must_parse("null")),
+    must_execute(compile("(.a,.b) = range(3)"), must_parse("null")),
     [
       Value::object({ "a": Value::number(0.0), "b": Value::number(0.0) }),
       Value::object({ "a": Value::number(1.0), "b": Value::number(1.0) }),
@@ -2835,29 +2559,26 @@ test "execute update assignment compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("(.a,.b) |= range(3)"), must_parse("null")),
+    must_execute(compile("(.a,.b) |= range(3)"), must_parse("null")),
     [Value::object({ "a": Value::number(0.0), "b": Value::number(0.0) })],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("(.a,.a) |= . + 1"), must_parse("{\"a\":0}")),
+    must_execute(compile("(.a,.a) |= . + 1"), must_parse("{\"a\":0}")),
     [Value::object({ "a": Value::number(2.0) })],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("(.a,.b) += (1,2)"), must_parse("null")),
+    must_execute(compile("(.a,.b) += (1,2)"), must_parse("null")),
     [
       Value::object({ "a": Value::number(1.0), "b": Value::number(1.0) }),
       Value::object({ "a": Value::number(2.0), "b": Value::number(2.0) }),
     ],
   )
-  @debug.assert_eq(
-    must_execute(parse_filter(".[] += .[0]"), must_parse("[1,2]")),
-    [Value::array([Value::number(2.0), Value::number(3.0)])],
-  )
+  @debug.assert_eq(must_execute(compile(".[] += .[0]"), must_parse("[1,2]")), [
+    Value::array([Value::number(2.0), Value::number(3.0)]),
+  ])
   @debug.assert_eq(
     must_execute(
-      parse_filter(
-        "reduce range(65540;65536;-1) as $i ([]; .[$i] = $i)|.[65536:]",
-      ),
+      compile("reduce range(65540;65536;-1) as $i ([]; .[$i] = $i)|.[65536:]"),
       must_parse("null"),
     ),
     [
@@ -2872,16 +2593,14 @@ test "execute update assignment compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("(.a as $x | .b) = \"b\""),
+      compile("(.a as $x | .b) = \"b\""),
       must_parse("{\"a\":null,\"b\":null}"),
     ),
     [Value::object({ "a": Value::null(), "b": Value::string("b") })],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(
-        "bsearch(4) as $ix | if $ix < 0 then .[-(1+$ix)] = 4 else . end",
-      ),
+      compile("bsearch(4) as $ix | if $ix < 0 then .[-(1+$ix)] = 4 else . end"),
       must_parse("[1,2,3]"),
     ),
     [
@@ -2895,7 +2614,7 @@ test "execute update assignment compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(".[2:4] = ([], [\"a\",\"b\"], [\"a\",\"b\",\"c\"])"),
+      compile(".[2:4] = ([], [\"a\",\"b\"], [\"a\",\"b\",\"c\"])"),
       must_parse("[0,1,2,3,4,5,6,7]"),
     ),
     [
@@ -2930,28 +2649,28 @@ test "execute update assignment compatibility" {
       ]),
     ],
   )
-  guard (try? execute(parse_filter(".[1:3] = 9"), must_parse("[0,1,2,3]")))
+  guard (try? execute(compile(".[1:3] = 9"), must_parse("[0,1,2,3]")))
     is Err(err) &&
     err.to_string() == "A slice of an array can only be assigned another array" else {
     fail("expected slice assignment array-only error")
   }
   @debug.assert_eq(
     must_execute(
-      parse_filter("try (\"foobar\" | .[1.5:3.5] = \"xyz\") catch ."),
+      compile("try (\"foobar\" | .[1.5:3.5] = \"xyz\") catch ."),
       must_parse("null"),
     ),
     [Value::string("Cannot update string slices")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("try ([range(3)] | .[nan] = 9) catch ."),
+      compile("try ([range(3)] | .[nan] = 9) catch ."),
       must_parse("null"),
     ),
     [Value::string("Cannot set array element at NaN index")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("try ([range(10)] | .[1.5:3.5] = [\"xyz\"]) catch ."),
+      compile("try ([range(10)] | .[1.5:3.5] = [\"xyz\"]) catch ."),
       must_parse("null"),
     ),
     [
@@ -2969,21 +2688,21 @@ test "execute update assignment compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("(.[] | select(. >= 2)) |= empty"),
+      compile("(.[] | select(. >= 2)) |= empty"),
       must_parse("[1,5,3,0,7]"),
     ),
     [Value::array([Value::number(1.0), Value::number(0.0)])],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(".[] |= select(. % 2 == 0)"),
+      compile(".[] |= select(. % 2 == 0)"),
       must_parse("[0,1,2,3,4,5]"),
     ),
     [Value::array([Value::number(0.0), Value::number(2.0), Value::number(4.0)])],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(".foo[1,4,2,3] |= empty"),
+      compile(".foo[1,4,2,3] |= empty"),
       must_parse("{\"foo\":[0,1,2,3,4,5]}"),
     ),
     [
@@ -2993,12 +2712,12 @@ test "execute update assignment compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter(".[1:2] |= empty"), must_parse("[1,2,3]")),
+    must_execute(compile(".[1:2] |= empty"), must_parse("[1,2,3]")),
     [Value::array([Value::number(1.0), Value::number(3.0)])],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(".[] |= try tonumber"),
+      compile(".[] |= try tonumber"),
       must_parse(
         "[\"1\", \"2a\", \"3\", \" 4\", \"5 \", \"6.7\", \".89\", \"-876\", \"+5.43\", 21]",
       ),
@@ -3015,17 +2734,16 @@ test "execute update assignment compatibility" {
       ]),
     ],
   )
-  @debug.assert_eq(
-    must_execute(parse_filter(".a %= 4"), must_parse("{\"a\":9}")),
-    [Value::object({ "a": Value::number(1.0) })],
-  )
+  @debug.assert_eq(must_execute(compile(".a %= 4"), must_parse("{\"a\":9}")), [
+    Value::object({ "a": Value::number(1.0) }),
+  ])
 }
 
 ///|
 test "execute update assignment dynamic slice compatibility" {
   @debug.assert_eq(
     must_execute(
-      parse_filter("1 as $s | 3 as $e | .[$s:$e] = [9]"),
+      compile("1 as $s | 3 as $e | .[$s:$e] = [9]"),
       must_parse("[0,1,2,3,4]"),
     ),
     [
@@ -3039,7 +2757,7 @@ test "execute update assignment dynamic slice compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("1 as $s | 4 as $e | .[$s:$e] |= map(.+10)"),
+      compile("1 as $s | 4 as $e | .[$s:$e] |= map(.+10)"),
       must_parse("[0,1,2,3,4]"),
     ),
     [
@@ -3054,14 +2772,14 @@ test "execute update assignment dynamic slice compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("1 as $s | 4 as $e | .[$s:$e] |= empty"),
+      compile("1 as $s | 4 as $e | .[$s:$e] |= empty"),
       must_parse("[0,1,2,3,4]"),
     ),
     [Value::array([Value::number(0.0), Value::number(4.0)])],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("1 as $s | 4 as $e | .a[$s:$e] += [9]"),
+      compile("1 as $s | 4 as $e | .a[$s:$e] += [9]"),
       must_parse("{\"a\":[0,1,2,3,4]}"),
     ),
     [
@@ -3079,7 +2797,7 @@ test "execute update assignment dynamic slice compatibility" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("(.[] | .[1:3]) |= map(.+100)"),
+      compile("(.[] | .[1:3]) |= map(.+100)"),
       must_parse("[[0,1,2,3],[4,5,6,7]]"),
     ),
     [
@@ -3100,7 +2818,7 @@ test "execute update assignment dynamic slice compatibility" {
     ],
   )
   guard (try? execute(
-      parse_filter("(.[] | .[1:3]) |= . + 100"),
+      compile("(.[] | .[1:3]) |= . + 100"),
       must_parse("[[0,1,2,3],[4,5,6,7]]"),
     ))
     is Err(err) &&
@@ -3112,23 +2830,23 @@ test "execute update assignment dynamic slice compatibility" {
 ///|
 test "execute object literal stream product" {
   let j = must_parse("null")
-  @debug.assert_eq(must_execute(parse_filter("{a:(1,2)}"), j), [
+  @debug.assert_eq(must_execute(compile("{a:(1,2)}"), j), [
     Value::object({ "a": Value::number(1.0) }),
     Value::object({ "a": Value::number(2.0) }),
   ])
-  @debug.assert_eq(must_execute(parse_filter("{a:(1,2), b:(3,4)}"), j), [
+  @debug.assert_eq(must_execute(compile("{a:(1,2), b:(3,4)}"), j), [
     Value::object({ "a": Value::number(1.0), "b": Value::number(3.0) }),
     Value::object({ "a": Value::number(1.0), "b": Value::number(4.0) }),
     Value::object({ "a": Value::number(2.0), "b": Value::number(3.0) }),
     Value::object({ "a": Value::number(2.0), "b": Value::number(4.0) }),
   ])
-  @debug.assert_eq(must_execute(parse_filter("{a:(empty)}"), j), [])
+  @debug.assert_eq(must_execute(compile("{a:(empty)}"), j), [])
 }
 
 ///|
 test "execute map" {
   let j = must_parse("[1,2,3]")
-  @debug.assert_eq(must_execute(parse_filter("map(. + 1)"), j), [
+  @debug.assert_eq(must_execute(compile("map(. + 1)"), j), [
     Value::array([Value::number(2.0), Value::number(3.0), Value::number(4.0)]),
   ])
 }
@@ -3136,25 +2854,24 @@ test "execute map" {
 ///|
 test "execute map object compatibility" {
   let j = must_parse("{\"a\":1}")
-  @debug.assert_eq(must_execute(parse_filter("map(. + 1)"), j), [
+  @debug.assert_eq(must_execute(compile("map(. + 1)"), j), [
     Value::array([Value::number(2.0)]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("map((., . + 1))"), j), [
+  @debug.assert_eq(must_execute(compile("map((., . + 1))"), j), [
     Value::array([Value::number(1.0), Value::number(2.0)]),
   ])
-  @debug.assert_eq(must_execute(parse_filter("map(select(. > 1))"), j), [
+  @debug.assert_eq(must_execute(compile("map(select(. > 1))"), j), [
     Value::array([]),
   ])
 }
 
 ///|
 test "execute map iter errors" {
-  guard (try? execute(parse_filter("map(. + 1)"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("map(. + 1)"), must_parse("1"))) is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected map number error")
   }
-  guard (try? execute(parse_filter("map(. + 1)"), must_parse("null")))
-    is Err(err) &&
+  guard (try? execute(compile("map(. + 1)"), must_parse("null"))) is Err(err) &&
     err.to_string() == "Cannot iterate over null (null)" else {
     fail("expected map null error")
   }
@@ -3163,34 +2880,32 @@ test "execute map iter errors" {
 ///|
 test "execute map_values jq semantics" {
   let obj = must_parse("{\"a\":1,\"b\":2}")
-  @debug.assert_eq(
-    must_execute(parse_filter("map_values(select(. > 1))"), obj),
-    [Value::object({ "b": Value::number(2.0) })],
-  )
-  @debug.assert_eq(must_execute(parse_filter("map_values((., . + 1))"), obj), [
+  @debug.assert_eq(must_execute(compile("map_values(select(. > 1))"), obj), [
+    Value::object({ "b": Value::number(2.0) }),
+  ])
+  @debug.assert_eq(must_execute(compile("map_values((., . + 1))"), obj), [
     Value::object({ "a": Value::number(1.0), "b": Value::number(2.0) }),
   ])
   let arr = must_parse("[1,2,3]")
-  @debug.assert_eq(must_execute(parse_filter("map_values(. + 1)"), arr), [
+  @debug.assert_eq(must_execute(compile("map_values(. + 1)"), arr), [
     Value::array([Value::number(2.0), Value::number(3.0), Value::number(4.0)]),
   ])
-  @debug.assert_eq(
-    must_execute(parse_filter("map_values(select(. > 1))"), arr),
-    [Value::array([Value::number(2.0), Value::number(3.0)])],
-  )
-  @debug.assert_eq(must_execute(parse_filter("map_values((., . + 1))"), arr), [
+  @debug.assert_eq(must_execute(compile("map_values(select(. > 1))"), arr), [
+    Value::array([Value::number(2.0), Value::number(3.0)]),
+  ])
+  @debug.assert_eq(must_execute(compile("map_values((., . + 1))"), arr), [
     Value::array([Value::number(1.0), Value::number(2.0), Value::number(3.0)]),
   ])
 }
 
 ///|
 test "execute map_values iter errors" {
-  guard (try? execute(parse_filter("map_values(. + 1)"), must_parse("1")))
+  guard (try? execute(compile("map_values(. + 1)"), must_parse("1")))
     is Err(err) &&
     err.to_string() == "Cannot iterate over number (1)" else {
     fail("expected map_values number error")
   }
-  guard (try? execute(parse_filter("map_values(. + 1)"), must_parse("null")))
+  guard (try? execute(compile("map_values(. + 1)"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "Cannot iterate over null (null)" else {
     fail("expected map_values null error")
@@ -3200,26 +2915,26 @@ test "execute map_values iter errors" {
 ///|
 test "execute as and variable" {
   let j = must_parse("{\"a\":1,\"b\":2}")
-  @debug.assert_eq(must_execute(parse_filter(".a as $x | $x"), j), [
+  @debug.assert_eq(must_execute(compile(".a as $x | $x"), j), [
     Value::number(1.0),
   ])
-  @debug.assert_eq(must_execute(parse_filter(".a as $x | .b"), j), [
+  @debug.assert_eq(must_execute(compile(".a as $x | .b"), j), [
     Value::number(2.0),
   ])
-  @debug.assert_eq(must_execute(parse_filter(".a as $x | $x + 1"), j), [
+  @debug.assert_eq(must_execute(compile(".a as $x | $x + 1"), j), [
     Value::number(2.0),
   ])
   @debug.assert_eq(
-    must_execute(parse_filter(". as $x | $x[]"), must_parse("[1,2,3]")),
+    must_execute(compile(". as $x | $x[]"), must_parse("[1,2,3]")),
     [Value::number(1.0), Value::number(2.0), Value::number(3.0)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[-1 as $x | 1,$x]"), must_parse("null")),
+    must_execute(compile("[-1 as $x | 1,$x]"), must_parse("null")),
     [Value::array([Value::number(1.0), Value::number(-1.0)])],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(
+      compile(
         "[\"foo\",1] as $p | getpath($p), setpath($p; 20), delpaths([$p])",
       ),
       must_parse("{\"bar\":42, \"foo\":[\"a\", \"b\", \"c\", \"d\"]}"),
@@ -3236,7 +2951,7 @@ test "execute as and variable" {
 test "execute as pattern bindings" {
   @debug.assert_eq(
     must_execute(
-      parse_filter(".[] as [$a,$b] | [$b,$a]"),
+      compile(".[] as [$a,$b] | [$b,$a]"),
       must_parse("[[1],[1,2,3]]"),
     ),
     [
@@ -3246,28 +2961,28 @@ test "execute as pattern bindings" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(". as {$a, $b:[$c,$d]} | [$a, $b, $c, $d]"),
+      compile(". as {$a, $b:[$c,$d]} | [$a, $b, $c, $d]"),
       must_parse("{\"a\":1,\"b\":[2,{\"d\":3}]}"),
     ),
     [must_parse("[1,[2,{\"d\":3}],2,{\"d\":3}]")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(".[] | . as {a:$a} ?// [$a] | $a"),
+      compile(".[] | . as {a:$a} ?// [$a] | $a"),
       must_parse("[{\"a\":1},[2]]"),
     ),
     [Value::number(1.0), Value::number(2.0)],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("[1, {c:3, d:4}] as [$a, {c:$b, b:$c}] | $a, $b, $c"),
+      compile("[1, {c:3, d:4}] as [$a, {c:$b, b:$c}] | $a, $b, $c"),
       must_parse("null"),
     ),
     [Value::number(1.0), Value::number(3.0), Value::null()],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(
+      compile(
         ".[] as [$a] ?// [$b] | if $a != null then error(\"err: \\($a)\") else {$a,$b} end",
       ),
       must_parse("[[3]]"),
@@ -3276,7 +2991,7 @@ test "execute as pattern bindings" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(
+      compile(
         ".[] | . as {$a, b: [$c, {$d}]} ?// [$a, {$b}, $e] ?// $f | [$a, $b, $c, $d, $e, $f]",
       ),
       must_parse(
@@ -3291,7 +3006,7 @@ test "execute as pattern bindings" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(". as {(\"e\"+\"x\"+\"p\"):$exp} | $exp"),
+      compile(". as {(\"e\"+\"x\"+\"p\"):$exp} | $exp"),
       must_parse("{\"exp\":3}"),
     ),
     [Value::number(3.0)],
@@ -3300,13 +3015,12 @@ test "execute as pattern bindings" {
 
 ///|
 test "execute special variables compatibility" {
-  @debug.assert_eq(
-    must_execute(parse_filter("$ENV.PAGER"), must_parse("null")),
-    [Value::null()],
-  )
+  @debug.assert_eq(must_execute(compile("$ENV.PAGER"), must_parse("null")), [
+    Value::null(),
+  ])
   @debug.assert_eq(
     must_execute(
-      parse_filter("{ a, $__loc__, c }"),
+      compile("{ a, $__loc__, c }"),
       must_parse("{\"a\":[1,2,3],\"b\":\"foo\",\"c\":{\"hi\":\"hey\"}}"),
     ),
     [
@@ -3321,24 +3035,21 @@ test "execute special variables compatibility" {
 test "execute dynamic bracket index" {
   @debug.assert_eq(
     must_execute(
-      parse_filter(".foo[.baz]"),
+      compile(".foo[.baz]"),
       must_parse("{\"foo\":{\"bar\":4},\"baz\":\"bar\"}"),
     ),
     [Value::number(4.0)],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("[1,2,3][] as $x | [4,5,6,7][$x]"),
-      must_parse("null"),
-    ),
+    must_execute(compile("[1,2,3][] as $x | [4,5,6,7][$x]"), must_parse("null")),
     [Value::number(5.0), Value::number(6.0), Value::number(7.0)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[][.]"), must_parse("1000000000000000000")),
+    must_execute(compile("[][.]"), must_parse("1000000000000000000")),
     [Value::null()],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[range(5)] | .[1.1]"), must_parse("null")),
+    must_execute(compile("[range(5)] | .[1.1]"), must_parse("null")),
     [Value::number(1.0)],
   )
 }
@@ -3346,59 +3057,50 @@ test "execute dynamic bracket index" {
 ///|
 test "execute try" {
   let j = must_parse("{\"a\":\"hi\"}")
-  @debug.assert_eq(must_execute(parse_filter("(.a + 1)?"), j), [])
-  @debug.assert_eq(must_execute(parse_filter("(.a | .b)?"), j), [])
+  @debug.assert_eq(must_execute(compile("(.a + 1)?"), j), [])
+  @debug.assert_eq(must_execute(compile("(.a | .b)?"), j), [])
 }
 
 ///|
 test "execute try/catch" {
   let j = must_parse("{\"a\":\"hi\",\"b\":1}")
-  @debug.assert_eq(must_execute(parse_filter("try .a catch .b"), j), [
+  @debug.assert_eq(must_execute(compile("try .a catch .b"), j), [
     Value::string("hi"),
   ])
-  @debug.assert_eq(must_execute(parse_filter("try (.a + 1) catch ."), j), [
+  @debug.assert_eq(must_execute(compile("try (.a + 1) catch ."), j), [
     Value::string("string (\"hi\") and number (1) cannot be added"),
   ])
   @debug.assert_eq(
-    must_execute(parse_filter("try error(\"boom\") catch (. + \"!\")"), j),
+    must_execute(compile("try error(\"boom\") catch (. + \"!\")"), j),
     [Value::string("boom!")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("try 2 catch 3 + 4"), must_parse("null")),
+    must_execute(compile("try 2 catch 3 + 4"), must_parse("null")),
     [Value::number(6.0)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("1 + try 2 catch 3 + 4"), must_parse("null")),
+    must_execute(compile("1 + try 2 catch 3 + 4"), must_parse("null")),
     [Value::number(7.0)],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("1 + try error(0) catch 3 + 4"),
-      must_parse("null"),
-    ),
+    must_execute(compile("1 + try error(0) catch 3 + 4"), must_parse("null")),
     [Value::number(8.0)],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("try (.[999999999] = 0) catch ."),
-      must_parse("null"),
-    ),
+    must_execute(compile("try (.[999999999] = 0) catch ."), must_parse("null")),
     [Value::string("Array index too large")],
   )
-  guard (try? execute(parse_filter("try .a + 1"), j)) is Err(err) &&
+  guard (try? execute(compile("try .a + 1"), j)) is Err(err) &&
     err.to_string() == "string (\"hi\") and number (1) cannot be added" else {
     fail("expected try precedence to match (try .a) + 1")
   }
   @debug.assert_eq(
-    must_execute(
-      parse_filter("try -. catch ."),
-      must_parse("\"very-long-string\""),
-    ),
+    must_execute(compile("try -. catch ."), must_parse("\"very-long-string\"")),
     [Value::string("string (\"very-long-...) cannot be negated")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("try (.-.) catch ."),
+      compile("try (.-.) catch ."),
       must_parse("\"very-long-string\""),
     ),
     [
@@ -3409,19 +3111,18 @@ test "execute try/catch" {
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter(
+      compile(
         "try ([\"hi\",\"ho\"][] | if . == \"ho\" then error else . end) catch \"caught \\(.)\"",
       ),
       must_parse("null"),
     ),
     [Value::string("hi"), Value::string("caught ho")],
   )
+  @debug.assert_eq(must_execute(compile("[(.*2, error)?]"), must_parse("1")), [
+    Value::array([Value::number(2.0)]),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter("[(.*2, error)?]"), must_parse("1")),
-    [Value::array([Value::number(2.0)])],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("[repeat(.*2, error)?]"), must_parse("1")),
+    must_execute(compile("[repeat(.*2, error)?]"), must_parse("1")),
     [Value::array([Value::number(2.0)])],
   )
 }
@@ -3429,35 +3130,35 @@ test "execute try/catch" {
 ///|
 test "execute reduce/foreach" {
   let j = must_parse("[1,2,3]")
+  @debug.assert_eq(must_execute(compile("reduce .[] as $x (0; . + $x)"), j), [
+    Value::number(6.0),
+  ])
+  @debug.assert_eq(must_execute(compile("foreach .[] as $x (0; . + $x)"), j), [
+    Value::number(1.0),
+    Value::number(3.0),
+    Value::number(6.0),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter("reduce .[] as $x (0; . + $x)"), j),
-    [Value::number(6.0)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("foreach .[] as $x (0; . + $x)"), j),
-    [Value::number(1.0), Value::number(3.0), Value::number(6.0)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("foreach .[] as $x (0; . + $x; .)"), j),
+    must_execute(compile("foreach .[] as $x (0; . + $x; .)"), j),
     [Value::number(1.0), Value::number(3.0), Value::number(6.0)],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("reduce .[] as [$i,$j] (0; . + $i * $j)"),
+      compile("reduce .[] as [$i,$j] (0; . + $i * $j)"),
       must_parse("[[1,2],[3,4],[5,6]]"),
     ),
     [Value::number(44.0)],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("foreach .[] as [$i,$j] (0; . + $i * $j; [$i,$j,.])"),
+      compile("foreach .[] as [$i,$j] (0; . + $i * $j; [$i,$j,.])"),
       must_parse("[[1,2],[3,4]]"),
     ),
     [must_parse("[1,2,2]"), must_parse("[3,4,14]")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("foreach .[] as $x (0, 1; . + $x)"),
+      compile("foreach .[] as $x (0, 1; . + $x)"),
       must_parse("[1,2]"),
     ),
     [
@@ -3472,36 +3173,29 @@ test "execute reduce/foreach" {
 ///|
 test "execute if-then-else" {
   let j = must_parse("{\"a\":true,\"b\":1,\"c\":2}")
-  @debug.assert_eq(must_execute(parse_filter("if .a then .b else .c end"), j), [
+  @debug.assert_eq(must_execute(compile("if .a then .b else .c end"), j), [
     Value::number(1.0),
   ])
   let j2 = must_parse("{\"a\":null,\"b\":1,\"c\":2}")
-  @debug.assert_eq(
-    must_execute(parse_filter("if .a then .b else .c end"), j2),
-    [Value::number(2.0)],
-  )
+  @debug.assert_eq(must_execute(compile("if .a then .b else .c end"), j2), [
+    Value::number(2.0),
+  ])
   let j3 = must_parse("{\"a\":false,\"c\":true,\"d\":3,\"e\":4}")
   @debug.assert_eq(
-    must_execute(parse_filter("if .a then .b elif .c then .d else .e end"), j3),
+    must_execute(compile("if .a then .b elif .c then .d else .e end"), j3),
     [Value::number(3.0)],
   )
-  @debug.assert_eq(must_execute(parse_filter("if .a then .b end"), j2), [j2])
+  @debug.assert_eq(must_execute(compile("if .a then .b end"), j2), [j2])
   @debug.assert_eq(
-    must_execute(
-      parse_filter("[if 1,null,2 then 3 else 4 end]"),
-      must_parse("null"),
-    ),
+    must_execute(compile("[if 1,null,2 then 3 else 4 end]"), must_parse("null")),
     [must_parse("[3,4,3]")],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("[if empty then 3 else 4 end]"),
-      must_parse("null"),
-    ),
+    must_execute(compile("[if empty then 3 else 4 end]"), must_parse("null")),
     [Value::array([])],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[if false then 3 end]"), must_parse("7")),
+    must_execute(compile("[if false then 3 end]"), must_parse("7")),
     [must_parse("[7]")],
   )
 }
@@ -3509,34 +3203,24 @@ test "execute if-then-else" {
 ///|
 test "execute fallback and empty" {
   let j = must_parse("{\"a\":1,\"b\":2}")
-  @debug.assert_eq(must_execute(parse_filter(".a // .b"), j), [
-    Value::number(1.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("empty // .b"), j), [
-    Value::number(2.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("empty"), j), [])
+  @debug.assert_eq(must_execute(compile(".a // .b"), j), [Value::number(1.0)])
+  @debug.assert_eq(must_execute(compile("empty // .b"), j), [Value::number(2.0)])
+  @debug.assert_eq(must_execute(compile("empty"), j), [])
 }
 
 ///|
 test "execute fallback jq semantics with null/false and streams" {
   let j = must_parse("null")
-  @debug.assert_eq(must_execute(parse_filter("null // 1"), j), [
+  @debug.assert_eq(must_execute(compile("null // 1"), j), [Value::number(1.0)])
+  @debug.assert_eq(must_execute(compile("false // 1"), j), [Value::number(1.0)])
+  @debug.assert_eq(must_execute(compile("true // 1"), j), [Value::boolean(true)])
+  @debug.assert_eq(must_execute(compile("[false,1] | .[] // 9"), j), [
     Value::number(1.0),
   ])
-  @debug.assert_eq(must_execute(parse_filter("false // 1"), j), [
-    Value::number(1.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("true // 1"), j), [
-    Value::boolean(true),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("[false,1] | .[] // 9"), j), [
-    Value::number(1.0),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("[null,false] | .[] // 9"), j), [
+  @debug.assert_eq(must_execute(compile("[null,false] | .[] // 9"), j), [
     Value::number(9.0),
   ])
-  @debug.assert_eq(must_execute(parse_filter("(1,2) // 9"), j), [
+  @debug.assert_eq(must_execute(compile("(1,2) // 9"), j), [
     Value::number(1.0),
     Value::number(2.0),
   ])
@@ -3545,59 +3229,59 @@ test "execute fallback jq semantics with null/false and streams" {
 ///|
 test "execute string contains/starts/ends" {
   let j = must_parse("\"hello\"")
-  @debug.assert_eq(must_execute(parse_filter("contains(\"ell\")"), j), [
+  @debug.assert_eq(must_execute(compile("contains(\"ell\")"), j), [
     Value::boolean(true),
   ])
-  @debug.assert_eq(must_execute(parse_filter("contains((\"he\",\"zz\"))"), j), [
-    Value::boolean(true),
-    Value::boolean(false),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("contains(empty)"), j), [])
-  @debug.assert_eq(must_execute(parse_filter("startswith(\"he\")"), j), [
-    Value::boolean(true),
-  ])
-  @debug.assert_eq(must_execute(parse_filter("startswith((\"h\",\"x\"))"), j), [
+  @debug.assert_eq(must_execute(compile("contains((\"he\",\"zz\"))"), j), [
     Value::boolean(true),
     Value::boolean(false),
   ])
-  @debug.assert_eq(must_execute(parse_filter("startswith(empty)"), j), [])
-  @debug.assert_eq(must_execute(parse_filter("endswith(\"lo\")"), j), [
+  @debug.assert_eq(must_execute(compile("contains(empty)"), j), [])
+  @debug.assert_eq(must_execute(compile("startswith(\"he\")"), j), [
     Value::boolean(true),
   ])
-  @debug.assert_eq(must_execute(parse_filter("endswith((\"o\",\"x\"))"), j), [
+  @debug.assert_eq(must_execute(compile("startswith((\"h\",\"x\"))"), j), [
     Value::boolean(true),
     Value::boolean(false),
   ])
-  @debug.assert_eq(must_execute(parse_filter("endswith(empty)"), j), [])
+  @debug.assert_eq(must_execute(compile("startswith(empty)"), j), [])
+  @debug.assert_eq(must_execute(compile("endswith(\"lo\")"), j), [
+    Value::boolean(true),
+  ])
+  @debug.assert_eq(must_execute(compile("endswith((\"o\",\"x\"))"), j), [
+    Value::boolean(true),
+    Value::boolean(false),
+  ])
+  @debug.assert_eq(must_execute(compile("endswith(empty)"), j), [])
 }
 
 ///|
 test "execute trimstr compatibility" {
   let j = must_parse("\"foobar\"")
-  @debug.assert_eq(must_execute(parse_filter("ltrimstr(\"foo\")"), j), [
+  @debug.assert_eq(must_execute(compile("ltrimstr(\"foo\")"), j), [
     Value::string("bar"),
   ])
-  @debug.assert_eq(must_execute(parse_filter("ltrimstr(\"bar\")"), j), [
+  @debug.assert_eq(must_execute(compile("ltrimstr(\"bar\")"), j), [
     Value::string("foobar"),
   ])
-  @debug.assert_eq(must_execute(parse_filter("rtrimstr(\"bar\")"), j), [
+  @debug.assert_eq(must_execute(compile("rtrimstr(\"bar\")"), j), [
     Value::string("foo"),
   ])
-  @debug.assert_eq(must_execute(parse_filter("rtrimstr(\"foo\")"), j), [
+  @debug.assert_eq(must_execute(compile("rtrimstr(\"foo\")"), j), [
     Value::string("foobar"),
   ])
-  @debug.assert_eq(
-    must_execute(parse_filter("ltrimstr((\"foo\",\"bar\"))"), j),
-    [Value::string("bar"), Value::string("foobar")],
-  )
-  @debug.assert_eq(must_execute(parse_filter("ltrimstr(empty)"), j), [])
-  @debug.assert_eq(must_execute(parse_filter("ltrimstr(\"\")"), j), [
+  @debug.assert_eq(must_execute(compile("ltrimstr((\"foo\",\"bar\"))"), j), [
+    Value::string("bar"),
     Value::string("foobar"),
   ])
-  @debug.assert_eq(must_execute(parse_filter("rtrimstr(\"\")"), j), [
+  @debug.assert_eq(must_execute(compile("ltrimstr(empty)"), j), [])
+  @debug.assert_eq(must_execute(compile("ltrimstr(\"\")"), j), [
+    Value::string("foobar"),
+  ])
+  @debug.assert_eq(must_execute(compile("rtrimstr(\"\")"), j), [
     Value::string(""),
   ])
-  @debug.assert_eq(must_execute(parse_filter("trimstr(\"\")"), j), [
+  @debug.assert_eq(must_execute(compile("trimstr(\"\")"), j), [
     Value::string(""),
   ])
 }
@@ -3605,12 +3289,12 @@ test "execute trimstr compatibility" {
 ///|
 test "execute trim/ltrim/rtrim compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("trim, ltrim, rtrim"), must_parse("\" abc \"")),
+    must_execute(compile("trim, ltrim, rtrim"), must_parse("\" abc \"")),
     [Value::string("abc"), Value::string("abc "), Value::string(" abc")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("[.[]|trimstr(\"foo\")]"),
+      compile("[.[]|trimstr(\"foo\")]"),
       must_parse("[\"fo\",\"foo\",\"barfoo\",\"foobarfoo\",\"foob\"]"),
     ),
     [
@@ -3627,40 +3311,35 @@ test "execute trim/ltrim/rtrim compatibility" {
 
 ///|
 test "execute trimstr errors" {
-  guard (try? execute(parse_filter("ltrimstr(\"1\")"), must_parse("1")))
-    is Err(err) &&
+  guard (try? execute(compile("ltrimstr(\"1\")"), must_parse("1"))) is Err(err) &&
     err.to_string() == "startswith() requires string inputs" else {
     fail("expected ltrimstr input type error")
   }
-  guard (try? execute(parse_filter("ltrimstr(1)"), must_parse("\"x\"")))
-    is Err(err) &&
+  guard (try? execute(compile("ltrimstr(1)"), must_parse("\"x\""))) is Err(err) &&
     err.to_string() == "startswith() requires string inputs" else {
     fail("expected ltrimstr separator type error")
   }
-  guard (try? execute(parse_filter("rtrimstr(1)"), must_parse("\"x\"")))
-    is Err(err) &&
+  guard (try? execute(compile("rtrimstr(1)"), must_parse("\"x\""))) is Err(err) &&
     err.to_string() == "endswith() requires string inputs" else {
     fail("expected rtrimstr separator type error")
   }
-  guard (try? execute(parse_filter("trim"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("trim"), must_parse("1"))) is Err(err) &&
     err.to_string() == "trim input must be a string" else {
     fail("expected trim input type error")
   }
-  guard (try? execute(parse_filter("ltrim"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("ltrim"), must_parse("1"))) is Err(err) &&
     err.to_string() == "trim input must be a string" else {
     fail("expected ltrim input type error")
   }
-  guard (try? execute(parse_filter("rtrim"), must_parse("1"))) is Err(err) &&
+  guard (try? execute(compile("rtrim"), must_parse("1"))) is Err(err) &&
     err.to_string() == "trim input must be a string" else {
     fail("expected rtrim input type error")
   }
-  guard (try? execute(parse_filter("trimstr(\"1\")"), must_parse("1")))
-    is Err(err) &&
+  guard (try? execute(compile("trimstr(\"1\")"), must_parse("1"))) is Err(err) &&
     err.to_string() == "startswith() requires string inputs" else {
     fail("expected trimstr input type error")
   }
-  guard (try? execute(parse_filter("trimstr(1)"), must_parse("\"x\"")))
-    is Err(err) &&
+  guard (try? execute(compile("trimstr(1)"), must_parse("\"x\""))) is Err(err) &&
     err.to_string() == "startswith() requires string inputs" else {
     fail("expected trimstr separator type error")
   }
@@ -3669,64 +3348,61 @@ test "execute trimstr errors" {
 ///|
 test "execute abs/have_decnum/isempty compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("map(abs)"), must_parse("[-10,-1.1,-1e-1]")),
+    must_execute(compile("map(abs)"), must_parse("[-10,-1.1,-1e-1]")),
     [
       Value::array([Value::number(10.0), Value::number(1.1), Value::number(0.1)]),
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("map(abs)|tojson"), must_parse("[-0,0,-10,-1.1]")),
+    must_execute(compile("map(abs)|tojson"), must_parse("[-0,0,-10,-1.1]")),
     [Value::string("[-0,0,10,1.1]")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("map(abs)|tojson"),
+      compile("map(abs)|tojson"),
       must_parse("[0.1,1000000000000000002]"),
     ),
     [Value::string("[0.1,1000000000000000002]")],
   )
-  @debug.assert_eq(must_execute(parse_filter("abs"), must_parse("\"abc\"")), [
+  @debug.assert_eq(must_execute(compile("abs"), must_parse("\"abc\"")), [
     Value::string("abc"),
   ])
-  @debug.assert_eq(must_execute(parse_filter("abs"), must_parse("[1,-2]")), [
+  @debug.assert_eq(must_execute(compile("abs"), must_parse("[1,-2]")), [
     Value::array([Value::number(1.0), Value::number(-2.0)]),
   ])
-  @debug.assert_eq(
-    must_execute(parse_filter("abs"), must_parse("{\"a\":-1}")),
-    [Value::object({ "a": Value::number(-1.0) })],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("have_decnum"), must_parse("null")),
-    [Value::boolean(false)],
-  )
+  @debug.assert_eq(must_execute(compile("abs"), must_parse("{\"a\":-1}")), [
+    Value::object({ "a": Value::number(-1.0) }),
+  ])
+  @debug.assert_eq(must_execute(compile("have_decnum"), must_parse("null")), [
+    Value::boolean(false),
+  ])
   @debug.assert_eq(
     must_execute(
-      parse_filter("\"-1\"|IN(builtins[] / \"/\"|.[1])"),
+      compile("\"-1\"|IN(builtins[] / \"/\"|.[1])"),
       must_parse("null"),
     ),
     [Value::boolean(false)],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("all(builtins[] / \"/\"; .[1]|tonumber >= 0)"),
+      compile("all(builtins[] / \"/\"; .[1]|tonumber >= 0)"),
       must_parse("null"),
     ),
     [Value::boolean(true)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("isempty(empty)"), must_parse("null")),
+    must_execute(compile("isempty(empty)"), must_parse("null")),
     [Value::boolean(true)],
   )
+  @debug.assert_eq(must_execute(compile("isempty(.[])"), must_parse("[]")), [
+    Value::boolean(true),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter("isempty(.[])"), must_parse("[]")),
-    [Value::boolean(true)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("isempty(.[])"), must_parse("[1,2,3]")),
+    must_execute(compile("isempty(.[])"), must_parse("[1,2,3]")),
     [Value::boolean(false)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("isempty((1,error(\"x\")))"), must_parse("null")),
+    must_execute(compile("isempty((1,error(\"x\")))"), must_parse("null")),
     [Value::boolean(false)],
   )
 }
@@ -3735,7 +3411,7 @@ test "execute abs/have_decnum/isempty compatibility" {
 test "execute numeric/meta builtins compatibility" {
   @debug.assert_eq(
     must_execute(
-      parse_filter("map(toboolean)"),
+      compile("map(toboolean)"),
       must_parse("[\"false\",\"true\",false,true]"),
     ),
     [
@@ -3748,25 +3424,23 @@ test "execute numeric/meta builtins compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("[.[]|floor]"), must_parse("[-1.1,1.1,1.9]")),
+    must_execute(compile("[.[]|floor]"), must_parse("[-1.1,1.1,1.9]")),
     [
       Value::array([Value::number(-2.0), Value::number(1.0), Value::number(1.0)]),
     ],
   )
+  @debug.assert_eq(must_execute(compile("[.[]|sqrt]"), must_parse("[4,9]")), [
+    Value::array([Value::number(2.0), Value::number(3.0)]),
+  ])
+  @debug.assert_eq(must_execute(compile("pow(2;10)"), must_parse("null")), [
+    Value::number(1024.0),
+  ])
   @debug.assert_eq(
-    must_execute(parse_filter("[.[]|sqrt]"), must_parse("[4,9]")),
-    [Value::array([Value::number(2.0), Value::number(3.0)])],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("pow(2;10)"), must_parse("null")),
-    [Value::number(1024.0)],
-  )
-  @debug.assert_eq(
-    must_execute(parse_filter("pow(2;8)|log2|round"), must_parse("null")),
+    must_execute(compile("pow(2;8)|log2|round"), must_parse("null")),
     [Value::number(8.0)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("map(fabs)"), must_parse("[-0,0,-10,-1.1]")),
+    must_execute(compile("map(fabs)"), must_parse("[-0,0,-10,-1.1]")),
     [
       Value::array([
         Value::number(0.0),
@@ -3777,58 +3451,49 @@ test "execute numeric/meta builtins compatibility" {
     ],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("atan * 4 * 1000000|floor / 1000000"),
-      must_parse("1"),
-    ),
+    must_execute(compile("atan * 4 * 1000000|floor / 1000000"), must_parse("1")),
     [Value::number(3.141592)],
   )
   @debug.assert_eq(
-    must_execute(
-      parse_filter("infinite | type, nan | type"),
-      must_parse("null"),
-    ),
+    must_execute(compile("infinite | type, nan | type"), must_parse("null")),
     [Value::string("string"), Value::string("number")],
   )
-  guard (try? execute(parse_filter("modulemeta"), must_parse("\"c\"")))
-    is Err(err) &&
+  guard (try? execute(compile("modulemeta"), must_parse("\"c\""))) is Err(err) &&
     err.to_string() == "module not found: c" else {
     fail("expected modulemeta missing-module error")
   }
   @debug.assert_eq(
-    must_execute(parse_filter("builtins|length > 10"), must_parse("null")),
+    must_execute(compile("builtins|length > 10"), must_parse("null")),
     [Value::boolean(true)],
   )
 }
 
 ///|
 test "execute numeric/meta builtins errors" {
-  guard (try? execute(parse_filter("toboolean"), must_parse("\"tru\"")))
-    is Err(err) &&
+  guard (try? execute(compile("toboolean"), must_parse("\"tru\""))) is Err(err) &&
     err.to_string() == "string (\"tru\") cannot be parsed as a boolean" else {
     fail("expected toboolean parse error")
   }
   @debug.assert_eq(
     must_execute(
-      parse_filter("\"true\\u0000x\", \"false\\u0000\" | toboolean"),
+      compile("\"true\\u0000x\", \"false\\u0000\" | toboolean"),
       must_parse("null"),
     ),
     [Value::boolean(true), Value::boolean(false)],
   )
-  guard (try? execute(parse_filter("sqrt"), must_parse("\"x\""))) is Err(err) &&
+  guard (try? execute(compile("sqrt"), must_parse("\"x\""))) is Err(err) &&
     err.to_string() == "string (\"x\") only numbers have sqrt" else {
     fail("expected sqrt type error")
   }
-  guard (try? execute(parse_filter("floor"), must_parse("true"))) is Err(err) &&
+  guard (try? execute(compile("floor"), must_parse("true"))) is Err(err) &&
     err.to_string() == "boolean (true) only numbers have floor" else {
     fail("expected floor type error")
   }
-  guard (try? execute(parse_filter("pow(\"x\";2)"), must_parse("null")))
-    is Err(err) &&
+  guard (try? execute(compile("pow(\"x\";2)"), must_parse("null"))) is Err(err) &&
     err.to_string() == "pow() requires numeric arguments" else {
     fail("expected pow type error")
   }
-  guard (try? execute(parse_filter("log2"), must_parse("\"x\""))) is Err(err) &&
+  guard (try? execute(compile("log2"), must_parse("\"x\""))) is Err(err) &&
     err.to_string() == "string (\"x\") only numbers have log2" else {
     fail("expected log2 type error")
   }
@@ -3836,19 +3501,19 @@ test "execute numeric/meta builtins errors" {
 
 ///|
 test "execute abs/fabs/isempty errors" {
-  guard (try? execute(parse_filter("abs"), must_parse("null"))) is Err(err) &&
+  guard (try? execute(compile("abs"), must_parse("null"))) is Err(err) &&
     err.to_string() == "null (null) cannot be negated" else {
     fail("expected abs null type error")
   }
-  guard (try? execute(parse_filter("abs"), must_parse("true"))) is Err(err) &&
+  guard (try? execute(compile("abs"), must_parse("true"))) is Err(err) &&
     err.to_string() == "boolean (true) cannot be negated" else {
     fail("expected abs boolean type error")
   }
-  guard (try? execute(parse_filter("fabs"), must_parse("\"x\""))) is Err(err) &&
+  guard (try? execute(compile("fabs"), must_parse("\"x\""))) is Err(err) &&
     err.to_string() == "string (\"x\") cannot be negated" else {
     fail("expected fabs string type error")
   }
-  guard (try? execute(parse_filter("isempty(.[0])"), must_parse("{\"a\":1}")))
+  guard (try? execute(compile("isempty(.[0])"), must_parse("{\"a\":1}")))
     is Err(err) &&
     err.to_string() == "Cannot index object with number" else {
     fail("expected isempty to propagate pre-first error")
@@ -3858,23 +3523,22 @@ test "execute abs/fabs/isempty errors" {
 ///|
 test "execute ascii case compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("ascii_downcase"), must_parse("\"AbC_é\"")),
+    must_execute(compile("ascii_downcase"), must_parse("\"AbC_é\"")),
     [Value::string("abc_é")],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("ascii_upcase"), must_parse("\"AbC_é\"")),
+    must_execute(compile("ascii_upcase"), must_parse("\"AbC_é\"")),
     [Value::string("ABC_é")],
   )
 }
 
 ///|
 test "execute ascii case errors" {
-  guard (try? execute(parse_filter("ascii_upcase"), must_parse("1")))
-    is Err(err) &&
+  guard (try? execute(compile("ascii_upcase"), must_parse("1"))) is Err(err) &&
     err.to_string() == "ascii_upcase input must be a string" else {
     fail("expected ascii_upcase type error")
   }
-  guard (try? execute(parse_filter("ascii_downcase"), must_parse("null")))
+  guard (try? execute(compile("ascii_downcase"), must_parse("null")))
     is Err(err) &&
     err.to_string() == "ascii_downcase input must be a string" else {
     fail("expected ascii_downcase type error")
@@ -3884,29 +3548,26 @@ test "execute ascii case errors" {
 ///|
 test "execute utf8bytelength compatibility" {
   @debug.assert_eq(
-    must_execute(parse_filter("utf8bytelength"), must_parse("\"asdf\\u03bc\"")),
+    must_execute(compile("utf8bytelength"), must_parse("\"asdf\\u03bc\"")),
     [Value::number(6.0)],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("utf8bytelength"), must_parse("\"\\u03bc\"")),
+    must_execute(compile("utf8bytelength"), must_parse("\"\\u03bc\"")),
     [Value::number(2.0)],
   )
 }
 
 ///|
 test "execute utf8bytelength errors" {
-  guard (try? execute(parse_filter("utf8bytelength"), must_parse("[]")))
-    is Err(err) &&
+  guard (try? execute(compile("utf8bytelength"), must_parse("[]"))) is Err(err) &&
     err.to_string() == "array ([]) only strings have UTF-8 byte length" else {
     fail("expected utf8bytelength array type error")
   }
-  guard (try? execute(parse_filter("utf8bytelength"), must_parse("{}")))
-    is Err(err) &&
+  guard (try? execute(compile("utf8bytelength"), must_parse("{}"))) is Err(err) &&
     err.to_string() == "object ({}) only strings have UTF-8 byte length" else {
     fail("expected utf8bytelength object type error")
   }
-  guard (try? execute(parse_filter("utf8bytelength"), must_parse("55")))
-    is Err(err) &&
+  guard (try? execute(compile("utf8bytelength"), must_parse("55"))) is Err(err) &&
     err.to_string() == "number (55) only strings have UTF-8 byte length" else {
     fail("expected utf8bytelength number type error")
   }

@@ -3,18 +3,18 @@
 
 ///|
 test "parse identity" {
-  inspect(parse_filter("."), content="Identity")
+  inspect(compile("."), content="Identity")
 }
 
 ///|
 test "parse recurse" {
-  inspect(parse_filter(".."), content="Recurse")
+  inspect(compile(".."), content="Recurse")
 }
 
 ///|
 test "parse field" {
   inspect(
-    parse_filter(".foo"),
+    compile(".foo"),
     content=(
       #|Pipe(Identity, Field("foo"))
     ),
@@ -24,7 +24,7 @@ test "parse field" {
 ///|
 test "parse chained fields" {
   inspect(
-    parse_filter(".foo.bar"),
+    compile(".foo.bar"),
     content=(
       #|Pipe(Pipe(Identity, Field("foo")), Field("bar"))
     ),
@@ -33,25 +33,25 @@ test "parse chained fields" {
 
 ///|
 test "parse index" {
-  inspect(parse_filter(".[0]"), content="Pipe(Identity, Index(0))")
+  inspect(compile(".[0]"), content="Pipe(Identity, Index(0))")
 }
 
 ///|
 test "parse chained index without extra dot" {
   inspect(
-    parse_filter(".a[0]"),
+    compile(".a[0]"),
     content=(
       #|Pipe(Pipe(Identity, Field("a")), Index(0))
     ),
   )
   inspect(
-    parse_filter(".a[0]?"),
+    compile(".a[0]?"),
     content=(
       #|Pipe(Pipe(Identity, Field("a")), IndexOpt(0))
     ),
   )
   inspect(
-    parse_filter(".a[1:3]"),
+    compile(".a[1:3]"),
     content=(
       #|Pipe(Pipe(Identity, Field("a")), Slice(Some(1), Some(3)))
     ),
@@ -60,46 +60,43 @@ test "parse chained index without extra dot" {
 
 ///|
 test "parse slice" {
+  inspect(compile(".[1:3]"), content="Pipe(Identity, Slice(Some(1), Some(3)))")
+  inspect(compile(".[:2]"), content="Pipe(Identity, Slice(None, Some(2)))")
+  inspect(compile(".[1:]"), content="Pipe(Identity, Slice(Some(1), None))")
   inspect(
-    parse_filter(".[1:3]"),
-    content="Pipe(Identity, Slice(Some(1), Some(3)))",
-  )
-  inspect(parse_filter(".[:2]"), content="Pipe(Identity, Slice(None, Some(2)))")
-  inspect(parse_filter(".[1:]"), content="Pipe(Identity, Slice(Some(1), None))")
-  inspect(
-    parse_filter(".[1:3]?"),
+    compile(".[1:3]?"),
     content="Pipe(Identity, SliceOpt(Some(1), Some(3)))",
   )
 }
 
 ///|
 test "parse invalid empty slice" {
-  guard (try? parse_filter(".[:]")) is Err(_) else {
+  guard (try? compile(".[:]")) is Err(_) else {
     fail("expected parse error for empty slice")
   }
 }
 
 ///|
 test "parse iter" {
-  inspect(parse_filter(".[]"), content="Pipe(Identity, Iter)")
+  inspect(compile(".[]"), content="Pipe(Identity, Iter)")
 }
 
 ///|
 test "parse optional access" {
   inspect(
-    parse_filter(".foo?"),
+    compile(".foo?"),
     content=(
       #|Pipe(Identity, FieldOpt("foo"))
     ),
   )
-  inspect(parse_filter(".[0]?"), content="Pipe(Identity, IndexOpt(0))")
-  inspect(parse_filter(".[]?"), content="Pipe(Identity, IterOpt)")
+  inspect(compile(".[0]?"), content="Pipe(Identity, IndexOpt(0))")
+  inspect(compile(".[]?"), content="Pipe(Identity, IterOpt)")
 }
 
 ///|
 test "parse try" {
   inspect(
-    parse_filter("(.a + 1)?"),
+    compile("(.a + 1)?"),
     content=(
       #|Try(Add(Pipe(Identity, Field("a")), Literal(Number(1, None))))
     ),
@@ -109,19 +106,19 @@ test "parse try" {
 ///|
 test "parse try/catch" {
   inspect(
-    parse_filter("try .a catch .b"),
+    compile("try .a catch .b"),
     content=(
       #|TryCatch(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
     ),
   )
   inspect(
-    parse_filter("try .a"),
+    compile("try .a"),
     content=(
       #|TryCatch(Pipe(Identity, Field("a")), Empty)
     ),
   )
   inspect(
-    parse_filter("1 + try 2 catch 3 + 4"),
+    compile("1 + try 2 catch 3 + 4"),
     content=(
       #|Add(
       #|  Add(
@@ -133,7 +130,7 @@ test "parse try/catch" {
     ),
   )
   inspect(
-    parse_filter("try (1/0) catch 9 + 2"),
+    compile("try (1/0) catch 9 + 2"),
     content=(
       #|Add(
       #|  TryCatch(
@@ -144,7 +141,7 @@ test "parse try/catch" {
       #|)
     ),
   )
-  guard (try? parse_filter("try 1/0 catch 9")) is Err(_) else {
+  guard (try? compile("try 1/0 catch 9")) is Err(_) else {
     fail("expected parse error for unparenthesized try/catch arithmetic")
   }
 }
@@ -152,7 +149,7 @@ test "parse try/catch" {
 ///|
 test "parse reduce/foreach" {
   inspect(
-    parse_filter("reduce .[] as $x (0; . + $x)"),
+    compile("reduce .[] as $x (0; . + $x)"),
     content=(
       #|Reduce(
       #|  Pipe(Identity, Iter),
@@ -163,7 +160,7 @@ test "parse reduce/foreach" {
     ),
   )
   inspect(
-    parse_filter("foreach .[] as $x (0; . + $x; .)"),
+    compile("foreach .[] as $x (0; . + $x; .)"),
     content=(
       #|Foreach(
       #|  Pipe(Identity, Iter),
@@ -175,7 +172,7 @@ test "parse reduce/foreach" {
     ),
   )
   inspect(
-    parse_filter("foreach .[] as $x (0; . + $x)"),
+    compile("foreach .[] as $x (0; . + $x)"),
     content=(
       #|Foreach(
       #|  Pipe(Identity, Iter),
@@ -186,12 +183,10 @@ test "parse reduce/foreach" {
       #|)
     ),
   )
-  guard (try? parse_filter("reduce .[] as [$i,$j] (0; . + $i * $j)")) is Ok(_) else {
+  guard (try? compile("reduce .[] as [$i,$j] (0; . + $i * $j)")) is Ok(_) else {
     fail("expected reduce as-pattern parse")
   }
-  guard (try? parse_filter(
-      "foreach .[] as {x:$x,y:$y} (0; . + $x + $y; [$x,$y,.])",
-    ))
+  guard (try? compile("foreach .[] as {x:$x,y:$y} (0; . + $x + $y; [$x,$y,.])"))
     is Ok(_) else {
     fail("expected foreach as-pattern parse")
   }
@@ -200,13 +195,13 @@ test "parse reduce/foreach" {
 ///|
 test "parse string key index" {
   inspect(
-    parse_filter(".[\"foo\"]"),
+    compile(".[\"foo\"]"),
     content=(
       #|Pipe(Identity, Field("foo"))
     ),
   )
   inspect(
-    parse_filter(".\"foo\".\"bar\""),
+    compile(".\"foo\".\"bar\""),
     content=(
       #|Pipe(Pipe(Identity, Field("foo")), Field("bar"))
     ),
@@ -215,35 +210,35 @@ test "parse string key index" {
 
 ///|
 test "parse dynamic bracket index" {
-  guard (try? parse_filter(".foo[.baz]")) is Ok(_) else {
+  guard (try? compile(".foo[.baz]")) is Ok(_) else {
     fail("expected dynamic index parse")
   }
-  guard (try? parse_filter("[1,2,3][$x]")) is Ok(_) else {
+  guard (try? compile("1 as $x | [1,2,3][$x]")) is Ok(_) else {
     fail("expected variable index parse")
   }
-  guard (try? parse_filter("[range(5)] | .[1.1]")) is Ok(_) else {
+  guard (try? compile("[range(5)] | .[1.1]")) is Ok(_) else {
     fail("expected float index parse")
   }
-  guard (try? parse_filter("$ENV.PAGER")) is Ok(_) else {
+  guard (try? compile("$ENV.PAGER")) is Ok(_) else {
     fail("expected variable field postfix parse")
   }
-  guard (try? parse_filter("env.PAGER")) is Ok(_) else {
+  guard (try? compile("env.PAGER")) is Ok(_) else {
     fail("expected builtin field postfix parse")
   }
 }
 
 ///|
 test "parse dynamic slice bounds" {
-  guard (try? parse_filter(".[:rindex(\"x\")]")) is Ok(_) else {
+  guard (try? compile(".[:rindex(\"x\")]")) is Ok(_) else {
     fail("expected dynamic end slice parse")
   }
-  guard (try? parse_filter("map([1,2][0:.])")) is Ok(_) else {
+  guard (try? compile("map([1,2][0:.])")) is Ok(_) else {
     fail("expected identity end slice parse")
   }
-  guard (try? parse_filter("[range(3)] | .[nan:1]")) is Ok(_) else {
+  guard (try? compile("[range(3)] | .[nan:1]")) is Ok(_) else {
     fail("expected nan start slice parse")
   }
-  guard (try? parse_filter("[range(3)] | .[1:nan]")) is Ok(_) else {
+  guard (try? compile("[range(3)] | .[1:nan]")) is Ok(_) else {
     fail("expected nan end slice parse")
   }
 }
@@ -251,7 +246,7 @@ test "parse dynamic slice bounds" {
 ///|
 test "parse pipe and comma" {
   inspect(
-    parse_filter(".foo | .bar, .baz"),
+    compile(".foo | .bar, .baz"),
     content=(
       #|Pipe(
       #|  Pipe(Identity, Field("foo")),
@@ -260,7 +255,7 @@ test "parse pipe and comma" {
     ),
   )
   inspect(
-    parse_filter("{x:(1,2)},{x:3} | .x"),
+    compile("{x:(1,2)},{x:3} | .x"),
     content=(
       #|Pipe(
       #|  Comma(
@@ -276,54 +271,54 @@ test "parse pipe and comma" {
 ///|
 test "parse literals" {
   inspect(
-    parse_filter("null"),
+    compile("null"),
     content=(
       #|Literal(JNull)
     ),
   )
   inspect(
-    parse_filter("true"),
+    compile("true"),
     content=(
       #|Literal(JTrue)
     ),
   )
   inspect(
-    parse_filter("false"),
+    compile("false"),
     content=(
       #|Literal(JFalse)
     ),
   )
   inspect(
-    parse_filter("\"hi\""),
+    compile("\"hi\""),
     content=(
       #|Literal(String("hi"))
     ),
   )
   inspect(
-    parse_filter("123"),
+    compile("123"),
     content=(
       #|Literal(Number(123, None))
     ),
   )
   inspect(
-    parse_filter("@uri"),
+    compile("@uri"),
     content=(
       #|Builtin("@uri")
     ),
   )
-  guard (try? parse_filter("(@uri|@urid)")) is Ok(_) else {
+  guard (try? compile("(@uri|@urid)")) is Ok(_) else {
     fail("expected format filter parse")
   }
-  guard (try? parse_filter("@html \"<b>\\(.)</b>\"")) is Ok(_) else {
+  guard (try? compile("@html \"<b>\\(.)</b>\"")) is Ok(_) else {
     fail("expected @html format string parse")
   }
-  guard (try? parse_filter("@sh \"echo \\(.)\"")) is Ok(_) else {
+  guard (try? compile("@sh \"echo \\(.)\"")) is Ok(_) else {
     fail("expected @sh format string parse")
   }
-  guard (try? parse_filter(".00005")) is Ok(_) else {
+  guard (try? compile(".00005")) is Ok(_) else {
     fail("expected leading-dot number literal parse")
   }
-  guard (try? parse_filter("select(.>.00005)")) is Ok(_) else {
+  guard (try? compile("select(.>.00005)")) is Ok(_) else {
     fail("expected leading-dot number literal parse in comparison")
   }
 }
@@ -331,19 +326,19 @@ test "parse literals" {
 ///|
 test "parse builtin" {
   inspect(
-    parse_filter("length"),
+    compile("length"),
     content=(
       #|Builtin("length")
     ),
   )
   inspect(
-    parse_filter("type"),
+    compile("type"),
     content=(
       #|Builtin("type")
     ),
   )
   inspect(
-    parse_filter("keys"),
+    compile("keys"),
     content=(
       #|Builtin("keys")
     ),
@@ -352,23 +347,23 @@ test "parse builtin" {
 
 ///|
 test "parse def no-arg minimal" {
-  guard (try? parse_filter("def inc: . + 1; . | inc")) is Ok(_) else {
+  guard (try? compile("def inc: . + 1; . | inc")) is Ok(_) else {
     fail("expected simple no-arg def parse")
   }
-  guard (try? parse_filter("def inc: . + 1; def twice: inc | inc; . | twice"))
+  guard (try? compile("def inc: . + 1; def twice: inc | inc; . | twice"))
     is Ok(_) else {
     fail("expected chained no-arg def parse")
   }
-  guard (try? parse_filter("def f(x): x; [f(1), f(2)]")) is Ok(_) else {
+  guard (try? compile("def f(x): x; [f(1), f(2)]")) is Ok(_) else {
     fail("expected parse success for def parameters")
   }
-  guard (try? parse_filter(
+  guard (try? compile(
       "def f: . + 1; def g: def g: . + 100; f | g | f; (f | g), g",
     ))
     is Ok(_) else {
     fail("expected parse success for nested local defs in def body")
   }
-  guard (try? parse_filter(
+  guard (try? compile(
       "[[20,10][1,0] as $x | def f: (100,200) as $y | def g: [$x + $y, .]; . + $x | g; f[0] | [f][0][1] | f]",
     ))
     is Ok(_) else {
@@ -379,13 +374,13 @@ test "parse def no-arg minimal" {
 ///|
 test "parse call" {
   inspect(
-    parse_filter("select(.a)"),
+    compile("select(.a)"),
     content=(
       #|Call("select", [Pipe(Identity, Field("a"))])
     ),
   )
   inspect(
-    parse_filter("setpath([\"a\"]; 1)"),
+    compile("setpath([\"a\"]; 1)"),
     content=(
       #|Call(
       #|  "setpath",
@@ -394,7 +389,7 @@ test "parse call" {
     ),
   )
   inspect(
-    parse_filter("setpath(([\"a\"], [\"b\"]); 1)"),
+    compile("setpath(([\"a\"], [\"b\"]); 1)"),
     content=(
       #|Call(
       #|  "setpath",
@@ -410,19 +405,19 @@ test "parse call" {
 ///|
 test "parse qualified callable names" {
   inspect(
-    parse_filter("foo::bar"),
+    compile("foo::bar"),
     content=(
       #|Builtin("foo::bar")
     ),
   )
   inspect(
-    parse_filter("foo::bar(1)"),
+    compile("foo::bar(1)"),
     content=(
       #|Call("foo::bar", [Literal(Number(1, None))])
     ),
   )
   inspect(
-    parse_filter("a::b::c"),
+    compile("a::b::c"),
     content=(
       #|Builtin("a::b::c")
     ),
@@ -432,19 +427,13 @@ test "parse qualified callable names" {
 ///|
 test "parse variables and as" {
   inspect(
-    parse_filter("$x"),
-    content=(
-      #|Var("x")
-    ),
-  )
-  inspect(
-    parse_filter(".a as $x | $x"),
+    compile(".a as $x | $x"),
     content=(
       #|As(Pipe(Identity, Field("a")), "x", Var("x"))
     ),
   )
   inspect(
-    parse_filter(". as $x | $x[]"),
+    compile(". as $x | $x[]"),
     content=(
       #|As(Identity, "x", Pipe(Var("x"), Iter))
     ),
@@ -453,19 +442,19 @@ test "parse variables and as" {
 
 ///|
 test "parse as pattern bindings" {
-  guard (try? parse_filter(".[] as [$a, {j:$j}] | [$a, $j]")) is Ok(_) else {
+  guard (try? compile(".[] as [$a, {j:$j}] | [$a, $j]")) is Ok(_) else {
     fail("expected array/object as-pattern parse")
   }
-  guard (try? parse_filter(". as {$a, $b:[$c,$d]} | [$a, $b, $c, $d]")) is Ok(_) else {
+  guard (try? compile(". as {$a, $b:[$c,$d]} | [$a, $b, $c, $d]")) is Ok(_) else {
     fail("expected object as-pattern parse")
   }
-  guard (try? parse_filter(".[] | . as {a:$a} ?// [$a] | $a")) is Ok(_) else {
+  guard (try? compile(".[] | . as {a:$a} ?// [$a] | $a")) is Ok(_) else {
     fail("expected ?// parse")
   }
-  guard (try? parse_filter(". as [] | null")) is Err(_) else {
+  guard (try? compile(". as [] | null")) is Err(_) else {
     fail("expected parse error for empty array as-pattern")
   }
-  guard (try? parse_filter(". as {} | null")) is Err(_) else {
+  guard (try? compile(". as {} | null")) is Err(_) else {
     fail("expected parse error for empty object as-pattern")
   }
 }
@@ -473,37 +462,37 @@ test "parse as pattern bindings" {
 ///|
 test "parse compare" {
   inspect(
-    parse_filter(".a == .b"),
+    compile(".a == .b"),
     content=(
       #|Eq(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
     ),
   )
   inspect(
-    parse_filter(".a != .b"),
+    compile(".a != .b"),
     content=(
       #|Neq(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
     ),
   )
   inspect(
-    parse_filter(".a < .b"),
+    compile(".a < .b"),
     content=(
       #|Lt(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
     ),
   )
   inspect(
-    parse_filter(".a <= .b"),
+    compile(".a <= .b"),
     content=(
       #|Lte(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
     ),
   )
   inspect(
-    parse_filter(".a > .b"),
+    compile(".a > .b"),
     content=(
       #|Gt(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
     ),
   )
   inspect(
-    parse_filter(".a >= .b"),
+    compile(".a >= .b"),
     content=(
       #|Gte(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
     ),
@@ -513,26 +502,26 @@ test "parse compare" {
 ///|
 test "parse logical" {
   inspect(
-    parse_filter(".a and .b"),
+    compile(".a and .b"),
     content=(
       #|And(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
     ),
   )
   inspect(
-    parse_filter(".a or .b"),
+    compile(".a or .b"),
     content=(
       #|Or(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
     ),
   )
-  inspect(parse_filter("not"), content="Not(Identity)")
+  inspect(compile("not"), content="Not(Identity)")
   inspect(
-    parse_filter(".a | not"),
+    compile(".a | not"),
     content=(
       #|Pipe(Pipe(Identity, Field("a")), Not(Identity))
     ),
   )
   inspect(
-    parse_filter("not .a"),
+    compile("not .a"),
     content=(
       #|Not(Pipe(Identity, Field("a")))
     ),
@@ -542,7 +531,7 @@ test "parse logical" {
 ///|
 test "parse arithmetic" {
   inspect(
-    parse_filter(".a + .b * .c"),
+    compile(".a + .b * .c"),
     content=(
       #|Add(
       #|  Pipe(Identity, Field("a")),
@@ -551,19 +540,19 @@ test "parse arithmetic" {
     ),
   )
   inspect(
-    parse_filter("1+2"),
+    compile("1+2"),
     content=(
       #|Add(Literal(Number(1, None)), Literal(Number(2, None)))
     ),
   )
   inspect(
-    parse_filter("1-2"),
+    compile("1-2"),
     content=(
       #|Sub(Literal(Number(1, None)), Literal(Number(2, None)))
     ),
   )
   inspect(
-    parse_filter("(.a - .b) / 2"),
+    compile("(.a - .b) / 2"),
     content=(
       #|Div(
       #|  Sub(Pipe(Identity, Field("a")), Pipe(Identity, Field("b"))),
@@ -572,19 +561,19 @@ test "parse arithmetic" {
     ),
   )
   inspect(
-    parse_filter("10 % 3"),
+    compile("10 % 3"),
     content=(
       #|Mod(Literal(Number(10, None)), Literal(Number(3, None)))
     ),
   )
   inspect(
-    parse_filter("-."),
+    compile("-."),
     content=(
       #|Call("__neg", [Identity])
     ),
   )
   inspect(
-    parse_filter("-(.a + 1)"),
+    compile("-(.a + 1)"),
     content=(
       #|Call(
       #|  "__neg",
@@ -597,7 +586,7 @@ test "parse arithmetic" {
 ///|
 test "parse if-then-else" {
   inspect(
-    parse_filter("if .a then .b else .c end"),
+    compile("if .a then .b else .c end"),
     content=(
       #|IfElse(
       #|  Pipe(Identity, Field("a")),
@@ -607,7 +596,7 @@ test "parse if-then-else" {
     ),
   )
   inspect(
-    parse_filter("if .a then .b elif .c then .d else .e end"),
+    compile("if .a then .b elif .c then .d else .e end"),
     content=(
       #|IfElse(
       #|  Pipe(Identity, Field("a")),
@@ -621,7 +610,7 @@ test "parse if-then-else" {
     ),
   )
   inspect(
-    parse_filter("if .a then .b end"),
+    compile("if .a then .b end"),
     content=(
       #|IfElse(
       #|  Pipe(Identity, Field("a")),
@@ -635,18 +624,18 @@ test "parse if-then-else" {
 ///|
 test "parse fallback and empty" {
   inspect(
-    parse_filter(".a // .b"),
+    compile(".a // .b"),
     content=(
       #|Fallback(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
     ),
   )
-  inspect(parse_filter("empty"), content="Empty")
+  inspect(compile("empty"), content="Empty")
 }
 
 ///|
 test "parse update assignment operators" {
   inspect(
-    parse_filter(".a |= . + 1"),
+    compile(".a |= . + 1"),
     content=(
       #|IfElse(
       #|  Call(
@@ -678,7 +667,7 @@ test "parse update assignment operators" {
     ),
   )
   inspect(
-    parse_filter(".a += 2"),
+    compile(".a += 2"),
     content=(
       #|Call(
       #|  "setpath",
@@ -693,7 +682,7 @@ test "parse update assignment operators" {
     ),
   )
   inspect(
-    parse_filter(".a //= 0"),
+    compile(".a //= 0"),
     content=(
       #|Call(
       #|  "setpath",
@@ -708,7 +697,7 @@ test "parse update assignment operators" {
     ),
   )
   inspect(
-    parse_filter(".[0] *= 3"),
+    compile(".[0] *= 3"),
     content=(
       #|Call(
       #|  "setpath",
@@ -723,7 +712,7 @@ test "parse update assignment operators" {
     ),
   )
   inspect(
-    parse_filter(".a = 1"),
+    compile(".a = 1"),
     content=(
       #|Call(
       #|  "setpath",
@@ -732,7 +721,7 @@ test "parse update assignment operators" {
     ),
   )
   inspect(
-    parse_filter(".a %= 2"),
+    compile(".a %= 2"),
     content=(
       #|Call(
       #|  "setpath",
@@ -750,16 +739,16 @@ test "parse update assignment operators" {
 
 ///|
 test "parse update assignment dynamic lhs" {
-  guard (try? parse_filter(".[] |= . + 1")) is Ok(_) else {
+  guard (try? compile(".[] |= . + 1")) is Ok(_) else {
     fail("expected parse success for dynamic update assignment lhs")
   }
-  guard (try? parse_filter("(.a, .b) = range(3)")) is Ok(_) else {
+  guard (try? compile("(.a, .b) = range(3)")) is Ok(_) else {
     fail("expected parse success for grouped update assignment lhs")
   }
-  guard (try? parse_filter("1 as $s | 3 as $e | .[$s:$e] = [9]")) is Ok(_) else {
+  guard (try? compile("1 as $s | 3 as $e | .[$s:$e] = [9]")) is Ok(_) else {
     fail("expected parse success for dynamic slice bounds in update lhs")
   }
-  guard (try? parse_filter("(.[] | .[1:3]) |= map(.+100)")) is Ok(_) else {
+  guard (try? compile("(.[] | .[1:3]) |= map(.+100)")) is Ok(_) else {
     fail("expected parse success for dynamic base slice update lhs")
   }
 }
@@ -767,7 +756,7 @@ test "parse update assignment dynamic lhs" {
 ///|
 test "parse update assignment precedence" {
   inspect(
-    parse_filter("1 < 2 | . + 1"),
+    compile("1 < 2 | . + 1"),
     content=(
       #|Pipe(
       #|  Lt(Literal(Number(1, None)), Literal(Number(2, None))),
@@ -775,15 +764,13 @@ test "parse update assignment precedence" {
       #|)
     ),
   )
-  guard (try? parse_filter(".a = .b | .a")) is Ok(_) else {
+  guard (try? compile(".a = .b | .a")) is Ok(_) else {
     fail("expected parse success for pipe after update assignment")
   }
-  guard (try? parse_filter(".a = .b // 1 | .a")) is Ok(_) else {
+  guard (try? compile(".a = .b // 1 | .a")) is Ok(_) else {
     fail("expected parse success for fallback after update assignment")
   }
-  guard (try? parse_filter(
-      "reduce .[] as {$x,$y} (null; .x += $x | .y += [$y])",
-    ))
+  guard (try? compile("reduce .[] as {$x,$y} (null; .x += $x | .y += [$y])"))
     is Ok(_) else {
     fail("expected parse success for reduce update pipeline")
   }
@@ -792,13 +779,13 @@ test "parse update assignment precedence" {
 ///|
 test "parse array and object literals" {
   inspect(
-    parse_filter("[.a, .b]"),
+    compile("[.a, .b]"),
     content=(
       #|Array([Comma(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))])
     ),
   )
   inspect(
-    parse_filter("[10 > 0, 1 == 2]"),
+    compile("[10 > 0, 1 == 2]"),
     content=(
       #|Array(
       #|  [
@@ -811,19 +798,19 @@ test "parse array and object literals" {
     ),
   )
   inspect(
-    parse_filter("{\"a\": .b, c: .d}"),
+    compile("{\"a\": .b, c: .d}"),
     content=(
       #|Object([("a", Pipe(Identity, Field("b"))), ("c", Pipe(Identity, Field("d")))])
     ),
   )
   inspect(
-    parse_filter("{\"ok\": (10 > 0)}"),
+    compile("{\"ok\": (10 > 0)}"),
     content=(
       #|Object([("ok", Gt(Literal(Number(10, None)), Literal(Number(0, None))))])
     ),
   )
   inspect(
-    parse_filter("{a, \"b\", c: .d}"),
+    compile("{a, \"b\", c: .d}"),
     content=(
       #|Object(
       #|  [
@@ -835,23 +822,23 @@ test "parse array and object literals" {
     ),
   )
   inspect(
-    parse_filter("{ $x }"),
+    compile(". as $x | { $x }"),
     content=(
-      #|Object([("x", Var("x"))])
+      #|As(Identity, "x", Object([("x", Var("x"))]))
     ),
   )
   inspect(
-    parse_filter(".[1,2]"),
+    compile(".[1,2]"),
     content="Pipe(Identity, Comma(Index(1), Index(2)))",
   )
   inspect(
-    parse_filter(".[\"a\", \"b\"]"),
+    compile(".[\"a\", \"b\"]"),
     content=(
       #|Pipe(Identity, Comma(Field("a"), Field("b")))
     ),
   )
   inspect(
-    parse_filter("[1,2][]"),
+    compile("[1,2][]"),
     content=(
       #|Pipe(
       #|  Array([Comma(Literal(Number(1, None)), Literal(Number(2, None)))]),
@@ -859,22 +846,20 @@ test "parse array and object literals" {
       #|)
     ),
   )
-  guard (try? parse_filter("{a,b,(.d):.a,e:.b}")) is Ok(_) else {
+  guard (try? compile("{a,b,(.d):.a,e:.b}")) is Ok(_) else {
     fail("expected dynamic object key parse")
   }
-  guard (try? parse_filter("{\"a\",b,\"a$\\(1+1)\"}")) is Ok(_) else {
+  guard (try? compile("{\"a\",b,\"a$\\(1+1)\"}")) is Ok(_) else {
     fail("expected interpolated object key parse")
   }
-  guard (try? parse_filter(
-      "{x: try 1, y: try error catch 2, z: if true then 3 end}",
-    ))
+  guard (try? compile("{x: try 1, y: try error catch 2, z: if true then 3 end}"))
     is Ok(_) else {
     fail("expected object literal parse with try/catch values")
   }
-  guard (try? parse_filter("{a,$__loc__,c}")) is Ok(_) else {
+  guard (try? compile("{a,$__loc__,c}")) is Ok(_) else {
     fail("expected variable shorthand object key parse")
   }
-  guard (try? parse_filter(
+  guard (try? compile(
       "1 as $x | \"2\" as $y | \"3\" as $z | { $x, as, $y: 4, ($z): 5, if: 6, foo: 7 }",
     ))
     is Ok(_) else {
@@ -884,10 +869,10 @@ test "parse array and object literals" {
 
 ///|
 test "parse interpolated string literal" {
-  guard (try? parse_filter("\"invalid value: \\(.)\"")) is Ok(_) else {
+  guard (try? compile("\"invalid value: \\(.)\"")) is Ok(_) else {
     fail("expected string interpolation parse")
   }
-  guard (try? parse_filter("try error(\"\\($__loc__)\") catch .")) is Ok(_) else {
+  guard (try? compile("try error(\"\\($__loc__)\") catch .")) is Ok(_) else {
     fail("expected __loc__ interpolation parse")
   }
 }
@@ -895,7 +880,7 @@ test "parse interpolated string literal" {
 ///|
 test "parse parentheses" {
   inspect(
-    parse_filter("(.a, .b)"),
+    compile("(.a, .b)"),
     content=(
       #|Comma(Pipe(Identity, Field("a")), Pipe(Identity, Field("b")))
     ),

@@ -6,21 +6,18 @@ test "execute import/include filesystem module resolution" {
   set_module_search_paths(["third_party/jq-tests/tests/modules"])
 
   @debug.assert_eq(
-    must_execute(
-      parse_filter("import \"a\" as foo; foo::a"),
-      must_parse("null"),
-    ),
+    must_execute(compile("import \"a\" as foo; foo::a"), must_parse("null")),
     [Value::string("a")],
   )
   @debug.assert_eq(
     must_execute(
-      parse_filter("import \"b\" as bar; [bar::a, bar::b]"),
+      compile("import \"b\" as bar; [bar::a, bar::b]"),
       must_parse("null"),
     ),
     [Value::array([Value::string("b"), Value::string("c")])],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("include \"shadow1\"; e"), must_parse("null")),
+    must_execute(compile("include \"shadow1\"; e"), must_parse("null")),
     [Value::number(2.0)],
   )
 
@@ -36,14 +33,11 @@ test "execute import/include filesystem module resolution preserves non-BMP code
 
   let expected = must_parse("\"\\ud83d\\ude00\"")
   @debug.assert_eq(
-    must_execute(
-      parse_filter("import \"emoji\" as e; e::v"),
-      must_parse("null"),
-    ),
+    must_execute(compile("import \"emoji\" as e; e::v"), must_parse("null")),
     [expected],
   )
   @debug.assert_eq(
-    must_execute(parse_filter("include \"emoji\"; v"), must_parse("null")),
+    must_execute(compile("include \"emoji\"; v"), must_parse("null")),
     [expected],
   )
 
