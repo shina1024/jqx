@@ -5073,6 +5073,51 @@
     "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep object multiplication cases or jqx adopts a documented jq-crash compatibility mode"
   },
   {
+    "name": "upstream-jq-test-l2616",
+    "filter": "try ((reduce range(10001) as $_ ([]; [.])) as $x | (reduce range(10001) as $_ ([]; [.])) as $y | $x == $y) catch .",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 2616,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l2621",
+    "filter": "try ((reduce range(10001) as $_ ([]; [.])) as $x | [$x, $x] | sort) catch .",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 2621,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l2625",
+    "filter": "try ((reduce range(10001) as $_ ([]; [.])) as $x | [$x, $x] | unique) catch .",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 2625,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l2629",
+    "filter": "try ((reduce range(10001) as $_ ({}; {a: .})) as $x | [$x, $x] | sort) catch .",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 2629,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
+    "name": "upstream-jq-test-l2633",
+    "filter": "try ((reduce range(10001) as $_ ({}; {a: .})) as $x | [$x, $x] | unique) catch .",
+    "input": "null",
+    "source_file": "jq.test",
+    "source_line": 2633,
+    "source_kind": "runtime",
+    "source_expected_count": 1
+  },
+  {
     "name": "upstream-base64-test-l4",
     "filter": "@base64",
     "input": "\"\"",
