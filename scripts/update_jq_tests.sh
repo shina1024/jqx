@@ -3,6 +3,7 @@ set -euo pipefail
 
 UPSTREAM_REPO="${UPSTREAM_REPO:-https://github.com/jqlang/jq.git}"
 UPSTREAM_REF="${UPSTREAM_REF:-master}"
+FORCE_SYNC="${FORCE_SYNC:-false}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -16,6 +17,19 @@ trap cleanup EXIT
 
 git clone --depth 1 --branch "${UPSTREAM_REF}" "${UPSTREAM_REPO}" "${TMP_DIR}"
 UPSTREAM_COMMIT="$(git -C "${TMP_DIR}" rev-parse HEAD | tr -d '\r')"
+
+if [[ "${FORCE_SYNC}" != "true" ]] &&
+  [[ -f "${DEST_DIR}/UPSTREAM_REPO" ]] &&
+  [[ -f "${DEST_DIR}/UPSTREAM_REF" ]] &&
+  [[ -f "${DEST_DIR}/UPSTREAM_COMMIT" ]] &&
+  [[ "$(tr -d '\r\n' < "${DEST_DIR}/UPSTREAM_REPO")" == "${UPSTREAM_REPO}" ]] &&
+  [[ "$(tr -d '\r\n' < "${DEST_DIR}/UPSTREAM_REF")" == "${UPSTREAM_REF}" ]] &&
+  [[ "$(tr -d '\r\n' < "${DEST_DIR}/UPSTREAM_COMMIT")" == "${UPSTREAM_COMMIT}" ]]; then
+  echo "Vendored jq tests already match upstream commit: ${UPSTREAM_COMMIT}"
+  echo "Set FORCE_SYNC=true to refresh the vendored files anyway."
+  exit 0
+fi
+
 SYNCED_AT_UTC="$(date -u +%Y-%m-%d)"
 
 FILES_TO_COPY=(

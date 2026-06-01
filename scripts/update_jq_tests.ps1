@@ -1,7 +1,8 @@
 param(
   [string]$UpstreamRepo = "https://github.com/jqlang/jq.git",
   [string]$Ref = "master",
-  [string]$Destination = ""
+  [string]$Destination = "",
+  [switch]$Force
 )
 
 Set-StrictMode -Version Latest
@@ -31,6 +32,23 @@ $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("jq-tests-sync-" + [Gui
 try {
   Run-Git "" clone --depth 1 --branch $Ref $UpstreamRepo $tempRoot
   $upstreamCommit = (Run-Git $tempRoot rev-parse HEAD | Out-String).Trim()
+
+  $currentRepoPath = Join-Path $destinationPath "UPSTREAM_REPO"
+  $currentRefPath = Join-Path $destinationPath "UPSTREAM_REF"
+  $currentCommitPath = Join-Path $destinationPath "UPSTREAM_COMMIT"
+  if (
+    (-not $Force) -and
+    (Test-Path $currentRepoPath) -and
+    (Test-Path $currentRefPath) -and
+    (Test-Path $currentCommitPath) -and
+    ((Get-Content -Raw $currentRepoPath).Trim() -eq $UpstreamRepo) -and
+    ((Get-Content -Raw $currentRefPath).Trim() -eq $Ref) -and
+    ((Get-Content -Raw $currentCommitPath).Trim() -eq $upstreamCommit)
+  ) {
+    Write-Host "Vendored jq tests already match upstream commit: $upstreamCommit"
+    Write-Host "Pass -Force to refresh the vendored files anyway."
+    return
+  }
 
   $filesToCopy = @(
     "COPYING",
