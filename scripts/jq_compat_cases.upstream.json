@@ -5079,7 +5079,14 @@
     "source_file": "jq.test",
     "source_line": 2616,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [
+      "win32"
+    ],
+    "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-equality",
+    "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep equality case; jqx completes without reproducing process aborts",
+    "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep equality cases or jqx adopts a documented jq-crash compatibility mode"
   },
   {
     "name": "upstream-jq-test-l2621",
@@ -5088,7 +5095,14 @@
     "source_file": "jq.test",
     "source_line": 2621,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [
+      "win32"
+    ],
+    "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-array-sort",
+    "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep array sort case; jqx completes without reproducing process aborts",
+    "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep array sort cases or jqx adopts a documented jq-crash compatibility mode"
   },
   {
     "name": "upstream-jq-test-l2625",
@@ -5097,7 +5111,14 @@
     "source_file": "jq.test",
     "source_line": 2625,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [
+      "win32"
+    ],
+    "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-array-unique",
+    "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep array unique case; jqx completes without reproducing process aborts",
+    "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep array unique cases or jqx adopts a documented jq-crash compatibility mode"
   },
   {
     "name": "upstream-jq-test-l2629",
@@ -5106,7 +5127,14 @@
     "source_file": "jq.test",
     "source_line": 2629,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [
+      "win32"
+    ],
+    "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-object-sort",
+    "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep object sort case; jqx completes without reproducing process aborts",
+    "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep object sort cases or jqx adopts a documented jq-crash compatibility mode"
   },
   {
     "name": "upstream-jq-test-l2633",
@@ -5115,7 +5143,14 @@
     "source_file": "jq.test",
     "source_line": 2633,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [
+      "win32"
+    ],
+    "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-object-unique",
+    "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep object unique case; jqx completes without reproducing process aborts",
+    "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep object unique cases or jqx adopts a documented jq-crash compatibility mode"
   },
   {
     "name": "upstream-base64-test-l4",
