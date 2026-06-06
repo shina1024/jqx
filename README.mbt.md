@@ -27,7 +27,7 @@ npm install @shina1024/jqx-yup-adapter yup
 npm install @shina1024/jqx-valibot-adapter valibot
 ```
 
-The root README is the cross-surface entrypoint. Detailed JS/TS runtime and validator-specific adapter guidance lives in the package READMEs under [`ts/jqx/README.md`](ts/jqx/README.md), [`ts/zod-adapter/README.md`](ts/zod-adapter/README.md), [`ts/yup-adapter/README.md`](ts/yup-adapter/README.md), and [`ts/valibot-adapter/README.md`](ts/valibot-adapter/README.md).
+For detailed JS/TS runtime and adapter docs, see [`ts/jqx/README.md`](ts/jqx/README.md), [`ts/zod-adapter/README.md`](ts/zod-adapter/README.md), [`ts/yup-adapter/README.md`](ts/yup-adapter/README.md), and [`ts/valibot-adapter/README.md`](ts/valibot-adapter/README.md).
 
 ## CLI Quick Start
 
@@ -131,8 +131,11 @@ Start with the direct runtime from `@shina1024/jqx`:
 ```ts
 import { run, runJsonText } from "@shina1024/jqx";
 
-const values = run(".foo", { foo: 1 });
+const result = run(".foo", { foo: 1 });
+// { ok: true, value: [1] }
+
 const compat = runJsonText(".", "9007199254740993");
+// { ok: true, value: ["9007199254740993"] }
 ```
 
 In JS/TS, the value lane is intentionally stricter than jq itself. `run(...)`, `parseJson(...)`, and `isValidJson(...)` only accept values that remain representable as plain JS JSON values, so non-finite numbers such as `Infinity`, `-Infinity`, and `NaN` are rejected. When jq-compatible numeric fidelity matters, stay on `runJsonText(...)`.
@@ -192,16 +195,3 @@ Standalone adapter packages are:
 - `@shina1024/jqx-valibot-adapter`
 
 Each package keeps `createAdapter(runtime).filter(...)` as the primary on-ramp and owns its validator-specific details in its own README.
-
-## Documentation Ownership
-
-- Root README: cross-surface install story and one quick start per public surface.
-- [`ts/jqx/README.md`](ts/jqx/README.md): detailed JS/TS runtime, compiled-filter, query, and `/bind` documentation.
-- [`ts/zod-adapter/README.md`](ts/zod-adapter/README.md): Zod-specific adapter usage.
-- [`ts/yup-adapter/README.md`](ts/yup-adapter/README.md): Yup-specific adapter usage.
-- [`ts/valibot-adapter/README.md`](ts/valibot-adapter/README.md): Valibot-specific adapter usage.
-
-That split keeps the root docs concise while the package READMEs own the detailed runtime and adapter guidance that changes more often.
-
-When release-audit details change, update the package README that owns the surface first and then keep this root overview consistent with it.
-That prevents the root docs from drifting back into a second source of truth for runtime-specific or validator-specific behavior.
