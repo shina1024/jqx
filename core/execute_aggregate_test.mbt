@@ -88,33 +88,53 @@ test "execute any/all compatibility" {
 
 ///|
 test "execute any/all errors" {
-  guard (try? execute(compile("any"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over number (1)" else {
+  guard (try execute(compile("any"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot iterate over number (1)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected any number iterate error")
   }
-  guard (try? execute(compile("all"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over null (null)" else {
+  guard (try execute(compile("all"), must_parse("null")) catch {
+    err => err.to_string() == "Cannot iterate over null (null)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected all null iterate error")
   }
-  guard (try? execute(compile("any"), must_parse("\"ab\""))) is Err(err) &&
-    err.to_string() == "Cannot iterate over string (\"ab\")" else {
+  guard (try execute(compile("any"), must_parse("\"ab\"")) catch {
+    err => err.to_string() == "Cannot iterate over string (\"ab\")"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected any string iterate error")
   }
-  guard (try? execute(compile("any(.)"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over number (1)" else {
+  guard (try execute(compile("any(.)"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot iterate over number (1)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected any(cond) number iterate error")
   }
-  guard (try? execute(compile("all(.)"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over null (null)" else {
+  guard (try execute(compile("all(.)"), must_parse("null")) catch {
+    err => err.to_string() == "Cannot iterate over null (null)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected all(cond) null iterate error")
   }
-  guard (try? execute(compile("error"), must_parse("\"x\""))) is Err(err) &&
-    err.to_string() == "x" else {
+  guard (try execute(compile("error"), must_parse("\"x\"")) catch {
+    err => err.to_string() == "x"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected error builtin")
   }
-  guard (try? execute(compile("error(\"boom\")"), must_parse("null")))
-    is Err(err) &&
-    err.to_string() == "boom" else {
+  guard (try execute(compile("error(\"boom\")"), must_parse("null")) catch {
+    err => err.to_string() == "boom"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected error(msg) call")
   }
 }
@@ -154,8 +174,11 @@ test "execute pick compatibility" {
 
 ///|
 test "execute pick errors" {
-  guard (try? execute(compile("pick(last)"), must_parse("[1,2]"))) is Err(err) &&
-    err.to_string() == "Out of bounds negative array index" else {
+  guard (try execute(compile("pick(last)"), must_parse("[1,2]")) catch {
+    err => err.to_string() == "Out of bounds negative array index"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected pick(last) negative index error")
   }
 }
@@ -235,16 +258,26 @@ test "execute add builtin compatibility" {
 
 ///|
 test "execute add builtin errors" {
-  guard (try? execute(compile("add"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over null (null)" else {
+  guard (try execute(compile("add"), must_parse("null")) catch {
+    err => err.to_string() == "Cannot iterate over null (null)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected add null iterate error")
   }
-  guard (try? execute(compile("add"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over number (1)" else {
+  guard (try execute(compile("add"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot iterate over number (1)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected add number iterate error")
   }
-  guard (try? execute(compile("add"), must_parse("[true,false]"))) is Err(err) &&
-    err.to_string() == "boolean (true) and boolean (false) cannot be added" else {
+  guard (try execute(compile("add"), must_parse("[true,false]")) catch {
+    err =>
+      err.to_string() == "boolean (true) and boolean (false) cannot be added"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected add type mismatch error")
   }
 }
@@ -319,12 +352,20 @@ test "execute sort compatibility" {
 
 ///|
 test "execute sort errors" {
-  guard (try? execute(compile("sort"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "number (1) cannot be sorted, as it is not an array" else {
+  guard (try execute(compile("sort"), must_parse("1")) catch {
+    err =>
+      err.to_string() == "number (1) cannot be sorted, as it is not an array"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected sort non-array type error")
   }
-  guard (try? execute(compile("sort"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "null (null) cannot be sorted, as it is not an array" else {
+  guard (try execute(compile("sort"), must_parse("null")) catch {
+    err =>
+      err.to_string() == "null (null) cannot be sorted, as it is not an array"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected sort null type error")
   }
 }
@@ -369,8 +410,11 @@ test "execute sort_by compatibility" {
 
 ///|
 test "execute sort_by errors" {
-  guard (try? execute(compile("sort_by(.)"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over number (1)" else {
+  guard (try execute(compile("sort_by(.)"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot iterate over number (1)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected sort_by non-array error")
   }
 }
@@ -423,8 +467,11 @@ test "execute group_by compatibility" {
 
 ///|
 test "execute group_by errors" {
-  guard (try? execute(compile("group_by(.)"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over number (1)" else {
+  guard (try execute(compile("group_by(.)"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot iterate over number (1)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected group_by non-array error")
   }
 }
@@ -455,12 +502,20 @@ test "execute min/max compatibility" {
 
 ///|
 test "execute min/max errors" {
-  guard (try? execute(compile("min"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "number (1) and number (1) cannot be iterated over" else {
+  guard (try execute(compile("min"), must_parse("1")) catch {
+    err =>
+      err.to_string() == "number (1) and number (1) cannot be iterated over"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected min non-array iterate error")
   }
-  guard (try? execute(compile("max"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "null (null) and null (null) cannot be iterated over" else {
+  guard (try execute(compile("max"), must_parse("null")) catch {
+    err =>
+      err.to_string() == "null (null) and null (null) cannot be iterated over"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected max null iterate error")
   }
 }
@@ -506,12 +561,18 @@ test "execute min_by/max_by compatibility" {
 
 ///|
 test "execute min_by/max_by errors" {
-  guard (try? execute(compile("min_by(.)"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over number (1)" else {
+  guard (try execute(compile("min_by(.)"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot iterate over number (1)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected min_by non-array error")
   }
-  guard (try? execute(compile("max_by(.)"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over number (1)" else {
+  guard (try execute(compile("max_by(.)"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot iterate over number (1)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected max_by non-array error")
   }
 }
@@ -540,12 +601,20 @@ test "execute unique compatibility" {
 
 ///|
 test "execute unique errors" {
-  guard (try? execute(compile("unique"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "number (1) cannot be sorted, as it is not an array" else {
+  guard (try execute(compile("unique"), must_parse("1")) catch {
+    err =>
+      err.to_string() == "number (1) cannot be sorted, as it is not an array"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected unique non-array type error")
   }
-  guard (try? execute(compile("unique"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "null (null) cannot be sorted, as it is not an array" else {
+  guard (try execute(compile("unique"), must_parse("null")) catch {
+    err =>
+      err.to_string() == "null (null) cannot be sorted, as it is not an array"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected unique null type error")
   }
 }
@@ -592,8 +661,11 @@ test "execute unique_by compatibility" {
 
 ///|
 test "execute unique_by errors" {
-  guard (try? execute(compile("unique_by(.)"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over number (1)" else {
+  guard (try execute(compile("unique_by(.)"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot iterate over number (1)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected unique_by non-array error")
   }
 }

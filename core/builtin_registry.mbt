@@ -369,10 +369,8 @@ fn dispatch_nullary_builtin(
               json_type_with_value(input) + " cannot be parsed as a number",
             )
           }
-          let parsed_double = try? @string.parse_double(parse_input)
-          match parsed_double {
-            Ok(n) => [json_number_value(n)]
-            Err(_) =>
+          try @string.parse_double(parse_input) catch {
+            _ =>
               try parse(parse_input) catch {
                 _ =>
                   raise TypeError(
@@ -390,6 +388,8 @@ fn dispatch_nullary_builtin(
                       )
                   }
               }
+          } noraise {
+            n => [json_number_value(n)]
           }
         }
         _ =>

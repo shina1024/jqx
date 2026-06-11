@@ -170,10 +170,18 @@ fn format_error_message(msg : String) -> String {
             .to_owned()
           let start_col = start_line + j + marker2.length()
           let col_part = msg.view(start_offset=start_col).to_owned()
-          let parsed_line = try? @string.parse_int(line_part)
-          let parsed_col = try? @string.parse_int(col_part)
+          let parsed_line = try @string.parse_int(line_part) catch {
+            _ => None
+          } noraise {
+            line => Some(line)
+          }
+          let parsed_col = try @string.parse_int(col_part) catch {
+            _ => None
+          } noraise {
+            col => Some(col)
+          }
           match (parsed_line, parsed_col) {
-            (Ok(line), Ok(col)) => {
+            (Some(line), Some(col)) => {
               let base = msg.view(start_offset=0, end_offset=i).to_owned()
               return "jqx: error (at <stdin>:" +
                 line.to_string() +

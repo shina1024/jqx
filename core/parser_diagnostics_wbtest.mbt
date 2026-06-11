@@ -161,31 +161,46 @@ test "compile forward reference detection in scope" {
 
 ///|
 test "validate diagnostics reports unknown variable and label" {
-  guard (try? validate_filter_compile_diagnostics(Filter::var_("x"), "$x"))
-    is Err(Diagnostics(lines)) &&
-    lines.length() == 1 &&
-    lines[0].contains("$x is not defined") else {
+  guard (try
+    validate_filter_compile_diagnostics(Filter::var_("x"), "$x")
+  catch {
+    Diagnostics(lines) =>
+      lines.length() == 1 && lines[0].contains("$x is not defined")
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     fail("expected unknown variable diagnostic")
   }
-  guard (try? validate_filter_compile_diagnostics(
-      Filter::break_("loop"),
-      "break $loop",
-    ))
-    is Err(Diagnostics(lines)) &&
-    lines.length() == 1 &&
-    lines[0].contains("$*label-loop is not defined") else {
+  guard (try
+    validate_filter_compile_diagnostics(Filter::break_("loop"), "break $loop")
+  catch {
+    Diagnostics(lines) =>
+      lines.length() == 1 && lines[0].contains("$*label-loop is not defined")
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     fail("expected undefined label diagnostic")
   }
 }
 
 ///|
 test "validate diagnostics reports forward references from compile()" {
-  guard (try? compile("def f: g; def g: .; f")) is Err(Diagnostics(lines)) &&
-    lines.length() == 1 &&
-    lines[0].contains("g/0 is not defined") else {
+  guard (try compile("def f: g; def g: .; f") catch {
+    Diagnostics(lines) =>
+      lines.length() == 1 && lines[0].contains("g/0 is not defined")
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     fail("expected forward-reference diagnostic")
   }
-  guard (try? compile("def g: .; def f: g; f")) is Ok(_) else {
+  guard (try compile("def g: .; def f: g; f") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected ordered definitions to compile")
   }
 }

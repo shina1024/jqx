@@ -289,14 +289,14 @@ fn FilterCursor::parse_int(ctx : FilterCursor) -> Int raise FilterError {
   }
   let end = ctx.offset
   let s = ctx.input.view(start_offset=start, end_offset=end)
-  let parsed = try? @string.parse_int64(s)
-  match parsed {
-    Ok(v) => v.to_int()
-    Err(_) =>
+  try @string.parse_int64(s) catch {
+    _ =>
       raise InvalidNumber(
         filter_offset_to_position(ctx.input, start),
         s.to_owned(),
       )
+  } noraise {
+    v => v.to_int()
   }
 }
 
@@ -609,18 +609,16 @@ fn FilterCursor::parse_number_literal(
   let starts_with_dot = s_str.length() > 0 &&
     s_str.unsafe_get(0).to_int().unsafe_to_char() == '.'
   let parse_input = if starts_with_dot { "0" + s_str } else { s_str }
-  let parsed = try? parse(parse_input.view())
-  match parsed {
-    Ok(Number(n, repr)) =>
+  try parse(parse_input.view()) catch {
+    _ => raise InvalidNumber(filter_offset_to_position(ctx.input, start), s_str)
+  } noraise {
+    Number(n, repr) =>
       if starts_with_dot {
         Value::number(n)
       } else {
         Value::number(n, repr?)
       }
-    Ok(_) =>
-      raise InvalidNumber(filter_offset_to_position(ctx.input, start), s_str)
-    Err(_) =>
-      raise InvalidNumber(filter_offset_to_position(ctx.input, start), s_str)
+    _ => raise InvalidNumber(filter_offset_to_position(ctx.input, start), s_str)
   }
 }
 

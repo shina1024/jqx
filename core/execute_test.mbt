@@ -26,20 +26,32 @@ test "execute field/index type errors and optional suppression" {
   let array_json = must_parse("[1,2]")
   let object_json = must_parse("{\"a\":1}")
   let null_json = must_parse("null")
-  guard (try? execute(compile(".foo"), number_json)) is Err(err) &&
-    err.to_string() == "Cannot index number with string \"foo\"" else {
+  guard (try execute(compile(".foo"), number_json) catch {
+    err => err.to_string() == "Cannot index number with string \"foo\""
+  } noraise {
+    _ => false
+  }) else {
     fail("expected type error for number .foo")
   }
-  guard (try? execute(compile(".foo"), array_json)) is Err(err) &&
-    err.to_string() == "Cannot index array with string \"foo\"" else {
+  guard (try execute(compile(".foo"), array_json) catch {
+    err => err.to_string() == "Cannot index array with string \"foo\""
+  } noraise {
+    _ => false
+  }) else {
     fail("expected type error for array .foo")
   }
-  guard (try? execute(compile(".[0]"), number_json)) is Err(err) &&
-    err.to_string() == "Cannot index number with number" else {
+  guard (try execute(compile(".[0]"), number_json) catch {
+    err => err.to_string() == "Cannot index number with number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected type error for number .[0]")
   }
-  guard (try? execute(compile(".[0]"), object_json)) is Err(err) &&
-    err.to_string() == "Cannot index object with number" else {
+  guard (try execute(compile(".[0]"), object_json) catch {
+    err => err.to_string() == "Cannot index object with number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected type error for object .[0]")
   }
   @debug.assert_eq(must_execute(compile(".foo?"), number_json), [])
@@ -91,12 +103,18 @@ test "execute chained index without extra dot" {
 ///|
 test "execute string index jq compatibility" {
   let s = must_parse("\"abc\"")
-  guard (try? execute(compile(".[0]"), s)) is Err(err) &&
-    err.to_string() == "Cannot index string with number" else {
+  guard (try execute(compile(".[0]"), s) catch {
+    err => err.to_string() == "Cannot index string with number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected string index type error")
   }
-  guard (try? execute(compile(".[-1]"), s)) is Err(err) &&
-    err.to_string() == "Cannot index string with number" else {
+  guard (try execute(compile(".[-1]"), s) catch {
+    err => err.to_string() == "Cannot index string with number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected string negative index type error")
   }
   @debug.assert_eq(must_execute(compile(".[0]?"), s), [])
@@ -280,17 +298,32 @@ test "execute def edge semantics compatibility" {
     ),
     [Value::number(10.0)],
   )
-  guard (try? compile("def f: g; def g: . + 1; f")) is Err(Diagnostics(_)) else {
+  guard (try compile("def f: g; def g: . + 1; f") catch {
+    Diagnostics(_) => true
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     fail("expected forward def reference to fail at compile time")
   }
-  guard (try? compile("def f(x): g(x); def g(y): y + 1; f(1)"))
-    is Err(Diagnostics(_)) else {
+  guard (try compile("def f(x): g(x); def g(y): y + 1; f(1)") catch {
+    Diagnostics(_) => true
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     fail("expected forward def reference with arity to fail at compile time")
   }
-  guard (try? compile(
+  guard (try
+    compile(
       "def even: if . == 0 then true else .-1|odd end; def odd: if . == 0 then false else .-1|even end; 4|even",
-    ))
-    is Err(Diagnostics(_)) else {
+    )
+  catch {
+    Diagnostics(_) => true
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     fail(
       "expected mutual recursion without prior definition to fail at compile time",
     )
@@ -300,20 +333,25 @@ test "execute def edge semantics compatibility" {
 ///|
 test "execute import/include missing module compatibility" {
   clear_module_sources()
-  guard (try? execute(
-      compile("import \"a\" as foo; foo::a"),
-      must_parse("null"),
-    ))
-    is Err(err) &&
-    err.to_string() == "module not found: a" else {
+  guard (try
+    execute(compile("import \"a\" as foo; foo::a"), must_parse("null"))
+  catch {
+    err => err.to_string() == "module not found: a"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected missing module error for import")
   }
-  guard (try? execute(
+  guard (try
+    execute(
       compile("include \"shadow1\"; include \"shadow2\"; e"),
       must_parse("null"),
-    ))
-    is Err(err) &&
-    err.to_string() == "module not found: shadow2" else {
+    )
+  catch {
+    err => err.to_string() == "module not found: shadow2"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected missing module error for include")
   }
   clear_module_sources()
@@ -386,20 +424,32 @@ test "execute first/last/nth compatibility" {
 
 ///|
 test "execute first/last/nth errors" {
-  guard (try? execute(compile("first"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot index number with number" else {
+  guard (try execute(compile("first"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot index number with number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected first number index error")
   }
-  guard (try? execute(compile("last"), must_parse("{}"))) is Err(err) &&
-    err.to_string() == "Cannot index object with number" else {
+  guard (try execute(compile("last"), must_parse("{}")) catch {
+    err => err.to_string() == "Cannot index object with number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected last object index error")
   }
-  guard (try? execute(compile("nth(\"a\")"), must_parse("[1,2,3]"))) is Err(err) &&
-    err.to_string() == "Cannot index array with string \"a\"" else {
+  guard (try execute(compile("nth(\"a\")"), must_parse("[1,2,3]")) catch {
+    err => err.to_string() == "Cannot index array with string \"a\""
+  } noraise {
+    _ => false
+  }) else {
     fail("expected nth array string-key error")
   }
-  guard (try? execute(compile("nth(true)"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "Cannot index null with boolean" else {
+  guard (try execute(compile("nth(true)"), must_parse("null")) catch {
+    err => err.to_string() == "Cannot index null with boolean"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected nth null boolean-key error")
   }
 }
@@ -455,32 +505,47 @@ test "execute flatten compatibility" {
 
 ///|
 test "execute flatten errors" {
-  guard (try? execute(compile("flatten"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over number (1)" else {
+  guard (try execute(compile("flatten"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot iterate over number (1)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected flatten non-array iterate error")
   }
-  guard (try? execute(compile("flatten"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over null (null)" else {
+  guard (try execute(compile("flatten"), must_parse("null")) catch {
+    err => err.to_string() == "Cannot iterate over null (null)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected flatten null iterate error")
   }
-  guard (try? execute(compile("flatten(-1)"), must_parse("[1,[2]]")))
-    is Err(err) &&
-    err.to_string() == "flatten depth must not be negative" else {
+  guard (try execute(compile("flatten(-1)"), must_parse("[1,[2]]")) catch {
+    err => err.to_string() == "flatten depth must not be negative"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected flatten negative depth error")
   }
-  guard (try? execute(compile("flatten(null)"), must_parse("[1,[2]]")))
-    is Err(err) &&
-    err.to_string() == "flatten depth must not be negative" else {
+  guard (try execute(compile("flatten(null)"), must_parse("[1,[2]]")) catch {
+    err => err.to_string() == "flatten depth must not be negative"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected flatten null depth error")
   }
-  guard (try? execute(compile("flatten(true)"), must_parse("[1,[2]]")))
-    is Err(err) &&
-    err.to_string() == "flatten depth must not be negative" else {
+  guard (try execute(compile("flatten(true)"), must_parse("[1,[2]]")) catch {
+    err => err.to_string() == "flatten depth must not be negative"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected flatten bool depth error")
   }
-  guard (try? execute(compile("flatten(\"x\")"), must_parse("[1,[2]]")))
-    is Err(err) &&
-    err.to_string() == "string (\"x\") and number (1) cannot be subtracted" else {
+  guard (try execute(compile("flatten(\"x\")"), must_parse("[1,[2]]")) catch {
+    err =>
+      err.to_string() == "string (\"x\") and number (1) cannot be subtracted"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected flatten string depth error")
   }
 }
@@ -534,29 +599,46 @@ test "execute transpose compatibility" {
 
 ///|
 test "execute transpose errors" {
-  guard (try? execute(compile("transpose"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over number (1)" else {
+  guard (try execute(compile("transpose"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot iterate over number (1)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected transpose non-array iterate error")
   }
-  guard (try? execute(compile("transpose"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over null (null)" else {
+  guard (try execute(compile("transpose"), must_parse("null")) catch {
+    err => err.to_string() == "Cannot iterate over null (null)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected transpose null iterate error")
   }
-  guard (try? execute(compile("transpose"), must_parse("[1]"))) is Err(err) &&
-    err.to_string() == "Cannot index number with number" else {
+  guard (try execute(compile("transpose"), must_parse("[1]")) catch {
+    err => err.to_string() == "Cannot index number with number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected transpose number index error")
   }
-  guard (try? execute(compile("transpose"), must_parse("[[1],{}]"))) is Err(err) &&
-    err.to_string() == "Cannot index object with number" else {
+  guard (try execute(compile("transpose"), must_parse("[[1],{}]")) catch {
+    err => err.to_string() == "Cannot index object with number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected transpose object index error")
   }
-  guard (try? execute(compile("transpose"), must_parse("[[1],\"x\"]")))
-    is Err(err) &&
-    err.to_string() == "Cannot index string with number" else {
+  guard (try execute(compile("transpose"), must_parse("[[1],\"x\"]")) catch {
+    err => err.to_string() == "Cannot index string with number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected transpose string index error")
   }
-  guard (try? execute(compile("transpose"), must_parse("[true]"))) is Err(err) &&
-    err.to_string() == "boolean (true) has no length" else {
+  guard (try execute(compile("transpose"), must_parse("[true]")) catch {
+    err => err.to_string() == "boolean (true) has no length"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected transpose boolean length error")
   }
 }
@@ -604,38 +686,57 @@ test "execute to_entries/from_entries/with_entries compatibility" {
 
 ///|
 test "execute to_entries/from_entries/with_entries errors" {
-  guard (try? execute(compile("to_entries"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "number (1) has no keys" else {
+  guard (try execute(compile("to_entries"), must_parse("1")) catch {
+    err => err.to_string() == "number (1) has no keys"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected to_entries no-keys error")
   }
-  guard (try? execute(compile("from_entries"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over number (1)" else {
+  guard (try execute(compile("from_entries"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot iterate over number (1)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected from_entries iterate error")
   }
-  guard (try? execute(compile("from_entries"), must_parse("[1]"))) is Err(err) &&
-    err.to_string() == "Cannot index number with string \"key\"" else {
+  guard (try execute(compile("from_entries"), must_parse("[1]")) catch {
+    err => err.to_string() == "Cannot index number with string \"key\""
+  } noraise {
+    _ => false
+  }) else {
     fail("expected from_entries entry index error")
   }
-  guard (try? execute(compile("from_entries"), must_parse("[{\"value\":1}]")))
-    is Err(err) &&
-    err.to_string() == "Cannot use null (null) as object key" else {
+  guard (try
+    execute(compile("from_entries"), must_parse("[{\"value\":1}]"))
+  catch {
+    err => err.to_string() == "Cannot use null (null) as object key"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected from_entries null key error")
   }
-  guard (try? execute(
-      compile("from_entries"),
-      must_parse("[{\"key\":1,\"value\":2}]"),
-    ))
-    is Err(err) &&
-    err.to_string() == "Cannot use number (1) as object key" else {
+  guard (try
+    execute(compile("from_entries"), must_parse("[{\"key\":1,\"value\":2}]"))
+  catch {
+    err => err.to_string() == "Cannot use number (1) as object key"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected from_entries number key error")
   }
-  guard (try? execute(compile("with_entries(.)"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "number (1) has no keys" else {
+  guard (try execute(compile("with_entries(.)"), must_parse("1")) catch {
+    err => err.to_string() == "number (1) has no keys"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected with_entries no-keys error")
   }
-  guard (try? execute(compile("with_entries(.)"), must_parse("[10,20]")))
-    is Err(err) &&
-    err.to_string() == "Cannot use number (0) as object key" else {
+  guard (try execute(compile("with_entries(.)"), must_parse("[10,20]")) catch {
+    err => err.to_string() == "Cannot use number (0) as object key"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected with_entries array key type error")
   }
 }
@@ -657,12 +758,18 @@ test "execute keys compatibility errors and keys_unsorted" {
   @debug.assert_eq(must_execute(compile("tojson"), obj), [
     Value::string("{\"b\":2,\"a\":1}"),
   ])
-  guard (try? execute(compile("keys"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "number (1) has no keys" else {
+  guard (try execute(compile("keys"), must_parse("1")) catch {
+    err => err.to_string() == "number (1) has no keys"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected jq-compatible keys error")
   }
-  guard (try? execute(compile("keys_unsorted"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "number (1) has no keys" else {
+  guard (try execute(compile("keys_unsorted"), must_parse("1")) catch {
+    err => err.to_string() == "number (1) has no keys"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected jq-compatible keys_unsorted error")
   }
 }
@@ -831,13 +938,21 @@ test "execute format filter compatibility" {
     must_execute(compile("@sh \"echo \\(.)\""), must_parse("\"O'Hara's Ale\"")),
     [Value::string("echo 'O'\\''Hara'\\''s Ale'")],
   )
-  guard (try? execute(compile("@base64d"), must_parse("\"Not base64 data\"")))
-    is Err(err) &&
-    err.to_string() == "string (\"Not base64...) is not valid base64 data" else {
+  guard (try
+    execute(compile("@base64d"), must_parse("\"Not base64 data\""))
+  catch {
+    err =>
+      err.to_string() == "string (\"Not base64...) is not valid base64 data"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected @base64d invalid data error")
   }
-  guard (try? execute(compile("@base64d"), must_parse("\"QUJDa\""))) is Err(err) &&
-    err.to_string() == "string (\"QUJDa\") trailing base64 byte found" else {
+  guard (try execute(compile("@base64d"), must_parse("\"QUJDa\"")) catch {
+    err => err.to_string() == "string (\"QUJDa\") trailing base64 byte found"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected @base64d trailing byte error")
   }
   @debug.assert_eq(must_execute(compile("@base64d"), must_parse("\"=\"")), [
@@ -846,13 +961,19 @@ test "execute format filter compatibility" {
   @debug.assert_eq(must_execute(compile("@base64d"), must_parse("\"====\"")), [
     Value::string(""),
   ])
-  guard (try? execute(compile("@base64d"), must_parse("\"A==\""))) is Err(err) &&
-    err.to_string() == "string (\"A==\") trailing base64 byte found" else {
+  guard (try execute(compile("@base64d"), must_parse("\"A==\"")) catch {
+    err => err.to_string() == "string (\"A==\") trailing base64 byte found"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected @base64d trailing byte error for lax padding")
   }
-  guard (try? execute(compile("@urid"), must_parse("\"%FX%9F%98%8E\"")))
-    is Err(err) &&
-    err.to_string() == "string (\"%FX%9F%98%8E\") is not a valid uri encoding" else {
+  guard (try execute(compile("@urid"), must_parse("\"%FX%9F%98%8E\"")) catch {
+    err =>
+      err.to_string() == "string (\"%FX%9F%98%8E\") is not a valid uri encoding"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected @urid invalid encoding error")
   }
 }
@@ -867,8 +988,11 @@ test "execute io-control minimal compatibility" {
     must_execute(compile("try input catch ."), must_parse("null")),
     [Value::string("break")],
   )
-  guard (try? execute(compile("input"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "break" else {
+  guard (try execute(compile("input"), must_parse("null")) catch {
+    err => err.to_string() == "break"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected input EOF break error")
   }
 }
@@ -942,49 +1066,80 @@ test "execute recursion builtins minimal compatibility" {
 
 ///|
 test "execute fromjson errors" {
-  guard (try? execute(compile("fromjson"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "number (1) only strings can be parsed" else {
+  guard (try execute(compile("fromjson"), must_parse("1")) catch {
+    err => err.to_string() == "number (1) only strings can be parsed"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected fromjson number type error")
   }
-  guard (try? execute(compile("fromjson"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "null (null) only strings can be parsed" else {
+  guard (try execute(compile("fromjson"), must_parse("null")) catch {
+    err => err.to_string() == "null (null) only strings can be parsed"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected fromjson null type error")
   }
-  guard (try? execute(compile("fromjson"), must_parse("{}"))) is Err(err) &&
-    err.to_string() == "object ({}) only strings can be parsed" else {
+  guard (try execute(compile("fromjson"), must_parse("{}")) catch {
+    err => err.to_string() == "object ({}) only strings can be parsed"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected fromjson object type error")
   }
-  guard (try? execute(compile("fromjson"), must_parse("\"x\""))) is Err(err) &&
-    err.to_string().contains("while parsing 'x'") else {
+  guard (try execute(compile("fromjson"), must_parse("\"x\"")) catch {
+    err => err.to_string().contains("while parsing 'x'")
+  } noraise {
+    _ => false
+  }) else {
     fail("expected fromjson invalid token parse context")
   }
-  guard (try? execute(compile("fromjson"), must_parse("\"\""))) is Err(err) &&
-    err.to_string().contains("while parsing ''") else {
+  guard (try execute(compile("fromjson"), must_parse("\"\"")) catch {
+    err => err.to_string().contains("while parsing ''")
+  } noraise {
+    _ => false
+  }) else {
     fail("expected fromjson empty parse context")
   }
-  guard (try? execute(compile("fromjson"), must_parse("\"[1,2\""))) is Err(err) &&
-    err.to_string().contains("while parsing '[1,2'") else {
+  guard (try execute(compile("fromjson"), must_parse("\"[1,2\"")) catch {
+    err => err.to_string().contains("while parsing '[1,2'")
+  } noraise {
+    _ => false
+  }) else {
     fail("expected fromjson unfinished array parse context")
   }
-  guard (try? execute(compile("fromjson"), must_parse("\"NaN10\""))) is Err(err) &&
-    err.to_string() ==
-    "Invalid numeric literal at EOF at line 1, column 5 (while parsing 'NaN10')" else {
+  guard (try execute(compile("fromjson"), must_parse("\"NaN10\"")) catch {
+    err =>
+      err.to_string() ==
+      "Invalid numeric literal at EOF at line 1, column 5 (while parsing 'NaN10')"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected fromjson invalid non-finite suffix parse context")
   }
 }
 
 ///|
 test "execute tonumber errors" {
-  guard (try? execute(compile("tonumber"), must_parse("\"abc\""))) is Err(err) &&
-    err.to_string() == "string (\"abc\") cannot be parsed as a number" else {
+  guard (try execute(compile("tonumber"), must_parse("\"abc\"")) catch {
+    err => err.to_string() == "string (\"abc\") cannot be parsed as a number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected tonumber string parse error")
   }
-  guard (try? execute(compile("tonumber"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "null (null) cannot be parsed as a number" else {
+  guard (try execute(compile("tonumber"), must_parse("null")) catch {
+    err => err.to_string() == "null (null) cannot be parsed as a number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected tonumber null parse error")
   }
-  guard (try? execute(compile("tonumber"), must_parse("true"))) is Err(err) &&
-    err.to_string() == "boolean (true) cannot be parsed as a number" else {
+  guard (try execute(compile("tonumber"), must_parse("true")) catch {
+    err => err.to_string() == "boolean (true) cannot be parsed as a number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected tonumber boolean parse error")
   }
 }
@@ -1013,20 +1168,32 @@ test "execute reverse compatibility" {
 
 ///|
 test "execute reverse errors" {
-  guard (try? execute(compile("reverse"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot index number with number" else {
+  guard (try execute(compile("reverse"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot index number with number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected reverse number index error")
   }
-  guard (try? execute(compile("reverse"), must_parse("\"abc\""))) is Err(err) &&
-    err.to_string() == "Cannot index string with number" else {
+  guard (try execute(compile("reverse"), must_parse("\"abc\"")) catch {
+    err => err.to_string() == "Cannot index string with number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected reverse string index error")
   }
-  guard (try? execute(compile("reverse"), must_parse("{\"a\":1}"))) is Err(err) &&
-    err.to_string() == "Cannot index object with number" else {
+  guard (try execute(compile("reverse"), must_parse("{\"a\":1}")) catch {
+    err => err.to_string() == "Cannot index object with number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected reverse object index error")
   }
-  guard (try? execute(compile("reverse"), must_parse("false"))) is Err(err) &&
-    err.to_string() == "boolean (false) has no length" else {
+  guard (try execute(compile("reverse"), must_parse("false")) catch {
+    err => err.to_string() == "boolean (false) has no length"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected reverse boolean length error")
   }
 }
@@ -1058,27 +1225,40 @@ test "execute join compatibility" {
 
 ///|
 test "execute join errors" {
-  guard (try? execute(compile("join(\",\")"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over number (1)" else {
+  guard (try execute(compile("join(\",\")"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot iterate over number (1)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected join iterate error")
   }
-  guard (try? execute(compile("join(1)"), must_parse("[\"a\",\"b\"]")))
-    is Err(err) &&
-    err.to_string() == "string (\"a\") and number (1) cannot be added" else {
+  guard (try execute(compile("join(1)"), must_parse("[\"a\",\"b\"]")) catch {
+    err => err.to_string() == "string (\"a\") and number (1) cannot be added"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected join separator type error")
   }
-  guard (try? execute(compile("join(\",\")"), must_parse("[{\"x\":1}]")))
-    is Err(err) &&
-    err.to_string() == "string (\"\") and object ({\"x\":1}) cannot be added" else {
+  guard (try execute(compile("join(\",\")"), must_parse("[{\"x\":1}]")) catch {
+    err =>
+      err.to_string() == "string (\"\") and object ({\"x\":1}) cannot be added"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected join object element type error")
   }
-  guard (try? execute(
+  guard (try
+    execute(
       compile("join(\",\")"),
       must_parse("[\"1\",\"2\",{\"a\":{\"b\":{\"c\":33}}}]"),
-    ))
-    is Err(err) &&
-    err.to_string() ==
-    "string (\"1,2,\") and object ({\"a\":{\"b\":{...) cannot be added" else {
+    )
+  catch {
+    err =>
+      err.to_string() ==
+      "string (\"1,2,\") and object ({\"a\":{\"b\":{...) cannot be added"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected join deep object preview error")
   }
 }
@@ -1462,174 +1642,267 @@ test "execute regex named capture compatibility" {
 
 ///|
 test "execute split errors" {
-  guard (try? execute(compile("split(\",\")"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "split input and separator must be strings" else {
+  guard (try execute(compile("split(\",\")"), must_parse("1")) catch {
+    err => err.to_string() == "split input and separator must be strings"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected split input type error")
   }
-  guard (try? execute(compile("split(1)"), must_parse("\"a\""))) is Err(err) &&
-    err.to_string() == "split input and separator must be strings" else {
+  guard (try execute(compile("split(1)"), must_parse("\"a\"")) catch {
+    err => err.to_string() == "split input and separator must be strings"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected split separator type error")
   }
-  guard (try? execute(compile("split(\",\"; 1)"), must_parse("\"a\"")))
-    is Err(err) &&
-    err.to_string() == "split flags must be a string or null" else {
+  guard (try execute(compile("split(\",\"; 1)"), must_parse("\"a\"")) catch {
+    err => err.to_string() == "split flags must be a string or null"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected split flags type error")
   }
-  guard (try? execute(compile("splits(1)"), must_parse("\"a\""))) is Err(err) &&
-    err.to_string() == "splits input and separator must be strings" else {
+  guard (try execute(compile("splits(1)"), must_parse("\"a\"")) catch {
+    err => err.to_string() == "splits input and separator must be strings"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected splits separator type error")
   }
-  guard (try? execute(compile("split(\"a\"; \"z\")"), must_parse("\"a\"")))
-    is Err(err) &&
-    err.to_string() == "zg is not a valid modifier string" else {
+  guard (try
+    execute(compile("split(\"a\"; \"z\")"), must_parse("\"a\""))
+  catch {
+    err => err.to_string() == "zg is not a valid modifier string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected split invalid flags error")
   }
 }
 
 ///|
 test "execute test regex errors" {
-  guard (try? execute(compile("test(\"a\")"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "number (1) cannot be matched, as it is not a string" else {
+  guard (try execute(compile("test(\"a\")"), must_parse("1")) catch {
+    err =>
+      err.to_string() == "number (1) cannot be matched, as it is not a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected test input type error")
   }
-  guard (try? execute(compile("test(1)"), must_parse("\"abc\""))) is Err(err) &&
-    err.to_string() == "number not a string or array" else {
+  guard (try execute(compile("test(1)"), must_parse("\"abc\"")) catch {
+    err => err.to_string() == "number not a string or array"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected test pattern type error")
   }
-  guard (try? execute(compile("test(\"a\"; 1)"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "test flags must be a string or null" else {
+  guard (try execute(compile("test(\"a\"; 1)"), must_parse("\"abc\"")) catch {
+    err => err.to_string() == "test flags must be a string or null"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected test flags type error")
   }
-  guard (try? execute(compile("test(\"a\"; \"z\")"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "z is not a valid modifier string" else {
+  guard (try
+    execute(compile("test(\"a\"; \"z\")"), must_parse("\"abc\""))
+  catch {
+    err => err.to_string() == "z is not a valid modifier string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected test invalid flags error")
   }
 }
 
 ///|
 test "execute scan regex errors" {
-  guard (try? execute(compile("scan(\"a\")"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "number (1) cannot be matched, as it is not a string" else {
+  guard (try execute(compile("scan(\"a\")"), must_parse("1")) catch {
+    err =>
+      err.to_string() == "number (1) cannot be matched, as it is not a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected scan input type error")
   }
-  guard (try? execute(compile("scan(1)"), must_parse("\"abc\""))) is Err(err) &&
-    err.to_string() == "number not a string or array" else {
+  guard (try execute(compile("scan(1)"), must_parse("\"abc\"")) catch {
+    err => err.to_string() == "number not a string or array"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected scan pattern type error")
   }
-  guard (try? execute(compile("scan(\"a\"; 1)"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "scan flags must be a string or null" else {
+  guard (try execute(compile("scan(\"a\"; 1)"), must_parse("\"abc\"")) catch {
+    err => err.to_string() == "scan flags must be a string or null"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected scan flags type error")
   }
-  guard (try? execute(compile("scan(\"a\"; \"z\")"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "z is not a valid modifier string" else {
+  guard (try
+    execute(compile("scan(\"a\"; \"z\")"), must_parse("\"abc\""))
+  catch {
+    err => err.to_string() == "z is not a valid modifier string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected scan invalid flags error")
   }
 }
 
 ///|
 test "execute match regex errors" {
-  guard (try? execute(compile("match(\"a\")"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "number (1) cannot be matched, as it is not a string" else {
+  guard (try execute(compile("match(\"a\")"), must_parse("1")) catch {
+    err =>
+      err.to_string() == "number (1) cannot be matched, as it is not a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected match input type error")
   }
-  guard (try? execute(compile("match(1)"), must_parse("\"abc\""))) is Err(err) &&
-    err.to_string() == "number not a string or array" else {
+  guard (try execute(compile("match(1)"), must_parse("\"abc\"")) catch {
+    err => err.to_string() == "number not a string or array"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected match pattern type error")
   }
-  guard (try? execute(compile("match(\"a\"; 1)"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "match flags must be a string or null" else {
+  guard (try execute(compile("match(\"a\"; 1)"), must_parse("\"abc\"")) catch {
+    err => err.to_string() == "match flags must be a string or null"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected match flags type error")
   }
-  guard (try? execute(compile("match(\"a\"; \"z\")"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "z is not a valid modifier string" else {
+  guard (try
+    execute(compile("match(\"a\"; \"z\")"), must_parse("\"abc\""))
+  catch {
+    err => err.to_string() == "z is not a valid modifier string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected match invalid flags error")
   }
 }
 
 ///|
 test "execute capture regex errors" {
-  guard (try? execute(compile("capture(\"a\")"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "number (1) cannot be matched, as it is not a string" else {
+  guard (try execute(compile("capture(\"a\")"), must_parse("1")) catch {
+    err =>
+      err.to_string() == "number (1) cannot be matched, as it is not a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected capture input type error")
   }
-  guard (try? execute(compile("capture(1)"), must_parse("\"abc\""))) is Err(err) &&
-    err.to_string() == "number not a string or array" else {
+  guard (try execute(compile("capture(1)"), must_parse("\"abc\"")) catch {
+    err => err.to_string() == "number not a string or array"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected capture pattern type error")
   }
-  guard (try? execute(compile("capture(\"a\"; 1)"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "capture flags must be a string or null" else {
+  guard (try
+    execute(compile("capture(\"a\"; 1)"), must_parse("\"abc\""))
+  catch {
+    err => err.to_string() == "capture flags must be a string or null"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected capture flags type error")
   }
-  guard (try? execute(compile("capture(\"a\"; \"z\")"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "z is not a valid modifier string" else {
+  guard (try
+    execute(compile("capture(\"a\"; \"z\")"), must_parse("\"abc\""))
+  catch {
+    err => err.to_string() == "z is not a valid modifier string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected capture invalid flags error")
   }
 }
 
 ///|
 test "execute sub/gsub regex errors" {
-  guard (try? execute(compile("sub(\"a\"; \"x\")"), must_parse("1")))
-    is Err(err) &&
-    err.to_string() == "number (1) cannot be matched, as it is not a string" else {
+  guard (try execute(compile("sub(\"a\"; \"x\")"), must_parse("1")) catch {
+    err =>
+      err.to_string() == "number (1) cannot be matched, as it is not a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected sub input type error")
   }
-  guard (try? execute(compile("sub(1; \"x\")"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "number not a string or array" else {
+  guard (try execute(compile("sub(1; \"x\")"), must_parse("\"abc\"")) catch {
+    err => err.to_string() == "number not a string or array"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected sub pattern type error")
   }
-  guard (try? execute(compile("sub(\"a\"; 1)"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "sub replacement must be a string" else {
+  guard (try execute(compile("sub(\"a\"; 1)"), must_parse("\"abc\"")) catch {
+    err => err.to_string() == "sub replacement must be a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected sub replacement type error")
   }
-  guard (try? execute(compile("sub(\"a\"; \"x\"; 1)"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "sub flags must be a string or null" else {
+  guard (try
+    execute(compile("sub(\"a\"; \"x\"; 1)"), must_parse("\"abc\""))
+  catch {
+    err => err.to_string() == "sub flags must be a string or null"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected sub flags type error")
   }
-  guard (try? execute(
-      compile("sub(\"a\"; \"x\"; \"z\")"),
-      must_parse("\"abc\""),
-    ))
-    is Err(err) &&
-    err.to_string() == "z is not a valid modifier string" else {
+  guard (try
+    execute(compile("sub(\"a\"; \"x\"; \"z\")"), must_parse("\"abc\""))
+  catch {
+    err => err.to_string() == "z is not a valid modifier string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected sub invalid flags error")
   }
-  guard (try? execute(compile("gsub(\"a\"; \"x\")"), must_parse("1")))
-    is Err(err) &&
-    err.to_string() == "number (1) cannot be matched, as it is not a string" else {
+  guard (try execute(compile("gsub(\"a\"; \"x\")"), must_parse("1")) catch {
+    err =>
+      err.to_string() == "number (1) cannot be matched, as it is not a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected gsub input type error")
   }
-  guard (try? execute(compile("gsub(1; \"x\")"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "number not a string or array" else {
+  guard (try execute(compile("gsub(1; \"x\")"), must_parse("\"abc\"")) catch {
+    err => err.to_string() == "number not a string or array"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected gsub pattern type error")
   }
-  guard (try? execute(compile("gsub(\"a\"; 1)"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "gsub replacement must be a string" else {
+  guard (try execute(compile("gsub(\"a\"; 1)"), must_parse("\"abc\"")) catch {
+    err => err.to_string() == "gsub replacement must be a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected gsub replacement type error")
   }
-  guard (try? execute(compile("gsub(\"a\"; \"x\"; 1)"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "gsub flags must be a string or null" else {
+  guard (try
+    execute(compile("gsub(\"a\"; \"x\"; 1)"), must_parse("\"abc\""))
+  catch {
+    err => err.to_string() == "gsub flags must be a string or null"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected gsub flags type error")
   }
-  guard (try? execute(
-      compile("gsub(\"a\"; \"x\"; \"z\")"),
-      must_parse("\"abc\""),
-    ))
-    is Err(err) &&
-    err.to_string() == "zg is not a valid modifier string" else {
+  guard (try
+    execute(compile("gsub(\"a\"; \"x\"; \"z\")"), must_parse("\"abc\""))
+  catch {
+    err => err.to_string() == "zg is not a valid modifier string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected gsub invalid flags error")
   }
 }
@@ -1828,23 +2101,36 @@ test "execute explode/implode compatibility" {
 
 ///|
 test "execute explode/implode errors" {
-  guard (try? execute(compile("explode"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "explode input must be a string" else {
+  guard (try execute(compile("explode"), must_parse("1")) catch {
+    err => err.to_string() == "explode input must be a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected explode input type error")
   }
-  guard (try? execute(compile("implode"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "implode input must be an array" else {
+  guard (try execute(compile("implode"), must_parse("1")) catch {
+    err => err.to_string() == "implode input must be an array"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected implode input type error")
   }
-  guard (try? execute(compile("implode"), must_parse("[\"a\"]"))) is Err(err) &&
-    err.to_string() ==
-    "string (\"a\") can't be imploded, unicode codepoint needs to be numeric" else {
+  guard (try execute(compile("implode"), must_parse("[\"a\"]")) catch {
+    err =>
+      err.to_string() ==
+      "string (\"a\") can't be imploded, unicode codepoint needs to be numeric"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected implode element type error")
   }
-  guard (try? execute(compile("[nan] | implode"), must_parse("null")))
-    is Err(err) &&
-    err.to_string() ==
-    "number (null) can't be imploded, unicode codepoint needs to be numeric" else {
+  guard (try execute(compile("[nan] | implode"), must_parse("null")) catch {
+    err =>
+      err.to_string() ==
+      "number (null) can't be imploded, unicode codepoint needs to be numeric"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected implode NaN type error")
   }
 }
@@ -1921,27 +2207,41 @@ test "execute index/rindex/indices compatibility" {
 
 ///|
 test "execute index/rindex/indices errors" {
-  guard (try? execute(compile("index(1)"), must_parse("\"hello\""))) is Err(err) &&
-    err.to_string() == "Cannot index string with number" else {
+  guard (try execute(compile("index(1)"), must_parse("\"hello\"")) catch {
+    err => err.to_string() == "Cannot index string with number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected string index(number) type error")
   }
-  guard (try? execute(compile("index(true)"), must_parse("\"hello\"")))
-    is Err(err) &&
-    err.to_string() == "Cannot index string with boolean" else {
+  guard (try execute(compile("index(true)"), must_parse("\"hello\"")) catch {
+    err => err.to_string() == "Cannot index string with boolean"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected string index(boolean) type error")
   }
-  guard (try? execute(compile("index(\"a\")"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot index number with string \"a\"" else {
+  guard (try execute(compile("index(\"a\")"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot index number with string \"a\""
+  } noraise {
+    _ => false
+  }) else {
     fail("expected number index(string) type error")
   }
-  guard (try? execute(compile("_strindices(\"abc\")"), must_parse("123")))
-    is Err(err) &&
-    err.to_string() == "number (123) cannot be searched, as it is not a string" else {
+  guard (try execute(compile("_strindices(\"abc\")"), must_parse("123")) catch {
+    err =>
+      err.to_string() ==
+      "number (123) cannot be searched, as it is not a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected _strindices input type error")
   }
-  guard (try? execute(compile("_strindices(123)"), must_parse("\"abc\"")))
-    is Err(err) &&
-    err.to_string() == "number (123) is not a string" else {
+  guard (try execute(compile("_strindices(123)"), must_parse("\"abc\"")) catch {
+    err => err.to_string() == "number (123) is not a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected _strindices pattern type error")
   }
 }
@@ -2186,42 +2486,64 @@ test "execute label/break compatibility" {
 ///|
 test "execute range/limit/skip/nth stream errors" {
   let null_json = must_parse("null")
-  guard (try? execute(compile("limit(-1; .[])"), must_parse("[1,2,3]")))
-    is Err(err) &&
-    err.to_string() == "limit doesn't support negative count" else {
+  guard (try execute(compile("limit(-1; .[])"), must_parse("[1,2,3]")) catch {
+    err => err.to_string() == "limit doesn't support negative count"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected limit negative count error")
   }
-  guard (try? execute(compile("skip(-1; .[])"), must_parse("[1,2,3]")))
-    is Err(err) &&
-    err.to_string() == "skip doesn't support negative count" else {
+  guard (try execute(compile("skip(-1; .[])"), must_parse("[1,2,3]")) catch {
+    err => err.to_string() == "skip doesn't support negative count"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected skip negative count error")
   }
-  guard (try? execute(compile("nth(-1; range(10))"), null_json)) is Err(err) &&
-    err.to_string() == "nth doesn't support negative indices" else {
+  guard (try execute(compile("nth(-1; range(10))"), null_json) catch {
+    err => err.to_string() == "nth doesn't support negative indices"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected nth negative index error")
   }
 }
 
 ///|
 test "execute bsearch errors" {
-  guard (try? execute(compile("bsearch(1)"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "number (1) cannot be searched from" else {
+  guard (try execute(compile("bsearch(1)"), must_parse("1")) catch {
+    err => err.to_string() == "number (1) cannot be searched from"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected bsearch number input error")
   }
-  guard (try? execute(compile("bsearch(1)"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "null (null) cannot be searched from" else {
+  guard (try execute(compile("bsearch(1)"), must_parse("null")) catch {
+    err => err.to_string() == "null (null) cannot be searched from"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected bsearch null input error")
   }
-  guard (try? execute(compile("bsearch(1)"), must_parse("\"a\""))) is Err(err) &&
-    err.to_string() == "string (\"a\") cannot be searched from" else {
+  guard (try execute(compile("bsearch(1)"), must_parse("\"a\"")) catch {
+    err => err.to_string() == "string (\"a\") cannot be searched from"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected bsearch string input error")
   }
-  guard (try? execute(compile("bsearch(1)"), must_parse("{}"))) is Err(err) &&
-    err.to_string() == "object ({}) cannot be searched from" else {
+  guard (try execute(compile("bsearch(1)"), must_parse("{}")) catch {
+    err => err.to_string() == "object ({}) cannot be searched from"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected bsearch object input error")
   }
-  guard (try? execute(compile("bsearch(1)"), must_parse("true"))) is Err(err) &&
-    err.to_string() == "boolean (true) cannot be searched from" else {
+  guard (try execute(compile("bsearch(1)"), must_parse("true")) catch {
+    err => err.to_string() == "boolean (true) cannot be searched from"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected bsearch boolean input error")
   }
   @debug.assert_eq(must_execute(compile("bsearch(empty)"), must_parse("1")), [])
@@ -2410,8 +2732,11 @@ test "execute multiply compatibility" {
 ///|
 test "execute multiply repeat too long error" {
   let j = must_parse("null")
-  guard (try? execute(compile("\"x\" * 1000000000000"), j)) is Err(err) &&
-    err.to_string() == "Repeat string result too long" else {
+  guard (try execute(compile("\"x\" * 1000000000000"), j) catch {
+    err => err.to_string() == "Repeat string result too long"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected repeat-too-long error")
   }
 }
@@ -2430,14 +2755,22 @@ test "execute array subtraction compatibility" {
 ///|
 test "execute division by zero compatibility" {
   let j = must_parse("null")
-  guard (try? execute(compile("1 / 0"), j)) is Err(err) &&
-    err.to_string() ==
-    "number (1) and number (0) cannot be divided because the divisor is zero" else {
+  guard (try execute(compile("1 / 0"), j) catch {
+    err =>
+      err.to_string() ==
+      "number (1) and number (0) cannot be divided because the divisor is zero"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected jq-compatible division by zero error")
   }
-  guard (try? execute(compile("1 % 0"), j)) is Err(err) &&
-    err.to_string() ==
-    "number (1) and number (0) cannot be divided (remainder) because the divisor is zero" else {
+  guard (try execute(compile("1 % 0"), j) catch {
+    err =>
+      err.to_string() ==
+      "number (1) and number (0) cannot be divided (remainder) because the divisor is zero"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected jq-compatible modulo by zero error")
   }
 }
@@ -2445,14 +2778,22 @@ test "execute division by zero compatibility" {
 ///|
 test "execute arithmetic type errors include full json values" {
   let j = must_parse("null")
-  guard (try? execute(compile("[1,2,3] + {\"a\":[1,2,3]}"), j)) is Err(err) &&
-    err.to_string() ==
-    "array ([1,2,3]) and object ({\"a\":[1,2,3]}) cannot be added" else {
+  guard (try execute(compile("[1,2,3] + {\"a\":[1,2,3]}"), j) catch {
+    err =>
+      err.to_string() ==
+      "array ([1,2,3]) and object ({\"a\":[1,2,3]}) cannot be added"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected full-value add type error")
   }
-  guard (try? execute(compile("[1,2,3] / {\"a\":[1,2,3]}"), j)) is Err(err) &&
-    err.to_string() ==
-    "array ([1,2,3]) and object ({\"a\":[1,2,3]}) cannot be divided" else {
+  guard (try execute(compile("[1,2,3] / {\"a\":[1,2,3]}"), j) catch {
+    err =>
+      err.to_string() ==
+      "array ([1,2,3]) and object ({\"a\":[1,2,3]}) cannot be divided"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected full-value divide type error")
   }
 }
@@ -2649,9 +2990,13 @@ test "execute update assignment compatibility" {
       ]),
     ],
   )
-  guard (try? execute(compile(".[1:3] = 9"), must_parse("[0,1,2,3]")))
-    is Err(err) &&
-    err.to_string() == "A slice of an array can only be assigned another array" else {
+  guard (try execute(compile(".[1:3] = 9"), must_parse("[0,1,2,3]")) catch {
+    err =>
+      err.to_string() ==
+      "A slice of an array can only be assigned another array"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected slice assignment array-only error")
   }
   @debug.assert_eq(
@@ -2817,12 +3162,16 @@ test "execute update assignment dynamic slice compatibility" {
       ]),
     ],
   )
-  guard (try? execute(
+  guard (try
+    execute(
       compile("(.[] | .[1:3]) |= . + 100"),
       must_parse("[[0,1,2,3],[4,5,6,7]]"),
-    ))
-    is Err(err) &&
-    err.to_string() == "array ([1,2]) and number (100) cannot be added" else {
+    )
+  catch {
+    err => err.to_string() == "array ([1,2]) and number (100) cannot be added"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected jq-compatible dynamic slice update type error")
   }
 }
@@ -2867,12 +3216,18 @@ test "execute map object compatibility" {
 
 ///|
 test "execute map iter errors" {
-  guard (try? execute(compile("map(. + 1)"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over number (1)" else {
+  guard (try execute(compile("map(. + 1)"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot iterate over number (1)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected map number error")
   }
-  guard (try? execute(compile("map(. + 1)"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "Cannot iterate over null (null)" else {
+  guard (try execute(compile("map(. + 1)"), must_parse("null")) catch {
+    err => err.to_string() == "Cannot iterate over null (null)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected map null error")
   }
 }
@@ -2900,14 +3255,18 @@ test "execute map_values jq semantics" {
 
 ///|
 test "execute map_values iter errors" {
-  guard (try? execute(compile("map_values(. + 1)"), must_parse("1")))
-    is Err(err) &&
-    err.to_string() == "Cannot iterate over number (1)" else {
+  guard (try execute(compile("map_values(. + 1)"), must_parse("1")) catch {
+    err => err.to_string() == "Cannot iterate over number (1)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected map_values number error")
   }
-  guard (try? execute(compile("map_values(. + 1)"), must_parse("null")))
-    is Err(err) &&
-    err.to_string() == "Cannot iterate over null (null)" else {
+  guard (try execute(compile("map_values(. + 1)"), must_parse("null")) catch {
+    err => err.to_string() == "Cannot iterate over null (null)"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected map_values null error")
   }
 }
@@ -3090,8 +3449,11 @@ test "execute try/catch" {
     must_execute(compile("try (.[999999999] = 0) catch ."), must_parse("null")),
     [Value::string("Array index too large")],
   )
-  guard (try? execute(compile("try .a + 1"), j)) is Err(err) &&
-    err.to_string() == "string (\"hi\") and number (1) cannot be added" else {
+  guard (try execute(compile("try .a + 1"), j) catch {
+    err => err.to_string() == "string (\"hi\") and number (1) cannot be added"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected try precedence to match (try .a) + 1")
   }
   @debug.assert_eq(
@@ -3311,36 +3673,60 @@ test "execute trim/ltrim/rtrim compatibility" {
 
 ///|
 test "execute trimstr errors" {
-  guard (try? execute(compile("ltrimstr(\"1\")"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "startswith() requires string inputs" else {
+  guard (try execute(compile("ltrimstr(\"1\")"), must_parse("1")) catch {
+    err => err.to_string() == "startswith() requires string inputs"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected ltrimstr input type error")
   }
-  guard (try? execute(compile("ltrimstr(1)"), must_parse("\"x\""))) is Err(err) &&
-    err.to_string() == "startswith() requires string inputs" else {
+  guard (try execute(compile("ltrimstr(1)"), must_parse("\"x\"")) catch {
+    err => err.to_string() == "startswith() requires string inputs"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected ltrimstr separator type error")
   }
-  guard (try? execute(compile("rtrimstr(1)"), must_parse("\"x\""))) is Err(err) &&
-    err.to_string() == "endswith() requires string inputs" else {
+  guard (try execute(compile("rtrimstr(1)"), must_parse("\"x\"")) catch {
+    err => err.to_string() == "endswith() requires string inputs"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected rtrimstr separator type error")
   }
-  guard (try? execute(compile("trim"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "trim input must be a string" else {
+  guard (try execute(compile("trim"), must_parse("1")) catch {
+    err => err.to_string() == "trim input must be a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected trim input type error")
   }
-  guard (try? execute(compile("ltrim"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "trim input must be a string" else {
+  guard (try execute(compile("ltrim"), must_parse("1")) catch {
+    err => err.to_string() == "trim input must be a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected ltrim input type error")
   }
-  guard (try? execute(compile("rtrim"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "trim input must be a string" else {
+  guard (try execute(compile("rtrim"), must_parse("1")) catch {
+    err => err.to_string() == "trim input must be a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected rtrim input type error")
   }
-  guard (try? execute(compile("trimstr(\"1\")"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "startswith() requires string inputs" else {
+  guard (try execute(compile("trimstr(\"1\")"), must_parse("1")) catch {
+    err => err.to_string() == "startswith() requires string inputs"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected trimstr input type error")
   }
-  guard (try? execute(compile("trimstr(1)"), must_parse("\"x\""))) is Err(err) &&
-    err.to_string() == "startswith() requires string inputs" else {
+  guard (try execute(compile("trimstr(1)"), must_parse("\"x\"")) catch {
+    err => err.to_string() == "startswith() requires string inputs"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected trimstr separator type error")
   }
 }
@@ -3458,8 +3844,11 @@ test "execute numeric/meta builtins compatibility" {
     must_execute(compile("infinite | type, nan | type"), must_parse("null")),
     [Value::string("string"), Value::string("number")],
   )
-  guard (try? execute(compile("modulemeta"), must_parse("\"c\""))) is Err(err) &&
-    err.to_string() == "module not found: c" else {
+  guard (try execute(compile("modulemeta"), must_parse("\"c\"")) catch {
+    err => err.to_string() == "module not found: c"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected modulemeta missing-module error")
   }
   @debug.assert_eq(
@@ -3470,8 +3859,11 @@ test "execute numeric/meta builtins compatibility" {
 
 ///|
 test "execute numeric/meta builtins errors" {
-  guard (try? execute(compile("toboolean"), must_parse("\"tru\""))) is Err(err) &&
-    err.to_string() == "string (\"tru\") cannot be parsed as a boolean" else {
+  guard (try execute(compile("toboolean"), must_parse("\"tru\"")) catch {
+    err => err.to_string() == "string (\"tru\") cannot be parsed as a boolean"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected toboolean parse error")
   }
   @debug.assert_eq(
@@ -3481,41 +3873,64 @@ test "execute numeric/meta builtins errors" {
     ),
     [Value::boolean(true), Value::boolean(false)],
   )
-  guard (try? execute(compile("sqrt"), must_parse("\"x\""))) is Err(err) &&
-    err.to_string() == "string (\"x\") only numbers have sqrt" else {
+  guard (try execute(compile("sqrt"), must_parse("\"x\"")) catch {
+    err => err.to_string() == "string (\"x\") only numbers have sqrt"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected sqrt type error")
   }
-  guard (try? execute(compile("floor"), must_parse("true"))) is Err(err) &&
-    err.to_string() == "boolean (true) only numbers have floor" else {
+  guard (try execute(compile("floor"), must_parse("true")) catch {
+    err => err.to_string() == "boolean (true) only numbers have floor"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected floor type error")
   }
-  guard (try? execute(compile("pow(\"x\";2)"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "pow() requires numeric arguments" else {
+  guard (try execute(compile("pow(\"x\";2)"), must_parse("null")) catch {
+    err => err.to_string() == "pow() requires numeric arguments"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected pow type error")
   }
-  guard (try? execute(compile("log2"), must_parse("\"x\""))) is Err(err) &&
-    err.to_string() == "string (\"x\") only numbers have log2" else {
+  guard (try execute(compile("log2"), must_parse("\"x\"")) catch {
+    err => err.to_string() == "string (\"x\") only numbers have log2"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected log2 type error")
   }
 }
 
 ///|
 test "execute abs/fabs/isempty errors" {
-  guard (try? execute(compile("abs"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "null (null) cannot be negated" else {
+  guard (try execute(compile("abs"), must_parse("null")) catch {
+    err => err.to_string() == "null (null) cannot be negated"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected abs null type error")
   }
-  guard (try? execute(compile("abs"), must_parse("true"))) is Err(err) &&
-    err.to_string() == "boolean (true) cannot be negated" else {
+  guard (try execute(compile("abs"), must_parse("true")) catch {
+    err => err.to_string() == "boolean (true) cannot be negated"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected abs boolean type error")
   }
-  guard (try? execute(compile("fabs"), must_parse("\"x\""))) is Err(err) &&
-    err.to_string() == "string (\"x\") cannot be negated" else {
+  guard (try execute(compile("fabs"), must_parse("\"x\"")) catch {
+    err => err.to_string() == "string (\"x\") cannot be negated"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected fabs string type error")
   }
-  guard (try? execute(compile("isempty(.[0])"), must_parse("{\"a\":1}")))
-    is Err(err) &&
-    err.to_string() == "Cannot index object with number" else {
+  guard (try execute(compile("isempty(.[0])"), must_parse("{\"a\":1}")) catch {
+    err => err.to_string() == "Cannot index object with number"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected isempty to propagate pre-first error")
   }
 }
@@ -3534,13 +3949,18 @@ test "execute ascii case compatibility" {
 
 ///|
 test "execute ascii case errors" {
-  guard (try? execute(compile("ascii_upcase"), must_parse("1"))) is Err(err) &&
-    err.to_string() == "ascii_upcase input must be a string" else {
+  guard (try execute(compile("ascii_upcase"), must_parse("1")) catch {
+    err => err.to_string() == "ascii_upcase input must be a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected ascii_upcase type error")
   }
-  guard (try? execute(compile("ascii_downcase"), must_parse("null")))
-    is Err(err) &&
-    err.to_string() == "ascii_downcase input must be a string" else {
+  guard (try execute(compile("ascii_downcase"), must_parse("null")) catch {
+    err => err.to_string() == "ascii_downcase input must be a string"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected ascii_downcase type error")
   }
 }
@@ -3559,16 +3979,25 @@ test "execute utf8bytelength compatibility" {
 
 ///|
 test "execute utf8bytelength errors" {
-  guard (try? execute(compile("utf8bytelength"), must_parse("[]"))) is Err(err) &&
-    err.to_string() == "array ([]) only strings have UTF-8 byte length" else {
+  guard (try execute(compile("utf8bytelength"), must_parse("[]")) catch {
+    err => err.to_string() == "array ([]) only strings have UTF-8 byte length"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected utf8bytelength array type error")
   }
-  guard (try? execute(compile("utf8bytelength"), must_parse("{}"))) is Err(err) &&
-    err.to_string() == "object ({}) only strings have UTF-8 byte length" else {
+  guard (try execute(compile("utf8bytelength"), must_parse("{}")) catch {
+    err => err.to_string() == "object ({}) only strings have UTF-8 byte length"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected utf8bytelength object type error")
   }
-  guard (try? execute(compile("utf8bytelength"), must_parse("55"))) is Err(err) &&
-    err.to_string() == "number (55) only strings have UTF-8 byte length" else {
+  guard (try execute(compile("utf8bytelength"), must_parse("55")) catch {
+    err => err.to_string() == "number (55) only strings have UTF-8 byte length"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected utf8bytelength number type error")
   }
 }

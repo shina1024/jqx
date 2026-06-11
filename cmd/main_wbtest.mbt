@@ -134,7 +134,11 @@ test "parse cli inputs json stream invalid scalar adjacency" {
     filter: ".",
     input: None,
   }
-  guard (try? parse_cli_inputs(cfg, "1-2")) is Err(_) else {
+  guard (try parse_cli_inputs(cfg, "1-2") catch {
+    _ => true
+  } noraise {
+    _ => false
+  }) else {
     fail("expected parse error for invalid scalar adjacency")
   }
 }
@@ -449,13 +453,25 @@ test "run cli runtime error parity corpus case" {
 
 ///|
 test "parse json value end reports structured and string eof errors" {
-  guard (try? parse_json_value_end("{\"a\":1", 0)) is Err(_) else {
+  guard (try parse_json_value_end("{\"a\":1", 0) catch {
+    _ => true
+  } noraise {
+    _ => false
+  }) else {
     fail("expected parse error for unclosed object")
   }
-  guard (try? parse_json_value_end("{]", 0)) is Err(_) else {
+  guard (try parse_json_value_end("{]", 0) catch {
+    _ => true
+  } noraise {
+    _ => false
+  }) else {
     fail("expected parse error for mismatched braces")
   }
-  guard (try? parse_json_value_end("\"abc", 0)) is Err(_) else {
+  guard (try parse_json_value_end("\"abc", 0) catch {
+    _ => true
+  } noraise {
+    _ => false
+  }) else {
     fail("expected parse error for unclosed string")
   }
 }

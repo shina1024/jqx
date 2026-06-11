@@ -54,29 +54,45 @@ test "execute contains jq semantics" {
 ///|
 test "execute contains/startswith/endswith type errors" {
   let array_input = must_parse("[1,2,3]")
-  guard (try? execute(compile("contains(2)"), array_input)) is Err(err) &&
-    err.to_string() ==
-    "array ([1,2,3]) and number (2) cannot have their containment checked" else {
+  guard (try execute(compile("contains(2)"), array_input) catch {
+    err =>
+      err.to_string() ==
+      "array ([1,2,3]) and number (2) cannot have their containment checked"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected jq-compatible contains type error for array/number")
   }
-  guard (try? execute(compile("contains(false)"), must_parse("true")))
-    is Err(err) &&
-    err.to_string() ==
-    "boolean (true) and boolean (false) cannot have their containment checked" else {
+  guard (try execute(compile("contains(false)"), must_parse("true")) catch {
+    err =>
+      err.to_string() ==
+      "boolean (true) and boolean (false) cannot have their containment checked"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected jq-compatible contains type error for boolean mismatch")
   }
   let s = must_parse("\"hello\"")
-  guard (try? execute(compile("startswith(1)"), s)) is Err(err) &&
-    err.to_string() == "startswith() requires string inputs" else {
+  guard (try execute(compile("startswith(1)"), s) catch {
+    err => err.to_string() == "startswith() requires string inputs"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected startswith type error")
   }
-  guard (try? execute(compile("endswith(1)"), s)) is Err(err) &&
-    err.to_string() == "endswith() requires string inputs" else {
+  guard (try execute(compile("endswith(1)"), s) catch {
+    err => err.to_string() == "endswith() requires string inputs"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected endswith type error")
   }
   let n = must_parse("1")
-  guard (try? execute(compile("startswith(\"1\")"), n)) is Err(err) &&
-    err.to_string() == "startswith() requires string inputs" else {
+  guard (try execute(compile("startswith(\"1\")"), n) catch {
+    err => err.to_string() == "startswith() requires string inputs"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected startswith type error for non-string input")
   }
 }
@@ -118,19 +134,31 @@ test "execute inside jq semantics" {
 
 ///|
 test "execute inside type errors" {
-  guard (try? execute(compile("inside(false)"), must_parse("true"))) is Err(err) &&
-    err.to_string() ==
-    "boolean (false) and boolean (true) cannot have their containment checked" else {
+  guard (try execute(compile("inside(false)"), must_parse("true")) catch {
+    err =>
+      err.to_string() ==
+      "boolean (false) and boolean (true) cannot have their containment checked"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected inside boolean mismatch error")
   }
-  guard (try? execute(compile("inside(1)"), must_parse("[1]"))) is Err(err) &&
-    err.to_string() ==
-    "number (1) and array ([1]) cannot have their containment checked" else {
+  guard (try execute(compile("inside(1)"), must_parse("[1]")) catch {
+    err =>
+      err.to_string() ==
+      "number (1) and array ([1]) cannot have their containment checked"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected inside number/array mismatch error")
   }
-  guard (try? execute(compile("inside([1])"), must_parse("1"))) is Err(err) &&
-    err.to_string() ==
-    "array ([1]) and number (1) cannot have their containment checked" else {
+  guard (try execute(compile("inside([1])"), must_parse("1")) catch {
+    err =>
+      err.to_string() ==
+      "array ([1]) and number (1) cannot have their containment checked"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected inside array/number mismatch error")
   }
 }
@@ -169,18 +197,27 @@ test "execute has jq semantics" {
 ///|
 test "execute has type errors" {
   let obj = must_parse("{\"a\":1}")
-  guard (try? execute(compile("has(0)"), obj)) is Err(err) &&
-    err.to_string() == "Cannot check whether object has a number key" else {
+  guard (try execute(compile("has(0)"), obj) catch {
+    err => err.to_string() == "Cannot check whether object has a number key"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected object has(number) type error")
   }
   let arr = must_parse("[1,2]")
-  guard (try? execute(compile("has(\"0\")"), arr)) is Err(err) &&
-    err.to_string() == "Cannot check whether array has a string key" else {
+  guard (try execute(compile("has(\"0\")"), arr) catch {
+    err => err.to_string() == "Cannot check whether array has a string key"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected array has(string) type error")
   }
   let s = must_parse("\"abc\"")
-  guard (try? execute(compile("has(0)"), s)) is Err(err) &&
-    err.to_string() == "Cannot check whether string has a number key" else {
+  guard (try execute(compile("has(0)"), s) catch {
+    err => err.to_string() == "Cannot check whether string has a number key"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected string has(number) type error")
   }
 }
@@ -210,18 +247,25 @@ test "execute in jq semantics" {
 
 ///|
 test "execute in type errors" {
-  guard (try? execute(compile("\"a\" | in(1)"), must_parse("null"))) is Err(err) &&
-    err.to_string() == "Cannot check whether number has a string key" else {
+  guard (try execute(compile("\"a\" | in(1)"), must_parse("null")) catch {
+    err => err.to_string() == "Cannot check whether number has a string key"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected in(number, string) type error")
   }
-  guard (try? execute(compile("1 | in({\"a\":1})"), must_parse("null")))
-    is Err(err) &&
-    err.to_string() == "Cannot check whether object has a number key" else {
+  guard (try execute(compile("1 | in({\"a\":1})"), must_parse("null")) catch {
+    err => err.to_string() == "Cannot check whether object has a number key"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected in(object, number) type error")
   }
-  guard (try? execute(compile("\"a\" | in([1,2])"), must_parse("null")))
-    is Err(err) &&
-    err.to_string() == "Cannot check whether array has a string key" else {
+  guard (try execute(compile("\"a\" | in([1,2])"), must_parse("null")) catch {
+    err => err.to_string() == "Cannot check whether array has a string key"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected in(array, string) type error")
   }
 }
@@ -230,7 +274,11 @@ test "execute in type errors" {
 test "execute iter non-array errors" {
   let j = must_parse("1")
   let f = compile(".[]")
-  guard (try? execute(f, j)) is Err(_) else {
+  guard (try execute(f, j) catch {
+    _ => true
+  } noraise {
+    _ => false
+  }) else {
     fail("expected error for iter over non-array/object")
   }
 }
@@ -267,8 +315,11 @@ test "execute slice compatibility" {
   @debug.assert_eq(must_execute(compile(".[1:2]"), n), [Value::null()])
   @debug.assert_eq(must_execute(compile(".[1:2]?"), n), [Value::null()])
   let num = must_parse("1")
-  guard (try? execute(compile(".[1:2]"), num)) is Err(err) &&
-    err.to_string() == "Cannot index number with object" else {
+  guard (try execute(compile(".[1:2]"), num) catch {
+    err => err.to_string() == "Cannot index number with object"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected type error for number slice")
   }
   @debug.assert_eq(must_execute(compile(".[1:2]?"), num), [])
@@ -303,9 +354,13 @@ test "execute dynamic slice compatibility" {
     must_execute(compile("[range(3)] | .[1:nan]"), must_parse("null")),
     [Value::array([Value::number(1.0), Value::number(2.0)])],
   )
-  guard (try? execute(compile("[range(3)] | .[\"x\":1]"), must_parse("null")))
-    is Err(err) &&
-    err.to_string() == "Array/string slice indices must be integers" else {
+  guard (try
+    execute(compile("[range(3)] | .[\"x\":1]"), must_parse("null"))
+  catch {
+    err => err.to_string() == "Array/string slice indices must be integers"
+  } noraise {
+    _ => false
+  }) else {
     fail("expected dynamic slice endpoint type error")
   }
 }

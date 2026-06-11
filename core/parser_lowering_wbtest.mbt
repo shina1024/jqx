@@ -3,9 +3,12 @@
 
 ///|
 fn compile_diagnostic_contains(source : String, message : String) -> Bool {
-  guard (try? compile(source)) is Err(Diagnostics(lines)) &&
-    lines.length() == 1 &&
-    lines[0].contains(message) else {
+  guard (try compile(source) catch {
+    Diagnostics(lines) => lines.length() == 1 && lines[0].contains(message)
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     return false
   }
   true
@@ -13,11 +16,20 @@ fn compile_diagnostic_contains(source : String, message : String) -> Bool {
 
 ///|
 test "module declaration metadata must be constant object" {
-  guard (try? compile("module {}; .")) is Ok(_) else {
+  guard (try compile("module {}; .") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected empty module metadata to compile")
   }
-  guard (try? compile("module {\"name\": \"j\" + \"qx\", \"empty\": []}; ."))
-    is Ok(_) else {
+  guard (try
+    compile("module {\"name\": \"j\" + \"qx\", \"empty\": []}; .")
+  catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected constant string-add and empty-array metadata to compile")
   }
   guard compile_diagnostic_contains(
@@ -42,7 +54,11 @@ test "import and include metadata diagnostics" {
   clear_module_sources()
   register_module_source("a", "def a: \"a\";")
 
-  guard (try? compile("import \"a\" as foo {}; foo::a")) is Ok(_) else {
+  guard (try compile("import \"a\" as foo {}; foo::a") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected constant import metadata to compile")
   }
 

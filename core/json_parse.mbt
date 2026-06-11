@@ -946,28 +946,10 @@ fn ParseContext::lex_number_end(
 ) -> (Double, StringView?) {
   let s = ctx.input.view(start_offset=start, end_offset=end)
   if !s.contains(".") && !s.contains("e") && !s.contains("E") {
-    let parsed_int = try? @string.parse_int64(s)
-    match parsed_int {
-      Ok(i) => {
-        if s == "-0" {
-          return (-0.0, Some(s))
-        }
-        let d = i.to_double()
-        if i <= 9007199254740991 && i >= -9007199254740991 {
-          return (d, None)
-        }
-        return (d, Some(s))
-      }
-      Err(_) => {
-        let parsed_double = try? @string.parse_double(s)
-        match parsed_double {
-          Ok(d) =>
-            if number_literal_needs_exponent_normalization(s) {
-              (d, Some(number_literal_normalized_large_exponent_repr(s)))
-            } else {
-              (d, Some(s))
-            }
-          Err(_) =>
+    try @string.parse_int64(s) catch {
+      _ =>
+        try @string.parse_double(s) catch {
+          _ =>
             if s is ['-', ..] {
               if number_literal_needs_exponent_normalization(s) {
                 (
@@ -985,23 +967,29 @@ fn ParseContext::lex_number_end(
             } else {
               (@double.infinity, Some(s))
             }
+        } noraise {
+          d =>
+            if number_literal_needs_exponent_normalization(s) {
+              (d, Some(number_literal_normalized_large_exponent_repr(s)))
+            } else {
+              (d, Some(s))
+            }
         }
+    } noraise {
+      i => {
+        if s == "-0" {
+          return (-0.0, Some(s))
+        }
+        let d = i.to_double()
+        if i <= 9007199254740991 && i >= -9007199254740991 {
+          return (d, None)
+        }
+        return (d, Some(s))
       }
     }
   } else {
-    let parsed_double = try? @string.parse_double(s)
-    match parsed_double {
-      Ok(d) =>
-        if number_literal_should_preserve_repr(s) {
-          if number_literal_needs_exponent_normalization(s) {
-            (d, Some(number_literal_normalized_large_exponent_repr(s)))
-          } else {
-            (d, Some(s))
-          }
-        } else {
-          (d, None)
-        }
-      Err(_) =>
+    try @string.parse_double(s) catch {
+      _ =>
         if s is ['-', ..] {
           if number_literal_needs_exponent_normalization(s) {
             (
@@ -1018,6 +1006,17 @@ fn ParseContext::lex_number_end(
           )
         } else {
           (@double.infinity, Some(s))
+        }
+    } noraise {
+      d =>
+        if number_literal_should_preserve_repr(s) {
+          if number_literal_needs_exponent_normalization(s) {
+            (d, Some(number_literal_normalized_large_exponent_repr(s)))
+          } else {
+            (d, Some(s))
+          }
+        } else {
+          (d, None)
         }
     }
   }

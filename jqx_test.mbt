@@ -96,45 +96,72 @@ test "run_json_text preserves escaped strings and large-number repr" {
 
 ///|
 test "run raises compile errors through RunError" {
-  guard (try? run("%", null)) is Err(Compile(Diagnostics(lines))) &&
-    lines.length() > 0 else {
+  guard (try run("%", null) catch {
+    Compile(Diagnostics(lines)) => lines.length() > 0
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     fail("expected wrapped compile error")
   }
 }
 
 ///|
 test "run raises runtime errors through RunError" {
-  guard (try? run("error({\"code\":1})", null)) is Err(Runtime(Thrown(value))) else {
+  guard (try run("error({\"code\":1})", null) catch {
+    Runtime(Thrown(value)) => value.stringify() == "{\"code\":1}"
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     fail("expected wrapped runtime error")
   }
-  @debug.assert_eq(value.stringify(), "{\"code\":1}")
 }
 
 ///|
 test "run_json_text raises JsonTextRunError parse errors" {
-  guard (try? run_json_text(".", "{")) is Err(JsonParse(_)) else {
+  guard (try run_json_text(".", "{") catch {
+    JsonParse(_) => true
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     fail("expected wrapped parse error")
   }
 }
 
 ///|
 test "run_json_text raises JsonTextRunError compile errors" {
-  guard (try? run_json_text("%", "{}")) is Err(Compile(Diagnostics(lines))) &&
-    lines.length() > 0 else {
+  guard (try run_json_text("%", "{}") catch {
+    Compile(Diagnostics(lines)) => lines.length() > 0
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     fail("expected wrapped compile error")
   }
 }
 
 ///|
 test "parse_json raises public JsonParseError" {
-  guard (try? parse_json("{")) is Err(InvalidEof) else {
+  guard (try parse_json("{") catch {
+    InvalidEof => true
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     fail("expected public json parse invalid eof")
   }
 }
 
 ///|
 test "compile raises public CompileError" {
-  guard (try? compile("%")) is Err(Diagnostics(lines)) && lines.length() > 0 else {
+  guard (try compile("%") catch {
+    Diagnostics(lines) => lines.length() > 0
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     fail("expected public compile diagnostics")
   }
 }
@@ -145,10 +172,14 @@ test "compiled filter run raises public RuntimeError with Json payloads" {
     err => fail("compile failed: " + err.to_string())
   }
   let input : Json = null
-  guard (try? filter.run(input)) is Err(Thrown(value)) else {
+  guard (try filter.run(input) catch {
+    Thrown(value) => value.stringify() == "{\"code\":1}"
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     fail("expected public thrown eval error")
   }
-  @debug.assert_eq(value.stringify(), "{\"code\":1}")
 }
 
 ///|
@@ -171,7 +202,12 @@ test "compiled filter run_json_text raises CompiledJsonTextRunError parse errors
   let filter = compile(".") catch {
     err => fail("compile failed: " + err.to_string())
   }
-  guard (try? filter.run_json_text("{")) is Err(JsonParse(_)) else {
+  guard (try filter.run_json_text("{") catch {
+    JsonParse(_) => true
+    _ => false
+  } noraise {
+    _ => false
+  }) else {
     fail("expected compiled text parse error")
   }
 }

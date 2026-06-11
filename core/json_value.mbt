@@ -278,10 +278,10 @@ fn decimal_expand_positive_exponent(raw : String) -> String? {
   let exp_part = raw
     .view(start_offset=exp_index + 1, end_offset=raw.length())
     .to_owned()
-  let parsed_exp = try? @string.parse_int64(exp_part)
-  let exp_value = match parsed_exp {
-    Ok(v) => v.to_int()
-    Err(_) => return None
+  let exp_value = try @string.parse_int64(exp_part) catch {
+    _ => return None
+  } noraise {
+    v => v.to_int()
   }
   if exp_value < 0 {
     return None

@@ -71,7 +71,11 @@ test "parse slice" {
 
 ///|
 test "parse invalid empty slice" {
-  guard (try? compile(".[:]")) is Err(_) else {
+  guard (try compile(".[:]") catch {
+    _ => true
+  } noraise {
+    _ => false
+  }) else {
     fail("expected parse error for empty slice")
   }
 }
@@ -141,7 +145,11 @@ test "parse try/catch" {
       #|)
     ),
   )
-  guard (try? compile("try 1/0 catch 9")) is Err(_) else {
+  guard (try compile("try 1/0 catch 9") catch {
+    _ => true
+  } noraise {
+    _ => false
+  }) else {
     fail("expected parse error for unparenthesized try/catch arithmetic")
   }
 }
@@ -183,11 +191,20 @@ test "parse reduce/foreach" {
       #|)
     ),
   )
-  guard (try? compile("reduce .[] as [$i,$j] (0; . + $i * $j)")) is Ok(_) else {
+  guard (try compile("reduce .[] as [$i,$j] (0; . + $i * $j)") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected reduce as-pattern parse")
   }
-  guard (try? compile("foreach .[] as {x:$x,y:$y} (0; . + $x + $y; [$x,$y,.])"))
-    is Ok(_) else {
+  guard (try
+    compile("foreach .[] as {x:$x,y:$y} (0; . + $x + $y; [$x,$y,.])")
+  catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected foreach as-pattern parse")
   }
 }
@@ -210,35 +227,71 @@ test "parse string key index" {
 
 ///|
 test "parse dynamic bracket index" {
-  guard (try? compile(".foo[.baz]")) is Ok(_) else {
+  guard (try compile(".foo[.baz]") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected dynamic index parse")
   }
-  guard (try? compile("1 as $x | [1,2,3][$x]")) is Ok(_) else {
+  guard (try compile("1 as $x | [1,2,3][$x]") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected variable index parse")
   }
-  guard (try? compile("[range(5)] | .[1.1]")) is Ok(_) else {
+  guard (try compile("[range(5)] | .[1.1]") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected float index parse")
   }
-  guard (try? compile("$ENV.PAGER")) is Ok(_) else {
+  guard (try compile("$ENV.PAGER") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected variable field postfix parse")
   }
-  guard (try? compile("env.PAGER")) is Ok(_) else {
+  guard (try compile("env.PAGER") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected builtin field postfix parse")
   }
 }
 
 ///|
 test "parse dynamic slice bounds" {
-  guard (try? compile(".[:rindex(\"x\")]")) is Ok(_) else {
+  guard (try compile(".[:rindex(\"x\")]") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected dynamic end slice parse")
   }
-  guard (try? compile("map([1,2][0:.])")) is Ok(_) else {
+  guard (try compile("map([1,2][0:.])") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected identity end slice parse")
   }
-  guard (try? compile("[range(3)] | .[nan:1]")) is Ok(_) else {
+  guard (try compile("[range(3)] | .[nan:1]") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected nan start slice parse")
   }
-  guard (try? compile("[range(3)] | .[1:nan]")) is Ok(_) else {
+  guard (try compile("[range(3)] | .[1:nan]") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected nan end slice parse")
   }
 }
@@ -306,19 +359,39 @@ test "parse literals" {
       #|Builtin("@uri")
     ),
   )
-  guard (try? compile("(@uri|@urid)")) is Ok(_) else {
+  guard (try compile("(@uri|@urid)") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected format filter parse")
   }
-  guard (try? compile("@html \"<b>\\(.)</b>\"")) is Ok(_) else {
+  guard (try compile("@html \"<b>\\(.)</b>\"") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected @html format string parse")
   }
-  guard (try? compile("@sh \"echo \\(.)\"")) is Ok(_) else {
+  guard (try compile("@sh \"echo \\(.)\"") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected @sh format string parse")
   }
-  guard (try? compile(".00005")) is Ok(_) else {
+  guard (try compile(".00005") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected leading-dot number literal parse")
   }
-  guard (try? compile("select(.>.00005)")) is Ok(_) else {
+  guard (try compile("select(.>.00005)") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected leading-dot number literal parse in comparison")
   }
 }
@@ -347,26 +420,45 @@ test "parse builtin" {
 
 ///|
 test "parse def no-arg minimal" {
-  guard (try? compile("def inc: . + 1; . | inc")) is Ok(_) else {
+  guard (try compile("def inc: . + 1; . | inc") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected simple no-arg def parse")
   }
-  guard (try? compile("def inc: . + 1; def twice: inc | inc; . | twice"))
-    is Ok(_) else {
+  guard (try compile("def inc: . + 1; def twice: inc | inc; . | twice") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected chained no-arg def parse")
   }
-  guard (try? compile("def f(x): x; [f(1), f(2)]")) is Ok(_) else {
+  guard (try compile("def f(x): x; [f(1), f(2)]") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected parse success for def parameters")
   }
-  guard (try? compile(
-      "def f: . + 1; def g: def g: . + 100; f | g | f; (f | g), g",
-    ))
-    is Ok(_) else {
+  guard (try
+    compile("def f: . + 1; def g: def g: . + 100; f | g | f; (f | g), g")
+  catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected parse success for nested local defs in def body")
   }
-  guard (try? compile(
+  guard (try
+    compile(
       "[[20,10][1,0] as $x | def f: (100,200) as $y | def g: [$x + $y, .]; . + $x | g; f[0] | [f][0][1] | f]",
-    ))
-    is Ok(_) else {
+    )
+  catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected parse success for local defs in array element")
   }
 }
@@ -442,19 +534,39 @@ test "parse variables and as" {
 
 ///|
 test "parse as pattern bindings" {
-  guard (try? compile(".[] as [$a, {j:$j}] | [$a, $j]")) is Ok(_) else {
+  guard (try compile(".[] as [$a, {j:$j}] | [$a, $j]") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected array/object as-pattern parse")
   }
-  guard (try? compile(". as {$a, $b:[$c,$d]} | [$a, $b, $c, $d]")) is Ok(_) else {
+  guard (try compile(". as {$a, $b:[$c,$d]} | [$a, $b, $c, $d]") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected object as-pattern parse")
   }
-  guard (try? compile(".[] | . as {a:$a} ?// [$a] | $a")) is Ok(_) else {
+  guard (try compile(".[] | . as {a:$a} ?// [$a] | $a") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected ?// parse")
   }
-  guard (try? compile(". as [] | null")) is Err(_) else {
+  guard (try compile(". as [] | null") catch {
+    _ => true
+  } noraise {
+    _ => false
+  }) else {
     fail("expected parse error for empty array as-pattern")
   }
-  guard (try? compile(". as {} | null")) is Err(_) else {
+  guard (try compile(". as {} | null") catch {
+    _ => true
+  } noraise {
+    _ => false
+  }) else {
     fail("expected parse error for empty object as-pattern")
   }
 }
@@ -739,16 +851,32 @@ test "parse update assignment operators" {
 
 ///|
 test "parse update assignment dynamic lhs" {
-  guard (try? compile(".[] |= . + 1")) is Ok(_) else {
+  guard (try compile(".[] |= . + 1") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected parse success for dynamic update assignment lhs")
   }
-  guard (try? compile("(.a, .b) = range(3)")) is Ok(_) else {
+  guard (try compile("(.a, .b) = range(3)") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected parse success for grouped update assignment lhs")
   }
-  guard (try? compile("1 as $s | 3 as $e | .[$s:$e] = [9]")) is Ok(_) else {
+  guard (try compile("1 as $s | 3 as $e | .[$s:$e] = [9]") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected parse success for dynamic slice bounds in update lhs")
   }
-  guard (try? compile("(.[] | .[1:3]) |= map(.+100)")) is Ok(_) else {
+  guard (try compile("(.[] | .[1:3]) |= map(.+100)") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected parse success for dynamic base slice update lhs")
   }
 }
@@ -764,14 +892,27 @@ test "parse update assignment precedence" {
       #|)
     ),
   )
-  guard (try? compile(".a = .b | .a")) is Ok(_) else {
+  guard (try compile(".a = .b | .a") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected parse success for pipe after update assignment")
   }
-  guard (try? compile(".a = .b // 1 | .a")) is Ok(_) else {
+  guard (try compile(".a = .b // 1 | .a") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected parse success for fallback after update assignment")
   }
-  guard (try? compile("reduce .[] as {$x,$y} (null; .x += $x | .y += [$y])"))
-    is Ok(_) else {
+  guard (try
+    compile("reduce .[] as {$x,$y} (null; .x += $x | .y += [$y])")
+  catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected parse success for reduce update pipeline")
   }
 }
@@ -846,33 +987,63 @@ test "parse array and object literals" {
       #|)
     ),
   )
-  guard (try? compile("{a,b,(.d):.a,e:.b}")) is Ok(_) else {
+  guard (try compile("{a,b,(.d):.a,e:.b}") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected dynamic object key parse")
   }
-  guard (try? compile("{\"a\",b,\"a$\\(1+1)\"}")) is Ok(_) else {
+  guard (try compile("{\"a\",b,\"a$\\(1+1)\"}") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected interpolated object key parse")
   }
-  guard (try? compile("{x: try 1, y: try error catch 2, z: if true then 3 end}"))
-    is Ok(_) else {
+  guard (try
+    compile("{x: try 1, y: try error catch 2, z: if true then 3 end}")
+  catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected object literal parse with try/catch values")
   }
-  guard (try? compile("{a,$__loc__,c}")) is Ok(_) else {
+  guard (try compile("{a,$__loc__,c}") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected variable shorthand object key parse")
   }
-  guard (try? compile(
+  guard (try
+    compile(
       "1 as $x | \"2\" as $y | \"3\" as $z | { $x, as, $y: 4, ($z): 5, if: 6, foo: 7 }",
-    ))
-    is Ok(_) else {
+    )
+  catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected variable object key parse")
   }
 }
 
 ///|
 test "parse interpolated string literal" {
-  guard (try? compile("\"invalid value: \\(.)\"")) is Ok(_) else {
+  guard (try compile("\"invalid value: \\(.)\"") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected string interpolation parse")
   }
-  guard (try? compile("try error(\"\\($__loc__)\") catch .")) is Ok(_) else {
+  guard (try compile("try error(\"\\($__loc__)\") catch .") catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected __loc__ interpolation parse")
   }
 }

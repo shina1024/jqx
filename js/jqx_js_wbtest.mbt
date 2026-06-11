@@ -14,18 +14,20 @@ test "offset_from_line_column handles valid and invalid positions" {
 
 ///|
 fn expect_parse_error(input : String) -> @core.ParseError {
-  guard (try? @core.parse(input)) is Err(err) else {
-    abort("expected parse error: " + input)
+  try @core.parse(input) catch {
+    err => err
+  } noraise {
+    _ => abort("expected parse error: " + input)
   }
-  err
 }
 
 ///|
 fn expect_filter_error(input : String) -> @core.FilterError {
-  guard (try? @core.compile(input)) is Err(err) else {
-    abort("expected filter error: " + input)
+  try @core.compile(input) catch {
+    err => err
+  } noraise {
+    _ => abort("expected filter error: " + input)
   }
-  err
 }
 
 ///|

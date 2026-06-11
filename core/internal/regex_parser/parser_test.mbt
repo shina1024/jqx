@@ -24,9 +24,13 @@ fn test_ascii_profile() -> @re.Profile {
 
 ///|
 fn regex_parse_error_contains(pattern : String, hint : String) -> Bool {
-  guard (try? parse(profile=test_ascii_profile(), mode=String, pattern[:]))
-    is Err(err) &&
-    err.to_string().contains(hint) else {
+  guard (try
+    parse(profile=test_ascii_profile(), mode=String, pattern[:])
+  catch {
+    err => err.to_string().contains(hint)
+  } noraise {
+    _ => false
+  }) else {
     return false
   }
   true
@@ -34,8 +38,13 @@ fn regex_parse_error_contains(pattern : String, hint : String) -> Bool {
 
 ///|
 test "regex parser accepts supported POSIX character classes" {
-  guard (try? parse(profile=test_ascii_profile(), mode=String, "[[:digit:]]"[:]))
-    is Ok(_) else {
+  guard (try
+    parse(profile=test_ascii_profile(), mode=String, "[[:digit:]]"[:])
+  catch {
+    _ => false
+  } noraise {
+    _ => true
+  }) else {
     fail("expected supported POSIX class to parse")
   }
 }
