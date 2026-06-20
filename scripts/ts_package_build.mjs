@@ -139,7 +139,7 @@ try {
     },
   });
 
-  run(binPath("tsgo"), [
+  run(binPath("tsc"), [
     "-p",
     "tsconfig.build.json",
     "--emitDeclarationOnly",
