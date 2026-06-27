@@ -92,7 +92,11 @@ pub fn Value::to_json_string(self : Value) -> String {
       JFalse => buf.write_string("false")
       Number(n, repr) =>
         match repr {
-          Some(s) => buf.write_string(s)
+          Some(s) =>
+            match decimal_canonical_repr(s) {
+              Some(canonical) => buf.write_string(canonical)
+              None => buf.write_string(s)
+            }
           None =>
             if n != n {
               buf.write_string("null")

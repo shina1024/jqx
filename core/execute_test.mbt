@@ -816,7 +816,7 @@ test "execute tostring/tonumber compatibility" {
   @debug.assert_eq(nan_number[0].to_json_string(), "null")
   let huge = must_execute(compile("tonumber"), must_parse("\"1e309\""))
   @debug.assert_eq(huge.length(), 1)
-  @debug.assert_eq(huge[0].to_json_string(), "1e309")
+  @debug.assert_eq(huge[0].to_json_string(), "1E+309")
   let pos_inf = must_execute(compile("tonumber"), must_parse("\"Infinity\""))
   @debug.assert_eq(pos_inf.length(), 1)
   @debug.assert_eq(pos_inf[0].to_json_string(), "1.7976931348623157e+308")
@@ -850,11 +850,11 @@ test "execute tojson/fromjson compatibility" {
       compile("tojson"),
       must_parse("0.12345678901234567890123456789"),
     ),
-    [Value::string("0.12345678901234568")],
+    [Value::string("0.12345678901234567890123456789")],
   )
   @debug.assert_eq(
     must_execute(compile("tojson"), must_parse("1E-999999999")),
-    [Value::string("0")],
+    [Value::string("1E-999999999")],
   )
   @debug.assert_eq(must_execute(compile("fromjson"), must_parse("\"1\"")), [
     Value::number(1.0),
@@ -2679,10 +2679,10 @@ test "execute arithmetic" {
       j,
     ),
     [
-      Value::string("1.7976931348623157e+308"),
-      Value::string("1.7976931348623157e+308"),
-      Value::string("0"),
-      Value::string("0"),
+      Value::string("9E+999999999"),
+      Value::string("9.999999999E+999999999"),
+      Value::string("1E-999999999"),
+      Value::string("1E-999999999"),
     ],
   )
   @debug.assert_eq(must_execute(compile("-."), must_parse("3")), [
@@ -3767,7 +3767,7 @@ test "execute abs/have_decnum/isempty compatibility" {
     Value::object({ "a": Value::number(-1.0) }),
   ])
   @debug.assert_eq(must_execute(compile("have_decnum"), must_parse("null")), [
-    Value::boolean(false),
+    Value::boolean(true),
   ])
   @debug.assert_eq(
     must_execute(
@@ -4031,8 +4031,8 @@ test "execute shared run lanes preserve ordering and repr-sensitive outputs" {
   @debug.assert_eq(values.length(), 3)
   @debug.assert_eq(
     values[0].to_json_string(),
-    "{\"b\":1,\"a\":9,\"huge\":9007199254740993,\"n\":1e309,\"c\":3}",
+    "{\"b\":1,\"a\":9,\"huge\":9007199254740993,\"n\":1E+309,\"c\":3}",
   )
   @debug.assert_eq(values[1].to_json_string(), "9007199254740993")
-  @debug.assert_eq(values[2].to_json_string(), "1e309")
+  @debug.assert_eq(values[2].to_json_string(), "1E+309")
 }

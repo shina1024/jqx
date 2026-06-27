@@ -117,7 +117,15 @@ fn json_equal(a : Value, b : Value) -> Bool {
     (JNull, JNull) => true
     (JTrue, JTrue) => true
     (JFalse, JFalse) => true
-    (Number(x, _), Number(y, _)) => x == y
+    (Number(x, rx), Number(y, ry)) =>
+      match (rx, ry) {
+        (Some(a), Some(b)) =>
+          match decimal_compare_repr(a, b) {
+            Some(cmp) => cmp == 0
+            None => x == y
+          }
+        _ => x == y
+      }
     (String(x), String(y)) => x == y
     (Array(x), Array(y)) => {
       if x.length() != y.length() {

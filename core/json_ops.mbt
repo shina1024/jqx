@@ -49,6 +49,30 @@ fn json_number_value(n : Double) -> Value {
 }
 
 ///|
+fn json_number_negated_value(n : Double, repr : String?) -> Value {
+  match repr {
+    Some(s) =>
+      match decimal_negated_repr(s) {
+        Some(next_repr) => Value::number(-n, repr=next_repr)
+        None => Value::number(-n)
+      }
+    None => Value::number(-n)
+  }
+}
+
+///|
+fn json_number_abs_value(n : Double, repr : String?) -> Value {
+  match repr {
+    Some(s) =>
+      match decimal_abs_repr(s) {
+        Some(next_repr) => Value::number(builtin_fabs_number(n), repr=next_repr)
+        None => json_number_value(builtin_fabs_number(n))
+      }
+    None => json_number_value(builtin_fabs_number(n))
+  }
+}
+
+///|
 fn[T] contains_type_error(
   haystack : Value,
   needle : Value,
@@ -67,7 +91,15 @@ fn contains_match(haystack : Value, needle : Value) -> Bool {
     (JNull, JNull) => true
     (JTrue, JTrue) => true
     (JFalse, JFalse) => true
-    (Number(x, _), Number(y, _)) => x == y
+    (Number(x, rx), Number(y, ry)) =>
+      match (rx, ry) {
+        (Some(a), Some(b)) =>
+          match decimal_compare_repr(a, b) {
+            Some(cmp) => cmp == 0
+            None => x == y
+          }
+        _ => x == y
+      }
     (String(h), String(n)) => h.contains(n)
     (Array(h), Array(n)) => {
       for needle_item in n {
@@ -252,11 +284,19 @@ fn execute_compare(
     for i in 0..<l.length() {
       let a = l[i]
       match (a, b) {
-        (Number(x, _), Number(y, _)) => {
-          let ok = match op {
-            "<" => x < y
-            "<=" => x <= y
-            ">" => x > y
+        (Number(x, rx), Number(y, ry)) => {
+          let decimal_cmp = match (rx, ry) {
+            (Some(a), Some(b)) => decimal_compare_repr(a, b)
+            _ => None
+          }
+          let ok = match (op, decimal_cmp) {
+            ("<", Some(cmp)) => cmp < 0
+            ("<=", Some(cmp)) => cmp <= 0
+            (">", Some(cmp)) => cmp > 0
+            (_, Some(cmp)) => cmp >= 0
+            ("<", None) => x < y
+            ("<=", None) => x <= y
+            (">", None) => x > y
             _ => x >= y
           }
           out.push(Value::boolean(ok))

@@ -530,7 +530,7 @@ fn dispatch_numeric_builtin(
         let out = []
         for value in values {
           match value {
-            Number(n, _) => out.push(json_number_value(-n))
+            Number(n, repr) => out.push(json_number_negated_value(n, repr))
             String(s) =>
               raise TypeError(
                 format_filter_string_type_with_preview(s) + " cannot be negated",

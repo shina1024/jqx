@@ -15,16 +15,12 @@
   "case_overrides": {
     "upstream-jq-test-l1847": {
       "compat_status": "temporary_exception",
-      "compat_platforms": ["win32"],
+      "compat_platforms": [
+        "win32"
+      ],
       "compat_ledger_id": "jq-1.8.2-windows-strftime-encoding",
       "compat_reason": "jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names",
       "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output"
-    },
-    "upstream-jq-test-l2014": {
-      "compat_status": "temporary_exception",
-      "compat_ledger_id": "jq-latest-decnum-error-preview",
-      "compat_reason": "latest jq release artifacts enable decimal-number support, while jqx currently preserves numeric source text for formatting but does not implement full decimal arithmetic; have_decnum remains false to avoid advertising unsupported arithmetic semantics",
-      "compat_removal_condition": "jqx implements full decimal-number arithmetic and can truthfully expose have_decnum, or upstream adds a profile matching jqx numeric-representation semantics"
     },
     "upstream-jq-test-l2602": {
       "compat_status": "temporary_exception",
@@ -70,7 +66,9 @@
     },
     "upstream-optional-test-l9": {
       "compat_status": "temporary_exception",
-      "compat_platforms": ["win32"],
+      "compat_platforms": [
+        "win32"
+      ],
       "compat_ledger_id": "jq-1.8.2-windows-strftime-encoding",
       "compat_reason": "jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names",
       "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output"

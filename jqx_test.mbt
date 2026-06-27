@@ -91,7 +91,7 @@ test "run_json_text preserves escaped strings and large-number repr" {
   ) catch {
     err => fail("run_json_text failed: " + err.to_string())
   }
-  @debug.assert_eq(values, ["\"line\\nbreak\"", "1e309", "9007199254740993"])
+  @debug.assert_eq(values, ["\"line\\nbreak\"", "1E+309", "9007199254740993"])
 }
 
 ///|

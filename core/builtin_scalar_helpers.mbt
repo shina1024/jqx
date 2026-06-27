@@ -108,11 +108,6 @@ fn builtin_fabs_number(n : Double) -> Double {
 }
 
 ///|
-fn builtin_is_negative_zero(n : Double) -> Bool {
-  n == 0.0 && 1.0 / n == @double.neg_infinity
-}
-
-///|
 fn format_filter_input_string(input : Value) -> String {
   match input {
     String(s) => s

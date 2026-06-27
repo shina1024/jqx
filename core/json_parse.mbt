@@ -841,8 +841,18 @@ fn number_literal_significant_digits(token : StringView) -> Int {
 
 ///|
 fn number_literal_should_preserve_repr(token : StringView) -> Bool {
+  token.contains(".") ||
+  token.contains("e") ||
+  token.contains("E") ||
   number_literal_has_large_exponent(token) ||
   number_literal_significant_digits(token) > 17
+}
+
+///|
+fn number_literal_is_negative_zero(token : StringView) -> Bool {
+  token.length() == 2 &&
+  token.unsafe_get(0).to_int().unsafe_to_char() == '-' &&
+  token.unsafe_get(1).to_int().unsafe_to_char() == '0'
 }
 
 ///|
@@ -977,7 +987,7 @@ fn ParseContext::lex_number_end(
         }
     } noraise {
       i => {
-        if s == "-0" {
+        if number_literal_is_negative_zero(s) {
           return (-0.0, Some(s))
         }
         let d = i.to_double()

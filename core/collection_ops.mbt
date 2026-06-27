@@ -271,13 +271,14 @@ fn compare_json(a : Value, b : Value) -> Int {
   }
   match (a, b) {
     (JNull, JNull) | (JFalse, JFalse) | (JTrue, JTrue) => 0
-    (Number(x, _), Number(y, _)) =>
-      if x < y {
-        -1
-      } else if x > y {
-        1
-      } else {
-        0
+    (Number(x, rx), Number(y, ry)) =>
+      match (rx, ry) {
+        (Some(a), Some(b)) =>
+          match decimal_compare_repr(a, b) {
+            Some(cmp) => cmp
+            None => if x < y { -1 } else if x > y { 1 } else { 0 }
+          }
+        _ => if x < y { -1 } else if x > y { 1 } else { 0 }
       }
     (String(x), String(y)) => x.compare(y)
     (Array(x), Array(y)) => {

@@ -32,7 +32,7 @@ fn dispatch_nullary_builtin(
   input : Value,
 ) -> Array[Value] raise EvalError {
   match name {
-    "have_decnum" => [Value::boolean(false)]
+    "have_decnum" => [Value::boolean(true)]
     "modulemeta" =>
       match input {
         String(name) => raise TypeError("module not found: " + name)
@@ -141,31 +141,7 @@ fn dispatch_nullary_builtin(
     "error" => raise Thrown(input)
     "abs" =>
       match input {
-        Number(n, repr) =>
-          if n == @double.infinity || n == @double.neg_infinity || n != n {
-            [json_number_value(builtin_fabs_number(n))]
-          } else if n < 0.0 {
-            match repr {
-              Some(s) =>
-                if s.has_prefix("-") {
-                  [
-                    Value::number(
-                      -n,
-                      repr=s
-                        .view(start_offset=1, end_offset=s.length())
-                        .to_owned(),
-                    ),
-                  ]
-                } else {
-                  [json_number_value(-n)]
-                }
-              None => [json_number_value(-n)]
-            }
-          } else if builtin_is_negative_zero(n) || repr == Some("-0") {
-            [Value::number(-0.0, repr="-0")]
-          } else {
-            [Value::number(n, repr?)]
-          }
+        Number(n, repr) => [json_number_abs_value(n, repr)]
         JNull | JTrue | JFalse =>
           raise TypeError(json_type_with_value(input) + " cannot be negated")
         _ => [input]
@@ -198,12 +174,7 @@ fn dispatch_nullary_builtin(
         Object(o) => [Value::number(o.length().to_double())]
         String(s) => [Value::number(s.length().to_double())]
         JNull => [Value::number(0.0)]
-        Number(n, _) =>
-          if n < 0.0 {
-            [Value::number(-n)]
-          } else {
-            [Value::number(n)]
-          }
+        Number(n, repr) => [json_number_abs_value(n, repr)]
         _ =>
           raise TypeError("Cannot get length of " + json_type_with_value(input))
       }
@@ -312,7 +283,7 @@ fn dispatch_nullary_builtin(
     "tostring" =>
       match input {
         String(_) => [input]
-        Number(n, _) => [Value::string(Value::number(n).to_json_string())]
+        Number(_, _) => [Value::string(input.to_json_string())]
         _ => [Value::string(input.to_json_string())]
       }
     "@text" => [Value::string(format_filter_input_string(input))]
@@ -355,7 +326,7 @@ fn dispatch_nullary_builtin(
     }
     "tojson" =>
       match input {
-        Number(n, _) => [Value::string(Value::number(n).to_json_string())]
+        Number(_, _) => [Value::string(input.to_json_string())]
         _ => [Value::string(input.to_json_string())]
       }
     "tostream" => [Value::array([Value::array([]), input])]

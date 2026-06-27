@@ -79,7 +79,7 @@ test "js execute direct filter" {
 test "js run_json_text preserves large-number repr output" {
   let out = run_json_text(".", "1e309")
   guard out is Ok(values) else { fail("expected Ok") }
-  @debug.assert_eq(values, ["1e309"])
+  @debug.assert_eq(values, ["1E+309"])
 }
 
 ///|
@@ -125,8 +125,8 @@ test "js compiled lanes preserve ordering and repr-sensitive outputs" {
   )
   guard text_out is Ok(text_values) else { fail("expected Ok") }
   @debug.assert_eq(text_values, [
-    "{\"b\":1,\"a\":9,\"huge\":9007199254740993,\"n\":1e309,\"c\":3}", "9007199254740993",
-    "1e309",
+    "{\"b\":1,\"a\":9,\"huge\":9007199254740993,\"n\":1E+309,\"c\":3}", "9007199254740993",
+    "1E+309",
   ])
 
   let value_out = run_compiled_values(
@@ -136,10 +136,10 @@ test "js compiled lanes preserve ordering and repr-sensitive outputs" {
   @debug.assert_eq(values.length(), 3)
   @debug.assert_eq(
     values[0].to_json_string(),
-    "{\"b\":1,\"a\":9,\"huge\":9007199254740993,\"n\":1e309,\"c\":3}",
+    "{\"b\":1,\"a\":9,\"huge\":9007199254740993,\"n\":1E+309,\"c\":3}",
   )
   @debug.assert_eq(values[1].to_json_string(), "9007199254740993")
-  @debug.assert_eq(values[2].to_json_string(), "1e309")
+  @debug.assert_eq(values[2].to_json_string(), "1E+309")
 }
 
 ///|
