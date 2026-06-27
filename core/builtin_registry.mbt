@@ -363,7 +363,7 @@ fn dispatch_nullary_builtin(
       match input {
         Number(_, _) => [input]
         String(s) => {
-          let parse_input = builtin_c_string_prefix(s)
+          let parse_input = s
           if builtin_has_outer_trim_ws(parse_input) {
             raise TypeError(
               json_type_with_value(input) + " cannot be parsed as a number",
@@ -534,19 +534,19 @@ fn dispatch_nullary_builtin(
           if n == 0.0 {
             [Value::array([])]
           } else {
-            raise TypeError("Cannot index number with number")
+            index_type_error(input, Value::number(0.0))
           }
         String(s) =>
           if s.length() == 0 {
             [Value::array([])]
           } else {
-            raise TypeError("Cannot index string with number")
+            index_type_error(input, Value::number((s.length() - 1).to_double()))
           }
         Object(o) =>
           if o.length() == 0 {
             [Value::array([])]
           } else {
-            raise TypeError("Cannot index object with number")
+            index_type_error(input, Value::number(0.0))
           }
         JTrue | JFalse =>
           raise TypeError(json_type_with_value(input) + " has no length")

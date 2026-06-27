@@ -58,16 +58,6 @@ fn builtin_has_outer_trim_ws(s : String) -> Bool {
 }
 
 ///|
-fn builtin_c_string_prefix(s : String) -> String {
-  for i in 0..<s.length() {
-    if s.unsafe_get(i).to_int() == 0 {
-      return s.view(start_offset=0, end_offset=i).to_owned()
-    }
-  }
-  s
-}
-
-///|
 fn builtin_utf8_byte_length(s : String) -> Int {
   let mut total = 0
   for ch in s {
@@ -90,9 +80,9 @@ fn builtin_to_boolean(input : Value) -> Value raise EvalError {
   match input {
     JTrue | JFalse => input
     String(s) =>
-      if builtin_c_string_prefix(s) == "true" {
+      if s == "true" {
         Value::boolean(true)
-      } else if builtin_c_string_prefix(s) == "false" {
+      } else if s == "false" {
         Value::boolean(false)
       } else {
         raise TypeError(
@@ -132,7 +122,10 @@ fn format_filter_input_string(input : Value) -> String {
 
 ///|
 fn format_filter_string_preview(s : String) -> String {
-  let max_preview_bytes = 10
+  if builtin_utf8_byte_length(s) <= 26 {
+    return s
+  }
+  let max_preview_bytes = 24
   let buf = StringBuilder()
   let mut used = 0
   for ch in s {
@@ -169,11 +162,5 @@ fn format_filter_string_type_with_value(s : String) -> String {
 fn format_filter_string_type_with_preview(s : String) -> String {
   let preview = format_filter_string_preview(s)
   let quoted = Value::string(preview).to_json_string()
-  if preview == s {
-    "string (" + quoted + ")"
-  } else {
-    "string (" +
-    quoted.view(start_offset=0, end_offset=quoted.length() - 1).to_owned() +
-    ")"
-  }
+  "string (" + quoted + ")"
 }

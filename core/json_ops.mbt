@@ -17,7 +17,7 @@ fn json_type_with_value(j : Value) -> String {
 
 ///|
 fn json_value_preview(s : String) -> String {
-  let max_preview = 13
+  let max_preview = 26
   if s.length() <= max_preview {
     return s
   }
@@ -37,7 +37,7 @@ fn json_value_preview(s : String) -> String {
 ///|
 fn json_type_with_value_preview(j : Value) -> String {
   match j {
-    Object(_) | Array(_) =>
+    Number(_, _) | Object(_) | Array(_) =>
       json_type_name(j) + " (" + json_value_preview(j.to_json_string()) + ")"
     _ => json_type_with_value(j)
   }
@@ -165,7 +165,8 @@ fn has_key(collection : Value, key : Value) -> Bool raise EvalError {
 ///|
 fn[T] index_type_error(input : Value, key : Value) -> T raise EvalError {
   let key_desc = match key {
-    String(_) => "string " + key.to_json_string()
+    String(_) => "string (" + key.to_json_string() + ")"
+    Number(_, _) => "number (" + key.to_json_string() + ")"
     _ => json_type_name(key)
   }
   raise TypeError("Cannot index " + json_type_name(input) + " with " + key_desc)

@@ -13,8 +13,11 @@ test "offset_from_line_column handles valid and invalid positions" {
 }
 
 ///|
-fn expect_parse_error(input : String) -> @core.ParseError {
-  try @core.parse(input) catch {
+fn expect_parse_error(
+  input : String,
+  max_nesting_depth? : Int = 10000,
+) -> @core.ParseError {
+  try @core.parse(input, max_nesting_depth~) catch {
     err => err
   } noraise {
     _ => abort("expected parse error: " + input)
@@ -79,14 +82,14 @@ test "parse_error_to_jqx_error maps parse variants" {
   @debug.assert_eq(mapped_invalid_string_eof.offset, 1)
 
   let deep_input_buf = StringBuilder()
-  for _ in 0..<1025 {
+  for _ in 0..<4 {
     deep_input_buf.write_char('[')
   }
-  for _ in 0..<1025 {
+  for _ in 0..<4 {
     deep_input_buf.write_char(']')
   }
   let deep_input = deep_input_buf.to_string()
-  let depth = expect_parse_error(deep_input)
+  let depth = expect_parse_error(deep_input, max_nesting_depth=3)
   @debug.assert_eq(
     parse_error_to_jqx_error(deep_input, depth),
     jqx_error("parse_depth_limit_exceeded", depth.to_string()),

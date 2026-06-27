@@ -2,6 +2,7 @@
 fn getpath_on_input(input : Value, path : Value) -> Value raise EvalError {
   match path {
     Array(parts) => {
+      validate_path_depth(parts)
       let mut current = input
       for key in parts {
         let cur = current
@@ -48,8 +49,23 @@ fn getpath_on_input(input : Value, path : Value) -> Value raise EvalError {
 ///|
 fn normalize_setpath_arg(path : Value) -> Array[Value] raise EvalError {
   match path {
-    Array(parts) => parts
+    Array(parts) => {
+      validate_path_depth(parts)
+      parts
+    }
     _ => raise TypeError("Path must be specified as an array")
+  }
+}
+
+///|
+fn jq_path_max_depth() -> Int {
+  10000
+}
+
+///|
+fn validate_path_depth(path : Array[Value]) -> Unit raise EvalError {
+  if path.length() > jq_path_max_depth() {
+    raise TypeError("Path too deep")
   }
 }
 
@@ -213,7 +229,10 @@ fn normalize_delpaths_arg(paths : Value) -> Array[Array[Value]] raise EvalError 
       let out = []
       for p in path_list {
         match p {
-          Array(parts) => out.push(parts)
+          Array(parts) => {
+            validate_path_depth(parts)
+            out.push(parts)
+          }
           _ =>
             raise TypeError(
               "Path must be specified as array, not " + json_type_name(p),
@@ -283,6 +302,9 @@ fn delpaths_on_input(
         let rest = path_tail(path)
         match key {
           Number(n, _) => {
+            if n != n || n == @double.infinity || n == @double.neg_infinity {
+              continue
+            }
             let i = n.to_int()
             let idx = if i < 0 { a.length() + i } else { i }
             if idx >= 0 && idx < a.length() {

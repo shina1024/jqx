@@ -34,11 +34,10 @@ void test("runJsonText executes a jq filter on JSON text", () => {
   assert.deepEqual(result, { ok: true, value: ["1"] });
 });
 
-void test("runJsonText matches jq 1.8.1 print depth truncation", () => {
-  const input = nestedJsonArrayText(257, "0");
-  const expected = nestedJsonArrayText(257, "<skipped: too deep>");
-  const result = runJsonText(".", input);
-  assert.deepEqual(result, { ok: true, value: [expected] });
+void test("runJsonText follows jq 1.8.2 print depth beyond old limit", () => {
+  const beyondOldLimit = nestedJsonArrayText(257, "0");
+  const result = runJsonText(".", beyondOldLimit);
+  assert.deepEqual(result, { ok: true, value: [beyondOldLimit] });
 });
 
 void test("run stringifies input and parses outputs", () => {

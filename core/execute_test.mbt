@@ -27,28 +27,28 @@ test "execute field/index type errors and optional suppression" {
   let object_json = must_parse("{\"a\":1}")
   let null_json = must_parse("null")
   guard (try execute(compile(".foo"), number_json) catch {
-    err => err.to_string() == "Cannot index number with string \"foo\""
+    err => err.to_string() == "Cannot index number with string (\"foo\")"
   } noraise {
     _ => false
   }) else {
     fail("expected type error for number .foo")
   }
   guard (try execute(compile(".foo"), array_json) catch {
-    err => err.to_string() == "Cannot index array with string \"foo\""
+    err => err.to_string() == "Cannot index array with string (\"foo\")"
   } noraise {
     _ => false
   }) else {
     fail("expected type error for array .foo")
   }
   guard (try execute(compile(".[0]"), number_json) catch {
-    err => err.to_string() == "Cannot index number with number"
+    err => err.to_string() == "Cannot index number with number (0)"
   } noraise {
     _ => false
   }) else {
     fail("expected type error for number .[0]")
   }
   guard (try execute(compile(".[0]"), object_json) catch {
-    err => err.to_string() == "Cannot index object with number"
+    err => err.to_string() == "Cannot index object with number (0)"
   } noraise {
     _ => false
   }) else {
@@ -104,14 +104,14 @@ test "execute chained index without extra dot" {
 test "execute string index jq compatibility" {
   let s = must_parse("\"abc\"")
   guard (try execute(compile(".[0]"), s) catch {
-    err => err.to_string() == "Cannot index string with number"
+    err => err.to_string() == "Cannot index string with number (0)"
   } noraise {
     _ => false
   }) else {
     fail("expected string index type error")
   }
   guard (try execute(compile(".[-1]"), s) catch {
-    err => err.to_string() == "Cannot index string with number"
+    err => err.to_string() == "Cannot index string with number (-1)"
   } noraise {
     _ => false
   }) else {
@@ -425,21 +425,21 @@ test "execute first/last/nth compatibility" {
 ///|
 test "execute first/last/nth errors" {
   guard (try execute(compile("first"), must_parse("1")) catch {
-    err => err.to_string() == "Cannot index number with number"
+    err => err.to_string() == "Cannot index number with number (0)"
   } noraise {
     _ => false
   }) else {
     fail("expected first number index error")
   }
   guard (try execute(compile("last"), must_parse("{}")) catch {
-    err => err.to_string() == "Cannot index object with number"
+    err => err.to_string() == "Cannot index object with number (-1)"
   } noraise {
     _ => false
   }) else {
     fail("expected last object index error")
   }
   guard (try execute(compile("nth(\"a\")"), must_parse("[1,2,3]")) catch {
-    err => err.to_string() == "Cannot index array with string \"a\""
+    err => err.to_string() == "Cannot index array with string (\"a\")"
   } noraise {
     _ => false
   }) else {
@@ -614,21 +614,21 @@ test "execute transpose errors" {
     fail("expected transpose null iterate error")
   }
   guard (try execute(compile("transpose"), must_parse("[1]")) catch {
-    err => err.to_string() == "Cannot index number with number"
+    err => err.to_string() == "Cannot index number with number (0)"
   } noraise {
     _ => false
   }) else {
     fail("expected transpose number index error")
   }
   guard (try execute(compile("transpose"), must_parse("[[1],{}]")) catch {
-    err => err.to_string() == "Cannot index object with number"
+    err => err.to_string() == "Cannot index object with number (0)"
   } noraise {
     _ => false
   }) else {
     fail("expected transpose object index error")
   }
   guard (try execute(compile("transpose"), must_parse("[[1],\"x\"]")) catch {
-    err => err.to_string() == "Cannot index string with number"
+    err => err.to_string() == "Cannot index string with number (0)"
   } noraise {
     _ => false
   }) else {
@@ -701,7 +701,7 @@ test "execute to_entries/from_entries/with_entries errors" {
     fail("expected from_entries iterate error")
   }
   guard (try execute(compile("from_entries"), must_parse("[1]")) catch {
-    err => err.to_string() == "Cannot index number with string \"key\""
+    err => err.to_string() == "Cannot index number with string (\"key\")"
   } noraise {
     _ => false
   }) else {
@@ -797,10 +797,17 @@ test "execute tostring/tonumber compatibility" {
   @debug.assert_eq(must_execute(compile("tonumber"), must_parse("\"1.25\"")), [
     Value::number(1.25),
   ])
-  @debug.assert_eq(
-    must_execute(compile("tonumber"), must_parse("\"123\\u0000456\"")),
-    [Value::number(123.0)],
-  )
+  guard (try
+    execute(compile("tonumber"), must_parse("\"123\\u0000456\""))
+  catch {
+    err =>
+      err.to_string() ==
+      "string (\"123\\u0000456\") cannot be parsed as a number"
+  } noraise {
+    _ => false
+  }) else {
+    fail("expected tonumber to reject strings with embedded NUL and suffix")
+  }
   @debug.assert_eq(must_execute(compile("tonumber"), must_parse("1")), [
     Value::number(1.0),
   ])
@@ -908,11 +915,11 @@ test "execute format filter compatibility" {
   )
   @debug.assert_eq(
     must_execute(compile("@urid"), must_parse("\"a\\u0000b\\u0000c\"")),
-    [Value::string("a")],
+    [Value::string("a\u{00}b\u{00}c")],
   )
   @debug.assert_eq(
     must_execute(compile("@urid"), must_parse("\"Knäckebröd\"")),
-    [Value::string("Kn\u{fffd}\u{fffd}ckebr\u{fffd}\u{fffd}d")],
+    [Value::string("Knäckebröd")],
   )
   @debug.assert_eq(
     must_execute(
@@ -942,7 +949,7 @@ test "execute format filter compatibility" {
     execute(compile("@base64d"), must_parse("\"Not base64 data\""))
   catch {
     err =>
-      err.to_string() == "string (\"Not base64...) is not valid base64 data"
+      err.to_string() == "string (\"Not base64 data\") is not valid base64 data"
   } noraise {
     _ => false
   }) else {
@@ -1169,21 +1176,21 @@ test "execute reverse compatibility" {
 ///|
 test "execute reverse errors" {
   guard (try execute(compile("reverse"), must_parse("1")) catch {
-    err => err.to_string() == "Cannot index number with number"
+    err => err.to_string() == "Cannot index number with number (0)"
   } noraise {
     _ => false
   }) else {
     fail("expected reverse number index error")
   }
   guard (try execute(compile("reverse"), must_parse("\"abc\"")) catch {
-    err => err.to_string() == "Cannot index string with number"
+    err => err.to_string() == "Cannot index string with number (2)"
   } noraise {
     _ => false
   }) else {
     fail("expected reverse string index error")
   }
   guard (try execute(compile("reverse"), must_parse("{\"a\":1}")) catch {
-    err => err.to_string() == "Cannot index object with number"
+    err => err.to_string() == "Cannot index object with number (0)"
   } noraise {
     _ => false
   }) else {
@@ -1255,7 +1262,7 @@ test "execute join errors" {
   catch {
     err =>
       err.to_string() ==
-      "string (\"1,2,\") and object ({\"a\":{\"b\":{...) cannot be added"
+      "string (\"1,2,\") and object ({\"a\":{\"b\":{\"c\":33}}}) cannot be added"
   } noraise {
     _ => false
   }) else {
@@ -2208,7 +2215,7 @@ test "execute index/rindex/indices compatibility" {
 ///|
 test "execute index/rindex/indices errors" {
   guard (try execute(compile("index(1)"), must_parse("\"hello\"")) catch {
-    err => err.to_string() == "Cannot index string with number"
+    err => err.to_string() == "Cannot index string with number (1)"
   } noraise {
     _ => false
   }) else {
@@ -2222,7 +2229,7 @@ test "execute index/rindex/indices errors" {
     fail("expected string index(boolean) type error")
   }
   guard (try execute(compile("index(\"a\")"), must_parse("1")) catch {
-    err => err.to_string() == "Cannot index number with string \"a\""
+    err => err.to_string() == "Cannot index number with string (\"a\")"
   } noraise {
     _ => false
   }) else {
@@ -3458,7 +3465,7 @@ test "execute try/catch" {
   }
   @debug.assert_eq(
     must_execute(compile("try -. catch ."), must_parse("\"very-long-string\"")),
-    [Value::string("string (\"very-long-...) cannot be negated")],
+    [Value::string("string (\"very-long-string\") cannot be negated")],
   )
   @debug.assert_eq(
     must_execute(
@@ -3467,7 +3474,7 @@ test "execute try/catch" {
     ),
     [
       Value::string(
-        "string (\"very-long-...) and string (\"very-long-...) cannot be subtracted",
+        "string (\"very-long-string\") and string (\"very-long-string\") cannot be subtracted",
       ),
     ],
   )
@@ -3641,10 +3648,10 @@ test "execute trimstr compatibility" {
     Value::string("foobar"),
   ])
   @debug.assert_eq(must_execute(compile("rtrimstr(\"\")"), j), [
-    Value::string(""),
+    Value::string("foobar"),
   ])
   @debug.assert_eq(must_execute(compile("trimstr(\"\")"), j), [
-    Value::string(""),
+    Value::string("foobar"),
   ])
 }
 
@@ -3866,13 +3873,20 @@ test "execute numeric/meta builtins errors" {
   }) else {
     fail("expected toboolean parse error")
   }
-  @debug.assert_eq(
-    must_execute(
+  guard (try
+    execute(
       compile("\"true\\u0000x\", \"false\\u0000\" | toboolean"),
       must_parse("null"),
-    ),
-    [Value::boolean(true), Value::boolean(false)],
-  )
+    )
+  catch {
+    err =>
+      err.to_string() ==
+      "string (\"true\\u0000x\") cannot be parsed as a boolean"
+  } noraise {
+    _ => false
+  }) else {
+    fail("expected toboolean to reject embedded NUL suffix")
+  }
   guard (try execute(compile("sqrt"), must_parse("\"x\"")) catch {
     err => err.to_string() == "string (\"x\") only numbers have sqrt"
   } noraise {
@@ -3927,7 +3941,7 @@ test "execute abs/fabs/isempty errors" {
     fail("expected fabs string type error")
   }
   guard (try execute(compile("isempty(.[0])"), must_parse("{\"a\":1}")) catch {
-    err => err.to_string() == "Cannot index object with number"
+    err => err.to_string() == "Cannot index object with number (0)"
   } noraise {
     _ => false
   }) else {

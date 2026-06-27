@@ -38,13 +38,8 @@ jobs:
       - name: MoonBit Version
         run: moon version --all
 
-      - name: Install jq
-        run: |
-          JQ_VERSION="1.8.1"
-          mkdir -p "$HOME/.local/bin"
-          curl -fsSL "https://github.com/jqlang/jq/releases/download/jq-${JQ_VERSION}/jq-linux-amd64" -o "$HOME/.local/bin/jq"
-          chmod +x "$HOME/.local/bin/jq"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Install jq (latest)
+        uses: ./.github/actions/install-jq
 
       - name: jq Version
         run: jq --version

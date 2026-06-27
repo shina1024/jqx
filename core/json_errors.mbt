@@ -27,10 +27,7 @@ pub impl Show for ParseError with fn output(self, logger) {
       ..write_string(", column ")
       .write_object(column)
     InvalidEof => logger.write_string("Unexpected end of file")
-    DepthLimitExceeded =>
-      logger.write_string(
-        "Depth limit exceeded, please increase the max_nesting_depth parameter",
-      )
+    DepthLimitExceeded => logger.write_string("Exceeds depth limit for parsing")
     InvalidNumericLiteral({ line, column }) =>
       logger
       ..write_string("Invalid numeric literal at line ")

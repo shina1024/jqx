@@ -59,14 +59,9 @@ jobs:
           corepack enable
           corepack prepare pnpm@latest --activate
 
-      - name: Install jq (Linux)
+      - name: Install jq (latest)
         if: runner.os == 'Linux'
-        run: |
-          JQ_VERSION="1.8.1"
-          mkdir -p "$HOME/.local/bin"
-          curl -fsSL "https://github.com/jqlang/jq/releases/download/jq-${JQ_VERSION}/jq-linux-amd64" -o "$HOME/.local/bin/jq"
-          chmod +x "$HOME/.local/bin/jq"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+        uses: ./.github/actions/install-jq
 
       - name: jq Version (Linux)
         if: runner.os == 'Linux'
@@ -214,42 +209,8 @@ jobs:
       - name: MoonBit Version
         run: moon version --all
 
-      - name: Install jq (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          JQ_VERSION="1.8.1"
-          mkdir -p "$HOME/.local/bin"
-          curl -fsSL "https://github.com/jqlang/jq/releases/download/jq-${JQ_VERSION}/jq-linux-amd64" -o "$HOME/.local/bin/jq"
-          chmod +x "$HOME/.local/bin/jq"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-
-      - name: Install jq (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          JQ_VERSION="1.8.1"
-          case "$(uname -m)" in
-            arm64) JQ_ASSET="jq-macos-arm64" ;;
-            x86_64) JQ_ASSET="jq-macos-amd64" ;;
-            *)
-              echo "Unsupported macOS architecture: $(uname -m)" >&2
-              exit 2
-              ;;
-          esac
-          mkdir -p "$HOME/.local/bin"
-          curl -fsSL "https://github.com/jqlang/jq/releases/download/jq-${JQ_VERSION}/${JQ_ASSET}" -o "$HOME/.local/bin/jq"
-          chmod +x "$HOME/.local/bin/jq"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-
-      - name: Install jq (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $jqVersion = "1.8.1"
-          $jqDir = Join-Path $HOME ".local\\bin"
-          New-Item -ItemType Directory -Force -Path $jqDir | Out-Null
-          $jqPath = Join-Path $jqDir "jq.exe"
-          Invoke-WebRequest -Uri "https://github.com/jqlang/jq/releases/download/jq-$jqVersion/jq-windows-amd64.exe" -OutFile $jqPath
-          $jqDir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Install jq (latest)
+        uses: ./.github/actions/install-jq
 
       - name: jq Version
         run: jq --version

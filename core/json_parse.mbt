@@ -46,7 +46,7 @@ pub fn valid(input : StringView) -> Bool {
 ///|
 pub fn parse_json(
   input : StringView,
-  max_nesting_depth? : Int = 1024,
+  max_nesting_depth? : Int = 10000,
 ) -> Json raise ParseError {
   Value::to_json(parse(input, max_nesting_depth~))
 }
@@ -54,7 +54,7 @@ pub fn parse_json(
 ///|
 pub fn parse(
   input : StringView,
-  max_nesting_depth? : Int = 1024,
+  max_nesting_depth? : Int = 10000,
 ) -> Value raise ParseError {
   let ctx = ParseContext::make(input, max_nesting_depth)
   let val = ctx.parse_value()

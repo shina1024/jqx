@@ -329,7 +329,7 @@ fn format_uri_decode_percent_run(input : String, start : Int) -> (String, Int)? 
 
 ///|
 fn format_uri_decode(input : String) -> String? {
-  let c_input = builtin_c_string_prefix(input)
+  let c_input = input
   let buf = StringBuilder()
   let mut i = 0
   while i < c_input.length() {
@@ -343,13 +343,7 @@ fn format_uri_decode(input : String) -> String? {
         None => return None
       }
     } else {
-      if ch.to_int() <= 0x7F {
-        buf.write_char(ch)
-      } else {
-        for b in utf8_bytes_of_string(ch.to_string()) {
-          buf.write_string(utf8_decode_bytes_lossy([b]))
-        }
-      }
+      buf.write_char(ch)
       i += 1
     }
   }

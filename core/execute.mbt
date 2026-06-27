@@ -600,14 +600,7 @@ fn execute_with_runtime(
             None => [Value::null()]
           }
         JNull => [Value::null()]
-        _ =>
-          raise TypeError(
-            "Cannot index " +
-            json_type_name(input) +
-            " with string \"" +
-            name +
-            "\"",
-          )
+        _ => index_type_error(input, Value::string(name))
       }
     FieldOpt(name) =>
       match input {
@@ -630,10 +623,7 @@ fn execute_with_runtime(
           }
         }
         JNull => [Value::null()]
-        _ =>
-          raise TypeError(
-            "Cannot index " + json_type_name(input) + " with number",
-          )
+        _ => index_type_error(input, Value::number(i.to_double()))
       }
     IndexOpt(i) =>
       match input {

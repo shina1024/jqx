@@ -6,7 +6,11 @@ fn bracket_static_selector_from_filter(filter : Filter) -> Filter? {
     Literal(String(name)) => Some(Filter::field(name))
     Literal(Number(n, _)) =>
       if n == n && n != @double.infinity && n != @double.neg_infinity {
-        Some(Filter::index(n.to_int()))
+        if n.floor() == n {
+          Some(Filter::index(n.to_int()))
+        } else {
+          None
+        }
       } else {
         None
       }

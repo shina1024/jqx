@@ -165,10 +165,9 @@ test "js structured runtime error" {
 }
 
 ///|
-test "js run_json_text matches jq 1.8.1 print depth truncation" {
-  let over_limit = nested_json_array_text(257, "0")
-  let expected = nested_json_array_text(257, "<skipped: too deep>")
-  let out = run_json_text(".", over_limit)
+test "js run_json_text follows jq 1.8.2 print depth beyond old limit" {
+  let beyond_old_limit = nested_json_array_text(257, "0")
+  let out = run_json_text(".", beyond_old_limit)
   guard out is Ok(values) else { fail("expected Ok") }
-  @debug.assert_eq(values, [expected])
+  @debug.assert_eq(values, [beyond_old_limit])
 }

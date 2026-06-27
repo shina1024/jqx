@@ -5,7 +5,7 @@
 ///|
 pub fn parse_json(
   input : StringView,
-  max_nesting_depth? : Int = 1024,
+  max_nesting_depth? : Int = 10000,
 ) -> Json raise JsonParseError {
   @core.parse_json(input, max_nesting_depth~) catch {
     err => raise json_parse_error_from_core(err)
@@ -55,7 +55,7 @@ pub fn CompiledFilter::run(
 pub fn run_json_text(
   filter : StringView,
   input : StringView,
-  max_nesting_depth? : Int = 1024,
+  max_nesting_depth? : Int = 10000,
 ) -> Array[String] raise JsonTextRunError {
   let compiled = compile(filter) catch { err => raise Compile(err) }
   compiled.run_json_text(input, max_nesting_depth~) catch {
@@ -71,7 +71,7 @@ pub fn run_json_text(
 pub fn CompiledFilter::run_json_text(
   self : CompiledFilter,
   input : StringView,
-  max_nesting_depth? : Int = 1024,
+  max_nesting_depth? : Int = 10000,
 ) -> Array[String] raise CompiledJsonTextRunError {
   @core.run_compiled_json_text(self.filter, input, max_nesting_depth~) catch {
     err => raise compiled_json_text_run_error_from_core(err)

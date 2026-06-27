@@ -13,99 +13,67 @@
   "compile_fail_expect_error_mode": "strict",
   "default_case_fields": {},
   "case_overrides": {
-    "upstream-jq-test-l1188": {
-      "compat_status": "temporary_exception",
-      "compat_ledger_id": "jq-1.8.1-abort-del-nan-index",
-      "compat_reason": "jq 1.8.1 aborts while deleting an array path selected by a NaN index; jqx intentionally does not reproduce process aborts",
-      "compat_removal_condition": "jq upstream stops aborting for del(.[nan]) or jqx adopts a documented jq-crash compatibility mode"
-    },
-    "upstream-jq-test-l1192": {
-      "compat_status": "temporary_exception",
-      "compat_ledger_id": "jq-1.8.1-abort-del-nan-index",
-      "compat_reason": "jq 1.8.1 aborts while deleting an array path selected by NaN indices; jqx intentionally does not reproduce process aborts",
-      "compat_removal_condition": "jq upstream stops aborting for del(.[nan,nan]) or jqx adopts a documented jq-crash compatibility mode"
-    },
-    "upstream-jq-test-l1553": {
-      "compat_status": "temporary_exception",
-      "compat_ledger_id": "jq-1.8.1-abort-strindices-input",
-      "compat_reason": "jq 1.8.1 aborts when _strindices receives a non-string input; jqx returns a normal type error instead of reproducing process aborts",
-      "compat_removal_condition": "jq upstream stops aborting for _strindices with non-string input or jqx adopts a documented jq-crash compatibility mode"
-    },
-    "upstream-jq-test-l1557": {
-      "compat_status": "temporary_exception",
-      "compat_ledger_id": "jq-1.8.1-abort-strindices-pattern",
-      "compat_reason": "jq 1.8.1 aborts when _strindices receives a non-string pattern; jqx returns a normal type error instead of reproducing process aborts",
-      "compat_removal_condition": "jq upstream stops aborting for _strindices with non-string pattern or jqx adopts a documented jq-crash compatibility mode"
-    },
-    "upstream-jq-test-l2573": {
+    "upstream-jq-test-l1847": {
       "compat_status": "temporary_exception",
       "compat_platforms": ["win32"],
-      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-setpath-flatten",
-      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep setpath/flatten case; jqx completes without reproducing process aborts",
-      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep setpath/flatten cases or jqx adopts a documented jq-crash compatibility mode"
+      "compat_ledger_id": "jq-1.8.2-windows-strftime-encoding",
+      "compat_reason": "jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names",
+      "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output"
     },
-    "upstream-jq-test-l2577": {
+    "upstream-jq-test-l2014": {
       "compat_status": "temporary_exception",
-      "compat_platforms": ["win32"],
-      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-setpath",
-      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep setpath case; jqx completes without reproducing process aborts",
-      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep setpath cases or jqx adopts a documented jq-crash compatibility mode"
+      "compat_ledger_id": "jq-latest-decnum-error-preview",
+      "compat_reason": "latest jq release artifacts enable decimal-number support, while jqx currently preserves numeric source text for formatting but does not implement full decimal arithmetic; have_decnum remains false to avoid advertising unsupported arithmetic semantics",
+      "compat_removal_condition": "jqx implements full decimal-number arithmetic and can truthfully expose have_decnum, or upstream adds a profile matching jqx numeric-representation semantics"
     },
     "upstream-jq-test-l2602": {
       "compat_status": "temporary_exception",
-      "compat_platforms": ["win32"],
-      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-contains",
-      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep contains case; jqx completes without reproducing process aborts",
-      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep contains cases or jqx adopts a documented jq-crash compatibility mode"
-    },
-    "upstream-jq-test-l2607": {
-      "compat_status": "temporary_exception",
-      "compat_platforms": ["win32"],
-      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-object-multiply",
-      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep object multiplication case; jqx completes without reproducing process aborts",
-      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep object multiplication cases or jqx adopts a documented jq-crash compatibility mode"
+      "compat_ledger_id": "jq-1.8.2-deep-contains-guard",
+      "compat_reason": "jq 1.8.2 reports \"Containment check too deep\" for this deep contains case; jqx currently completes the operation instead of enforcing the jq depth guard",
+      "compat_removal_condition": "jqx implements the jq 1.8.2 deep contains guard or jq upstream changes/removes this guard"
     },
     "upstream-jq-test-l2611": {
       "compat_status": "temporary_exception",
-      "compat_platforms": ["win32"],
-      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-object-multiply",
-      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep object multiplication case; jqx completes without reproducing process aborts",
-      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep object multiplication cases or jqx adopts a documented jq-crash compatibility mode"
+      "compat_ledger_id": "jq-1.8.2-deep-object-merge-guard",
+      "compat_reason": "jq 1.8.2 reports \"Object merge too deep\" for this deep object multiplication case; jqx currently completes the operation instead of enforcing the jq depth guard",
+      "compat_removal_condition": "jqx implements the jq 1.8.2 deep object merge guard or jq upstream changes/removes this guard"
     },
     "upstream-jq-test-l2616": {
       "compat_status": "temporary_exception",
-      "compat_platforms": ["win32"],
-      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-equality",
-      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep equality case; jqx completes without reproducing process aborts",
-      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep equality cases or jqx adopts a documented jq-crash compatibility mode"
+      "compat_ledger_id": "jq-1.8.2-deep-equality-guard",
+      "compat_reason": "jq 1.8.2 reports \"Equality check too deep\" for this deep equality case; jqx currently completes the operation instead of enforcing the jq depth guard",
+      "compat_removal_condition": "jqx implements the jq 1.8.2 deep equality guard or jq upstream changes/removes this guard"
     },
     "upstream-jq-test-l2621": {
       "compat_status": "temporary_exception",
-      "compat_platforms": ["win32"],
-      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-array-sort",
-      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep array sort case; jqx completes without reproducing process aborts",
-      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep array sort cases or jqx adopts a documented jq-crash compatibility mode"
+      "compat_ledger_id": "jq-1.8.2-deep-array-sort-guard",
+      "compat_reason": "jq 1.8.2 reports \"Comparison too deep\" for this deep array sort case; jqx currently completes the operation instead of enforcing the jq comparison depth guard",
+      "compat_removal_condition": "jqx implements the jq 1.8.2 deep comparison guard for array sort or jq upstream changes/removes this guard"
     },
     "upstream-jq-test-l2625": {
       "compat_status": "temporary_exception",
-      "compat_platforms": ["win32"],
-      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-array-unique",
-      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep array unique case; jqx completes without reproducing process aborts",
-      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep array unique cases or jqx adopts a documented jq-crash compatibility mode"
+      "compat_ledger_id": "jq-1.8.2-deep-array-unique-guard",
+      "compat_reason": "jq 1.8.2 reports \"Comparison too deep\" for this deep array unique case; jqx currently completes the operation instead of enforcing the jq comparison depth guard",
+      "compat_removal_condition": "jqx implements the jq 1.8.2 deep comparison guard for array unique or jq upstream changes/removes this guard"
     },
     "upstream-jq-test-l2629": {
       "compat_status": "temporary_exception",
-      "compat_platforms": ["win32"],
-      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-object-sort",
-      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep object sort case; jqx completes without reproducing process aborts",
-      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep object sort cases or jqx adopts a documented jq-crash compatibility mode"
+      "compat_ledger_id": "jq-1.8.2-deep-object-sort-guard",
+      "compat_reason": "jq 1.8.2 reports \"Comparison too deep\" for this deep object sort case; jqx currently completes the operation instead of enforcing the jq comparison depth guard",
+      "compat_removal_condition": "jqx implements the jq 1.8.2 deep comparison guard for object sort or jq upstream changes/removes this guard"
     },
     "upstream-jq-test-l2633": {
       "compat_status": "temporary_exception",
+      "compat_ledger_id": "jq-1.8.2-deep-object-unique-guard",
+      "compat_reason": "jq 1.8.2 reports \"Comparison too deep\" for this deep object unique case; jqx currently completes the operation instead of enforcing the jq comparison depth guard",
+      "compat_removal_condition": "jqx implements the jq 1.8.2 deep comparison guard for object unique or jq upstream changes/removes this guard"
+    },
+    "upstream-optional-test-l9": {
+      "compat_status": "temporary_exception",
       "compat_platforms": ["win32"],
-      "compat_ledger_id": "jq-1.8.1-windows-stack-overflow-deep-object-unique",
-      "compat_reason": "jq 1.8.1 for Windows exits with stack overflow status 3221225725 for this deep object unique case; jqx completes without reproducing process aborts",
-      "compat_removal_condition": "jq Windows stops stack-overflow aborting for deep object unique cases or jqx adopts a documented jq-crash compatibility mode"
+      "compat_ledger_id": "jq-1.8.2-windows-strftime-encoding",
+      "compat_reason": "jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names",
+      "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output"
     }
   }
 }

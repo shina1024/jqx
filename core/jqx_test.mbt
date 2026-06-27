@@ -195,17 +195,11 @@ test "core run helpers centralize value and text lanes" {
 }
 
 ///|
-test "run_json_text matches jq 1.8.1 print depth truncation" {
-  let at_limit = nested_json_array_text(256, "0")
-  let within_limit = run_json_text(".", at_limit) catch {
-    err => fail("run_json_text failed at depth limit: " + err.to_string())
+test "run_json_text follows jq 1.8.2 print depth beyond old limit" {
+  let beyond_old_limit = nested_json_array_text(257, "0")
+  let within_limit = run_json_text(".", beyond_old_limit) catch {
+    err =>
+      fail("run_json_text failed beyond old depth limit: " + err.to_string())
   }
-  @debug.assert_eq(within_limit, [at_limit])
-
-  let over_limit = nested_json_array_text(257, "0")
-  let expected = nested_json_array_text(257, "<skipped: too deep>")
-  let truncated = run_json_text(".", over_limit) catch {
-    err => fail("run_json_text failed past depth limit: " + err.to_string())
-  }
-  @debug.assert_eq(truncated, [expected])
+  @debug.assert_eq(within_limit, [beyond_old_limit])
 }

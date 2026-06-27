@@ -46,21 +46,21 @@ test "execute getpath errors" {
     fail("expected getpath path-array type error")
   }
   guard (try execute(compile("getpath([\"a\"])"), must_parse("1")) catch {
-    err => err.to_string() == "Cannot index number with string \"a\""
+    err => err.to_string() == "Cannot index number with string (\"a\")"
   } noraise {
     _ => false
   }) else {
     fail("expected getpath number string-index error")
   }
   guard (try execute(compile("getpath([0])"), must_parse("{\"a\":1}")) catch {
-    err => err.to_string() == "Cannot index object with number"
+    err => err.to_string() == "Cannot index object with number (0)"
   } noraise {
     _ => false
   }) else {
     fail("expected getpath object number-index error")
   }
   guard (try execute(compile("getpath([\"a\"])"), must_parse("[1,2]")) catch {
-    err => err.to_string() == "Cannot index array with string \"a\""
+    err => err.to_string() == "Cannot index array with string (\"a\")"
   } noraise {
     _ => false
   }) else {
@@ -183,28 +183,28 @@ test "execute setpath errors" {
     fail("expected setpath array-key type error")
   }
   guard (try execute(compile("setpath([\"a\"];2)"), must_parse("[1,2]")) catch {
-    err => err.to_string() == "Cannot index array with string \"a\""
+    err => err.to_string() == "Cannot index array with string (\"a\")"
   } noraise {
     _ => false
   }) else {
     fail("expected setpath array string-index error")
   }
   guard (try execute(compile("setpath([0];2)"), must_parse("{\"a\":1}")) catch {
-    err => err.to_string() == "Cannot index object with number"
+    err => err.to_string() == "Cannot index object with number (0)"
   } noraise {
     _ => false
   }) else {
     fail("expected setpath object number-index error")
   }
   guard (try execute(compile("setpath([\"a\"];2)"), must_parse("1")) catch {
-    err => err.to_string() == "Cannot index number with string \"a\""
+    err => err.to_string() == "Cannot index number with string (\"a\")"
   } noraise {
     _ => false
   }) else {
     fail("expected setpath number string-index error")
   }
   guard (try execute(compile("setpath([0];2)"), must_parse("1")) catch {
-    err => err.to_string() == "Cannot index number with number"
+    err => err.to_string() == "Cannot index number with number (0)"
   } noraise {
     _ => false
   }) else {
@@ -737,14 +737,14 @@ test "execute paths compatibility" {
 ///|
 test "execute paths errors" {
   guard (try execute(compile("paths(.foo)"), must_parse("{\"a\":1}")) catch {
-    err => err.to_string() == "Cannot index number with string \"foo\""
+    err => err.to_string() == "Cannot index number with string (\"foo\")"
   } noraise {
     _ => false
   }) else {
     fail("expected paths predicate string-index error")
   }
   guard (try execute(compile("paths(.[0])"), must_parse("{\"a\":1}")) catch {
-    err => err.to_string() == "Cannot index number with number"
+    err => err.to_string() == "Cannot index number with number (0)"
   } noraise {
     _ => false
   }) else {

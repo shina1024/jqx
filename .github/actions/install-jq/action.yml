@@ -1,0 +1,75 @@
+name: Install jq
+description: Install jq from the latest or an explicit jqlang/jq GitHub Release
+
+inputs:
+  version:
+    description: jq version to install; use "latest" for the GitHub latest release
+    required: false
+    default: latest
+
+runs:
+  using: composite
+  steps:
+    - name: Install jq (Linux/macOS)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        version="${{ inputs.version }}"
+        case "$RUNNER_OS" in
+          Linux)
+            asset="jq-linux-amd64"
+            ;;
+          macOS)
+            case "$(uname -m)" in
+              arm64) asset="jq-macos-arm64" ;;
+              x86_64) asset="jq-macos-amd64" ;;
+              *)
+                echo "Unsupported macOS architecture: $(uname -m)" >&2
+                exit 2
+                ;;
+            esac
+            ;;
+          *)
+            echo "Unsupported runner OS: $RUNNER_OS" >&2
+            exit 2
+            ;;
+        esac
+
+        if [ "$version" = "latest" ]; then
+          base_url="https://github.com/jqlang/jq/releases/latest/download"
+        else
+          tag="${version#jq-}"
+          base_url="https://github.com/jqlang/jq/releases/download/jq-${tag}"
+        fi
+
+        mkdir -p "$HOME/.local/bin"
+        curl -fsSL "${base_url}/${asset}" -o "$HOME/.local/bin/jq"
+        chmod +x "$HOME/.local/bin/jq"
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+    - name: Install jq (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        $version = "${{ inputs.version }}"
+        $arch = [System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture
+        switch ($arch) {
+          "X64" { $asset = "jq-windows-amd64.exe" }
+          "Arm64" { $asset = "jq-windows-arm64.exe" }
+          default { throw "Unsupported Windows architecture: $arch" }
+        }
+
+        if ($version -eq "latest") {
+          $baseUrl = "https://github.com/jqlang/jq/releases/latest/download"
+        } else {
+          $tag = if ($version.StartsWith("jq-")) { $version } else { "jq-$version" }
+          $baseUrl = "https://github.com/jqlang/jq/releases/download/$tag"
+        }
+
+        $jqDir = Join-Path $HOME ".local\bin"
+        New-Item -ItemType Directory -Force -Path $jqDir | Out-Null
+        $jqPath = Join-Path $jqDir "jq.exe"
+        Invoke-WebRequest -Uri "$baseUrl/$asset" -OutFile $jqPath
+        $jqDir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append

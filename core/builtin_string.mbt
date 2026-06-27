@@ -155,7 +155,7 @@ fn dispatch_string_builtin(
           match (input, needle) {
             (String(h), String(n)) =>
               if n.length() == 0 {
-                out.push(Value::string(""))
+                out.push(Value::string(h))
               } else {
                 let mut trimmed = h
                 if trimmed.has_prefix(n) {
@@ -186,7 +186,7 @@ fn dispatch_string_builtin(
           match (input, needle) {
             (String(h), String(n)) =>
               if n.length() == 0 {
-                out.push(Value::string(""))
+                out.push(Value::string(h))
               } else if h.has_suffix(n) {
                 out.push(
                   Value::string(

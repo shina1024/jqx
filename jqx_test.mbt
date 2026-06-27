@@ -213,11 +213,11 @@ test "compiled filter run_json_text raises CompiledJsonTextRunError parse errors
 }
 
 ///|
-test "public run_json_text matches jq 1.8.1 print depth truncation" {
-  let over_limit = nested_json_array_text(257, "0")
-  let expected = nested_json_array_text(257, "<skipped: too deep>")
-  let outputs = run_json_text(".", over_limit) catch {
-    err => fail("run_json_text failed past depth limit: " + err.to_string())
+test "public run_json_text follows jq 1.8.2 print depth beyond old limit" {
+  let beyond_old_limit = nested_json_array_text(257, "0")
+  let outputs = run_json_text(".", beyond_old_limit) catch {
+    err =>
+      fail("run_json_text failed beyond old depth limit: " + err.to_string())
   }
-  @debug.assert_eq(outputs, [expected])
+  @debug.assert_eq(outputs, [beyond_old_limit])
 }

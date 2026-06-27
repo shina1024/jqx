@@ -4,7 +4,7 @@ This repository targets jq-compatible behavior.
 
 ## Compatibility
 
-- Compatibility checks in this repo run against jq 1.8.1.
+- Compatibility checks in CI install jq from the latest jqlang/jq GitHub Release by default.
 - If jq-version-specific behavior matters, make the intended version or exception explicit in code, tests, or docs.
 - Do not widen skips casually or weaken error/output comparison as a shortcut.
 - Temporary compatibility exceptions must be explicit and removable.
