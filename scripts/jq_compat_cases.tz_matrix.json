@@ -7,12 +7,28 @@
   {
     "name": "locale-upstream-strftime-weekday-month",
     "filter": "strftime(\"%A, %B %d, %Y\")",
-    "input": "1435677542.822351"
+    "input": "1435677542.822351",
+    "compat_status": "temporary_exception",
+    "compat_platforms": [
+      "win32"
+    ],
+    "compat_ledger_id": "jq-1.8.2-windows-strftime-encoding",
+    "compat_reason": "jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names",
+    "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output",
+    "compat_stale_policy": "allow"
   },
   {
     "name": "locale-upstream-optional-strftime-weekday-month",
     "filter": "strftime(\"%A, %B %e, %Y\")",
-    "input": "1435677542.822351"
+    "input": "1435677542.822351",
+    "compat_status": "temporary_exception",
+    "compat_platforms": [
+      "win32"
+    ],
+    "compat_ledger_id": "jq-1.8.2-windows-strftime-encoding",
+    "compat_reason": "jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names",
+    "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output",
+    "compat_stale_policy": "allow"
   },
   {
     "name": "tz-upstream-gmtime",

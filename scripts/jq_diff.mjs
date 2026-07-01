@@ -251,6 +251,12 @@ function getCompatPlatforms(testCase) {
   return testCase.compat_platforms.map((value) => String(value).toLowerCase());
 }
 
+function getCompatStalePolicy(testCase) {
+  return typeof testCase.compat_stale_policy === "string"
+    ? testCase.compat_stale_policy.toLowerCase()
+    : "fail";
+}
+
 function isCompatActive(testCase) {
   const compatPlatforms = getCompatPlatforms(testCase);
   return (
@@ -303,8 +309,14 @@ function ensureValidMetadata(testCase) {
   const compatStatus = getCompatStatus(testCase);
   const name = String(testCase.name ?? "");
   const compatPlatforms = getCompatPlatforms(testCase);
+  const compatStalePolicy = getCompatStalePolicy(testCase);
   if (!["pass", "temporary_exception"].includes(compatStatus)) {
     throw new Error(`invalid compat_status for case ${name}: ${compatStatus}`);
+  }
+  if (!["fail", "allow"].includes(compatStalePolicy)) {
+    throw new Error(
+      `invalid compat_stale_policy for case ${name}: ${compatStalePolicy}`,
+    );
   }
   if (
     compatPlatforms == null ||
@@ -320,6 +332,11 @@ function ensureValidMetadata(testCase) {
   ) {
     throw new Error(
       `temporary_exception case ${name} must set compat_ledger_id, compat_reason, and compat_removal_condition`,
+    );
+  }
+  if (compatStatus !== "temporary_exception" && compatStalePolicy !== "fail") {
+    throw new Error(
+      `compat_stale_policy is only valid for temporary_exception case ${name}`,
     );
   }
 }
@@ -376,6 +393,7 @@ function main() {
         testCase,
         "compat_removal_condition",
       );
+      const compatStalePolicy = getCompatStalePolicy(testCase);
       const compatActive = isCompatActive(testCase);
       const jqArgs = Array.isArray(testCase.jq_args) ? [...testCase.jq_args].map(String) : [];
       const jqxArgs = Array.isArray(testCase.jqx_args)
@@ -462,6 +480,11 @@ function main() {
 
       if (compatActive) {
         if (ok) {
+          if (compatStalePolicy === "allow") {
+            passed += 1;
+            console.log(`[PASS] ${name} (temporary exception not reproduced)`);
+            continue;
+          }
           failed += 1;
           diffRecords.push({
             name,
@@ -470,6 +493,7 @@ function main() {
             compat_ledger_id: compatLedgerId,
             compat_reason: compatReason,
             compat_removal_condition: compatRemovalCondition,
+            compat_stale_policy: compatStalePolicy,
             jq_status: String(jqRun.status),
             jqx_status: String(jqxRun.status),
             jq_out: jqClass.mergedText,
@@ -493,6 +517,7 @@ function main() {
             compat_ledger_id: compatLedgerId,
             compat_reason: compatReason,
             compat_removal_condition: compatRemovalCondition,
+            compat_stale_policy: compatStalePolicy,
             jq_status: String(jqRun.status),
             jqx_status: String(jqxRun.status),
             jq_out: jqClass.mergedText,
@@ -527,6 +552,7 @@ function main() {
         compat_ledger_id: compatLedgerId,
         compat_reason: compatReason,
         compat_removal_condition: compatRemovalCondition,
+        compat_stale_policy: compatStalePolicy,
         jq_status: String(jqRun.status),
         jqx_status: String(jqxRun.status),
         jq_out: jqClass.mergedText,

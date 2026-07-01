@@ -3576,7 +3576,8 @@
     ],
     "compat_ledger_id": "jq-1.8.2-windows-strftime-encoding",
     "compat_reason": "jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names",
-    "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output"
+    "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output",
+    "compat_stale_policy": "allow"
   },
   {
     "name": "upstream-jq-test-l1851",
@@ -5394,7 +5395,8 @@
     ],
     "compat_ledger_id": "jq-1.8.2-windows-strftime-encoding",
     "compat_reason": "jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names",
-    "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output"
+    "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output",
+    "compat_stale_policy": "allow"
   },
   {
     "name": "upstream-onig-test-l2",

@@ -121,6 +121,12 @@ function getCompatPlatforms(testCase) {
   return testCase.compat_platforms.map((value) => String(value).toLowerCase());
 }
 
+function getCompatStalePolicy(testCase) {
+  return typeof testCase.compat_stale_policy === "string"
+    ? testCase.compat_stale_policy.toLowerCase()
+    : "fail";
+}
+
 function isCompatActive(testCase) {
   const compatPlatforms = getCompatPlatforms(testCase);
   return (
@@ -163,6 +169,7 @@ function buildCaseComparableRecord(testCase) {
     compat_ledger_id: getCompatField(testCase, "compat_ledger_id"),
     compat_reason: getCompatField(testCase, "compat_reason"),
     compat_removal_condition: getCompatField(testCase, "compat_removal_condition"),
+    compat_stale_policy: getCompatStalePolicy(testCase),
   };
 }
 
@@ -177,6 +184,8 @@ function buildDiffComparableRecord(record) {
       record.compat_removal_condition == null
         ? ""
         : String(record.compat_removal_condition),
+    compat_stale_policy:
+      record.compat_stale_policy == null ? "" : String(record.compat_stale_policy),
     jq_status: record.jq_status == null ? "" : String(record.jq_status),
     jqx_status: record.jqx_status == null ? "" : String(record.jqx_status),
     jq_out: record.jq_out == null ? "" : String(record.jq_out),
@@ -215,6 +224,7 @@ function validateCaseMetadata(cases, corpusName) {
     const compatReason = getCompatField(testCase, "compat_reason");
     const compatRemovalCondition = getCompatField(testCase, "compat_removal_condition");
     const compatPlatforms = getCompatPlatforms(testCase);
+    const compatStalePolicy = getCompatStalePolicy(testCase);
     const skipReason = getCaseSkipReason(testCase);
 
     if (!["pass", "temporary_exception"].includes(compatStatus)) {
@@ -225,6 +235,11 @@ function validateCaseMetadata(cases, corpusName) {
       compatPlatforms.some((platform) => platform.trim() === "")
     ) {
       errors.push(`${corpusName} case ${name} has invalid compat_platforms`);
+    }
+    if (!["fail", "allow"].includes(compatStalePolicy)) {
+      errors.push(
+        `${corpusName} case ${name} has invalid compat_stale_policy: ${compatStalePolicy}`,
+      );
     }
 
     if (compatStatus === "temporary_exception") {
@@ -248,6 +263,11 @@ function validateCaseMetadata(cases, corpusName) {
       if (skipReason.trim() !== "") {
         errors.push(
           `${corpusName} case ${name} uses skip_reason without compat_status=temporary_exception`,
+        );
+      }
+      if (compatStalePolicy !== "fail") {
+        errors.push(
+          `${corpusName} case ${name} uses compat_stale_policy without compat_status=temporary_exception`,
         );
       }
     }
