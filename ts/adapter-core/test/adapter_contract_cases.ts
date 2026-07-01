@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vite-plus/test";
 
 import type { Json, JqxQueryRuntime, JqxRuntime } from "../src/index.js";
 
@@ -62,7 +62,7 @@ function expectErrorKind(result: TestResult, expected: string): void {
 export function registerAdapterContractCases(config: AdapterContractConfig): void {
   const { label } = config;
 
-  void test(`${label}: adapter.filter validates input and output`, async () => {
+  test(`${label}: adapter.filter validates input and output`, async () => {
     const runtime: JqxRuntime = {
       run(filter, input) {
         assert.equal(filter, ".user.name");
@@ -83,7 +83,7 @@ export function registerAdapterContractCases(config: AdapterContractConfig): voi
     }
   });
 
-  void test(`${label}: adapter.filter returns input_validation error`, async () => {
+  test(`${label}: adapter.filter returns input_validation error`, async () => {
     const runtime: JqxRuntime = {
       run() {
         return { ok: true, value: [1] };
@@ -99,7 +99,7 @@ export function registerAdapterContractCases(config: AdapterContractConfig): voi
     expectErrorKind(result, "input_validation");
   });
 
-  void test(`${label}: adapter.filter returns runtime error`, async () => {
+  test(`${label}: adapter.filter returns runtime error`, async () => {
     const runtime: JqxRuntime = {
       run() {
         return { ok: false, error: { kind: "backend_runtime", message: "boom" } };
@@ -119,7 +119,7 @@ export function registerAdapterContractCases(config: AdapterContractConfig): voi
     }
   });
 
-  void test(`${label}: adapter.filter returns output_validation error`, async () => {
+  test(`${label}: adapter.filter returns output_validation error`, async () => {
     const runtime: JqxRuntime = {
       run() {
         return { ok: true, value: [1] };
@@ -141,7 +141,7 @@ export function registerAdapterContractCases(config: AdapterContractConfig): voi
     }
   });
 
-  void test(`${label}: adapter.query validates through query runtime`, async () => {
+  test(`${label}: adapter.query validates through query runtime`, async () => {
     const runtime: JqxRuntime & JqxQueryRuntime<{ kind: "Q" }> = {
       run() {
         return { ok: true, value: [] };
@@ -165,7 +165,7 @@ export function registerAdapterContractCases(config: AdapterContractConfig): voi
     }
   });
 
-  void test(`${label}: adapter.infer returns runtime values`, async () => {
+  test(`${label}: adapter.infer returns runtime values`, async () => {
     const runtime: JqxRuntime = {
       run(filter, input) {
         assert.equal(filter, ".user.name");
@@ -184,7 +184,7 @@ export function registerAdapterContractCases(config: AdapterContractConfig): voi
     }
   });
 
-  void test(`${label}: adapter.infer returns runtime error`, async () => {
+  test(`${label}: adapter.infer returns runtime error`, async () => {
     const runtime: JqxRuntime = {
       run() {
         return { ok: false, error: { kind: "backend_runtime", message: "boom" } };

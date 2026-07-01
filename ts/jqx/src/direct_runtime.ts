@@ -21,9 +21,8 @@ import type {
 type DirectQueryInput = QueryAst | TypedDslQuery;
 const compiledFilterRaw = new WeakMap<CompiledFilter, unknown>();
 
-type TypedDslQueryOutput<Q extends TypedDslQuery> = Q extends TypedDslQuery<infer Output>
-  ? Output
-  : never;
+type TypedDslQueryOutput<Q extends TypedDslQuery> =
+  Q extends TypedDslQuery<infer Output> ? Output : never;
 
 type MoonBitRuntimeResult<T, E> = { _0: T } | { _0: E };
 
@@ -59,11 +58,9 @@ type MoonBitExports = {
 function normalizeMoonBitModule(
   module: Record<string, unknown> & { default?: Record<string, unknown> },
 ): MoonBitExports {
-  const normalized = (
-    "run_json_text" in module
-      ? module
-      : module.default
-  ) as MoonBitExports | undefined;
+  const normalized = ("run_json_text" in module ? module : module.default) as
+    | MoonBitExports
+    | undefined;
   if (normalized === undefined) {
     throw new TypeError("Failed to load MoonBit JS runtime");
   }
@@ -232,7 +229,9 @@ export class CompiledFilter<Filter extends string = string> {
     compiledFilterRaw.set(this, raw);
   }
 
-  run<Input extends Json>(input: Input): JqxResult<InferJqOutput<Input, Filter, "json">[], JqxRuntimeError>;
+  run<Input extends Json>(
+    input: Input,
+  ): JqxResult<InferJqOutput<Input, Filter, "json">[], JqxRuntimeError>;
   run(input: Json): JqxResult<Json[], JqxRuntimeError>;
   run(input: Json): JqxResult<Json[], JqxRuntimeError> {
     return runCompiledInternal(this, input);
@@ -253,7 +252,9 @@ function unwrapCompiledFilter(filter: CompiledFilter): unknown {
 
 export interface JqxDirectRuntime extends JqxRuntime {
   runJsonText(filter: string, input: string): JqxResult<string[], JqxRuntimeError>;
-  compile<Filter extends string>(filter: Filter): JqxResult<CompiledFilter<Filter>, JqxRuntimeError>;
+  compile<Filter extends string>(
+    filter: Filter,
+  ): JqxResult<CompiledFilter<Filter>, JqxRuntimeError>;
   compile(filter: string): JqxResult<CompiledFilter, JqxRuntimeError>;
   parseJson(input: string): JqxResult<Json, JqxRuntimeError>;
   isValidJson(input: string): boolean;

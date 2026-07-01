@@ -1,5 +1,8 @@
 {
   "name": "jqx-workspace",
   "private": true,
-  "packageManager": "pnpm@11.0.9"
+  "packageManager": "pnpm@11.0.9",
+  "devDependencies": {
+    "vite-plus": "0.2.1"
+  }
 }

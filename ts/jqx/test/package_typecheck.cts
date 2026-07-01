@@ -6,8 +6,10 @@ const directOutCheck: root.JqxResult<root.Json[], root.JqxRuntimeError> = direct
 void directOutCheck;
 
 const compiled = root.compile(".user.name");
-const compiledCheck: root.JqxResult<root.CompiledFilter<".user.name">, root.JqxRuntimeError> =
-  compiled;
+const compiledCheck: root.JqxResult<
+  root.CompiledFilter<".user.name">,
+  root.JqxRuntimeError
+> = compiled;
 void compiledCheck;
 
 declare const bindingRuntime: bind.JqxJsonTextRuntime;

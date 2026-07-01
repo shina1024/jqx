@@ -56,11 +56,7 @@ export interface DynamicAdapter {
   filter<InSchema extends ValibotInputSchema, OutSchema extends ValibotSchema>(
     options: FilterOptions<InSchema, OutSchema>,
   ): Promise<JqxResult<v.InferOutput<OutSchema>[], AdapterError>>;
-  infer<
-    Filter extends string,
-    Input extends Json,
-    Mode extends InferenceFallbackMode = "unknown",
-  >(
+  infer<Filter extends string, Input extends Json, Mode extends InferenceFallbackMode = "unknown">(
     options: InferredOptions<Filter, Input, Mode>,
   ): Promise<JqxResult<InferJqOutput<Input, Filter, Mode>[], JqxRuntimeError>>;
 }

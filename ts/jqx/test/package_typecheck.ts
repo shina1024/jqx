@@ -1,4 +1,4 @@
-import { expectTypeOf } from "expect-type";
+import { expectTypeOf } from "vite-plus/test";
 
 import {
   compile,

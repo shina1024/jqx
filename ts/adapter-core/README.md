@@ -22,5 +22,5 @@ pnpm lint:typeaware
 pnpm typecheck
 ```
 
-`pnpm build` bundles ESM/CJS with `tsdown` and emits declarations with `tsgo`. `pnpm typecheck` uses `tsgo`.
-The workspace pins `@typescript/native-preview` for `tsgo` and type-aware linting, so adapter package verification follows the checked-in native-preview toolchain rather than a separately installed stock `typescript`.
+`pnpm build` runs Vite+ `vp pack` to bundle ESM/CJS and emit declarations with Oxc. `pnpm typecheck` runs Vite+ type-aware Oxlint checks.
+The workspace uses Vite+ as the TS package toolchain entrypoint, so adapter package verification follows the checked-in Vite+ versions instead of package-local formatter, linter, bundler, and test-runner dependencies.

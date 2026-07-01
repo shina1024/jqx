@@ -1,31 +1,14 @@
 // Canonical direct-use runtime surface.
-export {
-  compile,
-  isValidJson,
-  parseJson,
-  run,
-  runJsonText,
-} from "./direct_runtime.js";
+export { compile, isValidJson, parseJson, run, runJsonText } from "./direct_runtime.js";
 
-export {
-  CompiledFilter,
-  runtime,
-} from "./direct_runtime.js";
+export { CompiledFilter, runtime } from "./direct_runtime.js";
 
-export type {
-  JqxDirectRuntime,
-} from "./direct_runtime.js";
+export type { JqxDirectRuntime } from "./direct_runtime.js";
 
 // Secondary root-package lanes: query helpers and adapter-facing runtime objects.
-export {
-  query,
-  queryJsonText,
-  queryRuntime,
-} from "./direct_runtime.js";
+export { query, queryJsonText, queryRuntime } from "./direct_runtime.js";
 
-export type {
-  JqxDirectQueryRuntime,
-} from "./direct_runtime.js";
+export type { JqxDirectQueryRuntime } from "./direct_runtime.js";
 
 export type {
   InferTypedQueryOutput,

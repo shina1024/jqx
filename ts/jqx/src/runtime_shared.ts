@@ -15,10 +15,7 @@ export function failRuntimeResult<T>(error: JqxRuntimeError): JqxResult<T, JqxRu
   return { ok: false, error };
 }
 
-export function normalizeRuntimeError(
-  error: unknown,
-  fallbackMessage: string,
-): JqxRuntimeError {
+export function normalizeRuntimeError(error: unknown, fallbackMessage: string): JqxRuntimeError {
   const normalized = toJqxRuntimeError(error);
   if (normalized.kind === "backend_runtime" && normalized.message === "Unknown runtime error") {
     return { kind: "backend_runtime", message: fallbackMessage };
@@ -152,10 +149,7 @@ export function parseRuntimeJsonText(input: string): JqxResult<Json, JqxRuntimeE
   }
 }
 
-export function decodeRuntimeOutput(
-  raw: string,
-  index: number,
-): JqxResult<Json, JqxRuntimeError> {
+export function decodeRuntimeOutput(raw: string, index: number): JqxResult<Json, JqxRuntimeError> {
   try {
     const parsed = JSON.parse(raw) as Json;
     const found = findNonFiniteNumberPath(parsed);

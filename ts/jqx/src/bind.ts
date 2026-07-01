@@ -103,8 +103,7 @@ export interface JqxQueryJsonTextRuntime<Q = QueryAst> extends JqxJsonTextRuntim
   runQueryJsonText(query: Q, input: string): MaybePromise<JqxResult<string[], JqxRuntimeError>>;
 }
 
-export interface JqxQueryJsonTextStreamingRuntime<Q = QueryAst>
-  extends JqxQueryJsonTextRuntime<Q> {
+export interface JqxQueryJsonTextStreamingRuntime<Q = QueryAst> extends JqxQueryJsonTextRuntime<Q> {
   runQueryJsonTextStream(
     query: Q,
     input: string,
@@ -122,9 +121,15 @@ type QueryInputFor<Q> = Q extends QueryAst ? Q | TypedDslQuery : Q;
 
 export interface JqxQueryClient<Q = QueryAst> extends JqxClient {
   query(query: QueryInputFor<Q>, input: Json): Promise<JqxResult<Json[], JqxRuntimeError>>;
-  queryJsonText(query: QueryInputFor<Q>, input: string): Promise<JqxResult<string[], JqxRuntimeError>>;
+  queryJsonText(
+    query: QueryInputFor<Q>,
+    input: string,
+  ): Promise<JqxResult<string[], JqxRuntimeError>>;
   queryStream(query: QueryInputFor<Q>, input: Json): JqxResultStream<Json, JqxRuntimeError>;
-  queryJsonTextStream(query: QueryInputFor<Q>, input: string): JqxResultStream<string, JqxRuntimeError>;
+  queryJsonTextStream(
+    query: QueryInputFor<Q>,
+    input: string,
+  ): JqxResultStream<string, JqxRuntimeError>;
 }
 
 function toPromise<T>(value: MaybePromise<T>): Promise<T> {
@@ -208,7 +213,9 @@ function normalizeQueryInput<Q>(query: QueryInputFor<Q>): Q {
   return normalizeTypedDslQuery(query as Q | TypedDslQuery);
 }
 
-function createDynamicRuntime(runtime: JqxJsonTextRuntime & Partial<JqxJsonTextStreamingRuntime>): JqxClient {
+function createDynamicRuntime(
+  runtime: JqxJsonTextRuntime & Partial<JqxJsonTextStreamingRuntime>,
+): JqxClient {
   return {
     async runJsonText(filter, input) {
       const runtimeOut = await toPromise(runtime.runJsonText(filter, input));

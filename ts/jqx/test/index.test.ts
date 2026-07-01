@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vite-plus/test";
 
 import {
   bindRuntime,
@@ -20,7 +20,9 @@ import {
   type QueryAst,
 } from "../src/bind.js";
 
-async function collectStream<T, E>(stream: AsyncIterable<{ ok: true; value: T } | { ok: false; error: E }>) {
+async function collectStream<T, E>(
+  stream: AsyncIterable<{ ok: true; value: T } | { ok: false; error: E }>,
+) {
   const items: Array<{ ok: true; value: T } | { ok: false; error: E }> = [];
   for await (const item of stream) {
     items.push(item);
@@ -28,7 +30,7 @@ async function collectStream<T, E>(stream: AsyncIterable<{ ok: true; value: T } 
   return items;
 }
 
-void test("bindRuntime delegates runJsonText", async () => {
+test("bindRuntime delegates runJsonText", async () => {
   const runtime: JqxJsonTextRuntime = {
     runJsonText(filter, input) {
       return { ok: true as const, value: [`${filter}:${input}`] };
@@ -42,7 +44,7 @@ void test("bindRuntime delegates runJsonText", async () => {
   }
 });
 
-void test("bindRuntime run stringifies input and parses outputs", async () => {
+test("bindRuntime run stringifies input and parses outputs", async () => {
   const runtime: JqxJsonTextRuntime = {
     runJsonText(filter, input) {
       assert.equal(filter, ".x");
@@ -58,7 +60,7 @@ void test("bindRuntime run stringifies input and parses outputs", async () => {
   }
 });
 
-void test("bindRuntime run returns input_stringify for unserializable value-lane input", async () => {
+test("bindRuntime run returns input_stringify for unserializable value-lane input", async () => {
   const runtime: JqxJsonTextRuntime = {
     runJsonText() {
       assert.fail("runJsonText should not be called when input stringification fails");
@@ -76,7 +78,7 @@ void test("bindRuntime run returns input_stringify for unserializable value-lane
   }
 });
 
-void test("bindRuntime run rejects non-finite numbers in the value lane", async () => {
+test("bindRuntime run rejects non-finite numbers in the value lane", async () => {
   const runtime: JqxJsonTextRuntime = {
     runJsonText() {
       assert.fail("runJsonText should not be called when value-lane validation fails");
@@ -93,7 +95,7 @@ void test("bindRuntime run rejects non-finite numbers in the value lane", async 
   }
 });
 
-void test("bindRuntime run returns parse error for invalid raw JSON", async () => {
+test("bindRuntime run returns parse error for invalid raw JSON", async () => {
   const runtime: JqxJsonTextRuntime = {
     runJsonText() {
       return { ok: true as const, value: ["not-json"] };
@@ -110,7 +112,7 @@ void test("bindRuntime run returns parse error for invalid raw JSON", async () =
   }
 });
 
-void test("bindRuntime run returns output_value for jq-compatible raw outputs outside the value lane", async () => {
+test("bindRuntime run returns output_value for jq-compatible raw outputs outside the value lane", async () => {
   const runtime: JqxJsonTextRuntime = {
     runJsonText() {
       return { ok: true as const, value: ['{"value":[1e309]}'] };
@@ -128,7 +130,7 @@ void test("bindRuntime run returns output_value for jq-compatible raw outputs ou
   }
 });
 
-void test("bindRuntime normalizes legacy backend string errors", async () => {
+test("bindRuntime normalizes legacy backend string errors", async () => {
   const runtime: JqxJsonTextRuntime = {
     runJsonText() {
       return { ok: false as const, error: "boom" as unknown as JqxRuntimeError };
@@ -142,7 +144,7 @@ void test("bindRuntime normalizes legacy backend string errors", async () => {
   }
 });
 
-void test("bindRuntime runJsonTextStream falls back to runJsonText", async () => {
+test("bindRuntime runJsonTextStream falls back to runJsonText", async () => {
   const runtime: JqxJsonTextRuntime = {
     runJsonText(filter, input) {
       assert.equal(filter, ".");
@@ -158,9 +160,12 @@ void test("bindRuntime runJsonTextStream falls back to runJsonText", async () =>
   ]);
 });
 
-void test("bindRuntime runJsonTextStream prefers runtime streaming lane", async () => {
+test("bindRuntime runJsonTextStream prefers runtime streaming lane", async () => {
   const runtime: JqxJsonTextRuntime & {
-    runJsonTextStream(filter: string, input: string): {
+    runJsonTextStream(
+      filter: string,
+      input: string,
+    ): {
       ok: true;
       value: AsyncIterable<string>;
     };
@@ -188,9 +193,12 @@ void test("bindRuntime runJsonTextStream prefers runtime streaming lane", async 
   ]);
 });
 
-void test("bindRuntime runJsonTextStream yields backend_runtime on stream iteration failure", async () => {
+test("bindRuntime runJsonTextStream yields backend_runtime on stream iteration failure", async () => {
   const runtime: JqxJsonTextRuntime & {
-    runJsonTextStream(filter: string, input: string): {
+    runJsonTextStream(
+      filter: string,
+      input: string,
+    ): {
       ok: true;
       value: AsyncIterable<string>;
     };
@@ -223,9 +231,12 @@ void test("bindRuntime runJsonTextStream yields backend_runtime on stream iterat
   }
 });
 
-void test("bindRuntime runStream parses each streamed json value", async () => {
+test("bindRuntime runStream parses each streamed json value", async () => {
   const runtime: JqxJsonTextRuntime & {
-    runJsonTextStream(filter: string, input: string): {
+    runJsonTextStream(
+      filter: string,
+      input: string,
+    ): {
       ok: true;
       value: AsyncIterable<string>;
     };
@@ -253,9 +264,12 @@ void test("bindRuntime runStream parses each streamed json value", async () => {
   ]);
 });
 
-void test("bindRuntime runStream returns parse error with index", async () => {
+test("bindRuntime runStream returns parse error with index", async () => {
   const runtime: JqxJsonTextRuntime & {
-    runJsonTextStream(filter: string, input: string): {
+    runJsonTextStream(
+      filter: string,
+      input: string,
+    ): {
       ok: true;
       value: AsyncIterable<string>;
     };
@@ -289,9 +303,12 @@ void test("bindRuntime runStream returns parse error with index", async () => {
   }
 });
 
-void test("bindRuntime runStream returns output_value with index for jq-compatible streamed outputs outside the value lane", async () => {
+test("bindRuntime runStream returns output_value with index for jq-compatible streamed outputs outside the value lane", async () => {
   const runtime: JqxJsonTextRuntime & {
-    runJsonTextStream(filter: string, input: string): {
+    runJsonTextStream(
+      filter: string,
+      input: string,
+    ): {
       ok: true;
       value: AsyncIterable<string>;
     };
@@ -326,7 +343,7 @@ void test("bindRuntime runStream returns output_value with index for jq-compatib
   }
 });
 
-void test("bindQueryRuntime supports queryJsonText and query", async () => {
+test("bindQueryRuntime supports queryJsonText and query", async () => {
   const calls: Array<{ query: QueryAst; input: string }> = [];
   const runtime: JqxQueryJsonTextRuntime<QueryAst> = {
     runJsonText() {
@@ -355,7 +372,7 @@ void test("bindQueryRuntime supports queryJsonText and query", async () => {
   ]);
 });
 
-void test("bindQueryRuntime queryJsonTextStream falls back to runQueryJsonText", async () => {
+test("bindQueryRuntime queryJsonTextStream falls back to runQueryJsonText", async () => {
   const runtime: JqxQueryJsonTextRuntime<QueryAst> = {
     runJsonText() {
       return { ok: true as const, value: [] };
@@ -367,14 +384,19 @@ void test("bindQueryRuntime queryJsonTextStream falls back to runQueryJsonText",
     },
   };
   const jqx = bindQueryRuntime(runtime);
-  const items = await collectStream(jqx.queryJsonTextStream(field("user"), '{"user":{"name":"alice"}}'));
+  const items = await collectStream(
+    jqx.queryJsonTextStream(field("user"), '{"user":{"name":"alice"}}'),
+  );
   assert.deepEqual(items, [{ ok: true, value: '{"name":"alice"}' }]);
 });
 
-void test("bindQueryRuntime queryStream uses query streaming lane and normalizes DSL query", async () => {
+test("bindQueryRuntime queryStream uses query streaming lane and normalizes DSL query", async () => {
   const calls: QueryAst[] = [];
   const runtime: JqxQueryJsonTextRuntime<QueryAst> & {
-    runQueryJsonTextStream(query: QueryAst, input: string): {
+    runQueryJsonTextStream(
+      query: QueryAst,
+      input: string,
+    ): {
       ok: true;
       value: AsyncIterable<string>;
     };
@@ -403,7 +425,7 @@ void test("bindQueryRuntime queryStream uses query streaming lane and normalizes
   assert.deepEqual(calls, [toAst(dslQuery)]);
 });
 
-void test("bindQueryRuntime supports custom query lane without DSL normalization", async () => {
+test("bindQueryRuntime supports custom query lane without DSL normalization", async () => {
   const calls: Array<{ query: { kind: "custom"; key: string }; input: string }> = [];
   const runtime = {
     runJsonText() {
@@ -415,17 +437,14 @@ void test("bindQueryRuntime supports custom query lane without DSL normalization
     },
   };
   const jqx = bindQueryRuntime(runtime);
-  const result = await jqx.query(
-    { kind: "custom", key: "user" },
-    { user: { name: "alice" } },
-  );
+  const result = await jqx.query({ kind: "custom", key: "user" }, { user: { name: "alice" } });
   assert.equal(result.ok, true);
   assert.deepEqual(calls, [
     { query: { kind: "custom", key: "user" }, input: '{"user":{"name":"alice"}}' },
   ]);
 });
 
-void test("QueryAst document export/import supports v1 envelope", () => {
+test("QueryAst document export/import supports v1 envelope", () => {
   const query = field("user");
   const ast = toAst(query);
   const document = exportTypedQueryDocument(query);
@@ -442,7 +461,7 @@ void test("QueryAst document export/import supports v1 envelope", () => {
   }
 });
 
-void test("QueryAst import rejects bare ast", () => {
+test("QueryAst import rejects bare ast", () => {
   const ast = toAst(field("name"));
   const imported = importQueryAstDocument(ast);
   assert.equal(imported.ok, false);
@@ -451,7 +470,7 @@ void test("QueryAst import rejects bare ast", () => {
   }
 });
 
-void test("QueryAst import rejects unsupported document version", () => {
+test("QueryAst import rejects unsupported document version", () => {
   const ast = toAst(field("name"));
   const imported = importQueryAstDocument({
     format: QUERY_AST_DOCUMENT_FORMAT,
@@ -464,7 +483,7 @@ void test("QueryAst import rejects unsupported document version", () => {
   }
 });
 
-void test("QueryAst parse handles json text", () => {
+test("QueryAst parse handles json text", () => {
   const ast = toAst(field("name"));
   const text = stringifyQueryAstDocument(exportQueryAstDocument(ast).ast);
   const parsed = parseQueryAstDocument(text);

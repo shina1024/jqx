@@ -1,4 +1,4 @@
-import { expectTypeOf } from "expect-type";
+import { expectTypeOf } from "vite-plus/test";
 
 import {
   compile,
@@ -118,7 +118,9 @@ expectTypeOf(runJsonTextOut).toMatchTypeOf<Promise<JqxResult<string[], JqxRuntim
 const runStreamOut = jqx.runStream(".", { user: { name: "a" } });
 expectTypeOf(runStreamOut).toMatchTypeOf<AsyncIterable<JqxResult<Json, JqxRuntimeError>>>();
 const runJsonTextStreamOut = jqx.runJsonTextStream(".", '{"user":{"name":"a"}}');
-expectTypeOf(runJsonTextStreamOut).toMatchTypeOf<AsyncIterable<JqxResult<string, JqxRuntimeError>>>();
+expectTypeOf(runJsonTextStreamOut).toMatchTypeOf<
+  AsyncIterable<JqxResult<string, JqxRuntimeError>>
+>();
 // @ts-expect-error `undefined` is not a JSON value.
 void jqx.run(".", { user: undefined });
 // @ts-expect-error Compiled filters stay on the direct runtime, not the `/bind` client.
@@ -138,10 +140,7 @@ expectTypeOf(boundQueryJsonTextOutFromDsl).toMatchTypeOf<
 >();
 const boundQueryStreamOut = queryJqx.queryStream(ast, { user: { name: "a" } });
 expectTypeOf(boundQueryStreamOut).toMatchTypeOf<AsyncIterable<JqxResult<Json, JqxRuntimeError>>>();
-const boundQueryJsonTextStreamOut = queryJqx.queryJsonTextStream(
-  ast,
-  '{"user":{"name":"a"}}',
-);
+const boundQueryJsonTextStreamOut = queryJqx.queryJsonTextStream(ast, '{"user":{"name":"a"}}');
 expectTypeOf(boundQueryJsonTextStreamOut).toMatchTypeOf<
   AsyncIterable<JqxResult<string, JqxRuntimeError>>
 >();
