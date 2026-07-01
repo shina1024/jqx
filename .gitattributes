@@ -1,0 +1,4 @@
+/scripts/*.json text eol=lf
+/scripts/*.mjs text eol=lf
+/scripts/*.sh text eol=lf
+/scripts/*.md text eol=lf
