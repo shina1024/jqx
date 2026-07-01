@@ -1,6 +1,6 @@
 {
   "name": "@shina1024/jqx-yup-adapter",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Yup adapter for jqx, a jq-compatible JSON processor written in MoonBit",
   "keywords": [
     "adapter",

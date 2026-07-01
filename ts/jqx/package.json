@@ -1,6 +1,6 @@
 {
   "name": "@shina1024/jqx",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "JavaScript and TypeScript bindings for jqx, a jq-compatible JSON processor written in MoonBit",
   "keywords": [
     "filter",
