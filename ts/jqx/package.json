@@ -61,6 +61,6 @@
     "@shina1024/jqx-adapter-core": "workspace:^"
   },
   "devDependencies": {
-    "@types/node": "^25.9.3"
+    "@types/node": "^26.1.0"
   }
 }
