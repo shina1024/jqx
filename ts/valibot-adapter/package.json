@@ -51,8 +51,8 @@
     "@shina1024/jqx-adapter-core": "workspace:^"
   },
   "devDependencies": {
-    "@types/node": "^25.9.3",
-    "valibot": "^1.4.1"
+    "@types/node": "^26.1.0",
+    "valibot": "^1.4.2"
   },
   "peerDependencies": {
     "valibot": "^1.0.0"
