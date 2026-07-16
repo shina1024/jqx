@@ -5,8 +5,9 @@ import {
   "shina1024/jqx/core" @lib,
 }
 
+pkgtype(kind: "executable")
+
 options(
-  "is-main": true,
   "native-stub": [ "windows_utf8_args.c" ],
   targets: {
     "args_native.mbt": [ "native", "llvm" ],

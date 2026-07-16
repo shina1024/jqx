@@ -2875,7 +2875,7 @@ test "execute update assignment compatibility" {
   )
   @debug.assert_eq(
     must_execute(compile(".a |= select(. >= 0)"), must_parse("{\"a\":null}")),
-    [Value::object({})],
+    [Value::object(Map([]))],
   )
   @debug.assert_eq(must_execute(compile(".[2] += 5"), must_parse("[]")), [
     Value::array([Value::null(), Value::null(), Value::number(5.0)]),

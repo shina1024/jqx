@@ -42,7 +42,7 @@ fn strftime_locale_format(
   day_of_week : Int,
   day_of_year : Int,
 ) -> String? {
-  let pattern_buf = @buffer.new(size_hint=pattern.length() * 4)
+  let pattern_buf = Buffer(size_hint=pattern.length() * 4)
   pattern_buf.write_string_utf8(pattern)
   let pattern_bytes = pattern_buf.to_bytes()
   let pattern_len = pattern_bytes.length()

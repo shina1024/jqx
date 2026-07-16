@@ -207,10 +207,15 @@ fn FilterCursor::try_qslash_fallback_sep(ctx : FilterCursor) -> Bool {
 
 ///|
 fn FilterCursor::skip_ws(ctx : FilterCursor) -> Unit {
-  let rest = ctx.input.view(start_offset=ctx.offset, end_offset=ctx.end_offset)
-  lexmatch rest with longest {
-    ("[ \t\r\n]+", next) => ctx.offset = ctx.end_offset - next.length()
-    _ => ()
+  let end = ctx.end_offset
+  ctx.offset = for offset = ctx.offset {
+    if offset >= end {
+      break offset
+    }
+    match ctx.input.unsafe_get(offset) {
+      ' ' | '\t' | '\r' | '\n' => continue offset + 1
+      _ => break offset
+    }
   }
 }
 

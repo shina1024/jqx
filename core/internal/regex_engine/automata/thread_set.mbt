@@ -111,7 +111,7 @@ fn ThreadSet::make_node(
 
 ///|
 fn thread_priority(t : Thread) -> Int {
-  t.hash() * 1664525 + 1013904223
+  Hash::hash(t) * 1664525 + 1013904223
 }
 
 ///|

@@ -116,7 +116,7 @@ test "parse cli inputs json stream adjacent structured values" {
   }
   let parsed = parse_cli_inputs(cfg, "{}[]\"x\"")
   @debug.assert_eq(parsed, [
-    @lib.Value::object({}),
+    @lib.Value::object(Map([])),
     @lib.Value::array([]),
     @lib.Value::string("x"),
   ])

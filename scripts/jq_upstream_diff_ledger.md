@@ -3,7 +3,7 @@
 - maintained cases: `scripts/jq_compat_cases.json`
 - upstream cases: `scripts/jq_compat_cases.upstream.json`
 - upstream diff snapshot: `scripts/jq_upstream_failures.snapshot.json`
-- upstream commit (HEAD): `42d4035d4fe8028008c95d4efb0ac4f2a36a5932`
+- upstream commit (HEAD): `579e6f76cffd7643ba4002a2c3618a5ea710589a`
 - upstream commit (current): `579e6f76cffd7643ba4002a2c3618a5ea710589a`
 
 ## Corpus Status
@@ -34,9 +34,9 @@
 ## Upstream Drift Summary
 
 - upstream cases old/new: 879 -> 879
-- upstream cases added/removed/changed: 0 / 0 / 0
+- upstream cases added/removed/changed: 0 / 0 / 3
 - upstream differences old/new: 7 -> 7
-- upstream differences new/resolved/changed: 0 / 0 / 7
+- upstream differences new/resolved/changed: 0 / 0 / 0
 
 ## New Upstream Differences
 
@@ -48,17 +48,13 @@
 
 ## Upstream Difference Behavior Changes
 
-- upstream-jq-test-l2602 (`temporary-exception` -> `temporary-exception`)
-- upstream-jq-test-l2611 (`temporary-exception` -> `temporary-exception`)
-- upstream-jq-test-l2616 (`temporary-exception` -> `temporary-exception`)
-- upstream-jq-test-l2621 (`temporary-exception` -> `temporary-exception`)
-- upstream-jq-test-l2625 (`temporary-exception` -> `temporary-exception`)
-- upstream-jq-test-l2629 (`temporary-exception` -> `temporary-exception`)
-- upstream-jq-test-l2633 (`temporary-exception` -> `temporary-exception`)
+- none
 
 ## Upstream Case Behavior Changes
 
-- none
+- upstream-jq-test-l2558: compat_status, compat_platforms, compat_ledger_id, compat_reason, compat_removal_condition
+- upstream-jq-test-l2563: compat_status, compat_platforms, compat_ledger_id, compat_reason, compat_removal_condition
+- upstream-jq-test-l2573: compat_status, compat_platforms, compat_ledger_id, compat_reason, compat_removal_condition
 
 ## Added Upstream Cases
 

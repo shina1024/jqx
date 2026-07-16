@@ -93,7 +93,7 @@ fn module_source_decode_utf8(bytes : Bytes) -> String {
 
 ///|
 fn module_source_read_file(path : String) -> String? {
-  let path_buf = @buffer.new(size_hint=path.length() * 4)
+  let path_buf = Buffer(size_hint=path.length() * 4)
   path_buf.write_string_utf8(path)
   let path_bytes = path_buf.to_bytes()
   let path_len = path_bytes.length()

@@ -74,6 +74,33 @@
       "compat_reason": "jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names",
       "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output",
       "compat_stale_policy": "allow"
+    },
+    "upstream-jq-test-l2558": {
+      "compat_status": "temporary_exception",
+      "compat_platforms": [
+        "win32"
+      ],
+      "compat_ledger_id": "jqx-windows-native-deep-json-roundtrip-stack",
+      "compat_reason": "The Windows native jqx executable exits with STATUS_STACK_OVERFLOW (0xC00000FD) while processing this 9,999-level JSON round trip; Linux and macOS complete the upstream case.",
+      "compat_removal_condition": "The Windows native jqx executable completes this upstream case without STATUS_STACK_OVERFLOW."
+    },
+    "upstream-jq-test-l2563": {
+      "compat_status": "temporary_exception",
+      "compat_platforms": [
+        "win32"
+      ],
+      "compat_ledger_id": "jqx-windows-native-deep-fromjson-stack",
+      "compat_reason": "The Windows native jqx executable exits with STATUS_STACK_OVERFLOW (0xC00000FD) while parsing this 10,000-level JSON value; Linux and macOS return the expected depth-limit result.",
+      "compat_removal_condition": "The Windows native jqx executable completes this upstream case without STATUS_STACK_OVERFLOW."
+    },
+    "upstream-jq-test-l2573": {
+      "compat_status": "temporary_exception",
+      "compat_platforms": [
+        "win32"
+      ],
+      "compat_ledger_id": "jqx-windows-native-deep-setpath-flatten-stack",
+      "compat_reason": "The Windows native jqx executable exits with STATUS_STACK_OVERFLOW (0xC00000FD) while flattening this 10,000-level setpath result; Linux and macOS complete the upstream case.",
+      "compat_removal_condition": "The Windows native jqx executable completes this upstream case without STATUS_STACK_OVERFLOW."
     }
   }
 }
