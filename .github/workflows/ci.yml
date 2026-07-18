@@ -226,3 +226,23 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./scripts/jq_diff.ps1 -CasesPath scripts/jq_compat_cases.tz_matrix.json
+
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - test
+      - differential-smoke-matrix
+    steps:
+      - name: Verify all CI jobs passed
+        shell: bash
+        env:
+          TEST_RESULT: ${{ needs.test.result }}
+          DIFFERENTIAL_RESULT: ${{ needs.differential-smoke-matrix.result }}
+        run: |
+          if [[ "$TEST_RESULT" != "success" || "$DIFFERENTIAL_RESULT" != "success" ]]; then
+            echo "Test result: $TEST_RESULT"
+            echo "Differential smoke result: $DIFFERENTIAL_RESULT"
+            exit 1
+          fi
