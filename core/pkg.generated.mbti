@@ -201,6 +201,7 @@ pub fn Value::object_from_entries(Array[(String, Self)]) -> Self
 pub fn Value::string(String) -> Self
 pub fn Value::to_json(Self) -> Json
 pub fn Value::to_json_string(Self) -> String
+pub fn Value::to_json_string_pretty(Self) -> String
 pub impl Eq for Value
 pub impl Show for Value
 
