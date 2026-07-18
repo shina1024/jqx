@@ -960,7 +960,7 @@ fn execute_with_runtime(
         let b = r[j]
         for i in 0..<l.length() {
           let a = l[i]
-          out.push(Value::boolean(a == b))
+          out.push(Value::boolean(json_equal_checked(a, b)))
         }
       }
       out
@@ -973,7 +973,7 @@ fn execute_with_runtime(
         let b = r[j]
         for i in 0..<l.length() {
           let a = l[i]
-          out.push(Value::boolean(a != b))
+          out.push(Value::boolean(!json_equal_checked(a, b)))
         }
       }
       out

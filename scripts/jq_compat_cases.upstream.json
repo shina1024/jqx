@@ -5030,11 +5030,7 @@
     "source_file": "jq.test",
     "source_line": 2602,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "compat_status": "temporary_exception",
-    "compat_ledger_id": "jq-1.8.2-deep-contains-guard",
-    "compat_reason": "jq 1.8.2 reports \"Containment check too deep\" for this deep contains case; jqx currently completes the operation instead of enforcing the jq depth guard",
-    "compat_removal_condition": "jqx implements the jq 1.8.2 deep contains guard or jq upstream changes/removes this guard"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2607",
@@ -5052,11 +5048,7 @@
     "source_file": "jq.test",
     "source_line": 2611,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "compat_status": "temporary_exception",
-    "compat_ledger_id": "jq-1.8.2-deep-object-merge-guard",
-    "compat_reason": "jq 1.8.2 reports \"Object merge too deep\" for this deep object multiplication case; jqx currently completes the operation instead of enforcing the jq depth guard",
-    "compat_removal_condition": "jqx implements the jq 1.8.2 deep object merge guard or jq upstream changes/removes this guard"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2616",
@@ -5065,11 +5057,7 @@
     "source_file": "jq.test",
     "source_line": 2616,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "compat_status": "temporary_exception",
-    "compat_ledger_id": "jq-1.8.2-deep-equality-guard",
-    "compat_reason": "jq 1.8.2 reports \"Equality check too deep\" for this deep equality case; jqx currently completes the operation instead of enforcing the jq depth guard",
-    "compat_removal_condition": "jqx implements the jq 1.8.2 deep equality guard or jq upstream changes/removes this guard"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2621",
@@ -5078,11 +5066,7 @@
     "source_file": "jq.test",
     "source_line": 2621,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "compat_status": "temporary_exception",
-    "compat_ledger_id": "jq-1.8.2-deep-array-sort-guard",
-    "compat_reason": "jq 1.8.2 reports \"Comparison too deep\" for this deep array sort case; jqx currently completes the operation instead of enforcing the jq comparison depth guard",
-    "compat_removal_condition": "jqx implements the jq 1.8.2 deep comparison guard for array sort or jq upstream changes/removes this guard"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2625",
@@ -5091,11 +5075,7 @@
     "source_file": "jq.test",
     "source_line": 2625,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "compat_status": "temporary_exception",
-    "compat_ledger_id": "jq-1.8.2-deep-array-unique-guard",
-    "compat_reason": "jq 1.8.2 reports \"Comparison too deep\" for this deep array unique case; jqx currently completes the operation instead of enforcing the jq comparison depth guard",
-    "compat_removal_condition": "jqx implements the jq 1.8.2 deep comparison guard for array unique or jq upstream changes/removes this guard"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2629",
@@ -5104,11 +5084,7 @@
     "source_file": "jq.test",
     "source_line": 2629,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "compat_status": "temporary_exception",
-    "compat_ledger_id": "jq-1.8.2-deep-object-sort-guard",
-    "compat_reason": "jq 1.8.2 reports \"Comparison too deep\" for this deep object sort case; jqx currently completes the operation instead of enforcing the jq comparison depth guard",
-    "compat_removal_condition": "jqx implements the jq 1.8.2 deep comparison guard for object sort or jq upstream changes/removes this guard"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-jq-test-l2633",
@@ -5117,11 +5093,7 @@
     "source_file": "jq.test",
     "source_line": 2633,
     "source_kind": "runtime",
-    "source_expected_count": 1,
-    "compat_status": "temporary_exception",
-    "compat_ledger_id": "jq-1.8.2-deep-object-unique-guard",
-    "compat_reason": "jq 1.8.2 reports \"Comparison too deep\" for this deep object unique case; jqx currently completes the operation instead of enforcing the jq comparison depth guard",
-    "compat_removal_condition": "jqx implements the jq 1.8.2 deep comparison guard for object unique or jq upstream changes/removes this guard"
+    "source_expected_count": 1
   },
   {
     "name": "upstream-base64-test-l4",

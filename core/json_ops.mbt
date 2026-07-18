@@ -86,52 +86,115 @@ fn[T] contains_type_error(
 }
 
 ///|
-fn contains_match(haystack : Value, needle : Value) -> Bool {
-  match (haystack, needle) {
-    (JNull, JNull) => true
-    (JTrue, JTrue) => true
-    (JFalse, JFalse) => true
-    (Number(x, rx), Number(y, ry)) =>
-      match (rx, ry) {
-        (Some(a), Some(b)) =>
-          match decimal_compare_repr(a, b) {
-            Some(cmp) => cmp == 0
-            None => x == y
-          }
-        _ => x == y
-      }
-    (String(h), String(n)) => h.contains(n)
-    (Array(h), Array(n)) => {
-      for needle_item in n {
-        let mut found = false
-        for hay_item in h {
-          if contains_match(hay_item, needle_item) {
-            found = true
-            break
-          }
+priv enum ContainsTask {
+  CheckContains(Value, Value, Int)
+  ResumeArrayContains(Array[Value], Array[Value], Int, Int, Int)
+  ResumeObjectContains(JsonObject, Array[(String, Value)], Int, Int)
+}
+
+///|
+fn contains_match(haystack : Value, needle : Value) -> Bool raise EvalError {
+  let pending : Array[ContainsTask] = [CheckContains(haystack, needle, 0)]
+  let mut last_result = false
+  while pending.length() > 0 {
+    match pending.pop().unwrap() {
+      CheckContains(haystack, needle, depth) => {
+        if depth > 10000 {
+          raise TypeError("Containment check too deep")
         }
-        if !found {
-          return false
-        }
-      }
-      true
-    }
-    (Object(h), Object(n)) => {
-      for kv in n.iter() {
-        let key = kv.0
-        let needle_value = kv.1
-        match h.get(key) {
-          Some(hay_value) =>
-            if !contains_match(hay_value, needle_value) {
-              return false
+        match (haystack, needle) {
+          (JNull, JNull) | (JTrue, JTrue) | (JFalse, JFalse) =>
+            last_result = true
+          (Number(x, rx), Number(y, ry)) =>
+            last_result = match (rx, ry) {
+              (Some(a), Some(b)) =>
+                match decimal_compare_repr(a, b) {
+                  Some(cmp) => cmp == 0
+                  None => x == y
+                }
+              _ => x == y
             }
-          None => return false
+          (String(h), String(n)) => last_result = h.contains(n)
+          (Array(h), Array(n)) =>
+            if n.length() == 0 {
+              last_result = true
+            } else if h.length() == 0 {
+              last_result = false
+            } else {
+              pending.push(ResumeArrayContains(h, n, 0, 0, depth))
+              pending.push(CheckContains(h[0], n[0], depth + 1))
+            }
+          (Object(h), Object(n)) => {
+            let entries = n.iter()
+            if entries.length() == 0 {
+              last_result = true
+            } else {
+              match h.get(entries[0].0) {
+                Some(value) => {
+                  pending.push(ResumeObjectContains(h, entries, 0, depth))
+                  pending.push(CheckContains(value, entries[0].1, depth + 1))
+                }
+                None => last_result = false
+              }
+            }
+          }
+          _ => last_result = false
         }
       }
-      true
+      ResumeArrayContains(haystack, needle, needle_index, haystack_index, depth) =>
+        if last_result {
+          let next_needle = needle_index + 1
+          if next_needle >= needle.length() {
+            last_result = true
+          } else {
+            pending.push(
+              ResumeArrayContains(haystack, needle, next_needle, 0, depth),
+            )
+            pending.push(
+              CheckContains(haystack[0], needle[next_needle], depth + 1),
+            )
+          }
+        } else {
+          let next_haystack = haystack_index + 1
+          if next_haystack >= haystack.length() {
+            last_result = false
+          } else {
+            pending.push(
+              ResumeArrayContains(
+                haystack, needle, needle_index, next_haystack, depth,
+              ),
+            )
+            pending.push(
+              CheckContains(
+                haystack[next_haystack],
+                needle[needle_index],
+                depth + 1,
+              ),
+            )
+          }
+        }
+      ResumeObjectContains(haystack, entries, index, depth) =>
+        if last_result {
+          let next_index = index + 1
+          if next_index >= entries.length() {
+            last_result = true
+          } else {
+            match haystack.get(entries[next_index].0) {
+              Some(value) => {
+                pending.push(
+                  ResumeObjectContains(haystack, entries, next_index, depth),
+                )
+                pending.push(
+                  CheckContains(value, entries[next_index].1, depth + 1),
+                )
+              }
+              None => last_result = false
+            }
+          }
+        }
     }
-    _ => false
   }
+  last_result
 }
 
 ///|
@@ -420,7 +483,7 @@ fn execute_arith(
             for xv in x {
               let mut removed = false
               for yv in y {
-                if xv == yv {
+                if json_equal_checked(xv, yv) {
                   removed = true
                   break
                 }
@@ -470,23 +533,83 @@ fn multiply_string_number(s : String, n : Double) -> Value raise EvalError {
 }
 
 ///|
-fn merge_objects_recursive(left : JsonObject, right : JsonObject) -> JsonObject {
-  let merged = left.to_map().copy()
-  let merged_order = left.keys()
-  for kv in right.iter() {
-    let key = kv.0
-    let right_value = kv.1
-    let exists = merged.contains(key)
-    match (merged.get(key), right_value) {
-      (Some(Object(left_obj)), Object(right_obj)) =>
-        merged[key] = Object(merge_objects_recursive(left_obj, right_obj))
-      _ => merged[key] = right_value
-    }
-    if !exists {
-      merged_order.push(key)
+priv struct ObjectMergeState {
+  merged : Map[String, Value]
+  merged_order : Array[String]
+  entries : Array[(String, Value)]
+  index : Int
+  depth : Int
+}
+
+///|
+priv enum ObjectMergeTask {
+  StartObjectMerge(JsonObject, JsonObject, Int)
+  ProcessObjectMerge(ObjectMergeState)
+  StoreMergedObject(ObjectMergeState, String)
+}
+
+///|
+fn merge_objects_recursive(
+  left : JsonObject,
+  right : JsonObject,
+) -> JsonObject raise EvalError {
+  let pending : Array[ObjectMergeTask] = [StartObjectMerge(left, right, 0)]
+  let mut last_result : JsonObject? = None
+  while pending.length() > 0 {
+    match pending.pop().unwrap() {
+      StartObjectMerge(left, right, depth) => {
+        if depth > 10000 {
+          raise TypeError("Object merge too deep")
+        }
+        pending.push(
+          ProcessObjectMerge({
+            merged: left.to_map().copy(),
+            merged_order: left.keys(),
+            entries: right.iter(),
+            index: 0,
+            depth,
+          }),
+        )
+      }
+      ProcessObjectMerge(state) =>
+        if state.index >= state.entries.length() {
+          last_result = Some(
+            JsonObject::with_order(state.merged, state.merged_order),
+          )
+        } else {
+          let entry = state.entries[state.index]
+          let key = entry.0
+          let right_value = entry.1
+          if !state.merged.contains(key) {
+            state.merged_order.push(key)
+          }
+          let next_state = {
+            merged: state.merged,
+            merged_order: state.merged_order,
+            entries: state.entries,
+            index: state.index + 1,
+            depth: state.depth,
+          }
+          match (state.merged.get(key), right_value) {
+            (Some(Object(left_obj)), Object(right_obj)) => {
+              pending.push(StoreMergedObject(next_state, key))
+              pending.push(
+                StartObjectMerge(left_obj, right_obj, state.depth + 1),
+              )
+            }
+            _ => {
+              state.merged[key] = right_value
+              pending.push(ProcessObjectMerge(next_state))
+            }
+          }
+        }
+      StoreMergedObject(state, key) => {
+        state.merged[key] = Object(last_result.unwrap())
+        pending.push(ProcessObjectMerge(state))
+      }
     }
   }
-  JsonObject::with_order(merged, merged_order)
+  last_result.unwrap()
 }
 
 ///|

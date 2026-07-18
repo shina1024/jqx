@@ -242,94 +242,115 @@ fn json_sort_rank(j : Value) -> Int {
 }
 
 ///|
-fn compare_string_arrays(a : Array[String], b : Array[String]) -> Int {
-  let n = if a.length() < b.length() { a.length() } else { b.length() }
-  for i in 0..<n {
-    let c = a[i].compare(b[i])
-    if c != 0 {
-      return c
-    }
-  }
-  if a.length() < b.length() {
-    -1
-  } else if a.length() > b.length() {
-    1
-  } else {
-    0
-  }
+priv enum JsonCompareTask {
+  CompareValues(Value, Value, Int)
+  CompareLengths(Int, Int)
 }
 
 ///|
-fn compare_json(a : Value, b : Value) -> Int {
-  let ra = json_sort_rank(a)
-  let rb = json_sort_rank(b)
-  if ra < rb {
-    return -1
-  }
-  if ra > rb {
-    return 1
-  }
-  match (a, b) {
-    (JNull, JNull) | (JFalse, JFalse) | (JTrue, JTrue) => 0
-    (Number(x, rx), Number(y, ry)) =>
-      match (rx, ry) {
-        (Some(a), Some(b)) =>
-          match decimal_compare_repr(a, b) {
-            Some(cmp) => cmp
-            None => if x < y { -1 } else if x > y { 1 } else { 0 }
+fn compare_json(a : Value, b : Value) -> Int raise EvalError {
+  let pending : Array[JsonCompareTask] = [CompareValues(a, b, 0)]
+  while pending.length() > 0 {
+    match pending.pop().unwrap() {
+      CompareLengths(left, right) => {
+        if left < right {
+          return -1
+        }
+        if left > right {
+          return 1
+        }
+      }
+      CompareValues(left, right, depth) => {
+        if depth > 10000 {
+          raise TypeError("Comparison too deep")
+        }
+        let left_rank = json_sort_rank(left)
+        let right_rank = json_sort_rank(right)
+        if left_rank < right_rank {
+          return -1
+        }
+        if left_rank > right_rank {
+          return 1
+        }
+        match (left, right) {
+          (JNull, JNull) | (JFalse, JFalse) | (JTrue, JTrue) => ()
+          (Number(x, rx), Number(y, ry)) => {
+            let cmp = match (rx, ry) {
+              (Some(a), Some(b)) =>
+                match decimal_compare_repr(a, b) {
+                  Some(value) => value
+                  None => if x < y { -1 } else if x > y { 1 } else { 0 }
+                }
+              _ => if x < y { -1 } else if x > y { 1 } else { 0 }
+            }
+            if cmp != 0 {
+              return cmp
+            }
           }
-        _ => if x < y { -1 } else if x > y { 1 } else { 0 }
-      }
-    (String(x), String(y)) => x.compare(y)
-    (Array(x), Array(y)) => {
-      let n = if x.length() < y.length() { x.length() } else { y.length() }
-      for i in 0..<n {
-        let c = compare_json(x[i], y[i])
-        if c != 0 {
-          return c
+          (String(x), String(y)) => {
+            let cmp = x.compare(y)
+            if cmp != 0 {
+              return cmp
+            }
+          }
+          (Array(x), Array(y)) => {
+            let n = if x.length() < y.length() {
+              x.length()
+            } else {
+              y.length()
+            }
+            pending.push(CompareLengths(x.length(), y.length()))
+            for i = n - 1; i >= 0; i = i - 1 {
+              pending.push(CompareValues(x[i], y[i], depth + 1))
+            }
+          }
+          (Object(x), Object(y)) => {
+            if depth + 1 > 10000 {
+              raise TypeError("Comparison too deep")
+            }
+            let left_keys = x.lex_key_order
+            let right_keys = y.lex_key_order
+            let key_count = if left_keys.length() < right_keys.length() {
+              left_keys.length()
+            } else {
+              right_keys.length()
+            }
+            for i in 0..<key_count {
+              if depth + 2 > 10000 {
+                raise TypeError("Comparison too deep")
+              }
+              let key_cmp = left_keys[i].compare(right_keys[i])
+              if key_cmp != 0 {
+                return key_cmp
+              }
+            }
+            if left_keys.length() < right_keys.length() {
+              return -1
+            }
+            if left_keys.length() > right_keys.length() {
+              return 1
+            }
+            for i = left_keys.length() - 1; i >= 0; i = i - 1 {
+              let key = left_keys[i]
+              let left_value = x.get(key).unwrap_or(Value::null())
+              let right_value = y.get(key).unwrap_or(Value::null())
+              pending.push(CompareValues(left_value, right_value, depth + 1))
+            }
+          }
+          _ => ()
         }
-      }
-      if x.length() < y.length() {
-        -1
-      } else if x.length() > y.length() {
-        1
-      } else {
-        0
       }
     }
-    (Object(x), Object(y)) => {
-      let kx = x.lex_key_order
-      let ky = y.lex_key_order
-      let key_cmp = compare_string_arrays(kx, ky)
-      if key_cmp != 0 {
-        return key_cmp
-      }
-      for key in kx {
-        let vx = match x.get(key) {
-          Some(v) => v
-          None => Value::null()
-        }
-        let vy = match y.get(key) {
-          Some(v) => v
-          None => Value::null()
-        }
-        let c = compare_json(vx, vy)
-        if c != 0 {
-          return c
-        }
-      }
-      0
-    }
-    _ => 0
   }
+  0
 }
 
 ///|
-fn sort_json_array(a : Array[Value]) -> Array[Value] {
+fn sort_json_array(a : Array[Value]) -> Array[Value] raise EvalError {
   fn merge_sorted_json(
     left : Array[Value],
     right : Array[Value],
-  ) -> Array[Value] {
+  ) -> Array[Value] raise EvalError {
     let merged = []
     let mut i = 0
     let mut j = 0
@@ -368,7 +389,7 @@ fn sort_json_array(a : Array[Value]) -> Array[Value] {
 }
 
 ///|
-fn min_json_array(a : Array[Value]) -> Value {
+fn min_json_array(a : Array[Value]) -> Value raise EvalError {
   if a.length() == 0 {
     return Value::null()
   }
@@ -382,7 +403,7 @@ fn min_json_array(a : Array[Value]) -> Value {
 }
 
 ///|
-fn max_json_array(a : Array[Value]) -> Value {
+fn max_json_array(a : Array[Value]) -> Value raise EvalError {
   if a.length() == 0 {
     return Value::null()
   }
@@ -429,7 +450,7 @@ fn minmax_by_json_array(
 }
 
 ///|
-fn unique_sorted_json_array(a : Array[Value]) -> Array[Value] {
+fn unique_sorted_json_array(a : Array[Value]) -> Array[Value] raise EvalError {
   let out = []
   let mut prev = Value::null()
   let mut has_prev = false
@@ -444,11 +465,13 @@ fn unique_sorted_json_array(a : Array[Value]) -> Array[Value] {
 }
 
 ///|
-fn sort_keyed_pairs(items : Array[(Value, Value)]) -> Array[(Value, Value)] {
+fn sort_keyed_pairs(
+  items : Array[(Value, Value)],
+) -> Array[(Value, Value)] raise EvalError {
   fn merge_sorted_pairs(
     left : Array[(Value, Value)],
     right : Array[(Value, Value)],
-  ) -> Array[(Value, Value)] {
+  ) -> Array[(Value, Value)] raise EvalError {
     let merged : Array[(Value, Value)] = []
     let mut i = 0
     let mut j = 0
@@ -487,7 +510,7 @@ fn sort_keyed_pairs(items : Array[(Value, Value)]) -> Array[(Value, Value)] {
 }
 
 ///|
-fn bsearch_json_array(a : Array[Value], needle : Value) -> Int {
+fn bsearch_json_array(a : Array[Value], needle : Value) -> Int raise EvalError {
   let mut lo = 0
   let mut hi = a.length()
   while lo < hi {

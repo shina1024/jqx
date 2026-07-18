@@ -75,7 +75,7 @@ fn dispatch_collection_builtin(
         let candidates = execute_with_runtime(runtime, args[0], input, env)
         let mut found = false
         for candidate in candidates {
-          if candidate == input {
+          if json_equal_checked(candidate, input) {
             found = true
             break
           }
@@ -87,7 +87,7 @@ fn dispatch_collection_builtin(
         let mut found = false
         for needle in needles {
           for candidate in haystack {
-            if candidate == needle {
+            if json_equal_checked(candidate, needle) {
               found = true
               break
             }
