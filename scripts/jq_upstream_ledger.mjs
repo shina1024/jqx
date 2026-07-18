@@ -325,6 +325,9 @@ function writeTextFileIfChanged(filePath, content) {
 function getCorpusStatus(corpusName, cases, diffRecords) {
   const caseMap = buildMap(cases);
   const recordMap = buildMap(diffRecords);
+  const declaredTemporary = cases
+    .filter((testCase) => getCompatStatus(testCase) === "temporary_exception")
+    .map((testCase) => ({ case: testCase, corpus: corpusName }));
   const activeTemporary = [];
   const staleTemporary = [];
   const broken = [];
@@ -372,6 +375,7 @@ function getCorpusStatus(corpusName, cases, diffRecords) {
     corpus: corpusName,
     total: cases.length,
     passingCount: cases.length - activeTemporary.length - staleTemporary.length - broken.length,
+    declaredTemporary,
     activeTemporary,
     staleTemporary,
     broken,
@@ -484,24 +488,35 @@ function main() {
   lines.push(`- upstream commit (HEAD): \`${headUpstreamCommit}\``);
   lines.push(`- upstream commit (current): \`${currentUpstreamCommit}\``);
   lines.push("", "## Corpus Status", "");
-  lines.push("| Corpus | Total | Passing | Temporary Exceptions | Broken | Stale Exception Metadata |");
+  lines.push("| Corpus | Total | Passing | Declared Temporary Exceptions | Broken | Stale Exception Metadata |");
   lines.push("| --- | ---: | ---: | ---: | ---: | ---: |");
   lines.push(
-    `| maintained | ${maintainedStatus.total} | ${maintainedStatus.passingCount} | ${maintainedStatus.activeTemporary.length} | ${maintainedStatus.broken.length} | ${maintainedStatus.staleTemporary.length} |`,
+    `| maintained | ${maintainedStatus.total} | ${maintainedStatus.passingCount} | ${maintainedStatus.declaredTemporary.length} | ${maintainedStatus.broken.length} | ${maintainedStatus.staleTemporary.length} |`,
   );
   lines.push(
-    `| upstream | ${upstreamStatus.total} | ${upstreamStatus.passingCount} | ${upstreamStatus.activeTemporary.length} | ${upstreamStatus.broken.length} | ${upstreamStatus.staleTemporary.length} |`,
+    `| upstream | ${upstreamStatus.total} | ${upstreamStatus.passingCount} | ${upstreamStatus.declaredTemporary.length} | ${upstreamStatus.broken.length} | ${upstreamStatus.staleTemporary.length} |`,
   );
   lines.push("");
 
   addListSection(
     lines,
     "Temporary Exceptions",
-    [...maintainedStatus.activeTemporary, ...upstreamStatus.activeTemporary]
+    [...maintainedStatus.declaredTemporary, ...upstreamStatus.declaredTemporary]
       .sort((a, b) => a.corpus.localeCompare(b.corpus) || String(a.case.name).localeCompare(String(b.case.name)))
       .map(
-        (item) =>
-          `[${item.corpus}] ${String(item.case.name)} (\`${getCompatField(item.case, "compat_ledger_id")}\`): ${getCompatField(item.case, "compat_reason")}. Remove when ${getCompatField(item.case, "compat_removal_condition")}`,
+        (item) => {
+          const platforms = getCompatPlatforms(item.case);
+          const scope =
+            platforms == null || platforms.length === 0
+              ? "all platforms"
+              : platforms.join(", ");
+          const reason = getCompatField(item.case, "compat_reason").replace(/[.;:!?]+$/, "");
+          const removalCondition = getCompatField(
+            item.case,
+            "compat_removal_condition",
+          ).replace(/[.;:!?]+$/, "");
+          return `[${item.corpus}; ${scope}] ${String(item.case.name)} (\`${getCompatField(item.case, "compat_ledger_id")}\`): ${reason}; remove when ${removalCondition}.`;
+        },
       ),
   );
   addListSection(
@@ -579,7 +594,7 @@ function main() {
   }
 
   console.log(
-    `summary maintained_temp=${maintainedStatus.activeTemporary.length} maintained_broken=${maintainedStatus.broken.length} upstream_temp=${upstreamStatus.activeTemporary.length} upstream_broken=${upstreamStatus.broken.length}`,
+    `summary maintained_active_temp=${maintainedStatus.activeTemporary.length} maintained_declared_temp=${maintainedStatus.declaredTemporary.length} maintained_broken=${maintainedStatus.broken.length} upstream_active_temp=${upstreamStatus.activeTemporary.length} upstream_declared_temp=${upstreamStatus.declaredTemporary.length} upstream_broken=${upstreamStatus.broken.length}`,
   );
 }
 
