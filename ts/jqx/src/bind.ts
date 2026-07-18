@@ -136,11 +136,21 @@ function toPromise<T>(value: MaybePromise<T>): Promise<T> {
   return Promise.resolve(value);
 }
 
+type RuntimeCall<T> = () => MaybePromise<JqxResult<T, JqxRuntimeError>>;
+
+async function callRuntime<T>(call: RuntimeCall<T>): Promise<JqxResult<T, JqxRuntimeError>> {
+  try {
+    return normalizeRuntimeResult(await toPromise(call()));
+  } catch (error) {
+    return failRuntimeResult(normalizeRuntimeError(error, "Runtime call failed"));
+  }
+}
+
 function fromArrayRuntimeCall(
-  call: MaybePromise<JqxResult<string[], JqxRuntimeError>>,
+  call: RuntimeCall<string[]>,
 ): JqxResultStream<string, JqxRuntimeError> {
   return (async function* () {
-    const runtimeOut = normalizeRuntimeResult(await toPromise(call));
+    const runtimeOut = await callRuntime(call);
     if (!runtimeOut.ok) {
       yield failRuntimeResult<string>(runtimeOut.error);
       return;
@@ -152,10 +162,10 @@ function fromArrayRuntimeCall(
 }
 
 function fromStreamingRuntimeCall(
-  call: MaybePromise<JqxResult<AsyncIterable<string>, JqxRuntimeError>>,
+  call: RuntimeCall<AsyncIterable<string>>,
 ): JqxResultStream<string, JqxRuntimeError> {
   return (async function* () {
-    const runtimeOut = normalizeRuntimeResult(await toPromise(call));
+    const runtimeOut = await callRuntime(call);
     if (!runtimeOut.ok) {
       yield failRuntimeResult<string>(runtimeOut.error);
       return;
@@ -218,16 +228,14 @@ function createDynamicRuntime(
 ): JqxClient {
   return {
     async runJsonText(filter, input) {
-      const runtimeOut = await toPromise(runtime.runJsonText(filter, input));
-      return normalizeRuntimeResult(runtimeOut);
+      return callRuntime(() => runtime.runJsonText(filter, input));
     },
     async run(filter, input) {
       const encoded = encodeRuntimeInput(input);
       if (!encoded.ok) {
         return encoded;
       }
-      const runtimeOut = await toPromise(runtime.runJsonText(filter, encoded.value));
-      const normalizedOut = normalizeRuntimeResult(runtimeOut);
+      const normalizedOut = await callRuntime(() => runtime.runJsonText(filter, encoded.value));
       if (!normalizedOut.ok) {
         return normalizedOut;
       }
@@ -235,9 +243,9 @@ function createDynamicRuntime(
     },
     runJsonTextStream(filter, input) {
       if (hasStreamingJsonTextRuntime(runtime)) {
-        return fromStreamingRuntimeCall(runtime.runJsonTextStream(filter, input));
+        return fromStreamingRuntimeCall(() => runtime.runJsonTextStream(filter, input));
       }
-      return fromArrayRuntimeCall(runtime.runJsonText(filter, input));
+      return fromArrayRuntimeCall(() => runtime.runJsonText(filter, input));
     },
     runStream(filter, input) {
       const encoded = encodeRuntimeInput(input);
@@ -245,8 +253,8 @@ function createDynamicRuntime(
         return singleErrorStream(encoded.error);
       }
       const rawStream = hasStreamingJsonTextRuntime(runtime)
-        ? fromStreamingRuntimeCall(runtime.runJsonTextStream(filter, encoded.value))
-        : fromArrayRuntimeCall(runtime.runJsonText(filter, encoded.value));
+        ? fromStreamingRuntimeCall(() => runtime.runJsonTextStream(filter, encoded.value))
+        : fromArrayRuntimeCall(() => runtime.runJsonText(filter, encoded.value));
       return decodeRawResultStream(rawStream);
     },
   };
@@ -262,7 +270,7 @@ function createQueryRuntimeFromJsonText<Q>(
     ...baseRuntime,
     queryJsonText(query: QueryInputFor<Q>, input: string) {
       const normalized = normalizeQueryInput(query);
-      return toPromise(runtime.runQueryJsonText(normalized, input)).then(normalizeRuntimeResult);
+      return callRuntime(() => runtime.runQueryJsonText(normalized, input));
     },
     async query(query: QueryInputFor<Q>, input: Json) {
       const normalized = normalizeQueryInput(query);
@@ -270,8 +278,9 @@ function createQueryRuntimeFromJsonText<Q>(
       if (!encoded.ok) {
         return encoded;
       }
-      const runtimeOut = await toPromise(runtime.runQueryJsonText(normalized, encoded.value));
-      const normalizedOut = normalizeRuntimeResult(runtimeOut);
+      const normalizedOut = await callRuntime(() =>
+        runtime.runQueryJsonText(normalized, encoded.value),
+      );
       if (!normalizedOut.ok) {
         return normalizedOut;
       }
@@ -280,9 +289,9 @@ function createQueryRuntimeFromJsonText<Q>(
     queryJsonTextStream(query: QueryInputFor<Q>, input: string) {
       const normalized = normalizeQueryInput(query);
       if (hasQueryStreamingJsonTextRuntime(runtime)) {
-        return fromStreamingRuntimeCall(runtime.runQueryJsonTextStream(normalized, input));
+        return fromStreamingRuntimeCall(() => runtime.runQueryJsonTextStream(normalized, input));
       }
-      return fromArrayRuntimeCall(runtime.runQueryJsonText(normalized, input));
+      return fromArrayRuntimeCall(() => runtime.runQueryJsonText(normalized, input));
     },
     queryStream(query: QueryInputFor<Q>, input: Json) {
       const normalized = normalizeQueryInput(query);
@@ -291,8 +300,10 @@ function createQueryRuntimeFromJsonText<Q>(
         return singleErrorStream<Json>(encoded.error);
       }
       const rawStream = hasQueryStreamingJsonTextRuntime(runtime)
-        ? fromStreamingRuntimeCall(runtime.runQueryJsonTextStream(normalized, encoded.value))
-        : fromArrayRuntimeCall(runtime.runQueryJsonText(normalized, encoded.value));
+        ? fromStreamingRuntimeCall(() =>
+            runtime.runQueryJsonTextStream(normalized, encoded.value),
+          )
+        : fromArrayRuntimeCall(() => runtime.runQueryJsonText(normalized, encoded.value));
       return decodeRawResultStream(rawStream);
     },
   };

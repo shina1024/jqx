@@ -196,7 +196,11 @@ type QueryAstTuple<Queries extends readonly Query<unknown, unknown, QueryAst>[]>
 };
 
 function queryOfAst<I, O, Ast extends QueryAst>(ast: Ast): Query<I, O, Ast> {
-  return { ast };
+  const query = { ast };
+  Object.defineProperty(query, Symbol.for("@shina1024/jqx/typed-dsl-query"), {
+    value: true,
+  });
+  return query;
 }
 
 function failImport<T>(error: QueryAstImportError): QueryAstImportResult<T> {
@@ -208,21 +212,50 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isJsonValue(value: unknown): value is Json {
-  if (
-    value === null ||
-    typeof value === "string" ||
-    typeof value === "boolean" ||
-    typeof value === "number"
-  ) {
-    return true;
+  const pending: Array<{ value: unknown; depth: number }> = [{ value, depth: 0 }];
+  const seen = new WeakSet<object>();
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (current === undefined) {
+      break;
+    }
+    const item = current.value;
+    if (item === null || typeof item === "string" || typeof item === "boolean") {
+      continue;
+    }
+    if (typeof item === "number") {
+      if (!Number.isFinite(item)) {
+        return false;
+      }
+      continue;
+    }
+    if (typeof item !== "object" || current.depth >= 256 || seen.has(item)) {
+      return false;
+    }
+    seen.add(item);
+    if (Array.isArray(item)) {
+      for (const child of item) {
+        pending.push({ value: child, depth: current.depth + 1 });
+      }
+      continue;
+    }
+    const prototype = Object.getPrototypeOf(item);
+    if (prototype !== Object.prototype && prototype !== null) {
+      return false;
+    }
+    const keys = Reflect.ownKeys(item);
+    for (const key of keys) {
+      if (typeof key !== "string") {
+        return false;
+      }
+      const descriptor = Object.getOwnPropertyDescriptor(item, key);
+      if (descriptor === undefined || !descriptor.enumerable || !("value" in descriptor)) {
+        return false;
+      }
+      pending.push({ value: descriptor.value, depth: current.depth + 1 });
+    }
   }
-  if (Array.isArray(value)) {
-    return value.every(isJsonValue);
-  }
-  if (isRecord(value)) {
-    return Object.values(value).every(isJsonValue);
-  }
-  return false;
+  return true;
 }
 
 function hasExactKeys(value: Record<string, unknown>, expected: readonly string[]): boolean {
@@ -237,10 +270,22 @@ function invalidAst(path: string, message: string): QueryAstImportError {
   return { kind: "invalid_ast", path, message };
 }
 
-function validateQueryAstNode(value: unknown, path: string): QueryAstImportError | null {
+function validateQueryAstNode(
+  value: unknown,
+  path: string,
+  seen: WeakSet<object> = new WeakSet<object>(),
+  depth = 0,
+): QueryAstImportError | null {
   if (!isRecord(value)) {
     return invalidAst(path, "Expected object");
   }
+  if (depth >= 256) {
+    return invalidAst(path, "Maximum AST depth exceeded");
+  }
+  if (seen.has(value)) {
+    return invalidAst(path, "Cyclic or repeated AST object");
+  }
+  seen.add(value);
   const kind = value.kind;
   if (typeof kind !== "string") {
     return invalidAst(`${path}.kind`, "Expected string");
@@ -253,7 +298,7 @@ function validateQueryAstNode(value: unknown, path: string): QueryAstImportError
     if (!hasExactKeys(value, expectedKeys)) {
       return invalidAst(path, "Unexpected fields");
     }
-    return validateQueryAstNode(value[fieldName], `${path}.${fieldName}`);
+    return validateQueryAstNode(value[fieldName], `${path}.${fieldName}`, seen, depth + 1);
   };
 
   const validateBinaryNode = (
@@ -264,11 +309,21 @@ function validateQueryAstNode(value: unknown, path: string): QueryAstImportError
     if (!hasExactKeys(value, expectedKeys)) {
       return invalidAst(path, "Unexpected fields");
     }
-    const leftError = validateQueryAstNode(value[leftField], `${path}.${leftField}`);
+    const leftError = validateQueryAstNode(
+      value[leftField],
+      `${path}.${leftField}`,
+      seen,
+      depth + 1,
+    );
     if (leftError !== null) {
       return leftError;
     }
-    return validateQueryAstNode(value[rightField], `${path}.${rightField}`);
+    return validateQueryAstNode(
+      value[rightField],
+      `${path}.${rightField}`,
+      seen,
+      depth + 1,
+    );
   };
 
   switch (kind) {
@@ -284,7 +339,7 @@ function validateQueryAstNode(value: unknown, path: string): QueryAstImportError
       if (!hasExactKeys(value, ["kind", "index"])) {
         return invalidAst(path, "Unexpected fields");
       }
-      return typeof value.index === "number"
+      return typeof value.index === "number" && Number.isFinite(value.index)
         ? null
         : invalidAst(`${path}.index`, "Expected number");
     case "literal":
@@ -313,15 +368,25 @@ function validateQueryAstNode(value: unknown, path: string): QueryAstImportError
         return invalidAst(path, "Unexpected fields");
       }
       {
-        const condError = validateQueryAstNode(value.cond, `${path}.cond`);
+        const condError = validateQueryAstNode(value.cond, `${path}.cond`, seen, depth + 1);
         if (condError !== null) {
           return condError;
         }
-        const thenError = validateQueryAstNode(value.thenBranch, `${path}.thenBranch`);
+        const thenError = validateQueryAstNode(
+          value.thenBranch,
+          `${path}.thenBranch`,
+          seen,
+          depth + 1,
+        );
         if (thenError !== null) {
           return thenError;
         }
-        return validateQueryAstNode(value.elseBranch, `${path}.elseBranch`);
+        return validateQueryAstNode(
+          value.elseBranch,
+          `${path}.elseBranch`,
+          seen,
+          depth + 1,
+        );
       }
     case "tryCatch":
       return validateBinaryNode("inner", "handler", ["kind", "inner", "handler"]);
@@ -336,7 +401,7 @@ function validateQueryAstNode(value: unknown, path: string): QueryAstImportError
         return invalidAst(`${path}.args`, "Expected array");
       }
       for (const [index, arg] of value.args.entries()) {
-        const argError = validateQueryAstNode(arg, `${path}.args[${index}]`);
+        const argError = validateQueryAstNode(arg, `${path}.args[${index}]`, seen, depth + 1);
         if (argError !== null) {
           return argError;
         }
@@ -348,7 +413,11 @@ function validateQueryAstNode(value: unknown, path: string): QueryAstImportError
 }
 
 export function isQueryAst(value: unknown): value is QueryAst {
-  return validateQueryAstNode(value, "$") === null;
+  try {
+    return validateQueryAstNode(value, "$") === null;
+  } catch {
+    return false;
+  }
 }
 
 export function toAst<I, O, Ast extends QueryAst>(query: Query<I, O, Ast>): Ast {
@@ -419,7 +488,12 @@ export function importQueryAstDocument(input: unknown): QueryAstImportResult<Que
     });
   }
 
-  const astError = validateQueryAstNode(input.ast, "$.ast");
+  let astError: QueryAstImportError | null;
+  try {
+    astError = validateQueryAstNode(input.ast, "$.ast");
+  } catch {
+    astError = invalidAst("$.ast", "Unable to inspect AST value");
+  }
   if (astError !== null) {
     return failImport(astError);
   }

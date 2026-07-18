@@ -498,3 +498,138 @@ test("QueryAst parse handles json text", () => {
     assert.equal(invalid.error.kind, "invalid_json");
   }
 });
+
+test("bindRuntime returns backend_runtime when backend throws synchronously", async () => {
+  // Given
+  const runtime: JqxJsonTextRuntime = {
+    runJsonText() {
+      throw new Error("sync down");
+    },
+  };
+  const jqx = bindRuntime(runtime);
+
+  // When
+  const result = await jqx.runJsonText(".", "null");
+
+  // Then
+  assert.deepEqual(result, {
+    ok: false,
+    error: { kind: "backend_runtime", message: "sync down" },
+  });
+});
+
+test("bindRuntime returns backend_runtime when backend promise rejects", async () => {
+  // Given
+  const runtime: JqxJsonTextRuntime = {
+    runJsonText() {
+      return Promise.reject(new Error("async down"));
+    },
+  };
+  const jqx = bindRuntime(runtime);
+
+  // When
+  const result = await jqx.run(".", null);
+
+  // Then
+  assert.deepEqual(result, {
+    ok: false,
+    error: { kind: "backend_runtime", message: "async down" },
+  });
+});
+
+test("bindRuntime stream returns backend_runtime when backend throws before streaming", async () => {
+  // Given
+  const runtime: JqxJsonTextRuntime & {
+    runJsonTextStream(): { ok: true; value: AsyncIterable<string> };
+  } = {
+    runJsonText() {
+      return { ok: true, value: [] };
+    },
+    runJsonTextStream() {
+      throw new Error("stream setup down");
+    },
+  };
+  const jqx = bindRuntime(runtime);
+
+  // When
+  const items = await collectStream(jqx.runJsonTextStream(".", "null"));
+
+  // Then
+  assert.deepEqual(items, [
+    {
+      ok: false,
+      error: { kind: "backend_runtime", message: "stream setup down" },
+    },
+  ]);
+});
+
+test("bindQueryRuntime preserves custom query objects with an ast field", async () => {
+  // Given
+  type CustomQuery = { readonly ast: string };
+  const seen: CustomQuery[] = [];
+  const runtime: JqxQueryJsonTextRuntime<CustomQuery> = {
+    runJsonText() {
+      return { ok: true, value: [] };
+    },
+    runQueryJsonText(query) {
+      seen.push(query);
+      return { ok: true, value: ["null"] };
+    },
+  };
+  const jqx = bindQueryRuntime(runtime);
+  const query = { ast: "CUSTOM" };
+
+  // When
+  const result = await jqx.queryJsonText(query, "null");
+
+  // Then
+  assert.equal(result.ok, true);
+  assert.deepEqual(seen, [query]);
+});
+
+test("QueryAst import rejects non-JSON literal values", () => {
+  // Given
+  const documents: unknown[] = [
+    {
+      format: QUERY_AST_DOCUMENT_FORMAT,
+      version: QUERY_AST_DOCUMENT_VERSION,
+      ast: { kind: "literal", value: Number.NaN },
+    },
+    {
+      format: QUERY_AST_DOCUMENT_FORMAT,
+      version: QUERY_AST_DOCUMENT_VERSION,
+      ast: { kind: "literal", value: new Date(0) },
+    },
+  ];
+
+  for (const document of documents) {
+    // When
+    const result = importQueryAstDocument(document);
+
+    // Then
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.error.kind, "invalid_ast");
+    }
+  }
+});
+
+test("QueryAst import rejects cyclic literal values without throwing", () => {
+  // Given
+  const cyclic: Record<string, unknown> = { kind: "literal" };
+  cyclic.value = cyclic;
+  const document = {
+    format: QUERY_AST_DOCUMENT_FORMAT,
+    version: QUERY_AST_DOCUMENT_VERSION,
+    ast: cyclic,
+  };
+
+  // When
+  const result = importQueryAstDocument(document);
+
+  // Then
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.error.kind, "invalid_ast");
+  }
+});

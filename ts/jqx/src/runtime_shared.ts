@@ -179,11 +179,12 @@ export function decodeRuntimeOutputs(rawValues: string[]): JqxResult<Json[], Jqx
 }
 
 export function isTypedDslQuery(value: unknown): value is TypedDslQuery {
-  if (typeof value !== "object" || value === null || !("ast" in value)) {
+  if (typeof value !== "object" || value === null) {
     return false;
   }
-  const keys = Object.keys(value as Record<string, unknown>);
-  return keys.length === 1 && keys[0] === "ast";
+  return Object.getOwnPropertySymbols(value).includes(
+    Symbol.for("@shina1024/jqx/typed-dsl-query"),
+  );
 }
 
 export function normalizeTypedDslQuery<Q>(query: Q | TypedDslQuery): Q {
