@@ -29,11 +29,11 @@ const valid = isValidJson('{"users":[{"name":"alice"}]}');
 // true
 ```
 
-Use the value lane when native JS values are convenient. This lane only accepts values that stay representable as plain JS JSON values, so non-finite numbers such as `Infinity`, `-Infinity`, and `NaN` are rejected.
+Use the value lane when native JS values are convenient. This lane only accepts values that stay representable as plain JS JSON values, so non-finite numbers such as `Infinity`, `-Infinity`, and `NaN` are rejected. Object keys in this lane follow ECMAScript enumeration rules, including ascending order for integer-like keys.
 
 ## Compatibility Lane
 
-`runJsonText(...)` is the fidelity-sensitive lane when jq-style JSON text matters:
+`runJsonText(...)` is the fidelity-sensitive lane when jq-style JSON text matters, including object input and update order:
 
 ```ts
 import { runJsonText } from "@shina1024/jqx";

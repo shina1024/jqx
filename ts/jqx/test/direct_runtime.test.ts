@@ -34,6 +34,17 @@ test("runJsonText executes a jq filter on JSON text", () => {
   assert.deepEqual(result, { ok: true, value: ["1"] });
 });
 
+test("JSON text preserves integer-like key order while JS values follow ECMAScript order", () => {
+  const input = '{"2":"two","1":"one","a":"aye"}';
+  assert.deepEqual(runJsonText(".", input), { ok: true, value: [input] });
+
+  const parsed = parseJson(input);
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) {
+    assert.deepEqual(Object.keys(parsed.value as Record<string, Json>), ["1", "2", "a"]);
+  }
+});
+
 test("runJsonText follows jq 1.8.2 print depth beyond old limit", () => {
   const beyondOldLimit = nestedJsonArrayText(257, "0");
   const result = runJsonText(".", beyondOldLimit);

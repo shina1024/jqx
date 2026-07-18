@@ -138,7 +138,7 @@ const compat = runJsonText(".", "9007199254740993");
 // { ok: true, value: ["9007199254740993"] }
 ```
 
-In JS/TS, the value lane is intentionally stricter than jq itself. `run(...)`, `parseJson(...)`, and `isValidJson(...)` only accept values that remain representable as plain JS JSON values, so non-finite numbers such as `Infinity`, `-Infinity`, and `NaN` are rejected. When jq-compatible numeric fidelity matters, stay on `runJsonText(...)`.
+In JS/TS, the value lane is intentionally stricter than jq itself. `run(...)`, `parseJson(...)`, and `isValidJson(...)` only accept values that remain representable as plain JS JSON values, so non-finite numbers such as `Infinity`, `-Infinity`, and `NaN` are rejected. Native objects also follow ECMAScript key enumeration rules, including ascending order for integer-like keys. When jq-compatible numeric or object-order fidelity matters, stay on `runJsonText(...)`.
 
 Reuse a compiled filter when you expect to run the same jq program repeatedly:
 
