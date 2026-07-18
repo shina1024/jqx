@@ -21,6 +21,9 @@ MOONBIT_FFI_EXPORT int32_t jqx_write_stderr(
 #include <windows.h>
 #include <shellapi.h>
 #pragma comment(lib, "shell32.lib")
+// jq-compatible parsing and paths are bounded at 10,000 levels. Reserve enough
+// stack for the Windows native runtime to reach that explicit guard.
+#pragma comment(linker, "/STACK:16777216")
 
 static int32_t jqx_windows_utf8_arg_len_internal(
   int32_t index,
