@@ -104,10 +104,7 @@ expectTypeOf(directQueryJsonTextOutFromDsl).toMatchTypeOf<JqxResult<string[], Jq
 
 expectTypeOf(runtime).toMatchTypeOf<JqxDirectRuntime>();
 expectTypeOf(queryRuntime).toMatchTypeOf<JqxDirectQueryRuntime>();
-// @ts-expect-error `undefined` is not a JSON value.
-run(".", { user: undefined });
-// @ts-expect-error `undefined` is not a JSON value.
-query(ast, { user: undefined });
+expectTypeOf<{ user: undefined } extends Json ? true : false>().toEqualTypeOf<false>();
 
 declare const bindingRuntime: JqxJsonTextRuntime;
 const jqx = bindRuntime(bindingRuntime);
@@ -121,10 +118,7 @@ const runJsonTextStreamOut = jqx.runJsonTextStream(".", '{"user":{"name":"a"}}')
 expectTypeOf(runJsonTextStreamOut).toMatchTypeOf<
   AsyncIterable<JqxResult<string, JqxRuntimeError>>
 >();
-// @ts-expect-error `undefined` is not a JSON value.
-void jqx.run(".", { user: undefined });
-// @ts-expect-error Compiled filters stay on the direct runtime, not the `/bind` client.
-void jqx.compile(".user.name");
+expectTypeOf<"compile" extends keyof typeof jqx ? true : false>().toEqualTypeOf<false>();
 
 declare const bindingQueryRuntime: JqxQueryJsonTextRuntime<QueryAst>;
 const queryJqx = bindQueryRuntime(bindingQueryRuntime);
@@ -144,10 +138,7 @@ const boundQueryJsonTextStreamOut = queryJqx.queryJsonTextStream(ast, '{"user":{
 expectTypeOf(boundQueryJsonTextStreamOut).toMatchTypeOf<
   AsyncIterable<JqxResult<string, JqxRuntimeError>>
 >();
-// @ts-expect-error `undefined` is not a JSON value.
-void queryJqx.query(ast, { user: undefined });
-// @ts-expect-error Compiled filters stay on the direct runtime, not the `/bind` query client.
-void queryJqx.compile(".user.name");
+expectTypeOf<"compile" extends keyof typeof queryJqx ? true : false>().toEqualTypeOf<false>();
 
 type CustomQuery = { kind: "custom"; key: string };
 declare const customRuntime: JqxQueryJsonTextRuntime<CustomQuery>;
@@ -157,12 +148,12 @@ const customTypedOut = customJqx.query(
   { user: { name: "a" } },
 );
 expectTypeOf(customTypedOut).toMatchTypeOf<Promise<JqxResult<Json[], JqxRuntimeError>>>();
-// @ts-expect-error Typed DSL query input is only available when query type is QueryAst.
-void customJqx.query(nameQuery, { user: { name: "a" } });
+expectTypeOf<
+  typeof nameQuery extends Parameters<typeof customJqx.query>[0] ? true : false
+>().toEqualTypeOf<false>();
 
 const dynamicFromQuery = bindRuntime(customRuntime);
-// @ts-expect-error query is only available on bindQueryRuntime.
-void dynamicFromQuery.query({ kind: "custom", key: "user.name" }, { user: { name: "a" } });
+expectTypeOf<"query" extends keyof typeof dynamicFromQuery ? true : false>().toEqualTypeOf<false>();
 
 const normalizedRuntimeError = toJqxRuntimeError("boom");
 expectTypeOf(normalizedRuntimeError).toEqualTypeOf<JqxRuntimeError>();

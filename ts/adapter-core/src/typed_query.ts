@@ -480,14 +480,6 @@ export function importQueryAstDocument(input: unknown): QueryAstImportResult<Que
       message: `Unsupported QueryAst document version: ${input.version}`,
     });
   }
-  if (!("ast" in input)) {
-    return failImport({
-      kind: "invalid_document",
-      path: "$.ast",
-      message: "Missing ast field",
-    });
-  }
-
   let astError: QueryAstImportError | null;
   try {
     astError = validateQueryAstNode(input.ast, "$.ast");

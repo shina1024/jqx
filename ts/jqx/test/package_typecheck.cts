@@ -18,5 +18,6 @@ const boundRunCheck: Promise<root.JqxResult<root.Json[], root.JqxRuntimeError>> 
   user: { name: "a" },
 });
 void boundRunCheck;
-// @ts-expect-error `/bind` does not expose compiled filters in CommonJS consumers either.
-void jqx.compile(".user.name");
+type BoundRuntimeHasCompile = "compile" extends keyof typeof jqx ? true : false;
+const boundRuntimeHasCompile: BoundRuntimeHasCompile = false;
+void boundRuntimeHasCompile;

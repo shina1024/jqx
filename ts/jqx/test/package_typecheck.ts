@@ -26,13 +26,11 @@ const jqx = bindRuntime(bindingRuntime);
 expectTypeOf(jqx.run(".", { user: { name: "a" } })).toMatchTypeOf<
   Promise<JqxResult<Json[], JqxRuntimeError>>
 >();
-// @ts-expect-error `/bind` does not expose compiled filters.
-void jqx.compile(".user.name");
+expectTypeOf<"compile" extends keyof typeof jqx ? true : false>().toEqualTypeOf<false>();
 
 declare const bindingQueryRuntime: JqxQueryJsonTextRuntime;
 const queryJqx = bindQueryRuntime(bindingQueryRuntime);
 expectTypeOf(queryJqx.queryJsonText({ kind: "identity" }, "{}")).toMatchTypeOf<
   Promise<JqxResult<string[], JqxRuntimeError>>
 >();
-// @ts-expect-error `/bind` does not expose compiled filters.
-void queryJqx.compile(".user.name");
+expectTypeOf<"compile" extends keyof typeof queryJqx ? true : false>().toEqualTypeOf<false>();

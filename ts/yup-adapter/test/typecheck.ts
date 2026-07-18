@@ -111,13 +111,7 @@ expectTypeOf(queryResult).toEqualTypeOf<
 >();
 
 const dynamicFromQuery = createAdapter(queryRuntime);
-// @ts-expect-error query is only available from createQueryAdapter.
-dynamicFromQuery.query({
-  query: { kind: "query" },
-  input: { user: { name: "alice" } },
-  inputSchema,
-  outputSchema,
-});
+expectTypeOf<"query" extends keyof typeof dynamicFromQuery ? true : false>().toEqualTypeOf<false>();
 
 expectTypeOf<FilterOptions<typeof inputSchema, typeof outputSchema>>().toEqualTypeOf<{
   filter: string;
