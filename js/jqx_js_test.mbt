@@ -1,4 +1,7 @@
 ///|
+// Source under test: js/jqx_js.mbt
+
+///|
 fn nested_json_array_text(depth : Int, leaf : String) -> String {
   let buf = StringBuilder()
   for _ in 0..<depth {

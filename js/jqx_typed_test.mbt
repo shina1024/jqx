@@ -1,4 +1,7 @@
 ///|
+// Source under test: js/jqx_typed.mbt
+
+///|
 test "typed identity query" {
   let q : Query[@core.Value, @core.Value] = identity()
   let out = query_json_text(q, "{\"a\":1}")

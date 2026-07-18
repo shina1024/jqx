@@ -1,4 +1,6 @@
 ///|
+// Source under test: core/execute*.mbt
+//
 // Shared test helper for execute-related test files.
 
 ///|
