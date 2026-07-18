@@ -413,7 +413,7 @@ function main() {
       const jqStderr = cleanOutput(jqRun.stderr);
       const jqClass = classifyRunOutput(jqStdout, jqStderr);
 
-      const jqxRunArgs = [...jqxPrefixArgs, ...jqxArgs, filter];
+      const jqxRunArgs = [...jqxPrefixArgs, "-c", ...jqxArgs, filter];
       if (!jqxUseStdin) {
         jqxRunArgs.push(input);
       }
@@ -421,6 +421,9 @@ function main() {
       const jqxStdout = cleanOutput(jqxRun.stdout);
       const jqxStderr = cleanOutput(jqxRun.stderr);
       const jqxClass = classifyRunOutput(jqxStdout, jqxStderr);
+      const expectedStatusesMatch =
+        expectStatus == null ||
+        (jqRun.status === expectStatus && jqxRun.status === expectStatus);
 
       let ok = false;
       if (expectError) {
@@ -428,9 +431,10 @@ function main() {
         const jqxHasError = jqxRun.status !== 0 || jqxClass.hasErrorLine;
         if (expectErrorMode === "any" || expectErrorMode === "ignore_msg") {
           if (sourceKind === "compile_fail") {
-            ok = jqHasError && jqxHasError;
+            ok = expectedStatusesMatch && jqHasError && jqxHasError;
           } else {
             ok =
+              expectedStatusesMatch &&
               jqHasError &&
               jqxHasError &&
               jqClass.valueText === jqxClass.valueText &&
@@ -439,11 +443,13 @@ function main() {
           }
         } else if (sourceKind === "compile_fail") {
           ok =
+            expectedStatusesMatch &&
             jqHasError &&
             jqxHasError &&
             jqClass.errorText === jqxClass.errorText;
         } else {
           ok =
+            expectedStatusesMatch &&
             jqHasError &&
             jqxHasError &&
             jqClass.errorText === jqxClass.errorText &&

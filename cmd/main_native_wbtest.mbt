@@ -11,7 +11,8 @@ test "run cli native module path parity case" {
     ],
     "",
   )
-  @debug.assert_eq(result.lines, ["\"a\""])
+  @debug.assert_eq(result.stdout_lines, ["\"a\""])
+  @debug.assert_eq(result.stderr_lines, [])
   @debug.assert_eq(result.exit_code, None)
   @lib.clear_module_search_paths()
   @lib.clear_module_sources()

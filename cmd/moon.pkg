@@ -17,5 +17,7 @@ options(
     "main_native_wbtest.mbt": [ "native", "llvm" ],
     "stdin_native.mbt": [ "native", "llvm" ],
     "stdin_wasm.mbt": [ "wasm", "wasm-gc" ],
+    "stderr_native.mbt": [ "native", "llvm" ],
+    "stderr_wasm.mbt": [ "wasm", "wasm-gc" ],
   },
 )

@@ -1,6 +1,21 @@
 #include "moonbit.h"
 
 #include <stdint.h>
+#include <stdio.h>
+
+MOONBIT_FFI_EXPORT int32_t jqx_write_stderr(
+  moonbit_bytes_t bytes,
+  int32_t len
+) {
+  if (bytes == NULL || len < 0) {
+    return -1;
+  }
+  size_t written = fwrite(bytes, 1, (size_t)len, stderr);
+  if (written != (size_t)len || fputc('\n', stderr) == EOF) {
+    return -1;
+  }
+  return fflush(stderr) == 0 ? len : -1;
+}
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>

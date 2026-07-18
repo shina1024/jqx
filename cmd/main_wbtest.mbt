@@ -18,6 +18,7 @@ test "compute exit status" {
 test "parse cli inputs json basic" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: false,
     no_input: false,
     exit_status: false,
@@ -36,6 +37,7 @@ test "parse cli inputs json basic" {
 test "parse cli inputs direct input overrides stdin" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: false,
     no_input: false,
     exit_status: false,
@@ -54,6 +56,7 @@ test "parse cli inputs direct input overrides stdin" {
 test "parse cli inputs json stream accepts leading bom" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: false,
     no_input: false,
     exit_status: false,
@@ -70,6 +73,7 @@ test "parse cli inputs json stream accepts leading bom" {
 test "parse cli inputs json stream ndjson" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: false,
     no_input: false,
     exit_status: false,
@@ -90,6 +94,7 @@ test "parse cli inputs json stream ndjson" {
 test "parse cli inputs json stream whitespace separated" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: false,
     no_input: false,
     exit_status: false,
@@ -106,6 +111,7 @@ test "parse cli inputs json stream whitespace separated" {
 test "parse cli inputs json stream adjacent structured values" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: false,
     no_input: false,
     exit_status: false,
@@ -126,6 +132,7 @@ test "parse cli inputs json stream adjacent structured values" {
 test "parse cli inputs json stream invalid scalar adjacency" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: false,
     no_input: false,
     exit_status: false,
@@ -147,6 +154,7 @@ test "parse cli inputs json stream invalid scalar adjacency" {
 test "parse cli inputs json empty stdin" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: false,
     no_input: false,
     exit_status: false,
@@ -163,6 +171,7 @@ test "parse cli inputs json empty stdin" {
 test "parse cli inputs json slurp single" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: false,
     no_input: false,
     exit_status: false,
@@ -181,6 +190,7 @@ test "parse cli inputs json slurp single" {
 test "parse cli inputs json slurp ndjson" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: false,
     no_input: false,
     exit_status: false,
@@ -203,6 +213,7 @@ test "parse cli inputs json slurp ndjson" {
 test "parse cli inputs json slurp whitespace separated" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: false,
     no_input: false,
     exit_status: false,
@@ -221,6 +232,7 @@ test "parse cli inputs json slurp whitespace separated" {
 test "parse cli inputs json slurp empty" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: false,
     no_input: false,
     exit_status: false,
@@ -237,6 +249,7 @@ test "parse cli inputs json slurp empty" {
 test "parse cli inputs no-input with slurp" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: false,
     no_input: true,
     exit_status: false,
@@ -253,6 +266,7 @@ test "parse cli inputs no-input with slurp" {
 test "parse cli inputs raw lines" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: true,
     no_input: false,
     exit_status: false,
@@ -269,6 +283,7 @@ test "parse cli inputs raw lines" {
 test "parse cli inputs raw lines keep empty records" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: true,
     no_input: false,
     exit_status: false,
@@ -289,6 +304,7 @@ test "parse cli inputs raw lines keep empty records" {
 test "parse cli inputs raw lines trim crlf" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: true,
     no_input: false,
     exit_status: false,
@@ -305,6 +321,7 @@ test "parse cli inputs raw lines trim crlf" {
 test "parse cli inputs raw slurp" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: true,
     no_input: false,
     exit_status: false,
@@ -321,6 +338,7 @@ test "parse cli inputs raw slurp" {
 test "parse cli inputs raw direct input slurp" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: true,
     no_input: false,
     exit_status: false,
@@ -337,6 +355,7 @@ test "parse cli inputs raw direct input slurp" {
 test "parse cli inputs raw no-input takes precedence" {
   let cfg = {
     raw: false,
+    compact: false,
     raw_input: true,
     no_input: true,
     exit_status: false,
@@ -379,9 +398,10 @@ test "format error message rewrites line and column" {
 }
 
 ///|
-test "run cli prints usage when filter is missing" {
-  let result = run_cli(["jqx"], "")
-  @debug.assert_eq(result.lines, usage_lines())
+test "run cli defaults to identity when filter is missing" {
+  let result = run_cli(["jqx"], "{\"foo\":1}")
+  @debug.assert_eq(result.stdout_lines, ["{\n  \"foo\": 1\n}"])
+  @debug.assert_eq(result.stderr_lines, [])
   @debug.assert_eq(exit_code_matches(result.exit_code, None), true)
 }
 
@@ -389,53 +409,54 @@ test "run cli prints usage when filter is missing" {
 test "run cli usage text uses jqx command" {
   @debug.assert_eq(
     usage_summary_line(),
-    "Usage: jqx [options] \"<filter>\" [\"<json>\"]",
+    "Usage: jqx [options] [\"<filter>\"] [\"<json>\"]",
   )
-  @debug.assert_eq(usage_lines(), [
-    "Usage: jqx [options] \"<filter>\" [\"<json>\"]", "Example (stdin): echo '{\"foo\": 1}' | jqx \".foo\"",
-    "Example (arg):   jqx \".foo\" '{\"foo\": 1}'", "Options: -r, -R, -c, -n, -s, -e, -L <dir>",
-  ])
 }
 
 ///|
 test "run cli reports arg parse errors with short usage" {
   let result = run_cli(["jqx", "-L"], "")
-  @debug.assert_eq(result.lines, [
+  @debug.assert_eq(result.stdout_lines, [])
+  @debug.assert_eq(result.stderr_lines, [
     "jqx: error: missing argument for -L",
     usage_summary_line(),
   ])
-  @debug.assert_eq(exit_code_matches(result.exit_code, None), true)
+  @debug.assert_eq(exit_code_matches(result.exit_code, Some(2)), true)
 }
 
 ///|
 test "run cli executes stdin input" {
   let result = run_cli(["jqx", ".foo"], "{\"foo\":1}")
-  @debug.assert_eq(result.lines, ["1"])
+  @debug.assert_eq(result.stdout_lines, ["1"])
+  @debug.assert_eq(result.stderr_lines, [])
   @debug.assert_eq(exit_code_matches(result.exit_code, None), true)
 }
 
 ///|
 test "run cli direct input raw string parity case" {
-  @debug.assert_eq(format_output(true, @lib.Value::string("bar")), "bar")
+  @debug.assert_eq(format_output(true, false, @lib.Value::string("bar")), "bar")
   let result = run_cli(["jqx", "-r", ".foo", "{\"foo\":\"bar\"}"], "")
-  @debug.assert_eq(result.lines, ["bar"])
+  @debug.assert_eq(result.stdout_lines, ["bar"])
+  @debug.assert_eq(result.stderr_lines, [])
   @debug.assert_eq(exit_code_matches(result.exit_code, None), true)
 }
 
 ///|
 test "run cli computes -e exit status" {
   let result = run_cli(["jqx", "-e", ".", "null"], "")
-  @debug.assert_eq(result.lines, ["null"])
+  @debug.assert_eq(result.stdout_lines, ["null"])
+  @debug.assert_eq(result.stderr_lines, [])
   @debug.assert_eq(exit_code_matches(result.exit_code, Some(1)), true)
 }
 
 ///|
 test "run cli formats compile errors" {
   let result = run_cli(["jqx", ".['x']", "null"], "")
-  @debug.assert_eq(exit_code_matches(result.exit_code, Some(5)), true)
-  guard result.lines.length() == 1 &&
-    result.lines[0].contains("jqx: error (at <stdin>:1:3):") &&
-    result.lines[0].contains("Invalid character") else {
+  @debug.assert_eq(exit_code_matches(result.exit_code, Some(3)), true)
+  @debug.assert_eq(result.stdout_lines, [])
+  guard result.stderr_lines.length() == 1 &&
+    result.stderr_lines[0].contains("jqx: error (at <stdin>:1:3):") &&
+    result.stderr_lines[0].contains("Invalid character") else {
     fail("expected formatted compile error line")
   }
 }
@@ -444,10 +465,10 @@ test "run cli formats compile errors" {
 test "run cli runtime error parity corpus case" {
   let result = run_cli(["jqx", ".[] | tonumber", "[1,\"x\"]"], "")
   @debug.assert_eq(exit_code_matches(result.exit_code, Some(5)), true)
-  guard result.lines.length() == 2 &&
-    result.lines[0].contains("cannot be parsed as a number") &&
-    result.lines[1] == "1" else {
-    fail("expected runtime error followed by partial output")
+  guard result.stdout_lines == ["1"] &&
+    result.stderr_lines.length() == 1 &&
+    result.stderr_lines[0].contains("cannot be parsed as a number") else {
+    fail("expected partial output on stdout and runtime error on stderr")
   }
 }
 
@@ -500,7 +521,7 @@ test "render error lines skips empties and falls back on blank input" {
 
 ///|
 test "cli reads stdin only for parsed stdin input" {
-  @debug.assert_eq(cli_reads_stdin(["jqx"]), false)
+  @debug.assert_eq(cli_reads_stdin(["jqx"]), true)
   @debug.assert_eq(cli_reads_stdin(["jqx", "."]), true)
   @debug.assert_eq(cli_reads_stdin(["jqx", ".", "1"]), false)
   @debug.assert_eq(cli_reads_stdin(["jqx", "-n", "."]), false)
@@ -511,6 +532,7 @@ test "cli reads stdin only for parsed stdin input" {
 test "configure module search paths accepts explicit paths" {
   configure_module_search_paths({
     raw: false,
+    compact: false,
     raw_input: false,
     no_input: false,
     exit_status: false,

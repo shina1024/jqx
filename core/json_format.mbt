@@ -36,12 +36,18 @@ fn format_finite_number_without_repr(n : Double) -> String {
 }
 
 ///|
-/// Encode Value as a compact JSON string (jq-style output).
-pub fn Value::to_json_string(self : Value) -> String {
+fn Value::to_json_string_with_layout(self : Value, pretty : Bool) -> String {
   let buf = StringBuilder()
   // jq 1.8.2 uses MAX_PRINT_DEPTH=10000 in src/jv_print.c and emits
   // "<skipped: too deep>" once printing recurses past that depth.
   let max_depth = 10000
+  fn write_indent(depth : Int) {
+    buf.write_char('\n')
+    for _ in 0..<(depth * 2) {
+      buf.write_char(' ')
+    }
+  }
+
   fn write_escaped(s : String) {
     buf.write_char('"')
     for ch in s {
@@ -118,7 +124,13 @@ pub fn Value::to_json_string(self : Value) -> String {
           } else {
             buf.write_char(',')
           }
+          if pretty {
+            write_indent(depth + 1)
+          }
           write_value(v, depth + 1)
+        }
+        if pretty && !first {
+          write_indent(depth)
         }
         buf.write_char(']')
       }
@@ -133,9 +145,18 @@ pub fn Value::to_json_string(self : Value) -> String {
           } else {
             buf.write_char(',')
           }
+          if pretty {
+            write_indent(depth + 1)
+          }
           write_escaped(k)
           buf.write_char(':')
+          if pretty {
+            buf.write_char(' ')
+          }
           write_value(v, depth + 1)
+        }
+        if pretty && !first {
+          write_indent(depth)
         }
         buf.write_char('}')
       }
@@ -144,4 +165,16 @@ pub fn Value::to_json_string(self : Value) -> String {
 
   write_value(self, 0)
   buf.to_string()
+}
+
+///|
+/// Encode Value as a compact JSON string (jq-style output).
+pub fn Value::to_json_string(self : Value) -> String {
+  self.to_json_string_with_layout(false)
+}
+
+///|
+/// Encode Value as an indented JSON string (jq-style output).
+pub fn Value::to_json_string_pretty(self : Value) -> String {
+  self.to_json_string_with_layout(true)
 }

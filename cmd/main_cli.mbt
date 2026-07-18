@@ -1,32 +1,24 @@
 ///|
 priv struct CliRunResult {
-  lines : Array[String]
+  stdout_lines : Array[String]
+  stderr_lines : Array[String]
   exit_code : Int?
 }
 
 ///|
 fn usage_summary_line() -> String {
-  "Usage: jqx [options] \"<filter>\" [\"<json>\"]"
-}
-
-///|
-fn usage_lines() -> Array[String] {
-  [
-    usage_summary_line(),
-    "Example (stdin): echo '{\"foo\": 1}' | jqx \".foo\"",
-    "Example (arg):   jqx \".foo\" '{\"foo\": 1}'",
-    "Options: -r, -R, -c, -n, -s, -e, -L <dir>",
-  ]
+  "Usage: jqx [options] [\"<filter>\"] [\"<json>\"]"
 }
 
 ///|
 fn append_output_lines(
   lines : Array[String],
   raw : Bool,
+  compact : Bool,
   outputs : Array[@lib.Value],
 ) -> Unit {
   for value in outputs {
-    lines.push(format_output(raw, value))
+    lines.push(format_output(raw, compact, value))
   }
 }
 
@@ -60,9 +52,6 @@ fn render_error_lines(msg : String) -> Array[String] {
 
 ///|
 fn cli_reads_stdin(args : Array[String]) -> Bool {
-  if args.length() < 2 {
-    return false
-  }
   match parse_cli_args(args) {
     Ok(cfg) => !cfg.no_input && cfg.input is None
     Err(_) => false
@@ -81,14 +70,12 @@ fn configure_module_search_paths(cfg : CliArgs) -> Unit {
 
 ///|
 fn run_cli(args : Array[String], stdin_text : String) -> CliRunResult {
-  if args.length() < 2 {
-    return { lines: usage_lines(), exit_code: None }
-  }
   let parsed = parse_cli_args(args)
   guard parsed is Ok(cfg) else {
     return {
-      lines: ["jqx: error: " + parsed.unwrap_err(), usage_summary_line()],
-      exit_code: None,
+      stdout_lines: [],
+      stderr_lines: ["jqx: error: " + parsed.unwrap_err(), usage_summary_line()],
+      exit_code: Some(2),
     }
   }
   let cli_stdin = if cfg.no_input || cfg.input is Some(_) {
@@ -97,8 +84,19 @@ fn run_cli(args : Array[String], stdin_text : String) -> CliRunResult {
     stdin_text
   }
   configure_module_search_paths(cfg)
+  let compiled_result = try @lib.compile(cfg.filter) catch {
+    err => Err(err.to_string())
+  } noraise {
+    compiled => Ok(compiled)
+  }
+  guard compiled_result is Ok(compiled) else {
+    return {
+      stdout_lines: [],
+      stderr_lines: render_error_lines(compiled_result.unwrap_err()),
+      exit_code: Some(3),
+    }
+  }
   try {
-    let compiled = @lib.compile(cfg.filter)
     let inputs = parse_cli_inputs(cfg, cli_stdin)
     let outputs = []
     for input in inputs {
@@ -106,23 +104,32 @@ fn run_cli(args : Array[String], stdin_text : String) -> CliRunResult {
       append_json_output_values(outputs, result.0)
       match result.1 {
         Some(msg) => {
-          let lines = render_error_lines(msg)
-          append_output_lines(lines, cfg.raw, outputs)
-          return { lines, exit_code: Some(5) }
+          let stdout_lines = []
+          append_output_lines(stdout_lines, cfg.raw, cfg.compact, outputs)
+          return {
+            stdout_lines,
+            stderr_lines: render_error_lines(msg),
+            exit_code: Some(5),
+          }
         }
         None => ()
       }
     }
-    let lines = []
-    append_output_lines(lines, cfg.raw, outputs)
+    let stdout_lines = []
+    append_output_lines(stdout_lines, cfg.raw, cfg.compact, outputs)
     let exit_code = if cfg.exit_status {
       Some(compute_exit_status(outputs))
     } else {
       None
     }
-    { lines, exit_code }
+    { stdout_lines, stderr_lines: [], exit_code }
   } catch {
-    err => { lines: render_error_lines(err.to_string()), exit_code: Some(5) }
+    err =>
+      {
+        stdout_lines: [],
+        stderr_lines: render_error_lines(err.to_string()),
+        exit_code: Some(5),
+      }
   }
 }
 
@@ -131,8 +138,11 @@ fn main {
   let args = read_cli_args()
   let stdin_text = if cli_reads_stdin(args) { read_stdin_all() } else { "" }
   let result = run_cli(args, stdin_text)
-  for line in result.lines {
+  for line in result.stdout_lines {
     println(line)
+  }
+  for line in result.stderr_lines {
+    write_stderr_line(line)
   }
   match result.exit_code {
     Some(code) => jqx_exit(code)

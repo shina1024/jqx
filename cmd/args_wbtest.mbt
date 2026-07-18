@@ -162,10 +162,10 @@ test "parse args -L missing value" {
 }
 
 ///|
-test "parse args missing filter when no expression is provided" {
-  guard parse_cli_args(["jqx"]) is Err(msg) && msg == "missing filter" else {
-    fail("expected missing filter error")
-  }
+test "parse args defaults to identity when no expression is provided" {
+  guard parse_cli_args(["jqx"]) is Ok(cfg) else { fail("expected Ok") }
+  @debug.assert_eq(cfg.filter, ".")
+  @debug.assert_eq(cfg.compact, false)
 }
 
 ///|
@@ -181,14 +181,17 @@ test "parse args -r and -c are accepted" {
   let parsed = parse_cli_args(["jqx", "-r", "-c", ".", "\"x\""])
   guard parsed is Ok(cfg) else { fail("expected Ok") }
   @debug.assert_eq(cfg.raw, true)
+  @debug.assert_eq(cfg.compact, true)
   @debug.assert_eq(cfg.filter, ".")
   @debug.assert_eq(cfg_input_matches(cfg, Some("\"x\"")), true)
 }
 
 ///|
-test "parse args missing filter after options" {
-  guard parse_cli_args(["jqx", "-r", "-c"]) is Err(msg) &&
-    msg == "missing filter" else {
-    fail("expected missing filter after options")
+test "parse args defaults to identity after options" {
+  guard parse_cli_args(["jqx", "-r", "-c"]) is Ok(cfg) else {
+    fail("expected Ok")
   }
+  @debug.assert_eq(cfg.filter, ".")
+  @debug.assert_eq(cfg.raw, true)
+  @debug.assert_eq(cfg.compact, true)
 }

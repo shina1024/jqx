@@ -1,6 +1,7 @@
 ///|
 struct CliArgs {
   raw : Bool
+  compact : Bool
   raw_input : Bool
   no_input : Bool
   exit_status : Bool
@@ -17,10 +18,8 @@ fn read_cli_args() -> Array[String] {
 
 ///|
 fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
-  if args.length() < 2 {
-    return Err("missing filter")
-  }
   let mut raw = false
+  let mut compact = false
   let mut raw_input = false
   let mut no_input = false
   let mut exit_status = false
@@ -59,6 +58,7 @@ fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
       continue
     }
     if a == "-c" {
+      compact = true
       idx += 1
       continue
     }
@@ -82,7 +82,17 @@ fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
     break
   }
   if idx >= args.length() {
-    return Err("missing filter")
+    return Ok({
+      raw,
+      compact,
+      raw_input,
+      no_input,
+      exit_status,
+      slurp,
+      module_search_paths,
+      filter: ".",
+      input: None,
+    })
   }
   let filter = args[idx]
   idx += 1
@@ -92,6 +102,7 @@ fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
     }
     return Ok({
       raw,
+      compact,
       raw_input,
       no_input,
       exit_status,
@@ -113,6 +124,7 @@ fn parse_cli_args(args : Array[String]) -> Result[CliArgs, String] {
   }
   Ok({
     raw,
+    compact,
     raw_input,
     no_input,
     exit_status,

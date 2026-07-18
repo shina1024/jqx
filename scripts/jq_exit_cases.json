@@ -73,5 +73,16 @@
     "jqx_args": ["-n", "-e"],
     "jqx_use_stdin": true,
     "expect_status": 4
+  },
+  {
+    "name": "exit-unknown-option",
+    "filter": ".",
+    "input": "null",
+    "jq_args": ["--definitely-unknown"],
+    "jqx_args": ["--definitely-unknown"],
+    "expect_error": true,
+    "expect_error_mode": "ignore_msg",
+    "source_kind": "compile_fail",
+    "expect_status": 2
   }
 ]
