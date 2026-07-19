@@ -792,6 +792,31 @@ test("bindRuntime rejects non-string streaming backend values", async () => {
   assert.deepEqual(await collectStream(jqx.runStream(".", null)), expected);
 });
 
+test("bindRuntime rejects non-async streaming backend payloads", async () => {
+  const runtime: JqxJsonTextRuntime = {
+    runJsonText() {
+      return { ok: true, value: [] };
+    },
+  };
+  Object.defineProperty(runtime, "runJsonTextStream", {
+    value() {
+      return { ok: true, value: "null" };
+    },
+  });
+  const expected = [
+    {
+      ok: false,
+      error: {
+        kind: "backend_runtime",
+        message: "Runtime output stream must be async iterable",
+      },
+    },
+  ];
+  const jqx = bindRuntime(runtime);
+  assert.deepEqual(await collectStream(jqx.runJsonTextStream(".", "null")), expected);
+  assert.deepEqual(await collectStream(jqx.runStream(".", null)), expected);
+});
+
 test("public runtime error helpers contain revoked Proxy values", () => {
   const revocable = Proxy.revocable({}, {});
   revocable.revoke();
@@ -963,6 +988,35 @@ test("QueryAst import rejects non-JSON literal values", () => {
     if (!result.ok) {
       assert.equal(result.error.kind, "invalid_ast");
     }
+  }
+});
+
+test("QueryAst import rejects indices outside the MoonBit Int boundary", () => {
+  for (const value of [1.5, -1.5, 2_147_483_648, -2_147_483_649]) {
+    const result = importQueryAstDocument({
+      format: QUERY_AST_DOCUMENT_FORMAT,
+      version: QUERY_AST_DOCUMENT_VERSION,
+      ast: { kind: "index", index: value },
+    });
+    assert.deepEqual(result, {
+      ok: false,
+      error: {
+        kind: "invalid_ast",
+        path: "$.ast.index",
+        message: "Expected 32-bit integer",
+      },
+    });
+  }
+});
+
+test("QueryAst import accepts MoonBit Int boundary indices", () => {
+  for (const value of [-2_147_483_648, 2_147_483_647]) {
+    const result = importQueryAstDocument({
+      format: QUERY_AST_DOCUMENT_FORMAT,
+      version: QUERY_AST_DOCUMENT_VERSION,
+      ast: { kind: "index", index: value },
+    });
+    assert.deepEqual(result, { ok: true, value: { kind: "index", index: value } });
   }
 });
 

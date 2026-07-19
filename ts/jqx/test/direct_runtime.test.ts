@@ -9,6 +9,7 @@ import {
   run,
   runJsonText,
   field,
+  index,
   query,
   queryJsonText,
   queryRuntime,
@@ -205,6 +206,28 @@ test("query rejects non-finite literal values in the value lane", () => {
     if (result.error.kind === "input_value") {
       assert.equal(result.error.path, "$");
     }
+  }
+});
+
+test("query rejects indices outside the MoonBit Int boundary", () => {
+  for (const value of [1.5, -1.5, 2_147_483_648, -2_147_483_649]) {
+    const result = query(index(value), ["a", "b", "c"]);
+    assert.deepEqual(result, {
+      ok: false,
+      error: {
+        kind: "backend_runtime",
+        message: "Expected 32-bit integer",
+      },
+    });
+  }
+});
+
+test("query accepts MoonBit Int boundary indices", () => {
+  for (const value of [-2_147_483_648, 2_147_483_647]) {
+    assert.deepEqual(query(index(value), ["a", "b", "c"]), {
+      ok: true,
+      value: [null],
+    });
   }
 });
 

@@ -295,6 +295,15 @@ function invalidAst(path: string, message: string): QueryAstImportError {
   return { kind: "invalid_ast", path, message };
 }
 
+function isMoonBitInt(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= -2_147_483_648 &&
+    value <= 2_147_483_647
+  );
+}
+
 function validateQueryAstNode(
   value: unknown,
   path: string,
@@ -362,9 +371,9 @@ function validateQueryAstNode(
         if (!hasExactKeys(value, ["kind", "index"])) {
           return invalidAst(path, "Unexpected fields");
         }
-        return typeof value.index === "number" && Number.isFinite(value.index)
+        return isMoonBitInt(value.index)
           ? null
-          : invalidAst(`${path}.index`, "Expected number");
+          : invalidAst(`${path}.index`, "Expected 32-bit integer");
       case "literal":
         if (!hasExactKeys(value, ["kind", "value"])) {
           return invalidAst(path, "Unexpected fields");

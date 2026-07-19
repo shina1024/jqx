@@ -89,7 +89,16 @@ function fromStreamingRuntimeCall(
   call: RuntimeCall<AsyncIterable<string>>,
 ): JqxResultStream<string, JqxRuntimeError> {
   return (async function* () {
-    const runtimeOut = await callRuntime(call, (value) => value);
+    const runtimeOut = await callRuntime(call, (value) => {
+      if (
+        value === null ||
+        (typeof value !== "object" && typeof value !== "function") ||
+        typeof Reflect.get(value, Symbol.asyncIterator) !== "function"
+      ) {
+        throw new TypeError("Runtime output stream must be async iterable");
+      }
+      return value;
+    });
     if (!runtimeOut.ok) {
       yield failRuntimeResult<string>(runtimeOut.error);
       return;
