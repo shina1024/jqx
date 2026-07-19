@@ -16,6 +16,9 @@ on:
         required: false
         default: false
         type: boolean
+    secrets:
+      MOONCAKES_CREDENTIALS_JSON:
+        required: false
 permissions:
   contents: read
 
