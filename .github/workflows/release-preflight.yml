@@ -15,7 +15,6 @@ jobs:
   prepare:
     name: Prepare
     runs-on: ubuntu-latest
-    environment: release
     outputs:
       version: ${{ steps.vars.outputs.version }}
       tag: ${{ steps.vars.outputs.tag }}
@@ -305,6 +304,7 @@ jobs:
   mooncakes:
     name: Mooncakes dry-run
     runs-on: ubuntu-latest
+    environment: release
     needs: prepare
 
     steps:
