@@ -145,7 +145,8 @@ fn json_equal(a : Value, b : Value) -> Bool {
         if x.length() != y.length() {
           return false
         }
-        for i in 0..<x.length() {
+        for offset in 0..<x.length() {
+          let i = x.length() - offset - 1
           pending.push((x[i], y[i], depth + 1))
         }
       }
@@ -153,7 +154,9 @@ fn json_equal(a : Value, b : Value) -> Bool {
         if x.length() != y.length() {
           return false
         }
-        for kv in x.iter() {
+        let entries = x.iter()
+        for offset in 0..<entries.length() {
+          let kv = entries[entries.length() - offset - 1]
           match y.get(kv.0) {
             Some(v) => pending.push((kv.1, v, depth + 1))
             None => return false
@@ -200,7 +203,8 @@ fn json_equal_checked(a : Value, b : Value) -> Bool raise EvalError {
         if x.length() != y.length() {
           return false
         }
-        for i in 0..<x.length() {
+        for offset in 0..<x.length() {
+          let i = x.length() - offset - 1
           pending.push((x[i], y[i], depth + 1))
         }
       }
@@ -208,7 +212,9 @@ fn json_equal_checked(a : Value, b : Value) -> Bool raise EvalError {
         if x.length() != y.length() {
           return false
         }
-        for kv in x.iter() {
+        let entries = x.iter()
+        for offset in 0..<entries.length() {
+          let kv = entries[entries.length() - offset - 1]
           match y.get(kv.0) {
             Some(v) => pending.push((kv.1, v, depth + 1))
             None => return false

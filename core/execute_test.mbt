@@ -2250,6 +2250,20 @@ test "execute array index guards separately constructed deep values" {
 }
 
 ///|
+test "execute equality short-circuits before deep tails" {
+  let setup = "(reduce range(10001) as $_ (0; [.])) as $x | " +
+    "(reduce range(10001) as $_ (0; [.])) as $y | "
+  for
+    expression in [
+      "[0,$x] == [1,$y]", "{\"a\":0,\"b\":$x} == {\"a\":1,\"b\":$y}",
+    ] {
+    @debug.assert_eq(must_execute(compile(setup + expression), Value::null()), [
+      Value::boolean(false),
+    ])
+  }
+}
+
+///|
 test "execute index/rindex/indices errors" {
   guard (try execute(compile("index(1)"), must_parse("\"hello\"")) catch {
     err => err.to_string() == "Cannot index string with number (1)"
