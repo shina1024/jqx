@@ -65,6 +65,26 @@ jobs:
           echo "dry_run=${dry_run}" >> "$GITHUB_OUTPUT"
           echo "prerelease=${prerelease}" >> "$GITHUB_OUTPUT"
 
+      - name: Checkout release tag
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: refs/tags/${{ steps.vars.outputs.tag }}
+
+      - name: Verify release commit belongs to main
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ steps.vars.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          release_commit="$(git rev-parse "${RELEASE_TAG}^{commit}")"
+          if ! git merge-base --is-ancestor "${release_commit}" refs/remotes/origin/main; then
+            echo "::error::Release tag ${RELEASE_TAG} is not reachable from main."
+            exit 1
+          fi
+
   cli:
     name: CLI artifacts
     needs: prepare
