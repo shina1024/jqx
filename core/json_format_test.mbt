@@ -19,3 +19,15 @@ test "pretty json formatting matches jq layout" {
   @debug.assert_eq(Value::array([]).to_json_string_pretty(), "[]")
   @debug.assert_eq(Value::object(Map([])).to_json_string_pretty(), "{}")
 }
+
+///|
+test "json formatting handles jq maximum depth without host stack overflow" {
+  let mut value = Value::null()
+  for _ in 0..<10001 {
+    value = Value::array([value])
+  }
+  let rendered = value.to_json_string()
+  guard rendered.contains("<skipped: too deep>") else {
+    fail("expected jq maximum-depth sentinel")
+  }
+}

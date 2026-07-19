@@ -3,6 +3,17 @@
 #include <stdint.h>
 #include <stdio.h>
 
+MOONBIT_FFI_EXPORT int32_t jqx_write_stdout(
+  moonbit_bytes_t bytes,
+  int32_t len
+) {
+  if (bytes == NULL || len < 0) {
+    return -1;
+  }
+  size_t written = fwrite(bytes, 1, (size_t)len, stdout);
+  return written == (size_t)len ? len : -1;
+}
+
 MOONBIT_FFI_EXPORT int32_t jqx_write_stderr(
   moonbit_bytes_t bytes,
   int32_t len

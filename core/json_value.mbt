@@ -113,45 +113,57 @@ fn JsonObject::set(
 
 ///|
 fn json_equal(a : Value, b : Value) -> Bool {
-  match (a, b) {
-    (JNull, JNull) => true
-    (JTrue, JTrue) => true
-    (JFalse, JFalse) => true
-    (Number(x, rx), Number(y, ry)) =>
-      match (rx, ry) {
-        (Some(a), Some(b)) =>
-          match decimal_compare_repr(a, b) {
-            Some(cmp) => cmp == 0
-            None => x == y
-          }
-        _ => x == y
-      }
-    (String(x), String(y)) => x == y
-    (Array(x), Array(y)) => {
-      if x.length() != y.length() {
-        return false
-      }
-      for i in 0..<x.length() {
-        if !json_equal(x[i], y[i]) {
+  let pending = [(a, b, 0)]
+  while pending.length() > 0 {
+    let current = pending.pop().unwrap()
+    let left = current.0
+    let right = current.1
+    let depth = current.2
+    if physical_equal(left, right) {
+      continue
+    }
+    if depth > 10000 {
+      return false
+    }
+    match (left, right) {
+      (JNull, JNull) | (JTrue, JTrue) | (JFalse, JFalse) => ()
+      (Number(x, rx), Number(y, ry)) => {
+        let equal = match (rx, ry) {
+          (Some(a), Some(b)) =>
+            match decimal_compare_repr(a, b) {
+              Some(cmp) => cmp == 0
+              None => x == y
+            }
+          _ => x == y
+        }
+        if !equal {
           return false
         }
       }
-      true
-    }
-    (Object(x), Object(y)) => {
-      if x.length() != y.length() {
-        return false
-      }
-      for kv in x.iter() {
-        match y.get(kv.0) {
-          Some(v) => if !json_equal(kv.1, v) { return false }
-          None => return false
+      (String(x), String(y)) => if x != y { return false }
+      (Array(x), Array(y)) => {
+        if x.length() != y.length() {
+          return false
+        }
+        for i in 0..<x.length() {
+          pending.push((x[i], y[i], depth + 1))
         }
       }
-      true
+      (Object(x), Object(y)) => {
+        if x.length() != y.length() {
+          return false
+        }
+        for kv in x.iter() {
+          match y.get(kv.0) {
+            Some(v) => pending.push((kv.1, v, depth + 1))
+            None => return false
+          }
+        }
+      }
+      _ => return false
     }
-    _ => false
   }
+  true
 }
 
 ///|
@@ -162,6 +174,9 @@ fn json_equal_checked(a : Value, b : Value) -> Bool raise EvalError {
     let left = current.0
     let right = current.1
     let depth = current.2
+    if physical_equal(left, right) {
+      continue
+    }
     if depth > 10000 {
       raise TypeError("Equality check too deep")
     }

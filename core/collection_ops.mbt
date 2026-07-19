@@ -561,7 +561,10 @@ fn find_string_indices(haystack : String, pattern : String) -> Array[Int] {
 }
 
 ///|
-fn find_array_indices(haystack : Array[Value], pattern : Value) -> Array[Int] {
+fn find_array_indices(
+  haystack : Array[Value],
+  pattern : Value,
+) -> Array[Int] raise EvalError {
   match pattern {
     Array(needle) => {
       let n = needle.length()
@@ -572,7 +575,7 @@ fn find_array_indices(haystack : Array[Value], pattern : Value) -> Array[Int] {
       for i in 0..<(haystack.length() - n + 1) {
         let mut matched = true
         for j in 0..<n {
-          if haystack[i + j] != needle[j] {
+          if !json_equal_checked(haystack[i + j], needle[j]) {
             matched = false
             break
           }
@@ -586,7 +589,7 @@ fn find_array_indices(haystack : Array[Value], pattern : Value) -> Array[Int] {
     _ => {
       let out = []
       for i in 0..<haystack.length() {
-        if haystack[i] == pattern {
+        if json_equal_checked(haystack[i], pattern) {
           out.push(i)
         }
       }

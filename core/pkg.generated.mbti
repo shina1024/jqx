@@ -202,6 +202,7 @@ pub fn Value::string(String) -> Self
 pub fn Value::to_json(Self) -> Json
 pub fn Value::to_json_string(Self) -> String
 pub fn Value::to_json_string_pretty(Self) -> String
+pub fn Value::write_json_chunks(Self, Bool, (String) -> Unit) -> Unit
 pub impl Eq for Value
 pub impl Show for Value
 

@@ -43,3 +43,19 @@ test "json_equal covers false branches" {
     fail("expected type mismatch to be false")
   }
 }
+
+///|
+test "json_equal terminates for cyclic public values" {
+  let left_items = [Value::null()]
+  let left = Value::array(left_items)
+  left_items[0] = left
+  let right_items = [Value::null()]
+  let right = Value::array(right_items)
+  right_items[0] = right
+  guard json_equal(left, left) else {
+    fail("expected physical identity to compare equal")
+  }
+  guard !json_equal(left, right) else {
+    fail("expected separately constructed cycles to stop at the depth guard")
+  }
+}

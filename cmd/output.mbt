@@ -1,10 +1,13 @@
 ///|
-fn format_output(raw : Bool, compact : Bool, v : @lib.Value) -> String {
+fn write_output(
+  raw : Bool,
+  compact : Bool,
+  v : @lib.Value,
+  write : (String) -> Unit,
+) -> Unit {
   if raw && v is String(s) {
-    s
-  } else if compact {
-    v.to_json_string()
+    write(s)
   } else {
-    v.to_json_string_pretty()
+    v.write_json_chunks(!compact, write)
   }
 }

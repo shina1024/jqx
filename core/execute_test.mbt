@@ -2213,6 +2213,32 @@ test "execute index/rindex/indices compatibility" {
 }
 
 ///|
+test "execute array index handles deeply nested values" {
+  let mut deep = Value::null()
+  for _ in 0..<20000 {
+    deep = Value::array([deep])
+  }
+  @debug.assert_eq(must_execute(compile("index(.)"), Value::array([deep])), [
+    Value::number(0.0),
+  ])
+}
+
+///|
+test "execute array index guards separately constructed deep values" {
+  let filter = compile(
+    "(reduce range(10001) as $_ ([]; [.])) as $x | " +
+    "(reduce range(10001) as $_ ([]; [.])) as $y | [$x] | index([$y])",
+  )
+  guard (try execute(filter, Value::null()) catch {
+    err => err.to_string() == "Equality check too deep"
+  } noraise {
+    _ => false
+  }) else {
+    fail("expected checked array search depth error")
+  }
+}
+
+///|
 test "execute index/rindex/indices errors" {
   guard (try execute(compile("index(1)"), must_parse("\"hello\"")) catch {
     err => err.to_string() == "Cannot index string with number (1)"

@@ -36,19 +36,37 @@ fn format_finite_number_without_repr(n : Double) -> String {
 }
 
 ///|
-fn Value::to_json_string_with_layout(self : Value, pretty : Bool) -> String {
-  let buf = StringBuilder()
+priv enum JsonFormatFrame {
+  WriteJsonValue(Value, Int)
+  WriteJsonText(String)
+  WriteEscapedString(String)
+  WriteIndent(Int)
+}
+
+///|
+pub fn Value::write_json_chunks(
+  self : Value,
+  pretty : Bool,
+  write : (String) -> Unit,
+) -> Unit {
   // jq 1.8.2 uses MAX_PRINT_DEPTH=10000 in src/jv_print.c and emits
   // "<skipped: too deep>" once printing recurses past that depth.
   let max_depth = 10000
   fn write_indent(depth : Int) {
-    buf.write_char('\n')
-    for _ in 0..<(depth * 2) {
-      buf.write_char(' ')
+    write("\n")
+    let spaces = "                                                                "
+    let mut remaining = depth * 2
+    while remaining >= spaces.length() {
+      write(spaces)
+      remaining -= spaces.length()
+    }
+    if remaining > 0 {
+      write(spaces.view(end_offset=remaining).to_owned())
     }
   }
 
   fn write_escaped(s : String) {
+    let buf = StringBuilder()
     buf.write_char('"')
     for ch in s {
       match ch {
@@ -85,85 +103,104 @@ fn Value::to_json_string_with_layout(self : Value, pretty : Bool) -> String {
       }
     }
     buf.write_char('"')
+    write(buf.to_string())
   }
 
-  fn write_value(j : Value, depth : Int) {
-    if depth > max_depth {
-      buf.write_string("<skipped: too deep>")
-      return
-    }
-    match j {
-      JNull => buf.write_string("null")
-      JTrue => buf.write_string("true")
-      JFalse => buf.write_string("false")
-      Number(n, repr) =>
-        match repr {
-          Some(s) =>
-            match decimal_canonical_repr(s) {
-              Some(canonical) => buf.write_string(canonical)
-              None => buf.write_string(s)
+  let pending = [WriteJsonValue(self, 0)]
+  while pending.length() > 0 {
+    match pending.pop().unwrap() {
+      WriteJsonText(text) => write(text)
+      WriteEscapedString(text) => write_escaped(text)
+      WriteIndent(depth) => write_indent(depth)
+      WriteJsonValue(j, depth) => {
+        if depth > max_depth {
+          write("<skipped: too deep>")
+          continue
+        }
+        match j {
+          JNull => write("null")
+          JTrue => write("true")
+          JFalse => write("false")
+          Number(n, repr) =>
+            match repr {
+              Some(s) =>
+                match decimal_canonical_repr(s) {
+                  Some(canonical) => write(canonical)
+                  None => write(s)
+                }
+              None =>
+                if n != n {
+                  write("null")
+                } else if n == @double.infinity {
+                  write("1.7976931348623157e+308")
+                } else if n == @double.neg_infinity {
+                  write("-1.7976931348623157e+308")
+                } else {
+                  write(format_finite_number_without_repr(n))
+                }
             }
-          None =>
-            if n != n {
-              buf.write_string("null")
-            } else if n == @double.infinity {
-              buf.write_string("1.7976931348623157e+308")
-            } else if n == @double.neg_infinity {
-              buf.write_string("-1.7976931348623157e+308")
-            } else {
-              buf.write_string(format_finite_number_without_repr(n))
+          String(s) => write_escaped(s)
+          Array(values) => {
+            write("[")
+            if values.length() == 0 {
+              write("]")
+              continue
             }
-        }
-      String(s) => write_escaped(s)
-      Array(a) => {
-        buf.write_char('[')
-        let mut first = true
-        for v in a {
-          if first {
-            first = false
-          } else {
-            buf.write_char(',')
+            pending.push(WriteJsonText("]"))
+            if pretty {
+              pending.push(WriteIndent(depth))
+            }
+            let mut i = values.length() - 1
+            while i >= 0 {
+              pending.push(WriteJsonValue(values[i], depth + 1))
+              if pretty {
+                pending.push(WriteIndent(depth + 1))
+              }
+              if i > 0 {
+                pending.push(WriteJsonText(","))
+              }
+              i -= 1
+            }
           }
-          if pretty {
-            write_indent(depth + 1)
+          Object(object) => {
+            write("{")
+            let entries = object_entries_sorted(object)
+            if entries.length() == 0 {
+              write("}")
+              continue
+            }
+            pending.push(WriteJsonText("}"))
+            if pretty {
+              pending.push(WriteIndent(depth))
+            }
+            let mut i = entries.length() - 1
+            while i >= 0 {
+              let entry = entries[i]
+              pending.push(WriteJsonValue(entry.1, depth + 1))
+              if pretty {
+                pending.push(WriteJsonText(" "))
+              }
+              pending.push(WriteJsonText(":"))
+              pending.push(WriteEscapedString(entry.0))
+              if pretty {
+                pending.push(WriteIndent(depth + 1))
+              }
+              if i > 0 {
+                pending.push(WriteJsonText(","))
+              }
+              i -= 1
+            }
           }
-          write_value(v, depth + 1)
         }
-        if pretty && !first {
-          write_indent(depth)
-        }
-        buf.write_char(']')
-      }
-      Object(o) => {
-        buf.write_char('{')
-        let mut first = true
-        for kv in object_entries_sorted(o) {
-          let k = kv.0
-          let v = kv.1
-          if first {
-            first = false
-          } else {
-            buf.write_char(',')
-          }
-          if pretty {
-            write_indent(depth + 1)
-          }
-          write_escaped(k)
-          buf.write_char(':')
-          if pretty {
-            buf.write_char(' ')
-          }
-          write_value(v, depth + 1)
-        }
-        if pretty && !first {
-          write_indent(depth)
-        }
-        buf.write_char('}')
       }
     }
   }
+}
 
-  write_value(self, 0)
+///|
+fn Value::to_json_string_with_layout(self : Value, pretty : Bool) -> String {
+  let buf = StringBuilder()
+  self.write_json_chunks(pretty, fn(chunk) { buf.write_string(chunk) })
   buf.to_string()
 }
 
