@@ -112,6 +112,21 @@ function fromMoonBitResult<T, U>(
   };
 }
 
+function callMoonBit<T, U>(
+  call: () => unknown,
+  mapOk: (value: T) => U,
+  context: string,
+): JqxResult<U, JqxRuntimeError> {
+  try {
+    return fromMoonBitResult<T, U>(call(), mapOk, context);
+  } catch (error) {
+    return {
+      ok: false,
+      error: normalizeRuntimeError(error, `${context} failed`),
+    };
+  }
+}
+
 function toMoonBitValue(value: Json): unknown {
   const encoded = encodeRuntimeInput(value);
   if (!encoded.ok) {
@@ -266,8 +281,8 @@ export interface JqxDirectQueryRuntime extends JqxDirectRuntime, JqxQueryRuntime
 
 // Canonical direct-use runtime surface layered over the MoonBit JSON-text lane.
 export function runJsonText(filter: string, input: string): JqxResult<string[], JqxRuntimeError> {
-  return fromMoonBitResult<string[], string[]>(
-    moonbit.run_json_text(filter, input),
+  return callMoonBit<string[], string[]>(
+    () => moonbit.run_json_text(filter, input),
     (value) => value,
     "run_json_text",
   );
@@ -297,8 +312,8 @@ export function compile(filter: string): JqxResult<CompiledFilter, JqxRuntimeErr
 export function compile<Filter extends string>(
   filter: Filter,
 ): JqxResult<CompiledFilter<Filter>, JqxRuntimeError> {
-  return fromMoonBitResult<unknown, CompiledFilter<Filter>>(
-    moonbit.try_compile(filter),
+  return callMoonBit<unknown, CompiledFilter<Filter>>(
+    () => moonbit.try_compile(filter),
     (value) => new CompiledFilter<Filter>(value),
     "compile",
   );
@@ -329,8 +344,8 @@ export function queryJsonText(
   if (!compiled.ok) {
     return compiled;
   }
-  return fromMoonBitResult<string[], string[]>(
-    moonbit.query_json_text(compiled.value, input),
+  return callMoonBit<string[], string[]>(
+    () => moonbit.query_json_text(compiled.value, input),
     (value) => value,
     "query_json_text",
   );

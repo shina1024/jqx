@@ -68,6 +68,31 @@ test("run returns input_stringify for unserializable value-lane input", () => {
   }
 });
 
+test("run contains deep and accessor-driven input failures", () => {
+  let deep: unknown = null;
+  for (let depth = 0; depth < 10_000; depth += 1) {
+    deep = [deep];
+  }
+  const deepResult = run(".", deep as Json);
+  assert.equal(deepResult.ok, false);
+  if (!deepResult.ok) {
+    assert.equal(deepResult.error.kind, "input_stringify");
+  }
+
+  let getterCalled = false;
+  const accessorInput = Object.create(null) as Record<string, unknown>;
+  Object.defineProperty(accessorInput, "value", {
+    enumerable: true,
+    get() {
+      getterCalled = true;
+      throw new Error("getter should not execute");
+    },
+  });
+  const accessorResult = run(".", accessorInput as Json);
+  assert.equal(accessorResult.ok, false);
+  assert.equal(getterCalled, false);
+});
+
 test("run rejects non-finite numbers in the value lane", () => {
   const result = run(".", { foo: [1, Number.POSITIVE_INFINITY] } as Json);
   assert.equal(result.ok, false);

@@ -4,10 +4,12 @@ import { test } from "vite-plus/test";
 import {
   bindRuntime,
   bindQueryRuntime,
+  comma,
   exportQueryAstDocument,
   exportTypedQueryDocument,
   field,
   importQueryAstDocument,
+  literal,
   parseQueryAstDocument,
   QUERY_AST_DOCUMENT_FORMAT,
   QUERY_AST_DOCUMENT_VERSION,
@@ -76,6 +78,32 @@ test("bindRuntime run returns input_stringify for unserializable value-lane inpu
     assert.equal(result.error.kind, "input_stringify");
     assert.equal(typeof result.error.message, "string");
   }
+});
+
+test("bindRuntime contains hostile input failures across run and runStream", async () => {
+  const runtime: JqxJsonTextRuntime = {
+    runJsonText() {
+      assert.fail("backend should not receive hostile value-lane input");
+    },
+  };
+  const jqx = bindRuntime(runtime);
+  const hostile = new Proxy(
+    {},
+    {
+      ownKeys() {
+        throw new Error("inspection failed");
+      },
+    },
+  ) as Json;
+
+  const result = await jqx.run(".", hostile);
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.error.kind, "input_stringify");
+  }
+  const streamed = await collectStream(jqx.runStream(".", hostile));
+  assert.equal(streamed.length, 1);
+  assert.equal(streamed[0]?.ok, false);
 });
 
 test("bindRuntime run rejects non-finite numbers in the value lane", async () => {
@@ -458,6 +486,62 @@ test("QueryAst document export/import supports v1 envelope", () => {
   assert.equal(imported.ok, true);
   if (imported.ok) {
     assert.deepEqual(imported.value, ast);
+  }
+});
+
+test("QueryAst export/import accepts shared query and literal references", () => {
+  const sharedQuery = field("user");
+  const repeatedQuery = exportTypedQueryDocument(comma(sharedQuery, sharedQuery));
+  assert.equal(importQueryAstDocument(repeatedQuery).ok, true);
+
+  const sharedValue = { name: "alice" };
+  const repeatedValue = exportTypedQueryDocument(
+    literal({ first: sharedValue, second: sharedValue }),
+  );
+  assert.equal(importQueryAstDocument(repeatedValue).ok, true);
+});
+
+test("QueryAst import returns invalid_document for hostile objects", () => {
+  const hostile = new Proxy(
+    {},
+    {
+      has() {
+        throw new Error("inspection failed");
+      },
+    },
+  );
+
+  const result = importQueryAstDocument(hostile);
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.error.kind, "invalid_document");
+  }
+
+  const getterDocument = Object.create(null) as Record<string, unknown>;
+  Object.defineProperties(getterDocument, {
+    format: {
+      enumerable: true,
+      get() {
+        throw new Error("inspection failed");
+      },
+    },
+    version: { enumerable: true, value: QUERY_AST_DOCUMENT_VERSION },
+    ast: { enumerable: true, value: { kind: "identity" } },
+  });
+  assert.equal(importQueryAstDocument(getterDocument).ok, false);
+});
+
+test("QueryAst import returns a detached validated snapshot", () => {
+  const ast = { kind: "field" as const, name: "before" };
+  const imported = importQueryAstDocument({
+    format: QUERY_AST_DOCUMENT_FORMAT,
+    version: QUERY_AST_DOCUMENT_VERSION,
+    ast,
+  });
+  ast.name = "after";
+  assert.equal(imported.ok, true);
+  if (imported.ok && imported.value.kind === "field") {
+    assert.equal(imported.value.name, "before");
   }
 });
 

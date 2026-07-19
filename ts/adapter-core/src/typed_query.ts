@@ -212,8 +212,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isJsonValue(value: unknown): value is Json {
-  const pending: Array<{ value: unknown; depth: number }> = [{ value, depth: 0 }];
-  const seen = new WeakSet<object>();
+  const pending: Array<{ value: unknown; depth: number; exit?: true }> = [{ value, depth: 0 }];
+  const ancestors = new WeakSet<object>();
   while (pending.length > 0) {
     const current = pending.pop();
     if (current === undefined) {
@@ -229,10 +229,18 @@ function isJsonValue(value: unknown): value is Json {
       }
       continue;
     }
-    if (typeof item !== "object" || current.depth >= 256 || seen.has(item)) {
+    if (typeof item !== "object") {
       return false;
     }
-    seen.add(item);
+    if (current.exit) {
+      ancestors.delete(item);
+      continue;
+    }
+    if (current.depth >= 256 || ancestors.has(item)) {
+      return false;
+    }
+    ancestors.add(item);
+    pending.push({ value: item, depth: current.depth, exit: true });
     if (Array.isArray(item)) {
       for (const child of item) {
         pending.push({ value: child, depth: current.depth + 1 });
@@ -283,132 +291,128 @@ function validateQueryAstNode(
     return invalidAst(path, "Maximum AST depth exceeded");
   }
   if (seen.has(value)) {
-    return invalidAst(path, "Cyclic or repeated AST object");
+    return invalidAst(path, "Cyclic AST object");
   }
   seen.add(value);
-  const kind = value.kind;
-  if (typeof kind !== "string") {
-    return invalidAst(`${path}.kind`, "Expected string");
-  }
-
-  const validateUnaryNode = (
-    fieldName: string,
-    expectedKeys: readonly string[],
-  ): QueryAstImportError | null => {
-    if (!hasExactKeys(value, expectedKeys)) {
-      return invalidAst(path, "Unexpected fields");
+  try {
+    const kind = value.kind;
+    if (typeof kind !== "string") {
+      return invalidAst(`${path}.kind`, "Expected string");
     }
-    return validateQueryAstNode(value[fieldName], `${path}.${fieldName}`, seen, depth + 1);
-  };
 
-  const validateBinaryNode = (
-    leftField: string,
-    rightField: string,
-    expectedKeys: readonly string[],
-  ): QueryAstImportError | null => {
-    if (!hasExactKeys(value, expectedKeys)) {
-      return invalidAst(path, "Unexpected fields");
-    }
-    const leftError = validateQueryAstNode(
-      value[leftField],
-      `${path}.${leftField}`,
-      seen,
-      depth + 1,
-    );
-    if (leftError !== null) {
-      return leftError;
-    }
-    return validateQueryAstNode(
-      value[rightField],
-      `${path}.${rightField}`,
-      seen,
-      depth + 1,
-    );
-  };
+    const validateUnaryNode = (
+      fieldName: string,
+      expectedKeys: readonly string[],
+    ): QueryAstImportError | null => {
+      if (!hasExactKeys(value, expectedKeys)) {
+        return invalidAst(path, "Unexpected fields");
+      }
+      return validateQueryAstNode(value[fieldName], `${path}.${fieldName}`, seen, depth + 1);
+    };
 
-  switch (kind) {
-    case "identity":
-    case "iter":
-      return hasExactKeys(value, ["kind"]) ? null : invalidAst(path, "Unexpected fields");
-    case "field":
-      if (!hasExactKeys(value, ["kind", "name"])) {
+    const validateBinaryNode = (
+      leftField: string,
+      rightField: string,
+      expectedKeys: readonly string[],
+    ): QueryAstImportError | null => {
+      if (!hasExactKeys(value, expectedKeys)) {
         return invalidAst(path, "Unexpected fields");
       }
-      return typeof value.name === "string" ? null : invalidAst(`${path}.name`, "Expected string");
-    case "index":
-      if (!hasExactKeys(value, ["kind", "index"])) {
-        return invalidAst(path, "Unexpected fields");
+      const leftError = validateQueryAstNode(
+        value[leftField],
+        `${path}.${leftField}`,
+        seen,
+        depth + 1,
+      );
+      if (leftError !== null) {
+        return leftError;
       }
-      return typeof value.index === "number" && Number.isFinite(value.index)
-        ? null
-        : invalidAst(`${path}.index`, "Expected number");
-    case "literal":
-      if (!hasExactKeys(value, ["kind", "value"])) {
-        return invalidAst(path, "Unexpected fields");
-      }
-      return isJsonValue(value.value) ? null : invalidAst(`${path}.value`, "Expected Json value");
-    case "map":
-      return validateUnaryNode("inner", ["kind", "inner"]);
-    case "select":
-      return validateUnaryNode("predicate", ["kind", "predicate"]);
-    case "not":
-      return validateUnaryNode("value", ["kind", "value"]);
-    case "pipe":
-    case "comma":
-    case "eq":
-    case "lt":
-    case "gt":
-    case "and":
-    case "or":
-    case "add":
-    case "fallback":
-      return validateBinaryNode("left", "right", ["kind", "left", "right"]);
-    case "ifElse":
-      if (!hasExactKeys(value, ["kind", "cond", "thenBranch", "elseBranch"])) {
-        return invalidAst(path, "Unexpected fields");
-      }
-      {
-        const condError = validateQueryAstNode(value.cond, `${path}.cond`, seen, depth + 1);
-        if (condError !== null) {
-          return condError;
+      return validateQueryAstNode(value[rightField], `${path}.${rightField}`, seen, depth + 1);
+    };
+
+    switch (kind) {
+      case "identity":
+      case "iter":
+        return hasExactKeys(value, ["kind"]) ? null : invalidAst(path, "Unexpected fields");
+      case "field":
+        if (!hasExactKeys(value, ["kind", "name"])) {
+          return invalidAst(path, "Unexpected fields");
         }
-        const thenError = validateQueryAstNode(
-          value.thenBranch,
-          `${path}.thenBranch`,
-          seen,
-          depth + 1,
-        );
-        if (thenError !== null) {
-          return thenError;
+        return typeof value.name === "string"
+          ? null
+          : invalidAst(`${path}.name`, "Expected string");
+      case "index":
+        if (!hasExactKeys(value, ["kind", "index"])) {
+          return invalidAst(path, "Unexpected fields");
         }
-        return validateQueryAstNode(
-          value.elseBranch,
-          `${path}.elseBranch`,
-          seen,
-          depth + 1,
-        );
-      }
-    case "tryCatch":
-      return validateBinaryNode("inner", "handler", ["kind", "inner", "handler"]);
-    case "call":
-      if (!hasExactKeys(value, ["kind", "name", "args"])) {
-        return invalidAst(path, "Unexpected fields");
-      }
-      if (typeof value.name !== "string") {
-        return invalidAst(`${path}.name`, "Expected string");
-      }
-      if (!Array.isArray(value.args)) {
-        return invalidAst(`${path}.args`, "Expected array");
-      }
-      for (const [index, arg] of value.args.entries()) {
-        const argError = validateQueryAstNode(arg, `${path}.args[${index}]`, seen, depth + 1);
-        if (argError !== null) {
-          return argError;
+        return typeof value.index === "number" && Number.isFinite(value.index)
+          ? null
+          : invalidAst(`${path}.index`, "Expected number");
+      case "literal":
+        if (!hasExactKeys(value, ["kind", "value"])) {
+          return invalidAst(path, "Unexpected fields");
         }
-      }
-      return null;
-    default:
-      return invalidAst(`${path}.kind`, `Unsupported kind: ${kind}`);
+        return isJsonValue(value.value) ? null : invalidAst(`${path}.value`, "Expected Json value");
+      case "map":
+        return validateUnaryNode("inner", ["kind", "inner"]);
+      case "select":
+        return validateUnaryNode("predicate", ["kind", "predicate"]);
+      case "not":
+        return validateUnaryNode("value", ["kind", "value"]);
+      case "pipe":
+      case "comma":
+      case "eq":
+      case "lt":
+      case "gt":
+      case "and":
+      case "or":
+      case "add":
+      case "fallback":
+        return validateBinaryNode("left", "right", ["kind", "left", "right"]);
+      case "ifElse":
+        if (!hasExactKeys(value, ["kind", "cond", "thenBranch", "elseBranch"])) {
+          return invalidAst(path, "Unexpected fields");
+        }
+        {
+          const condError = validateQueryAstNode(value.cond, `${path}.cond`, seen, depth + 1);
+          if (condError !== null) {
+            return condError;
+          }
+          const thenError = validateQueryAstNode(
+            value.thenBranch,
+            `${path}.thenBranch`,
+            seen,
+            depth + 1,
+          );
+          if (thenError !== null) {
+            return thenError;
+          }
+          return validateQueryAstNode(value.elseBranch, `${path}.elseBranch`, seen, depth + 1);
+        }
+      case "tryCatch":
+        return validateBinaryNode("inner", "handler", ["kind", "inner", "handler"]);
+      case "call":
+        if (!hasExactKeys(value, ["kind", "name", "args"])) {
+          return invalidAst(path, "Unexpected fields");
+        }
+        if (typeof value.name !== "string") {
+          return invalidAst(`${path}.name`, "Expected string");
+        }
+        if (!Array.isArray(value.args)) {
+          return invalidAst(`${path}.args`, "Expected array");
+        }
+        for (const [index, arg] of value.args.entries()) {
+          const argError = validateQueryAstNode(arg, `${path}.args[${index}]`, seen, depth + 1);
+          if (argError !== null) {
+            return argError;
+          }
+        }
+        return null;
+      default:
+        return invalidAst(`${path}.kind`, `Unsupported kind: ${kind}`);
+    }
+  } finally {
+    seen.delete(value);
   }
 }
 
@@ -442,7 +446,117 @@ export function exportTypedQueryDocument<I, O, Ast extends QueryAst>(
   return exportQueryAstDocument(query.ast);
 }
 
-export function importQueryAstDocument(input: unknown): QueryAstImportResult<QueryAst> {
+type AstSnapshotResult = { ok: true; value: unknown } | { ok: false; error: QueryAstImportError };
+
+function snapshotAstValue(
+  value: unknown,
+  path: string,
+  ancestors: WeakSet<object> = new WeakSet<object>(),
+  depth = 0,
+): AstSnapshotResult {
+  if (value === null || typeof value !== "object") {
+    return { ok: true, value };
+  }
+  if (depth >= 256) {
+    return { ok: false, error: invalidAst(path, "Maximum AST depth exceeded") };
+  }
+  if (ancestors.has(value)) {
+    return { ok: false, error: invalidAst(path, "Cyclic AST object") };
+  }
+  const prototype = Object.getPrototypeOf(value);
+  if (!Array.isArray(value) && prototype !== Object.prototype && prototype !== null) {
+    return { ok: false, error: invalidAst(path, "Expected plain object") };
+  }
+  ancestors.add(value);
+  try {
+    const keys = Reflect.ownKeys(value);
+    if (Array.isArray(value)) {
+      if (keys.length !== value.length + 1 || !keys.includes("length")) {
+        return { ok: false, error: invalidAst(path, "Expected dense array") };
+      }
+      const clone: unknown[] = [];
+      for (let index = 0; index < value.length; index += 1) {
+        const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+        if (descriptor === undefined || !descriptor.enumerable || !("value" in descriptor)) {
+          return { ok: false, error: invalidAst(`${path}[${index}]`, "Expected data value") };
+        }
+        const child = snapshotAstValue(descriptor.value, `${path}[${index}]`, ancestors, depth + 1);
+        if (!child.ok) {
+          return child;
+        }
+        clone.push(child.value);
+      }
+      return { ok: true, value: clone };
+    }
+    const clone: Record<string, unknown> = {};
+    for (const key of keys) {
+      if (typeof key !== "string") {
+        return { ok: false, error: invalidAst(path, "Unexpected symbol field") };
+      }
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (descriptor === undefined || !descriptor.enumerable || !("value" in descriptor)) {
+        return { ok: false, error: invalidAst(`${path}.${key}`, "Expected data value") };
+      }
+      const child = snapshotAstValue(descriptor.value, `${path}.${key}`, ancestors, depth + 1);
+      if (!child.ok) {
+        return child;
+      }
+      Object.defineProperty(clone, key, {
+        value: child.value,
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      });
+    }
+    return { ok: true, value: clone };
+  } finally {
+    ancestors.delete(value);
+  }
+}
+
+function snapshotQueryAstDocument(input: unknown): QueryAstImportResult<unknown> {
+  if (!isRecord(input) || Array.isArray(input)) {
+    return failImport({ kind: "invalid_document", path: "$", message: "Expected object" });
+  }
+  const prototype = Object.getPrototypeOf(input);
+  if (prototype !== Object.prototype && prototype !== null) {
+    return failImport({ kind: "invalid_document", path: "$", message: "Expected plain object" });
+  }
+  const keys = Reflect.ownKeys(input);
+  const expected = ["format", "version", "ast"];
+  if (
+    keys.length !== expected.length ||
+    keys.some((key) => typeof key !== "string" || !expected.includes(key))
+  ) {
+    return failImport({
+      kind: "invalid_document",
+      path: "$",
+      message: "Expected { format, version, ast } document",
+    });
+  }
+  const values: Record<string, unknown> = {};
+  for (const key of expected) {
+    const descriptor = Object.getOwnPropertyDescriptor(input, key);
+    if (descriptor === undefined || !descriptor.enumerable || !("value" in descriptor)) {
+      return failImport({
+        kind: "invalid_document",
+        path: `$.${key}`,
+        message: "Expected data property",
+      });
+    }
+    values[key] = descriptor.value;
+  }
+  const ast = snapshotAstValue(values.ast, "$.ast");
+  if (!ast.ok) {
+    return ast;
+  }
+  return {
+    ok: true,
+    value: { format: values.format, version: values.version, ast: ast.value },
+  };
+}
+
+function importQueryAstDocumentValue(input: unknown): QueryAstImportResult<QueryAst> {
   if (!isRecord(input)) {
     return failImport({
       kind: "invalid_document",
@@ -490,6 +604,22 @@ export function importQueryAstDocument(input: unknown): QueryAstImportResult<Que
     return failImport(astError);
   }
   return { ok: true, value: input.ast as QueryAst };
+}
+
+export function importQueryAstDocument(input: unknown): QueryAstImportResult<QueryAst> {
+  try {
+    const snapshot = snapshotQueryAstDocument(input);
+    if (!snapshot.ok) {
+      return snapshot;
+    }
+    return importQueryAstDocumentValue(snapshot.value);
+  } catch {
+    return failImport({
+      kind: "invalid_document",
+      path: "$",
+      message: "Unable to inspect document",
+    });
+  }
 }
 
 export function parseQueryAstDocument(text: string): QueryAstImportResult<QueryAst> {

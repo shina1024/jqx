@@ -33,10 +33,22 @@ export function normalizeRuntimeResult<T>(
 }
 
 type JsonPathSegment = string | number;
+type JsonPath = { parent: JsonPath; segment: JsonPathSegment } | null;
+type JsonValueIssue =
+  | { kind: "non_finite"; path: JsonPath }
+  | { kind: "unsupported"; message: string };
 
-function formatJsonPath(path: JsonPathSegment[]): string {
+function appendJsonPath(path: JsonPath, segment: JsonPathSegment): JsonPath {
+  return { parent: path, segment };
+}
+
+function formatJsonPath(path: JsonPath): string {
+  const segments: JsonPathSegment[] = [];
+  for (let current = path; current !== null; current = current.parent) {
+    segments.push(current.segment);
+  }
   let out = "$";
-  for (const segment of path) {
+  for (const segment of segments.reverse()) {
     if (typeof segment === "number") {
       out += `[${segment}]`;
       continue;
@@ -50,40 +62,77 @@ function formatJsonPath(path: JsonPathSegment[]): string {
   return out;
 }
 
-function findNonFiniteNumberPath(
-  value: Json,
-  path: JsonPathSegment[] = [],
-  seen: WeakSet<object> = new WeakSet<object>(),
-): JsonPathSegment[] | null {
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? null : path;
-  }
-  if (value === null || typeof value !== "object") {
-    return null;
-  }
-  if (seen.has(value)) {
-    return null;
-  }
-  seen.add(value);
-  if (Array.isArray(value)) {
-    for (const [index, item] of value.entries()) {
-      const found = findNonFiniteNumberPath(item, [...path, index], seen);
-      if (found !== null) {
-        return found;
-      }
+function inspectJsonValue(value: unknown): JsonValueIssue | null {
+  const pending: Array<{ value: unknown; path: JsonPath; exit?: object }> = [{ value, path: null }];
+  const ancestors = new WeakSet<object>();
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (current === undefined) {
+      break;
     }
-    return null;
-  }
-  for (const [key, item] of Object.entries(value)) {
-    const found = findNonFiniteNumberPath(item, [...path, key], seen);
-    if (found !== null) {
-      return found;
+    if (current.exit !== undefined) {
+      ancestors.delete(current.exit);
+      continue;
+    }
+    const item = current.value;
+    if (item === null || typeof item === "string" || typeof item === "boolean") {
+      continue;
+    }
+    if (typeof item === "number") {
+      if (!Number.isFinite(item)) {
+        return { kind: "non_finite", path: current.path };
+      }
+      continue;
+    }
+    if (typeof item !== "object") {
+      return { kind: "unsupported", message: "Value lane input is not JSON data" };
+    }
+    if (ancestors.has(item)) {
+      return { kind: "unsupported", message: "Value lane input contains a cycle" };
+    }
+    const prototype = Object.getPrototypeOf(item);
+    if (!Array.isArray(item) && prototype !== Object.prototype && prototype !== null) {
+      return { kind: "unsupported", message: "Value lane input must use plain objects" };
+    }
+    ancestors.add(item);
+    pending.push({ value: null, path: current.path, exit: item });
+    const keys = Reflect.ownKeys(item);
+    if (Array.isArray(item)) {
+      const expectedKeyCount = item.length + 1;
+      if (keys.length !== expectedKeyCount || !keys.includes("length")) {
+        return { kind: "unsupported", message: "Value lane arrays must be dense JSON arrays" };
+      }
+      for (let index = item.length - 1; index >= 0; index -= 1) {
+        const descriptor = Object.getOwnPropertyDescriptor(item, String(index));
+        if (descriptor === undefined || !descriptor.enumerable || !("value" in descriptor)) {
+          return { kind: "unsupported", message: "Value lane arrays must contain data values" };
+        }
+        pending.push({
+          value: descriptor.value,
+          path: appendJsonPath(current.path, index),
+        });
+      }
+      continue;
+    }
+    for (let index = keys.length - 1; index >= 0; index -= 1) {
+      const key = keys[index];
+      if (typeof key !== "string") {
+        return { kind: "unsupported", message: "Value lane objects cannot contain symbol keys" };
+      }
+      const descriptor = Object.getOwnPropertyDescriptor(item, key);
+      if (descriptor === undefined || !descriptor.enumerable || !("value" in descriptor)) {
+        return { kind: "unsupported", message: "Value lane objects must contain data properties" };
+      }
+      pending.push({
+        value: descriptor.value,
+        path: appendJsonPath(current.path, key),
+      });
     }
   }
   return null;
 }
 
-function inputValueError(path: JsonPathSegment[]): JqxRuntimeError {
+function inputValueError(path: JsonPath): JqxRuntimeError {
   const renderedPath = formatJsonPath(path);
   return {
     kind: "input_value",
@@ -94,7 +143,7 @@ function inputValueError(path: JsonPathSegment[]): JqxRuntimeError {
   };
 }
 
-function outputValueError(index: number, path: JsonPathSegment[]): JqxRuntimeError {
+function outputValueError(index: number, path: JsonPath): JqxRuntimeError {
   const renderedPath = formatJsonPath(path);
   return {
     kind: "output_value",
@@ -107,9 +156,19 @@ function outputValueError(index: number, path: JsonPathSegment[]): JqxRuntimeErr
 }
 
 export function validateRuntimeInputValue(input: Json): JqxResult<Json, JqxRuntimeError> {
-  const found = findNonFiniteNumberPath(input);
-  if (found !== null) {
-    return failRuntimeResult(inputValueError(found));
+  try {
+    const issue = inspectJsonValue(input);
+    if (issue?.kind === "non_finite") {
+      return failRuntimeResult(inputValueError(issue.path));
+    }
+    if (issue?.kind === "unsupported") {
+      return failRuntimeResult({ kind: "input_stringify", message: issue.message });
+    }
+  } catch (error) {
+    return failRuntimeResult({
+      kind: "input_stringify",
+      message: error instanceof Error ? error.message : "Failed to inspect input",
+    });
   }
   return { ok: true, value: input };
 }
@@ -152,9 +211,9 @@ export function parseRuntimeJsonText(input: string): JqxResult<Json, JqxRuntimeE
 export function decodeRuntimeOutput(raw: string, index: number): JqxResult<Json, JqxRuntimeError> {
   try {
     const parsed = JSON.parse(raw) as Json;
-    const found = findNonFiniteNumberPath(parsed);
-    if (found !== null) {
-      return failRuntimeResult(outputValueError(index, found));
+    const issue = inspectJsonValue(parsed);
+    if (issue?.kind === "non_finite") {
+      return failRuntimeResult(outputValueError(index, issue.path));
     }
     return { ok: true, value: parsed };
   } catch (error) {
@@ -182,9 +241,7 @@ export function isTypedDslQuery(value: unknown): value is TypedDslQuery {
   if (typeof value !== "object" || value === null) {
     return false;
   }
-  return Object.getOwnPropertySymbols(value).includes(
-    Symbol.for("@shina1024/jqx/typed-dsl-query"),
-  );
+  return Object.getOwnPropertySymbols(value).includes(Symbol.for("@shina1024/jqx/typed-dsl-query"));
 }
 
 export function normalizeTypedDslQuery<Q>(query: Q | TypedDslQuery): Q {
