@@ -20,15 +20,6 @@ export function normalizeRuntimeError(error: unknown, fallbackMessage: string): 
   }
 }
 
-export function normalizeRuntimeResult<T>(
-  result: JqxResult<T, JqxRuntimeError>,
-): JqxResult<T, JqxRuntimeError> {
-  if (result.ok) {
-    return result;
-  }
-  return failRuntimeResult(normalizeRuntimeError(result.error, "Unknown runtime error"));
-}
-
 export function isTypedDslQuery(value: unknown): value is TypedDslQuery {
   if (typeof value !== "object" || value === null) {
     return false;

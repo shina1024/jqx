@@ -9,11 +9,14 @@ import {
   exportTypedQueryDocument,
   field,
   importQueryAstDocument,
+  isJqxError,
+  isJqxRuntimeError,
   literal,
   parseQueryAstDocument,
   QUERY_AST_DOCUMENT_FORMAT,
   QUERY_AST_DOCUMENT_VERSION,
   stringifyQueryAstDocument,
+  toJqxRuntimeError,
   toAst,
   type JqxJsonTextRuntime,
   type JqxQueryJsonTextRuntime,
@@ -679,6 +682,93 @@ test("bindRuntime contains runtime errors whose own reflection traps throw", asy
   assert.deepEqual(result, {
     ok: false,
     error: { kind: "backend_runtime", message: "Runtime call failed" },
+  });
+});
+
+test("bindRuntime contains hostile successful result payloads across every lane", async () => {
+  const runtime: JqxJsonTextRuntime = {
+    runJsonText() {
+      return { ok: true, value: [] };
+    },
+  };
+  Object.defineProperty(runtime, "runJsonText", {
+    value() {
+      return {
+        ok: true,
+        get value() {
+          throw new Error("hostile successful payload");
+        },
+      };
+    },
+  });
+  const jqx = bindRuntime(runtime);
+  assert.equal((await jqx.runJsonText(".", "null")).ok, false);
+  assert.equal((await jqx.run(".", null)).ok, false);
+  assert.equal((await collectStream(jqx.runJsonTextStream(".", "null")))[0]?.ok, false);
+  assert.equal((await collectStream(jqx.runStream(".", null)))[0]?.ok, false);
+});
+
+test("bindQueryRuntime contains hostile successful result payloads across every lane", async () => {
+  const runtime: JqxQueryJsonTextRuntime = {
+    runJsonText() {
+      return { ok: true, value: [] };
+    },
+    runQueryJsonText() {
+      return { ok: true, value: [] };
+    },
+  };
+  Object.defineProperty(runtime, "runQueryJsonText", {
+    value() {
+      return {
+        ok: true,
+        get value() {
+          throw new Error("hostile successful query payload");
+        },
+      };
+    },
+  });
+  const jqx = bindQueryRuntime(runtime);
+  const query: QueryAst = { kind: "identity" };
+  assert.equal((await jqx.queryJsonText(query, "null")).ok, false);
+  assert.equal((await jqx.query(query, null)).ok, false);
+  assert.equal((await collectStream(jqx.queryJsonTextStream(query, "null")))[0]?.ok, false);
+  assert.equal((await collectStream(jqx.queryStream(query, null)))[0]?.ok, false);
+});
+
+test("bindRuntime contains hostile successful array iteration", async () => {
+  const runtime: JqxJsonTextRuntime = {
+    runJsonText() {
+      return { ok: true, value: [] };
+    },
+  };
+  const values = new Proxy<string[]>(["null"], {
+    get(target, property, receiver) {
+      if (property === Symbol.iterator || property === "entries") {
+        throw new Error("hostile array iteration");
+      }
+      return Reflect.get(target, property, receiver);
+    },
+  });
+  Object.defineProperty(runtime, "runJsonText", {
+    value() {
+      return { ok: true, value: values };
+    },
+  });
+  const jqx = bindRuntime(runtime);
+  assert.deepEqual(await jqx.run(".", null), { ok: true, value: [null] });
+  assert.deepEqual(await collectStream(jqx.runJsonTextStream(".", "null")), [
+    { ok: true, value: "null" },
+  ]);
+});
+
+test("public runtime error helpers contain revoked Proxy values", () => {
+  const revocable = Proxy.revocable({}, {});
+  revocable.revoke();
+  assert.equal(isJqxError(revocable.proxy), false);
+  assert.equal(isJqxRuntimeError(revocable.proxy), false);
+  assert.deepEqual(toJqxRuntimeError(revocable.proxy), {
+    kind: "backend_runtime",
+    message: "Unknown runtime error",
   });
 });
 

@@ -7,7 +7,7 @@ import {
   type TypedDslQuery,
 } from "./runtime_shared.js";
 import {
-  callRuntime,
+  callStringArrayRuntime,
   decodeRawResultStream,
   selectJsonTextStream,
   selectQueryJsonTextStream,
@@ -150,14 +150,16 @@ function createDynamicRuntime(
 ): JqxClient {
   return {
     async runJsonText(filter, input) {
-      return callRuntime(() => runtime.runJsonText(filter, input));
+      return callStringArrayRuntime(() => runtime.runJsonText(filter, input));
     },
     async run(filter, input) {
       const encoded = encodeRuntimeInput(input);
       if (!encoded.ok) {
         return encoded;
       }
-      const normalizedOut = await callRuntime(() => runtime.runJsonText(filter, encoded.value));
+      const normalizedOut = await callStringArrayRuntime(() =>
+        runtime.runJsonText(filter, encoded.value),
+      );
       if (!normalizedOut.ok) {
         return normalizedOut;
       }
@@ -190,7 +192,7 @@ function createQueryRuntimeFromJsonText<Q>(
       if (!normalized.ok) {
         return normalized;
       }
-      return callRuntime(() => runtime.runQueryJsonText(normalized.value, input));
+      return callStringArrayRuntime(() => runtime.runQueryJsonText(normalized.value, input));
     },
     async query(query: QueryInputFor<Q>, input: Json) {
       const normalized = normalizeQueryInput(query);
@@ -201,7 +203,7 @@ function createQueryRuntimeFromJsonText<Q>(
       if (!encoded.ok) {
         return encoded;
       }
-      const normalizedOut = await callRuntime(() =>
+      const normalizedOut = await callStringArrayRuntime(() =>
         runtime.runQueryJsonText(normalized.value, encoded.value),
       );
       if (!normalizedOut.ok) {
