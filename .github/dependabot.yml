@@ -16,7 +16,7 @@ updates:
           - "*"
 
   - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Workspace root contains packageManager, pnpm-workspace.yaml, and pnpm-lock.yaml
+    directory: "/" # Workspace root contains pnpm-workspace.yaml and pnpm-lock.yaml
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 1

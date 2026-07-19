@@ -137,7 +137,8 @@ jobs:
         shell: bash
         run: |
           corepack enable
-          corepack prepare pnpm@latest --activate
+          pnpm_version="$(npm view pnpm version)"
+          corepack prepare "pnpm@${pnpm_version}" --activate
 
       - name: Install and smoke npm packages
         shell: bash
