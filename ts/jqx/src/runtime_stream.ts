@@ -95,7 +95,12 @@ function fromStreamingRuntimeCall(
       return;
     }
     try {
-      for await (const value of runtimeOut.value) yield { ok: true, value };
+      for await (const value of runtimeOut.value) {
+        if (typeof value !== "string") {
+          throw new TypeError("Runtime output stream must contain strings");
+        }
+        yield { ok: true, value };
+      }
     } catch (error) {
       yield failRuntimeResult<string>(normalizeRuntimeError(error, "Stream iteration failed"));
     }

@@ -15,6 +15,7 @@ import {
   parseQueryAstDocument,
   QUERY_AST_DOCUMENT_FORMAT,
   QUERY_AST_DOCUMENT_VERSION,
+  runtimeErrorToMessage,
   stringifyQueryAstDocument,
   toJqxRuntimeError,
   toAst,
@@ -761,6 +762,36 @@ test("bindRuntime contains hostile successful array iteration", async () => {
   ]);
 });
 
+test("bindRuntime rejects non-string streaming backend values", async () => {
+  const runtime: JqxJsonTextRuntime = {
+    runJsonText() {
+      return { ok: true, value: [] };
+    },
+  };
+  Object.defineProperty(runtime, "runJsonTextStream", {
+    value() {
+      return {
+        ok: true,
+        value: (async function* () {
+          yield 123;
+        })(),
+      };
+    },
+  });
+  const jqx = bindRuntime(runtime);
+  const expected = [
+    {
+      ok: false,
+      error: {
+        kind: "backend_runtime",
+        message: "Runtime output stream must contain strings",
+      },
+    },
+  ];
+  assert.deepEqual(await collectStream(jqx.runJsonTextStream(".", "null")), expected);
+  assert.deepEqual(await collectStream(jqx.runStream(".", null)), expected);
+});
+
 test("public runtime error helpers contain revoked Proxy values", () => {
   const revocable = Proxy.revocable({}, {});
   revocable.revoke();
@@ -770,6 +801,7 @@ test("public runtime error helpers contain revoked Proxy values", () => {
     kind: "backend_runtime",
     message: "Unknown runtime error",
   });
+  assert.equal(runtimeErrorToMessage(revocable.proxy), "Unknown runtime error");
 });
 
 test("bindRuntime contains throwing streaming capability getters", async () => {
