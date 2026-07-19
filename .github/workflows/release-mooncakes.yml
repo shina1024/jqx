@@ -126,7 +126,7 @@ jobs:
         run: |
           moon info
           moon fmt --check
-          moon check
+          moon check --warn-list +73
           moon test
           moon package --frozen --list
 

@@ -80,7 +80,7 @@ jobs:
         run: moon fmt --check
 
       - name: MoonBit Check
-        run: moon check -d
+        run: moon check -d --warn-list +73
 
       - name: MoonBit Test (Linux/macOS)
         if: runner.os != 'Windows'
