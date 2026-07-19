@@ -16,12 +16,12 @@ fn collection_values(input : Value) -> Array[Value] raise EvalError {
 ///|
 fn flatten_array_full(a : Array[Value]) -> Array[Value] {
   let out = []
-  for v in a {
+  let pending = []
+  a.rev_each(v => pending.push(v))
+  while pending.length() > 0 {
+    let v = pending.pop().unwrap()
     match v {
-      Array(inner) =>
-        for x in flatten_array_full(inner) {
-          out.push(x)
-        }
+      Array(inner) => inner.rev_each(x => pending.push(x))
       _ => out.push(v)
     }
   }
@@ -31,25 +31,25 @@ fn flatten_array_full(a : Array[Value]) -> Array[Value] {
 ///|
 fn flatten_array_depth(a : Array[Value], depth : Int) -> Array[Value] {
   if depth <= 0 {
-    return a
-  }
-  let out = []
-  for v in a {
-    match v {
-      Array(inner) =>
-        if depth == 1 {
-          for x in inner {
-            out.push(x)
+    a
+  } else {
+    let out = []
+    let pending = []
+    a.rev_each(v => pending.push((v, depth)))
+    while pending.length() > 0 {
+      let (v, remaining) = pending.pop().unwrap()
+      match v {
+        Array(inner) =>
+          if remaining > 0 {
+            inner.rev_each(x => pending.push((x, remaining - 1)))
+          } else {
+            out.push(v)
           }
-        } else {
-          for x in flatten_array_depth(inner, depth - 1) {
-            out.push(x)
-          }
-        }
-      _ => out.push(v)
+        _ => out.push(v)
+      }
     }
+    out
   }
-  out
 }
 
 ///|

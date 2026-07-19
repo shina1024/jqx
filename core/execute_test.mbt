@@ -504,6 +504,17 @@ test "execute flatten compatibility" {
 }
 
 ///|
+test "execute flatten handles deeply nested arrays" {
+  let mut deep = Value::number(0.0)
+  for _ in 0..<10000 {
+    deep = Value::array([deep])
+  }
+  let expected = [Value::array([Value::number(0.0)])]
+  @debug.assert_eq(must_execute(compile("flatten"), deep), expected)
+  @debug.assert_eq(must_execute(compile("flatten(10000)"), deep), expected)
+}
+
+///|
 test "execute flatten errors" {
   guard (try execute(compile("flatten"), must_parse("1")) catch {
     err => err.to_string() == "Cannot iterate over number (1)"
