@@ -1,4 +1,7 @@
 ///|
+// Source under test: cmd/main_cli.mbt, cmd/output.mbt
+
+///|
 priv struct CliRunResult {
   stdout_lines : Array[String]
   stderr_lines : Array[String]

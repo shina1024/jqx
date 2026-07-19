@@ -77,11 +77,11 @@ fn execute_cli(
   }
   try {
     let inputs = parse_cli_inputs(cfg, cli_stdin)
-    let outputs = []
+    let mut last_output : @lib.Value? = None
     for input in inputs {
       let result = @lib.execute_for_cli(compiled, input)
       for value in result.0 {
-        outputs.push(value)
+        last_output = Some(value)
         emit(cfg.raw, cfg.compact, value)
       }
       match result.1 {
@@ -91,7 +91,7 @@ fn execute_cli(
       }
     }
     let exit_code = if cfg.exit_status {
-      Some(compute_exit_status(outputs))
+      Some(compute_exit_status(last_output))
     } else {
       None
     }
@@ -164,12 +164,10 @@ fn format_error_message(msg : String) -> String {
 }
 
 ///|
-fn compute_exit_status(outputs : Array[@lib.Value]) -> Int {
-  if outputs.length() == 0 {
-    return 4
-  }
-  match outputs[outputs.length() - 1] {
-    JFalse | JNull => 1
-    _ => 0
+fn compute_exit_status(last_output : @lib.Value?) -> Int {
+  match last_output {
+    None => 4
+    Some(JFalse | JNull) => 1
+    Some(_) => 0
   }
 }

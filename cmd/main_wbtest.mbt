@@ -3,15 +3,11 @@
 
 ///|
 test "compute exit status" {
-  @debug.assert_eq(compute_exit_status([]), 4)
-  @debug.assert_eq(compute_exit_status([@lib.Value::null()]), 1)
-  @debug.assert_eq(compute_exit_status([@lib.Value::boolean(false)]), 1)
-  @debug.assert_eq(compute_exit_status([@lib.Value::boolean(true)]), 0)
-  @debug.assert_eq(compute_exit_status([@lib.Value::number(1.0)]), 0)
-  @debug.assert_eq(
-    compute_exit_status([@lib.Value::number(1.0), @lib.Value::boolean(false)]),
-    1,
-  )
+  @debug.assert_eq(compute_exit_status(None), 4)
+  @debug.assert_eq(compute_exit_status(Some(@lib.Value::null())), 1)
+  @debug.assert_eq(compute_exit_status(Some(@lib.Value::boolean(false))), 1)
+  @debug.assert_eq(compute_exit_status(Some(@lib.Value::boolean(true))), 0)
+  @debug.assert_eq(compute_exit_status(Some(@lib.Value::number(1.0))), 0)
 }
 
 ///|
