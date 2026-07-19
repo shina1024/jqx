@@ -15,6 +15,7 @@ import {
   runtime,
   toAst,
   type Json,
+  type QueryAst,
 } from "../src/index.js";
 
 function nestedJsonArrayText(depth: number, leaf: string): string {
@@ -204,6 +205,20 @@ test("query rejects non-finite literal values in the value lane", () => {
     if (result.error.kind === "input_value") {
       assert.equal(result.error.path, "$");
     }
+  }
+});
+
+test("query rejects cyclic raw ASTs before recursive compilation", () => {
+  const cyclic: { kind: "map"; inner: QueryAst } = {
+    kind: "map",
+    inner: { kind: "identity" },
+  };
+  cyclic.inner = cyclic;
+  const result = queryJsonText(cyclic, "null");
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.error.kind, "backend_runtime");
+    assert.match(result.error.message, /Cyclic AST object/u);
   }
 });
 

@@ -15,7 +15,7 @@ type EncodeFrame =
   | { kind: "text"; value: string }
   | { kind: "exit"; value: object };
 
-function inputValueError(path: JsonPath): JqxRuntimeError {
+export function inputValueError(path: JsonPath): JqxRuntimeError {
   const renderedPath = formatJsonPath(path);
   return {
     kind: "input_value",

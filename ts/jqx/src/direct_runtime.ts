@@ -1,6 +1,7 @@
 import { moonbitRuntime } from "./moonbit_runtime.js";
+import { exportQueryAstDocument, importQueryAstDocument } from "@shina1024/jqx-adapter-core";
 import { parseRuntimeJsonText, decodeRuntimeOutputs } from "./runtime_json.js";
-import { encodeRuntimeInput } from "./runtime_input.js";
+import { encodeRuntimeInput, inputValueError } from "./runtime_input.js";
 import {
   normalizeRuntimeError,
   normalizeTypedDslQuery,
@@ -196,7 +197,24 @@ function compileDirectQueryAst(ast: QueryAst): unknown {
 
 function compileDirectQuery(query: DirectQueryInput): JqxResult<unknown, JqxRuntimeError> {
   try {
-    return { ok: true, value: compileDirectQueryAst(normalizeTypedDslQuery<QueryAst>(query)) };
+    const normalized = normalizeTypedDslQuery<QueryAst>(query);
+    const snapshot = importQueryAstDocument(exportQueryAstDocument(normalized));
+    if (!snapshot.ok) {
+      if (
+        snapshot.error.kind === "invalid_ast" &&
+        snapshot.error.message === "Non-finite Json number"
+      ) {
+        return {
+          ok: false,
+          error: inputValueError(null),
+        };
+      }
+      return {
+        ok: false,
+        error: { kind: "backend_runtime", message: snapshot.error.message },
+      };
+    }
+    return { ok: true, value: compileDirectQueryAst(snapshot.value) };
   } catch (error) {
     return {
       ok: false,

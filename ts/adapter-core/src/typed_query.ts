@@ -266,6 +266,23 @@ function isJsonValue(value: unknown): value is Json {
   return true;
 }
 
+function containsNonFiniteNumber(value: unknown): boolean {
+  const pending: unknown[] = [value];
+  const seen = new WeakSet<object>();
+  while (pending.length > 0) {
+    const item = pending.pop();
+    if (typeof item === "number" && !Number.isFinite(item)) return true;
+    if (typeof item !== "object" || item === null) continue;
+    if (seen.has(item)) continue;
+    seen.add(item);
+    for (const key of Reflect.ownKeys(item)) {
+      const descriptor = Object.getOwnPropertyDescriptor(item, key);
+      if (descriptor !== undefined && "value" in descriptor) pending.push(descriptor.value);
+    }
+  }
+  return false;
+}
+
 function hasExactKeys(value: Record<string, unknown>, expected: readonly string[]): boolean {
   const actualKeys = Object.keys(value);
   if (actualKeys.length !== expected.length) {
@@ -352,7 +369,11 @@ function validateQueryAstNode(
         if (!hasExactKeys(value, ["kind", "value"])) {
           return invalidAst(path, "Unexpected fields");
         }
-        return isJsonValue(value.value) ? null : invalidAst(`${path}.value`, "Expected Json value");
+        if (isJsonValue(value.value)) return null;
+        return invalidAst(
+          `${path}.value`,
+          containsNonFiniteNumber(value.value) ? "Non-finite Json number" : "Expected Json value",
+        );
       case "map":
         return validateUnaryNode("inner", ["kind", "inner"]);
       case "select":
