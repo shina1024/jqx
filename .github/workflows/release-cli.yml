@@ -17,23 +17,6 @@ on:
         required: false
         default: false
         type: boolean
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Tag to release (for example: v0.1.0)"
-        required: true
-        type: string
-      dry_run:
-        description: "Build and upload artifacts without publishing a GitHub Release"
-        required: false
-        default: false
-        type: boolean
-      prerelease:
-        description: "Mark release as prerelease"
-        required: false
-        default: false
-        type: boolean
-
 permissions:
   contents: read
 
@@ -45,26 +28,20 @@ jobs:
       tag: ${{ steps.vars.outputs.tag }}
       dry_run: ${{ steps.vars.outputs.dry_run }}
       prerelease: ${{ steps.vars.outputs.prerelease }}
+      commit: ${{ steps.source.outputs.commit }}
     steps:
       - name: Resolve release metadata
         id: vars
         shell: bash
         env:
-          EVENT_NAME: ${{ github.event_name }}
           INPUT_TAG: ${{ inputs.tag }}
           INPUT_DRY_RUN: ${{ inputs.dry_run }}
           INPUT_PRERELEASE: ${{ inputs.prerelease }}
         run: |
           set -euo pipefail
-          if [ "${EVENT_NAME}" = "workflow_dispatch" ] || [ "${EVENT_NAME}" = "workflow_call" ]; then
-            TAG="${INPUT_TAG}"
-            DRY_RUN="${INPUT_DRY_RUN}"
-            PRERELEASE="${INPUT_PRERELEASE}"
-          else
-            TAG="${GITHUB_REF_NAME}"
-            DRY_RUN="false"
-            PRERELEASE="false"
-          fi
+          TAG="${INPUT_TAG}"
+          DRY_RUN="${INPUT_DRY_RUN}"
+          PRERELEASE="${INPUT_PRERELEASE}"
 
           if [[ "${TAG}" != v* ]]; then
             echo "::error::Tag must start with v. got=${TAG}"
@@ -83,6 +60,7 @@ jobs:
           ref: refs/tags/${{ steps.vars.outputs.tag }}
 
       - name: Verify release commit belongs to main
+        id: source
         shell: bash
         env:
           RELEASE_TAG: ${{ steps.vars.outputs.tag }}
@@ -94,6 +72,7 @@ jobs:
             echo "::error::Release tag ${RELEASE_TAG} is not reachable from main."
             exit 1
           fi
+          echo "commit=${release_commit}" >> "$GITHUB_OUTPUT"
 
   build:
     name: Build (${{ matrix.os }})
@@ -108,12 +87,12 @@ jobs:
           - windows-latest
 
     steps:
-      - name: Checkout tag
+      - name: Checkout verified commit
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
           fetch-depth: 0
-          ref: refs/tags/${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.commit }}
 
       - name: Install MoonBit (Linux/macOS)
         if: runner.os != 'Windows'
@@ -238,9 +217,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+          RELEASE_COMMIT: ${{ needs.prepare.outputs.commit }}
           PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
         run: |
           set -euo pipefail
+          remote_commit="$(
+            git ls-remote --refs "https://github.com/${GITHUB_REPOSITORY}.git" "refs/tags/${RELEASE_TAG}" |
+              awk '{print $1}'
+          )"
+          if [ "${remote_commit}" != "${RELEASE_COMMIT}" ]; then
+            echo "::error::Release tag ${RELEASE_TAG} changed after source verification."
+            exit 1
+          fi
           release_args=(--repo "${GITHUB_REPOSITORY}" --verify-tag --title "${RELEASE_TAG}" --generate-notes)
           if [ "${PRERELEASE}" = "true" ]; then
             release_args+=(--prerelease)

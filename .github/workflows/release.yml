@@ -33,6 +33,7 @@ jobs:
       version: ${{ steps.vars.outputs.version }}
       dry_run: ${{ steps.vars.outputs.dry_run }}
       prerelease: ${{ steps.vars.outputs.prerelease }}
+      commit: ${{ steps.source.outputs.commit }}
     steps:
       - name: Resolve release metadata
         id: vars
@@ -73,6 +74,7 @@ jobs:
           ref: refs/tags/${{ steps.vars.outputs.tag }}
 
       - name: Verify release commit belongs to main
+        id: source
         shell: bash
         env:
           RELEASE_TAG: ${{ steps.vars.outputs.tag }}
@@ -84,6 +86,7 @@ jobs:
             echo "::error::Release tag ${RELEASE_TAG} is not reachable from main."
             exit 1
           fi
+          echo "commit=${release_commit}" >> "$GITHUB_OUTPUT"
 
   cli:
     name: CLI artifacts
@@ -103,8 +106,6 @@ jobs:
       contents: read
       id-token: write
     uses: ./.github/workflows/release-npm.yml
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     with:
       tag: ${{ needs.prepare.outputs.tag }}
       dry_run: ${{ needs.prepare.outputs.dry_run == 'true' }}
@@ -115,8 +116,6 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/release-mooncakes.yml
-    secrets:
-      MOONCAKES_CREDENTIALS_JSON: ${{ secrets.MOONCAKES_CREDENTIALS_JSON }}
     with:
       tag: ${{ needs.prepare.outputs.tag }}
       dry_run: ${{ needs.prepare.outputs.dry_run == 'true' }}

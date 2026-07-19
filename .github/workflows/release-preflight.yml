@@ -15,6 +15,7 @@ jobs:
   prepare:
     name: Prepare
     runs-on: ubuntu-latest
+    environment: release
     outputs:
       version: ${{ steps.vars.outputs.version }}
       tag: ${{ steps.vars.outputs.tag }}
@@ -239,7 +240,8 @@ jobs:
         shell: bash
         run: |
           corepack enable
-          corepack prepare pnpm@latest --activate
+          pnpm_version="$(npm view pnpm version)"
+          corepack prepare "pnpm@${pnpm_version}" --activate
 
       - name: Install MoonBit
         shell: bash

@@ -12,21 +12,6 @@ on:
         required: false
         default: false
         type: boolean
-    secrets:
-      NPM_TOKEN:
-        required: false
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Tag to publish (for example: v0.1.0)"
-        required: true
-        type: string
-      dry_run:
-        description: "Run publish in dry-run mode"
-        required: false
-        default: false
-        type: boolean
-
 permissions:
   contents: read
 
@@ -38,23 +23,18 @@ jobs:
       tag: ${{ steps.vars.outputs.tag }}
       version: ${{ steps.vars.outputs.version }}
       dry_run: ${{ steps.vars.outputs.dry_run }}
+      commit: ${{ steps.source.outputs.commit }}
     steps:
       - name: Resolve release metadata
         id: vars
         shell: bash
         env:
-          EVENT_NAME: ${{ github.event_name }}
           INPUT_TAG: ${{ inputs.tag }}
           INPUT_DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -euo pipefail
-          if [ "${EVENT_NAME}" = "workflow_dispatch" ] || [ "${EVENT_NAME}" = "workflow_call" ]; then
-            TAG="${INPUT_TAG}"
-            DRY_RUN="${INPUT_DRY_RUN}"
-          else
-            TAG="${GITHUB_REF_NAME}"
-            DRY_RUN="false"
-          fi
+          TAG="${INPUT_TAG}"
+          DRY_RUN="${INPUT_DRY_RUN}"
 
           if [[ "${TAG}" != v* ]]; then
             echo "::error::Tag must start with v. got=${TAG}"
@@ -75,6 +55,7 @@ jobs:
           ref: refs/tags/${{ steps.vars.outputs.tag }}
 
       - name: Verify release commit belongs to main
+        id: source
         shell: bash
         env:
           RELEASE_TAG: ${{ steps.vars.outputs.tag }}
@@ -86,6 +67,7 @@ jobs:
             echo "::error::Release tag ${RELEASE_TAG} is not reachable from main."
             exit 1
           fi
+          echo "commit=${release_commit}" >> "$GITHUB_OUTPUT"
 
   publish:
     name: Publish npm packages
@@ -98,14 +80,15 @@ jobs:
     env:
       RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
       RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+      RELEASE_COMMIT: ${{ needs.prepare.outputs.commit }}
       DRY_RUN: ${{ needs.prepare.outputs.dry_run }}
     steps:
-      - name: Checkout tag
+      - name: Checkout verified commit
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
           fetch-depth: 0
-          ref: refs/tags/${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.commit }}
 
       - name: Setup Node (npm registry)
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
@@ -119,7 +102,8 @@ jobs:
         shell: bash
         run: |
           corepack enable
-          corepack prepare pnpm@latest --activate
+          pnpm_version="$(npm view pnpm version)"
+          corepack prepare "pnpm@${pnpm_version}" --activate
 
       - name: Install MoonBit
         shell: bash
@@ -246,6 +230,11 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
+          remote_commit="$(git ls-remote --refs origin "refs/tags/${RELEASE_TAG}" | awk '{print $1}')"
+          if [ "${remote_commit}" != "${RELEASE_COMMIT}" ]; then
+            echo "::error::Release tag ${RELEASE_TAG} changed after source verification."
+            exit 1
+          fi
           mapfile -t packages < <(node ./scripts/ts_packages.mjs list)
 
           if [ "${DRY_RUN}" != "true" ] && [ -z "${NODE_AUTH_TOKEN:-}" ]; then
