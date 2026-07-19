@@ -34,6 +34,12 @@ priv enum Token {
 }
 
 ///|
+priv enum ParseFrame {
+  ParsingArray(Array[Value])
+  ParsingObject(Map[String, Value], Array[String], String)
+}
+
+///|
 pub fn valid(input : StringView) -> Bool {
   try {
     parse(input) |> ignore
@@ -68,88 +74,99 @@ pub fn parse(
 
 ///|
 fn ParseContext::parse_value(ctx : ParseContext) -> Value raise ParseError {
-  let tok = ctx.lex_value(allow_rbracket=false)
-  ctx.parse_value2(tok)
-}
-
-///|
-fn ParseContext::parse_value2(
-  ctx : ParseContext,
-  tok : Token,
-) -> Value raise ParseError {
-  match tok {
-    Null => Value::null()
-    True => Value::boolean(true)
-    False => Value::boolean(false)
-    Number(n, repr) => Value::number(n, repr?)
-    String(s) => Value::string(s)
-    LBrace => ctx.parse_object()
-    LBracket => ctx.parse_array()
-    RBracket | RBrace | Comma => abort("unreachable")
-  }
-}
-
-///|
-fn ParseContext::parse_object(ctx : ParseContext) -> Value raise ParseError {
-  if ctx.remaining_available_depth <= 0 {
-    raise DepthLimitExceeded
-  }
-  ctx.remaining_available_depth -= 1
-  let map = Map([])
-  let key_order = []
-  for token = ctx.lex_property_name() {
-    match token {
-      RBrace => {
-        ctx.remaining_available_depth += 1
-        break Value::object_with_order(map, key_order)
-      }
-      String(name) => {
-        ctx.lex_after_property_name()
-        if !map.contains(name) {
-          key_order.push(name)
-        }
-        map[name] = ctx.parse_value()
-        match ctx.lex_after_object_value() {
-          Comma => continue ctx.lex_property_name2()
-          RBrace => {
-            ctx.remaining_available_depth += 1
-            break Value::object_with_order(map, key_order)
+  let frames : Array[ParseFrame] = []
+  let mut token = ctx.lex_value(allow_rbracket=false)
+  let mut completed : Value? = None
+  while true {
+    match completed {
+      None =>
+        match token {
+          Null => completed = Some(Value::null())
+          True => completed = Some(Value::boolean(true))
+          False => completed = Some(Value::boolean(false))
+          Number(n, repr) => completed = Some(Value::number(n, repr?))
+          String(s) => completed = Some(Value::string(s))
+          LBracket => {
+            if ctx.remaining_available_depth <= 0 {
+              raise DepthLimitExceeded
+            }
+            ctx.remaining_available_depth -= 1
+            let values = []
+            token = ctx.lex_value(allow_rbracket=true)
+            if token is RBracket {
+              ctx.remaining_available_depth += 1
+              completed = Some(Value::array(values))
+            } else {
+              frames.push(ParsingArray(values))
+            }
           }
-          _ => abort("unreachable")
+          LBrace => {
+            if ctx.remaining_available_depth <= 0 {
+              raise DepthLimitExceeded
+            }
+            ctx.remaining_available_depth -= 1
+            let map = Map([])
+            let key_order = []
+            match ctx.lex_property_name() {
+              RBrace => {
+                ctx.remaining_available_depth += 1
+                completed = Some(Value::object_with_order(map, key_order))
+              }
+              String(name) => {
+                ctx.lex_after_property_name()
+                frames.push(ParsingObject(map, key_order, name))
+                token = ctx.lex_value(allow_rbracket=false)
+              }
+              _ => abort("unreachable")
+            }
+          }
+          RBracket | RBrace | Comma => abort("unreachable")
         }
-      }
-      _ => abort("unreachable")
+      Some(value) =>
+        match frames.pop() {
+          None => return value
+          Some(ParsingArray(values)) => {
+            values.push(value)
+            match ctx.lex_after_array_value() {
+              Comma => {
+                frames.push(ParsingArray(values))
+                token = ctx.lex_value(allow_rbracket=false)
+                completed = None
+              }
+              RBracket => {
+                ctx.remaining_available_depth += 1
+                completed = Some(Value::array(values))
+              }
+              _ => abort("unreachable")
+            }
+          }
+          Some(ParsingObject(map, key_order, name)) => {
+            if !map.contains(name) {
+              key_order.push(name)
+            }
+            map[name] = value
+            match ctx.lex_after_object_value() {
+              Comma =>
+                match ctx.lex_property_name2() {
+                  String(next_name) => {
+                    ctx.lex_after_property_name()
+                    frames.push(ParsingObject(map, key_order, next_name))
+                    token = ctx.lex_value(allow_rbracket=false)
+                    completed = None
+                  }
+                  _ => abort("unreachable")
+                }
+              RBrace => {
+                ctx.remaining_available_depth += 1
+                completed = Some(Value::object_with_order(map, key_order))
+              }
+              _ => abort("unreachable")
+            }
+          }
+        }
     }
   }
-}
-
-///|
-fn ParseContext::parse_array(ctx : ParseContext) -> Value raise ParseError {
-  if ctx.remaining_available_depth <= 0 {
-    raise DepthLimitExceeded
-  }
-  ctx.remaining_available_depth -= 1
-  let vec = []
-  for token = ctx.lex_value(allow_rbracket=true) {
-    match token {
-      RBracket => {
-        ctx.remaining_available_depth += 1
-        break Value::array(vec)
-      }
-      tok => {
-        vec.push(ctx.parse_value2(tok))
-        let tok2 = ctx.lex_after_array_value()
-        match tok2 {
-          Comma => continue ctx.lex_value(allow_rbracket=false)
-          RBracket => {
-            ctx.remaining_available_depth += 1
-            break Value::array(vec)
-          }
-          _ => abort("unreachable")
-        }
-      }
-    }
-  }
+  abort("unreachable")
 }
 
 ///|

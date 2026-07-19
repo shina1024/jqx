@@ -45,10 +45,15 @@ test("JSON text preserves integer-like key order while JS values follow ECMAScri
   }
 });
 
-test("runJsonText follows jq 1.8.2 print depth beyond old limit", () => {
-  const beyondOldLimit = nestedJsonArrayText(257, "0");
-  const result = runJsonText(".", beyondOldLimit);
-  assert.deepEqual(result, { ok: true, value: [beyondOldLimit] });
+test("runJsonText handles the configured JSON nesting limit without a JS stack overflow", () => {
+  const atLimit = nestedJsonArrayText(10_000, "0");
+  assert.deepEqual(runJsonText(".", atLimit), { ok: true, value: [atLimit] });
+
+  const beyondLimit = runJsonText(".", nestedJsonArrayText(10_001, "0"));
+  assert.equal(beyondLimit.ok, false);
+  if (!beyondLimit.ok) {
+    assert.equal(beyondLimit.error.kind, "backend_runtime");
+  }
 });
 
 test("run stringifies input and parses outputs", () => {
@@ -68,17 +73,7 @@ test("run returns input_stringify for unserializable value-lane input", () => {
   }
 });
 
-test("run contains deep and accessor-driven input failures", () => {
-  let deep: unknown = null;
-  for (let depth = 0; depth < 10_000; depth += 1) {
-    deep = [deep];
-  }
-  const deepResult = run(".", deep as Json);
-  assert.equal(deepResult.ok, false);
-  if (!deepResult.ok) {
-    assert.equal(deepResult.error.kind, "input_stringify");
-  }
-
+test("run contains accessor-driven input failures", () => {
   let getterCalled = false;
   const accessorInput = Object.create(null) as Record<string, unknown>;
   Object.defineProperty(accessorInput, "value", {
@@ -91,6 +86,15 @@ test("run contains deep and accessor-driven input failures", () => {
   const accessorResult = run(".", accessorInput as Json);
   assert.equal(accessorResult.ok, false);
   assert.equal(getterCalled, false);
+});
+
+test("run encodes deeply nested value-lane input without a JS stack overflow", () => {
+  let deep: unknown = null;
+  for (let depth = 0; depth < 10_000; depth += 1) {
+    deep = [deep];
+  }
+  const deepResult = run(".", deep as Json);
+  assert.equal(deepResult.ok, true);
 });
 
 test("run rejects non-finite numbers in the value lane", () => {

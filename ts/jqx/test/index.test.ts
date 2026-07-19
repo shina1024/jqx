@@ -17,7 +17,6 @@ import {
   toAst,
   type JqxJsonTextRuntime,
   type JqxQueryJsonTextRuntime,
-  type JqxRuntimeError,
   type Json,
   type QueryAst,
 } from "../src/bind.js";
@@ -106,6 +105,41 @@ test("bindRuntime contains hostile input failures across run and runStream", asy
   assert.equal(streamed[0]?.ok, false);
 });
 
+test("bindRuntime serializes descriptor values without invoking Proxy getters", async () => {
+  let getterCalls = 0;
+  const encodedInputs: string[] = [];
+  const runtime: JqxJsonTextRuntime = {
+    runJsonText(_filter, input) {
+      encodedInputs.push(input);
+      return { ok: true, value: [input] };
+    },
+  };
+  const input = new Proxy(
+    { x: 1, items: [2] },
+    {
+      get(target, property, receiver) {
+        getterCalls += 1;
+        if (property === "x") return Number.POSITIVE_INFINITY;
+        return Reflect.get(target, property, receiver);
+      },
+    },
+  );
+  const result = await bindRuntime(runtime).run(".", input);
+  assert.equal(result.ok, true);
+  const arrayInput = new Proxy([2], {
+    get(target, property, receiver) {
+      getterCalls += 1;
+      if (property === "length") return 100;
+      if (property === "0") return Number.POSITIVE_INFINITY;
+      return Reflect.get(target, property, receiver);
+    },
+  });
+  const arrayResult = await bindRuntime(runtime).run(".", arrayInput);
+  assert.equal(arrayResult.ok, true);
+  assert.deepEqual(encodedInputs, ['{"x":1,"items":[2]}', "[2]"]);
+  assert.equal(getterCalls, 0);
+});
+
 test("bindRuntime run rejects non-finite numbers in the value lane", async () => {
   const runtime: JqxJsonTextRuntime = {
     runJsonText() {
@@ -161,9 +195,14 @@ test("bindRuntime run returns output_value for jq-compatible raw outputs outside
 test("bindRuntime normalizes legacy backend string errors", async () => {
   const runtime: JqxJsonTextRuntime = {
     runJsonText() {
-      return { ok: false as const, error: "boom" as unknown as JqxRuntimeError };
+      return { ok: false, error: { kind: "backend_runtime", message: "placeholder" } };
     },
   };
+  Object.defineProperty(runtime, "runJsonText", {
+    value() {
+      return { ok: false, error: "boom" };
+    },
+  });
   const jqx = bindRuntime(runtime);
   const rawOut = await jqx.runJsonText(".", "{}");
   assert.equal(rawOut.ok, false);
@@ -545,6 +584,26 @@ test("QueryAst import returns a detached validated snapshot", () => {
   }
 });
 
+test("QueryAst import snapshots array length without invoking Proxy getters", () => {
+  let getterCalls = 0;
+  const args = new Proxy<QueryAst[]>([{ kind: "identity" }], {
+    get(target, property, receiver) {
+      getterCalls += 1;
+      return property === "length" ? 100 : Reflect.get(target, property, receiver);
+    },
+  });
+  const imported = importQueryAstDocument({
+    format: QUERY_AST_DOCUMENT_FORMAT,
+    version: QUERY_AST_DOCUMENT_VERSION,
+    ast: { kind: "call", name: "empty", args },
+  });
+  assert.equal(imported.ok, true);
+  assert.equal(getterCalls, 0);
+  if (imported.ok && imported.value.kind === "call") {
+    assert.equal(imported.value.args.length, 1);
+  }
+});
+
 test("QueryAst import rejects bare ast", () => {
   const ast = toAst(field("name"));
   const imported = importQueryAstDocument(ast);
@@ -600,6 +659,93 @@ test("bindRuntime returns backend_runtime when backend throws synchronously", as
     ok: false,
     error: { kind: "backend_runtime", message: "sync down" },
   });
+});
+
+test("bindRuntime contains runtime errors whose own reflection traps throw", async () => {
+  const hostileError = new Proxy(
+    {},
+    {
+      getPrototypeOf() {
+        throw new Error("prototype inspection failed");
+      },
+    },
+  );
+  const runtime: JqxJsonTextRuntime = {
+    runJsonText() {
+      throw hostileError;
+    },
+  };
+  const result = await bindRuntime(runtime).runJsonText(".", "null");
+  assert.deepEqual(result, {
+    ok: false,
+    error: { kind: "backend_runtime", message: "Runtime call failed" },
+  });
+});
+
+test("bindRuntime contains throwing streaming capability getters", async () => {
+  const runtime: JqxJsonTextRuntime = {
+    runJsonText() {
+      return { ok: true, value: [] };
+    },
+  };
+  Object.defineProperty(runtime, "runJsonTextStream", {
+    get() {
+      throw new Error("capability inspection failed");
+    },
+  });
+  const items = await collectStream(bindRuntime(runtime).runJsonTextStream(".", "null"));
+  assert.equal(items.length, 1);
+  assert.equal(items[0]?.ok, false);
+});
+
+test("bindQueryRuntime contains hostile typed-query inspection", async () => {
+  const runtime: JqxQueryJsonTextRuntime = {
+    runJsonText() {
+      return { ok: true, value: [] };
+    },
+    runQueryJsonText() {
+      assert.fail("backend should not receive a hostile query");
+    },
+  };
+  const query = new Proxy<QueryAst>(
+    { kind: "identity" },
+    {
+      ownKeys() {
+        throw new Error("query inspection failed");
+      },
+    },
+  );
+  const jqx = bindQueryRuntime(runtime);
+  const textResult = await jqx.queryJsonText(query, "null");
+  const valueResult = await jqx.query(query, null);
+  assert.equal(textResult.ok, false);
+  assert.equal(valueResult.ok, false);
+  const textStream = await collectStream(jqx.queryJsonTextStream(query, "null"));
+  const valueStream = await collectStream(jqx.queryStream(query, null));
+  assert.equal(textStream.length, 1);
+  assert.equal(textStream[0]?.ok, false);
+  assert.equal(valueStream.length, 1);
+  assert.equal(valueStream[0]?.ok, false);
+});
+
+test("bindQueryRuntime contains throwing query-stream capability getters", async () => {
+  const runtime: JqxQueryJsonTextRuntime = {
+    runJsonText() {
+      return { ok: true, value: [] };
+    },
+    runQueryJsonText() {
+      return { ok: true, value: [] };
+    },
+  };
+  Object.defineProperty(runtime, "runQueryJsonTextStream", {
+    get() {
+      throw new Error("query capability inspection failed");
+    },
+  });
+  const query: QueryAst = { kind: "identity" };
+  const items = await collectStream(bindQueryRuntime(runtime).queryJsonTextStream(query, "null"));
+  assert.equal(items.length, 1);
+  assert.equal(items[0]?.ok, false);
 });
 
 test("bindRuntime returns backend_runtime when backend promise rejects", async () => {

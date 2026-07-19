@@ -471,11 +471,20 @@ function snapshotAstValue(
   try {
     const keys = Reflect.ownKeys(value);
     if (Array.isArray(value)) {
-      if (keys.length !== value.length + 1 || !keys.includes("length")) {
+      const lengthDescriptor = Object.getOwnPropertyDescriptor(value, "length");
+      const length =
+        lengthDescriptor !== undefined &&
+        "value" in lengthDescriptor &&
+        typeof lengthDescriptor.value === "number" &&
+        Number.isSafeInteger(lengthDescriptor.value) &&
+        lengthDescriptor.value >= 0
+          ? lengthDescriptor.value
+          : null;
+      if (length === null || keys.length !== length + 1 || !keys.includes("length")) {
         return { ok: false, error: invalidAst(path, "Expected dense array") };
       }
       const clone: unknown[] = [];
-      for (let index = 0; index < value.length; index += 1) {
+      for (let index = 0; index < length; index += 1) {
         const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
         if (descriptor === undefined || !descriptor.enumerable || !("value" in descriptor)) {
           return { ok: false, error: invalidAst(`${path}[${index}]`, "Expected data value") };

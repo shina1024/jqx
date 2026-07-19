@@ -1,8 +1,7 @@
 import { moonbitRuntime } from "./moonbit_runtime.js";
+import { parseRuntimeJsonText, decodeRuntimeOutputs } from "./runtime_json.js";
+import { encodeRuntimeInput } from "./runtime_input.js";
 import {
-  parseRuntimeJsonText,
-  decodeRuntimeOutputs,
-  encodeRuntimeInput,
   normalizeRuntimeError,
   normalizeTypedDslQuery,
   type TypedDslQuery,

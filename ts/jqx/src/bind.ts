@@ -1,13 +1,18 @@
+import { decodeRuntimeOutputs } from "./runtime_json.js";
+import { encodeRuntimeInput } from "./runtime_input.js";
 import {
-  decodeRuntimeOutput,
-  decodeRuntimeOutputs,
-  encodeRuntimeInput,
   failRuntimeResult,
   normalizeRuntimeError,
-  normalizeRuntimeResult,
   normalizeTypedDslQuery,
   type TypedDslQuery,
 } from "./runtime_shared.js";
+import {
+  callRuntime,
+  decodeRawResultStream,
+  selectJsonTextStream,
+  selectQueryJsonTextStream,
+  singleErrorStream,
+} from "./runtime_stream.js";
 
 import type {
   Json,
@@ -132,95 +137,12 @@ export interface JqxQueryClient<Q = QueryAst> extends JqxClient {
   ): JqxResultStream<string, JqxRuntimeError>;
 }
 
-function toPromise<T>(value: MaybePromise<T>): Promise<T> {
-  return Promise.resolve(value);
-}
-
-type RuntimeCall<T> = () => MaybePromise<JqxResult<T, JqxRuntimeError>>;
-
-async function callRuntime<T>(call: RuntimeCall<T>): Promise<JqxResult<T, JqxRuntimeError>> {
+function normalizeQueryInput<Q>(query: QueryInputFor<Q>): JqxResult<Q, JqxRuntimeError> {
   try {
-    return normalizeRuntimeResult(await toPromise(call()));
+    return { ok: true, value: normalizeTypedDslQuery(query as Q | TypedDslQuery) };
   } catch (error) {
-    return failRuntimeResult(normalizeRuntimeError(error, "Runtime call failed"));
+    return failRuntimeResult(normalizeRuntimeError(error, "Unable to inspect query"));
   }
-}
-
-function fromArrayRuntimeCall(
-  call: RuntimeCall<string[]>,
-): JqxResultStream<string, JqxRuntimeError> {
-  return (async function* () {
-    const runtimeOut = await callRuntime(call);
-    if (!runtimeOut.ok) {
-      yield failRuntimeResult<string>(runtimeOut.error);
-      return;
-    }
-    for (const value of runtimeOut.value) {
-      yield { ok: true, value };
-    }
-  })();
-}
-
-function fromStreamingRuntimeCall(
-  call: RuntimeCall<AsyncIterable<string>>,
-): JqxResultStream<string, JqxRuntimeError> {
-  return (async function* () {
-    const runtimeOut = await callRuntime(call);
-    if (!runtimeOut.ok) {
-      yield failRuntimeResult<string>(runtimeOut.error);
-      return;
-    }
-    try {
-      for await (const value of runtimeOut.value) {
-        yield { ok: true, value };
-      }
-    } catch (error) {
-      yield failRuntimeResult<string>(normalizeRuntimeError(error, "Stream iteration failed"));
-    }
-  })();
-}
-
-function decodeRawResultStream(
-  rawStream: JqxResultStream<string, JqxRuntimeError>,
-): JqxResultStream<Json, JqxRuntimeError> {
-  return (async function* () {
-    let index = 0;
-    for await (const item of rawStream) {
-      if (!item.ok) {
-        yield item;
-        return;
-      }
-      const decoded = decodeRuntimeOutput(item.value, index);
-      if (!decoded.ok) {
-        yield decoded;
-        return;
-      }
-      yield decoded;
-      index += 1;
-    }
-  })();
-}
-
-function singleErrorStream<T>(error: JqxRuntimeError): JqxResultStream<T, JqxRuntimeError> {
-  return (async function* () {
-    yield failRuntimeResult<T>(error);
-  })();
-}
-
-function hasStreamingJsonTextRuntime(
-  runtime: JqxJsonTextRuntime & Partial<JqxJsonTextStreamingRuntime>,
-): runtime is JqxJsonTextStreamingRuntime {
-  return typeof runtime.runJsonTextStream === "function";
-}
-
-function hasQueryStreamingJsonTextRuntime<Q>(
-  runtime: JqxQueryJsonTextRuntime<Q> & Partial<JqxQueryJsonTextStreamingRuntime<Q>>,
-): runtime is JqxQueryJsonTextStreamingRuntime<Q> {
-  return typeof runtime.runQueryJsonTextStream === "function";
-}
-
-function normalizeQueryInput<Q>(query: QueryInputFor<Q>): Q {
-  return normalizeTypedDslQuery(query as Q | TypedDslQuery);
 }
 
 function createDynamicRuntime(
@@ -242,19 +164,14 @@ function createDynamicRuntime(
       return decodeRuntimeOutputs(normalizedOut.value);
     },
     runJsonTextStream(filter, input) {
-      if (hasStreamingJsonTextRuntime(runtime)) {
-        return fromStreamingRuntimeCall(() => runtime.runJsonTextStream(filter, input));
-      }
-      return fromArrayRuntimeCall(() => runtime.runJsonText(filter, input));
+      return selectJsonTextStream(runtime, filter, input);
     },
     runStream(filter, input) {
       const encoded = encodeRuntimeInput(input);
       if (!encoded.ok) {
         return singleErrorStream(encoded.error);
       }
-      const rawStream = hasStreamingJsonTextRuntime(runtime)
-        ? fromStreamingRuntimeCall(() => runtime.runJsonTextStream(filter, encoded.value))
-        : fromArrayRuntimeCall(() => runtime.runJsonText(filter, encoded.value));
+      const rawStream = selectJsonTextStream(runtime, filter, encoded.value);
       return decodeRawResultStream(rawStream);
     },
   };
@@ -268,18 +185,24 @@ function createQueryRuntimeFromJsonText<Q>(
   const baseRuntime = createDynamicRuntime(runtime);
   const queryRuntime: JqxQueryClient<Q> = {
     ...baseRuntime,
-    queryJsonText(query: QueryInputFor<Q>, input: string) {
+    async queryJsonText(query: QueryInputFor<Q>, input: string) {
       const normalized = normalizeQueryInput(query);
-      return callRuntime(() => runtime.runQueryJsonText(normalized, input));
+      if (!normalized.ok) {
+        return normalized;
+      }
+      return callRuntime(() => runtime.runQueryJsonText(normalized.value, input));
     },
     async query(query: QueryInputFor<Q>, input: Json) {
       const normalized = normalizeQueryInput(query);
+      if (!normalized.ok) {
+        return normalized;
+      }
       const encoded = encodeRuntimeInput(input);
       if (!encoded.ok) {
         return encoded;
       }
       const normalizedOut = await callRuntime(() =>
-        runtime.runQueryJsonText(normalized, encoded.value),
+        runtime.runQueryJsonText(normalized.value, encoded.value),
       );
       if (!normalizedOut.ok) {
         return normalizedOut;
@@ -288,22 +211,21 @@ function createQueryRuntimeFromJsonText<Q>(
     },
     queryJsonTextStream(query: QueryInputFor<Q>, input: string) {
       const normalized = normalizeQueryInput(query);
-      if (hasQueryStreamingJsonTextRuntime(runtime)) {
-        return fromStreamingRuntimeCall(() => runtime.runQueryJsonTextStream(normalized, input));
+      if (!normalized.ok) {
+        return singleErrorStream(normalized.error);
       }
-      return fromArrayRuntimeCall(() => runtime.runQueryJsonText(normalized, input));
+      return selectQueryJsonTextStream(runtime, normalized.value, input);
     },
     queryStream(query: QueryInputFor<Q>, input: Json) {
       const normalized = normalizeQueryInput(query);
+      if (!normalized.ok) {
+        return singleErrorStream(normalized.error);
+      }
       const encoded = encodeRuntimeInput(input);
       if (!encoded.ok) {
         return singleErrorStream<Json>(encoded.error);
       }
-      const rawStream = hasQueryStreamingJsonTextRuntime(runtime)
-        ? fromStreamingRuntimeCall(() =>
-            runtime.runQueryJsonTextStream(normalized, encoded.value),
-          )
-        : fromArrayRuntimeCall(() => runtime.runQueryJsonText(normalized, encoded.value));
+      const rawStream = selectQueryJsonTextStream(runtime, normalized.value, encoded.value);
       return decodeRawResultStream(rawStream);
     },
   };
