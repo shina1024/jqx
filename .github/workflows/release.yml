@@ -96,6 +96,7 @@ jobs:
     uses: ./.github/workflows/release-cli.yml
     with:
       tag: ${{ needs.prepare.outputs.tag }}
+      expected_commit: ${{ needs.prepare.outputs.commit }}
       dry_run: ${{ needs.prepare.outputs.dry_run == 'true' }}
       prerelease: ${{ needs.prepare.outputs.prerelease == 'true' }}
 
@@ -108,6 +109,7 @@ jobs:
     uses: ./.github/workflows/release-npm.yml
     with:
       tag: ${{ needs.prepare.outputs.tag }}
+      expected_commit: ${{ needs.prepare.outputs.commit }}
       dry_run: ${{ needs.prepare.outputs.dry_run == 'true' }}
 
   mooncakes:
@@ -118,6 +120,7 @@ jobs:
     uses: ./.github/workflows/release-mooncakes.yml
     with:
       tag: ${{ needs.prepare.outputs.tag }}
+      expected_commit: ${{ needs.prepare.outputs.commit }}
       dry_run: ${{ needs.prepare.outputs.dry_run == 'true' }}
 
   smoke:
