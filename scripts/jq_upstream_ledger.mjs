@@ -374,7 +374,7 @@ function getCorpusStatus(corpusName, cases, diffRecords) {
   return {
     corpus: corpusName,
     total: cases.length,
-    passingCount: cases.length - activeTemporary.length - staleTemporary.length - broken.length,
+    passingCount: cases.length - declaredTemporary.length - broken.length,
     declaredTemporary,
     activeTemporary,
     staleTemporary,
