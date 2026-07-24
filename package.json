@@ -2,6 +2,6 @@
   "name": "jqx-workspace",
   "private": true,
   "devDependencies": {
-    "vite-plus": "0.2.5"
+    "vite-plus": "0.2.6"
   }
 }
