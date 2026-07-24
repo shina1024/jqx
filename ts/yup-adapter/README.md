@@ -111,7 +111,7 @@ pnpm typecheck
 pnpm test
 ```
 
-`pnpm build` runs Vite+ `vp pack` to bundle ESM/CJS and emit declarations with Oxc. `pnpm typecheck` runs Vite+ type-aware Oxlint checks.
+`pnpm build` runs Vite+ `vp pack` to bundle ESM and emit declarations with Oxc. `pnpm typecheck` runs Vite+ type-aware Oxlint checks.
 
 ## Related Docs
 

@@ -1,13 +1,11 @@
 import * as assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { createRequire } from "node:module";
 import { test } from "vite-plus/test";
 
-const require = createRequire(import.meta.url);
 const packageJson = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8"),
 ) as {
-  exports: Record<string, { import?: string; require?: string; types?: string }>;
+  exports: Record<string, { import?: string; types?: string }>;
 };
 const runtimeEntryPoints = [".", "./bind"];
 const removedAdapterSubpaths = ["./zod", "./yup", "./valibot"];
@@ -25,11 +23,11 @@ test("root export map stays runtime-only", () => {
 
 test("package export map points at built artifact files", () => {
   for (const [subpath, conditions] of Object.entries(packageJson.exports)) {
-    for (const target of [conditions.import, conditions.require, conditions.types]) {
+    for (const target of [conditions.import, conditions.types]) {
       assert.equal(
         typeof target,
         "string",
-        `Expected ${subpath} to declare import/require/types targets`,
+        `Expected ${subpath} to declare import/types targets`,
       );
       assert.equal(
         existsSync(new URL(`..\\${target}`.replaceAll("\\", "/"), import.meta.url)),
@@ -47,24 +45,6 @@ test("package-name ESM imports resolve root and bind entrypoints", async () => {
   assert.equal(typeof root.parseJson, "function");
 
   const bind = await import("@shina1024/jqx/bind");
-  assert.equal(typeof bind.bindRuntime, "function");
-  assert.equal(typeof bind.bindQueryRuntime, "function");
-});
-
-test("package-name CJS requires resolve root and bind entrypoints", () => {
-  const root = require("@shina1024/jqx") as {
-    run?: unknown;
-    compile?: unknown;
-    parseJson?: unknown;
-  };
-  assert.equal(typeof root.run, "function");
-  assert.equal(typeof root.compile, "function");
-  assert.equal(typeof root.parseJson, "function");
-
-  const bind = require("@shina1024/jqx/bind") as {
-    bindRuntime?: unknown;
-    bindQueryRuntime?: unknown;
-  };
   assert.equal(typeof bind.bindRuntime, "function");
   assert.equal(typeof bind.bindQueryRuntime, "function");
 });

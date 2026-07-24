@@ -210,7 +210,7 @@ pnpm typecheck
 pnpm test
 ```
 
-`pnpm build` runs Vite+ `vp pack` after the MoonBit JS runtime build, bundling ESM/CJS and emitting declarations with Oxc. `pnpm typecheck` runs Vite+ type-aware Oxlint checks.
+`pnpm build` runs Vite+ `vp pack` after the MoonBit JS runtime build, bundling ESM and emitting declarations with Oxc. `pnpm typecheck` runs Vite+ type-aware Oxlint checks.
 The workspace uses Vite+ as the TS package toolchain entrypoint, so package verification follows the checked-in Vite+ versions instead of package-local formatter, linter, bundler, and test-runner dependencies.
 `pnpm test` and `pnpm typecheck` both build `dist/` first so the package-name smoke tests and declaration fixtures run against the shipped entrypoints instead of source-file shortcuts.
 

@@ -25,19 +25,17 @@
     "README.md"
   ],
   "type": "module",
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     },
     "./bind": {
       "types": "./dist/bind.d.ts",
-      "import": "./dist/bind.js",
-      "require": "./dist/bind.cjs"
+      "import": "./dist/bind.js"
     }
   },
   "publishConfig": {
