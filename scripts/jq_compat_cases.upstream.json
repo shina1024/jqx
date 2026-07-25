@@ -5404,7 +5404,13 @@
     "source_file": "onig.test",
     "source_line": 15,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [],
+    "compat_ledger_id": "jq-onig-zero-width-multibyte-boundary",
+    "compat_reason": "jq's current release matches empty regex at byte boundaries inside multibyte characters; jqx implements the upstream fixture's intended char-boundary semantics (upstream comment: 'global zero-width matches must not land inside a multibyte character')",
+    "compat_removal_condition": "jq release adopts char-boundary zero-width match semantics matching upstream fixture expectations",
+    "compat_stale_policy": "fail"
   },
   {
     "name": "upstream-onig-test-l19",
@@ -5413,7 +5419,13 @@
     "source_file": "onig.test",
     "source_line": 19,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [],
+    "compat_ledger_id": "jq-onig-zero-width-multibyte-boundary",
+    "compat_reason": "jq's current release matches empty regex at byte boundaries inside multibyte characters; jqx implements the upstream fixture's intended char-boundary semantics (upstream comment: 'global zero-width matches must not land inside a multibyte character')",
+    "compat_removal_condition": "jq release adopts char-boundary zero-width match semantics matching upstream fixture expectations",
+    "compat_stale_policy": "fail"
   },
   {
     "name": "upstream-onig-test-l23",
@@ -5422,7 +5434,13 @@
     "source_file": "onig.test",
     "source_line": 23,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [],
+    "compat_ledger_id": "jq-onig-zero-width-multibyte-boundary",
+    "compat_reason": "jq's current release matches empty regex at byte boundaries inside multibyte characters; jqx implements the upstream fixture's intended char-boundary semantics (upstream comment: 'global zero-width matches must not land inside a multibyte character')",
+    "compat_removal_condition": "jq release adopts char-boundary zero-width match semantics matching upstream fixture expectations",
+    "compat_stale_policy": "fail"
   },
   {
     "name": "upstream-onig-test-l27",

@@ -207,20 +207,13 @@ fn dispatch_string_builtin(
       if args.length() != 1 {
         raise UnknownFunction("join")
       } else {
-        match input {
-          Array(a) => {
-            let seps = execute_with_runtime(runtime, args[0], input, env)
-            let out = []
-            for sep in seps {
-              out.push(join_values(a, sep))
-            }
-            Some(out)
-          }
-          _ =>
-            raise TypeError(
-              "Cannot iterate over " + json_type_with_value(input),
-            )
+        let values = collection_values(input)
+        let seps = execute_with_runtime(runtime, args[0], input, env)
+        let out = []
+        for sep in seps {
+          out.push(join_values(values, sep))
         }
+        Some(out)
       }
     "split" =>
       if args.length() == 1 {

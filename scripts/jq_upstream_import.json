@@ -32,6 +32,30 @@
       "compat_reason": "jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names",
       "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output",
       "compat_stale_policy": "allow"
+    },
+    "upstream-onig-test-l15": {
+      "compat_status": "temporary_exception",
+      "compat_platforms": [],
+      "compat_ledger_id": "jq-onig-zero-width-multibyte-boundary",
+      "compat_reason": "jq's current release matches empty regex at byte boundaries inside multibyte characters; jqx implements the upstream fixture's intended char-boundary semantics (upstream comment: 'global zero-width matches must not land inside a multibyte character')",
+      "compat_removal_condition": "jq release adopts char-boundary zero-width match semantics matching upstream fixture expectations",
+      "compat_stale_policy": "fail"
+    },
+    "upstream-onig-test-l19": {
+      "compat_status": "temporary_exception",
+      "compat_platforms": [],
+      "compat_ledger_id": "jq-onig-zero-width-multibyte-boundary",
+      "compat_reason": "jq's current release matches empty regex at byte boundaries inside multibyte characters; jqx implements the upstream fixture's intended char-boundary semantics (upstream comment: 'global zero-width matches must not land inside a multibyte character')",
+      "compat_removal_condition": "jq release adopts char-boundary zero-width match semantics matching upstream fixture expectations",
+      "compat_stale_policy": "fail"
+    },
+    "upstream-onig-test-l23": {
+      "compat_status": "temporary_exception",
+      "compat_platforms": [],
+      "compat_ledger_id": "jq-onig-zero-width-multibyte-boundary",
+      "compat_reason": "jq's current release matches empty regex at byte boundaries inside multibyte characters; jqx implements the upstream fixture's intended char-boundary semantics (upstream comment: 'global zero-width matches must not land inside a multibyte character')",
+      "compat_removal_condition": "jq release adopts char-boundary zero-width match semantics matching upstream fixture expectations",
+      "compat_stale_policy": "fail"
     }
   }
 }
