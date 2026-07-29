@@ -21,7 +21,7 @@ pub impl Show for ParseError with fn output(self, logger) {
     InvalidChar({ line, column }, c) =>
       logger
       ..write_string("Invalid character ")
-      ..write_string(to_repr(c).to_string())
+      ..write_string(Repr(c).to_string())
       ..write_string(" at line ")
       ..write_object(line)
       ..write_string(", column ")
