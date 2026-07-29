@@ -73,9 +73,10 @@ The normal path is standard `Json` via `run(filter, input)`. Reach for `compile(
 Add the package to your `moon.pkg` imports with an alias:
 
 ```moonbit nocheck
+///|
 import {
   "moonbitlang/core/json",
-  "shina1024/jqx" @jqx,
+  "shina1024/jqx",
 }
 ```
 
