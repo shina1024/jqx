@@ -2,8 +2,8 @@
 
 - upstream: https://github.com/jqlang/jq.git
 - ref: master
-- commit: 2d410d6d86be7f685ad28e5cffac0248aa47664c
-- synced_at_utc: 2026-07-20
+- commit: 603db3f57741d217ba651e61086b550a72148b83
+- synced_at_utc: 2026-07-27
 
 This directory is copied from `jqlang/jq` using `scripts/update_jq_tests.ps1`
 or `scripts/update_jq_tests.sh`.

@@ -4,7 +4,7 @@
 - upstream cases: `scripts/jq_compat_cases.upstream.json`
 - upstream diff snapshot: `scripts/jq_upstream_failures.snapshot.json`
 - upstream commit (HEAD): `2d410d6d86be7f685ad28e5cffac0248aa47664c`
-- upstream commit (current): `2d410d6d86be7f685ad28e5cffac0248aa47664c`
+- upstream commit (current): `603db3f57741d217ba651e61086b550a72148b83`
 
 ## Corpus Status
 
@@ -32,30 +32,26 @@
 ## Upstream Drift Summary
 
 - upstream cases old/new: 883 -> 883
-- upstream cases added/removed/changed: 0 / 0 / 3
-- upstream differences old/new: 4 -> 5
-- upstream differences new/resolved/changed: 2 / 1 / 3
+- upstream cases added/removed/changed: 0 / 0 / 0
+- upstream differences old/new: 5 -> 3
+- upstream differences new/resolved/changed: 0 / 2 / 0
 
 ## New Upstream Differences
 
-- upstream-jq-test-l1847 (`temporary-exception`)
-- upstream-optional-test-l9 (`temporary-exception`)
+- none
 
 ## Resolved Upstream Differences
 
-- upstream-man-test-l646
+- upstream-jq-test-l1847
+- upstream-optional-test-l9
 
 ## Upstream Difference Behavior Changes
 
-- upstream-onig-test-l15 (`output-mismatch` -> `temporary-exception`)
-- upstream-onig-test-l19 (`output-mismatch` -> `temporary-exception`)
-- upstream-onig-test-l23 (`output-mismatch` -> `temporary-exception`)
+- none
 
 ## Upstream Case Behavior Changes
 
-- upstream-onig-test-l15: compat_status, compat_ledger_id, compat_reason, compat_removal_condition
-- upstream-onig-test-l19: compat_status, compat_ledger_id, compat_reason, compat_removal_condition
-- upstream-onig-test-l23: compat_status, compat_ledger_id, compat_reason, compat_removal_condition
+- none
 
 ## Added Upstream Cases
 
