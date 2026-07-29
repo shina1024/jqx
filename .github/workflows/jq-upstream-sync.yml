@@ -10,6 +10,11 @@ on:
         required: false
         default: "master"
         type: string
+      force_sync:
+        description: "Force re-sync even when vendored files match upstream"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -23,6 +28,7 @@ jobs:
       pull-requests: write
     env:
       UPSTREAM_REF: ${{ github.event.inputs.upstream_ref || 'master' }}
+      FORCE_SYNC: ${{ github.event.inputs.force_sync || 'false' }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
