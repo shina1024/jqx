@@ -1742,14 +1742,14 @@ test "execute split full regex support" {
 
 ///|
 test "execute regex deep nested groups error" {
-  // 300 nested groups exceeds MAX_GROUP_DEPTH (256) and must return a
+  // 100 nested groups exceeds MAX_GROUP_DEPTH (64) and must return a
   // structured error rather than exhausting the host stack.
   let pat = StringBuilder()
-  for _ in 0..<300 {
+  for _ in 0..<100 {
     pat.write_char('(')
   }
   pat.write_char('a')
-  for _ in 0..<300 {
+  for _ in 0..<100 {
     pat.write_char(')')
   }
   let filter_src = "test(\"" + pat.to_string() + "\")"

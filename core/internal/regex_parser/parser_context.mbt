@@ -28,7 +28,7 @@ priv struct ParserContext {
 }
 
 ///|
-const MAX_GROUP_DEPTH : Int = 256
+const MAX_GROUP_DEPTH : Int = 64
 
 ///|
 fn ParserContext::new(
