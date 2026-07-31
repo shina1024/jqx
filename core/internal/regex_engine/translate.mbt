@@ -215,26 +215,34 @@ fn transl_seq(
   tc : TranslateContext,
   exprs : ReadOnlyArray[Pattern],
 ) -> @automata.Expr {
-  fn go(i : Int) -> @automata.Expr {
-    if i >= exprs.length() {
-      @automata.e_eps
-    } else if i == exprs.length() - 1 {
-      let (cr, pref2) = translate(tc, exprs[i])
-      enforce_pref(tc.ctx, tc.pref, pref2, cr)
-    } else {
-      let (cr, pref2) = translate(tc, exprs[i])
-      let cr2 = go(i + 1)
-      if @automata.is_eps(cr2) {
-        cr
-      } else if @automata.is_eps(cr) {
-        cr2
-      } else {
-        @automata.e_seq(ctx=tc.ctx, pref2, cr, cr2)
-      }
-    }
+  let n = exprs.length()
+  if n == 0 {
+    return @automata.e_eps
   }
-
-  go(0)
+  // Translate left-to-right to preserve capture group numbering side effects.
+  let crs : Array[@automata.Expr] = []
+  let prefs : Array[Preference] = []
+  for i in 0..<n {
+    let (cr, pref2) = translate(tc, exprs[i])
+    crs.push(cr)
+    prefs.push(pref2)
+  }
+  // Combine right-to-left iteratively (replaces recursive go(i+1)).
+  let mut acc = enforce_pref(tc.ctx, tc.pref, prefs[n - 1], crs[n - 1])
+  let mut i = n - 2
+  while i >= 0 {
+    let cr = crs[i]
+    let pref2 = prefs[i]
+    acc = if @automata.is_eps(acc) {
+      cr
+    } else if @automata.is_eps(cr) {
+      acc
+    } else {
+      @automata.e_seq(ctx=tc.ctx, pref2, cr, acc)
+    }
+    i = i - 1
+  }
+  acc
 }
 
 ///|
@@ -253,9 +261,11 @@ fn enforce_pref(
 
 ///|
 fn[T] iter(n : Int, f : (T) -> T, init : T) -> T {
-  if n == 0 {
-    init
-  } else {
-    iter(n - 1, f, f(init))
+  let mut acc = init
+  let mut i = 0
+  while i < n {
+    acc = f(acc)
+    i = i + 1
   }
+  acc
 }

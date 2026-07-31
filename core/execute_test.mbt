@@ -1700,6 +1700,91 @@ test "execute split errors" {
 }
 
 ///|
+test "execute split redos bounded time" {
+  // Pattern with overlapping quantified atoms that caused combinatorial
+  // backtracking in the old split matcher (O(n^4) for a*a*a*b).
+  // The derivative engine completes in linear time.
+  let input = StringBuilder()
+  for _ in 0..<50 {
+    input.write_char('a')
+  }
+  let json = "\"" + input.to_string() + "\""
+  let result = must_execute(
+    compile("split(\"a*a*a*b\"; \"\")"),
+    must_parse(json),
+  )
+  // No 'b' in input, so no match: the whole string is one token.
+  @debug.assert_eq(result, [Value::array([Value::string(input.to_string())])])
+}
+
+///|
+test "execute split full regex support" {
+  // The old split matcher only supported literal chars + ?/*/+ and anchors.
+  // The derivative engine supports full regex: character classes, alternation.
+  @debug.assert_eq(
+    must_execute(
+      compile("split(\"[0-9]+\"; \"\")"),
+      must_parse("\"ab12cd34ef\""),
+    ),
+    [
+      Value::array([
+        Value::string("ab"),
+        Value::string("cd"),
+        Value::string("ef"),
+      ]),
+    ],
+  )
+  @debug.assert_eq(
+    must_execute(compile("split(\"[,;]\"; \"\")"), must_parse("\"a,b;c\"")),
+    [Value::array([Value::string("a"), Value::string("b"), Value::string("c")])],
+  )
+}
+
+///|
+test "execute regex deep nested groups error" {
+  // 300 nested groups exceeds MAX_GROUP_DEPTH (256) and must return a
+  // structured error rather than exhausting the host stack.
+  let pat = StringBuilder()
+  for _ in 0..<300 {
+    pat.write_char('(')
+  }
+  pat.write_char('a')
+  for _ in 0..<300 {
+    pat.write_char(')')
+  }
+  let filter_src = "test(\"" + pat.to_string() + "\")"
+  guard (try execute(compile(filter_src), must_parse("\"a\"")) catch {
+    err => {
+      let msg = err.to_string()
+      msg.contains("Regex failure") && msg.contains("Group nesting too deep")
+    }
+  } noraise {
+    _ => false
+  }) else {
+    fail("expected group nesting depth error")
+  }
+}
+
+///|
+test "execute regex flat long sequence compiles" {
+  // A flat sequence of 2000 literal characters exercises the iterative
+  // transl_seq path (previously recursive go(i+1) would use 2000 frames).
+  let pat = StringBuilder()
+  for _ in 0..<2000 {
+    pat.write_char('a')
+  }
+  let input = StringBuilder()
+  for _ in 0..<2000 {
+    input.write_char('a')
+  }
+  let result = must_execute(
+    compile("test(\"" + pat.to_string() + "\")"),
+    must_parse("\"" + input.to_string() + "\""),
+  )
+  @debug.assert_eq(result, [Value::boolean(true)])
+}
+
+///|
 test "execute test regex errors" {
   guard (try execute(compile("test(\"a\")"), must_parse("1")) catch {
     err =>

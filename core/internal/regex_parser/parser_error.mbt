@@ -97,3 +97,6 @@ const HINT_UNSUPPORTED_NESTED_CHAR_CLASS = "Unsupported nested character class"
 
 ///|
 const HINT_USE_POSIX_CHARACTER_CLASS = "Use POSIX character class instead of \\w, \\W, \\d, \\D, \\s, \\S"
+
+///|
+const HINT_GROUP_NESTING_TOO_DEEP = "Group nesting too deep"

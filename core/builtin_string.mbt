@@ -242,7 +242,9 @@ fn dispatch_string_builtin(
                 match input {
                   String(s) =>
                     out.push(
-                      Value::array(split_string_regex_tokens(s, pattern, flags)),
+                      Value::array(
+                        regex_split_tokens(runtime, s, pattern, flags),
+                      ),
                     )
                   _ =>
                     raise TypeError("split input and separator must be strings")
@@ -275,7 +277,7 @@ fn dispatch_string_builtin(
                 )
                 match input {
                   String(s) =>
-                    for part in split_string_regex_tokens(s, pattern, flags) {
+                    for part in regex_split_tokens(runtime, s, pattern, flags) {
                       out.push(part)
                     }
                   _ =>

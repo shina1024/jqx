@@ -24,7 +24,11 @@ priv struct ParserContext {
   base : Int
   ignore_case : Bool
   mode : Mode
+  depth : Int
 }
+
+///|
+const MAX_GROUP_DEPTH : Int = 256
 
 ///|
 fn ParserContext::new(
@@ -32,7 +36,7 @@ fn ParserContext::new(
   base~ : Int,
   mode~ : Mode,
 ) -> ParserContext {
-  { profile, base, ignore_case: false, mode }
+  { profile, base, ignore_case: false, mode, depth: 0 }
 }
 
 ///|

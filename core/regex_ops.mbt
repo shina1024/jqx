@@ -35,6 +35,38 @@ let regex_unicode_profile : @regex_engine.Profile = @regex_engine.Profile::new(
 )
 
 ///|
+fn split_regex_flag_enabled(flags : String, flag : Char) -> Bool {
+  for ch in flags {
+    if ch == flag {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn string_to_chars(s : String) -> Array[Char] {
+  let out = []
+  for ch in s {
+    out.push(ch)
+  }
+  out
+}
+
+///|
+fn chars_slice_to_string(
+  chars : Array[Char],
+  start : Int,
+  end_ : Int,
+) -> String {
+  let buf = StringBuilder()
+  for i in start..<end_ {
+    buf.write_char(chars[i])
+  }
+  buf.to_string()
+}
+
+///|
 priv enum CompiledRegexMatcher {
   Native(@regex_engine.Regex)
   TopLevelPositiveLookahead(@regex_engine.Regex)
@@ -525,6 +557,44 @@ fn regex_scan_values(
         }
       }
       None => return out
+    }
+  }
+  out
+}
+
+///|
+fn regex_split_tokens(
+  runtime : RuntimeContext,
+  s : String,
+  pattern : String,
+  flags : String,
+) -> Array[Value] raise EvalError {
+  let compiled = regex_compile_pattern(runtime, pattern, flags)
+  let mut search_start = 0
+  let mut token_start = 0
+  let len = s.length()
+  let out = []
+  while search_start <= len {
+    match regex_find_next_match(compiled, s, search_start) {
+      Some(found) => {
+        out.push(Value::string(regex_slice_string(s, token_start, found.start)))
+        token_start = found.end_
+        match
+          regex_next_search_start(search_start, found.start, found.end_, len) {
+          Some(next_start) => {
+            search_start = next_start
+            continue
+          }
+          None => {
+            out.push(Value::string(regex_slice_string(s, token_start, len)))
+            return out
+          }
+        }
+      }
+      None => {
+        out.push(Value::string(regex_slice_string(s, token_start, len)))
+        return out
+      }
     }
   }
   out

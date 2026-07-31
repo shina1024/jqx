@@ -373,7 +373,11 @@ fn Parser::parse_group_continue(
   rest : StringView,
   ctx~ : ParserContext,
 ) -> (StringView, Pattern) raise ParserError {
-  let (rest, pat) = Parser::disjunction(rest, ctx~)
+  if ctx.depth >= MAX_GROUP_DEPTH {
+    raise ctx.error_at(rest, HINT_GROUP_NESTING_TOO_DEEP)
+  }
+  let inner_ctx = { ..ctx, depth: ctx.depth + 1 }
+  let (rest, pat) = Parser::disjunction(rest, ctx=inner_ctx)
   match rest {
     [')', .. rest] => (rest, pat)
     [] => raise ctx.error_at(rest, HINT_UNCLOSED_GROUP)
