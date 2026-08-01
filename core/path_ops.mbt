@@ -100,11 +100,21 @@ fn setpath_on_input(
   path : Array[Value],
   value : Value,
 ) -> Value raise EvalError {
-  if path.length() == 0 {
+  setpath_on_input_at(input, path, 0, value)
+}
+
+///|
+fn setpath_on_input_at(
+  input : Value,
+  path : Array[Value],
+  offset : Int,
+  value : Value,
+) -> Value raise EvalError {
+  if offset >= path.length() {
     return value
   }
-  let key = path[0]
-  let rest = path_tail(path)
+  let key = path[offset]
+  let next_offset = offset + 1
   match input {
     Object(o) =>
       match key {
@@ -113,7 +123,7 @@ fn setpath_on_input(
             Some(v) => v
             None => Value::null()
           }
-          let updated = setpath_on_input(child, rest, value)
+          let updated = setpath_on_input_at(child, path, next_offset, value)
           Object(o.set(name, updated))
         }
         _ => index_type_error(input, key)
@@ -128,7 +138,7 @@ fn setpath_on_input(
               raise TypeError("Out of bounds negative array index")
             } else {
               let out = a.copy()
-              out[idx] = setpath_on_input(out[idx], rest, value)
+              out[idx] = setpath_on_input_at(out[idx], path, next_offset, value)
               Value::array(out)
             }
           } else {
@@ -136,7 +146,7 @@ fn setpath_on_input(
             while out.length() <= i {
               out.push(Value::null())
             }
-            out[i] = setpath_on_input(out[i], rest, value)
+            out[i] = setpath_on_input_at(out[i], path, next_offset, value)
             Value::array(out)
           }
         }
@@ -149,7 +159,7 @@ fn setpath_on_input(
     JNull =>
       match key {
         String(name) => {
-          let updated = setpath_on_input(Value::null(), rest, value)
+          let updated = setpath_on_input_at(Value::null(), path, next_offset, value)
           Value::object_from_entries([(name, updated)])
         }
         Number(n, _) => {
@@ -161,7 +171,7 @@ fn setpath_on_input(
             while out.length() <= i {
               out.push(Value::null())
             }
-            out[i] = setpath_on_input(out[i], rest, value)
+            out[i] = setpath_on_input_at(out[i], path, next_offset, value)
             Value::array(out)
           }
         }
@@ -172,50 +182,43 @@ fn setpath_on_input(
 }
 
 ///|
-fn path_tail(path : Array[Value]) -> Array[Value] {
-  let out = []
-  for i in 1..<path.length() {
-    out.push(path[i])
-  }
-  out
-}
-
-///|
 fn add_object_path_group(
-  groups : Map[String, Array[Array[Value]]],
+  groups : Map[String, Array[(Array[Value], Int)]],
   key : String,
-  rest : Array[Value],
+  path : Array[Value],
+  offset : Int,
 ) -> Unit {
   match groups.get(key) {
     Some(paths) => {
       let next = paths.copy()
-      next.push(rest)
+      next.push((path, offset))
       groups[key] = next
     }
-    None => groups[key] = [rest]
+    None => groups[key] = [(path, offset)]
   }
 }
 
 ///|
 fn add_array_path_group(
-  groups : Map[Int, Array[Array[Value]]],
+  groups : Map[Int, Array[(Array[Value], Int)]],
   key : Int,
-  rest : Array[Value],
+  path : Array[Value],
+  offset : Int,
 ) -> Unit {
   match groups.get(key) {
     Some(paths) => {
       let next = paths.copy()
-      next.push(rest)
+      next.push((path, offset))
       groups[key] = next
     }
-    None => groups[key] = [rest]
+    None => groups[key] = [(path, offset)]
   }
 }
 
 ///|
-fn has_empty_path(paths : Array[Array[Value]]) -> Bool {
+fn has_empty_path_at(paths : Array[(Array[Value], Int)]) -> Bool {
   for p in paths {
-    if p.length() == 0 {
+    if p.1 >= p.0.length() {
       return true
     }
   }
@@ -250,21 +253,31 @@ fn delpaths_on_input(
   input : Value,
   paths : Array[Array[Value]],
 ) -> Value raise EvalError {
-  if has_empty_path(paths) {
+  let offset_paths : Array[(Array[Value], Int)] = paths.map(p => (p, 0))
+  delpaths_on_input_at(input, offset_paths)
+}
+
+///|
+fn delpaths_on_input_at(
+  input : Value,
+  paths : Array[(Array[Value], Int)],
+) -> Value raise EvalError {
+  if has_empty_path_at(paths) {
     return Value::null()
   }
   match input {
     JNull => Value::null()
     Object(o) => {
-      let groups = Map([])
-      for path in paths {
-        if path.length() == 0 {
+      let groups : Map[String, Array[(Array[Value], Int)]] = Map([])
+      for entry in paths {
+        let path = entry.0
+        let offset = entry.1
+        if offset >= path.length() {
           continue
         }
-        let key = path[0]
-        let rest = path_tail(path)
+        let key = path[offset]
         match key {
-          String(name) => add_object_path_group(groups, name, rest)
+          String(name) => add_object_path_group(groups, name, path, offset + 1)
           _ =>
             raise TypeError(
               "Cannot delete " + json_type_name(key) + " field of object",
@@ -278,11 +291,11 @@ fn delpaths_on_input(
         let value = kv.1
         match groups.get(name) {
           Some(subpaths) =>
-            if has_empty_path(subpaths) {
+            if has_empty_path_at(subpaths) {
               ()
             } else {
               out_order.push(name)
-              out[name] = delpaths_on_input(value, subpaths)
+              out[name] = delpaths_on_input_at(value, subpaths)
             }
           None => {
             out_order.push(name)
@@ -293,13 +306,14 @@ fn delpaths_on_input(
       Value::object_with_order(out, out_order)
     }
     Array(a) => {
-      let groups = Map([])
-      for path in paths {
-        if path.length() == 0 {
+      let groups : Map[Int, Array[(Array[Value], Int)]] = Map([])
+      for entry in paths {
+        let path = entry.0
+        let offset = entry.1
+        if offset >= path.length() {
           continue
         }
-        let key = path[0]
-        let rest = path_tail(path)
+        let key = path[offset]
         match key {
           Number(n, _) => {
             if n != n || n == @double.infinity || n == @double.neg_infinity {
@@ -308,7 +322,7 @@ fn delpaths_on_input(
             let i = n.to_int()
             let idx = if i < 0 { a.length() + i } else { i }
             if idx >= 0 && idx < a.length() {
-              add_array_path_group(groups, idx, rest)
+              add_array_path_group(groups, idx, path, offset + 1)
             }
           }
           Object(_) =>
@@ -323,10 +337,10 @@ fn delpaths_on_input(
       for i in 0..<a.length() {
         match groups.get(i) {
           Some(subpaths) =>
-            if has_empty_path(subpaths) {
+            if has_empty_path_at(subpaths) {
               ()
             } else {
-              out.push(delpaths_on_input(a[i], subpaths))
+              out.push(delpaths_on_input_at(a[i], subpaths))
             }
           None => out.push(a[i])
         }
@@ -353,33 +367,52 @@ fn collect_paths(
     }
   }
 
+  let stack : Array[(Value, Array[Value])] = []
   match input {
-    Object(o) =>
-      for kv in object_entries_sorted(o) {
-        let key = kv.0
-        let value = kv.1
+    Object(o) => {
+      let entries = object_entries_sorted(o)
+      for i = entries.length() - 1; i >= 0; i = i - 1 {
+        let kv = entries[i]
         let p = prefix.copy()
-        p.push(Value::string(key))
-        if include_node(value) {
-          out.push(Value::array(p))
-        }
-        for child in collect_paths(runtime, value, p, predicate, env) {
-          out.push(child)
-        }
+        p.push(Value::string(kv.0))
+        stack.push((kv.1, p))
       }
+    }
     Array(a) =>
-      for i in 0..<a.length() {
-        let value = a[i]
+      for i = a.length() - 1; i >= 0; i = i - 1 {
         let p = prefix.copy()
         p.push(Value::number(i.to_double()))
-        if include_node(value) {
-          out.push(Value::array(p))
-        }
-        for child in collect_paths(runtime, value, p, predicate, env) {
-          out.push(child)
-        }
+        stack.push((a[i], p))
       }
     _ => ()
+  }
+  while stack.length() > 0 {
+    match stack.pop() {
+      Some((value, path)) => {
+        if include_node(value) {
+          out.push(Value::array(path))
+        }
+        match value {
+          Object(o) => {
+            let entries = object_entries_sorted(o)
+            for i = entries.length() - 1; i >= 0; i = i - 1 {
+              let kv = entries[i]
+              let p = path.copy()
+              p.push(Value::string(kv.0))
+              stack.push((kv.1, p))
+            }
+          }
+          Array(a) =>
+            for i = a.length() - 1; i >= 0; i = i - 1 {
+              let p = path.copy()
+              p.push(Value::number(i.to_double()))
+              stack.push((a[i], p))
+            }
+          _ => ()
+        }
+      }
+      None => ()
+    }
   }
   out
 }
@@ -587,25 +620,28 @@ fn append_recurse_path_states(
   path : Array[Value],
   out : Array[PathEvalState],
 ) -> Unit {
-  out.push(path_eval_state(value, path, true))
-  match value {
-    Object(o) =>
-      for kv in object_entries_sorted(o) {
-        append_recurse_path_states(
-          kv.1,
-          path_with_segment(path, Value::string(kv.0)),
-          out,
-        )
+  let stack : Array[(Value, Array[Value])] = [(value, path)]
+  while stack.length() > 0 {
+    match stack.pop() {
+      Some((v, p)) => {
+        out.push(path_eval_state(v, p, true))
+        match v {
+          Object(o) => {
+            let entries = object_entries_sorted(o)
+            for i = entries.length() - 1; i >= 0; i = i - 1 {
+              let kv = entries[i]
+              stack.push((kv.1, path_with_segment(p, Value::string(kv.0))))
+            }
+          }
+          Array(a) =>
+            for i = a.length() - 1; i >= 0; i = i - 1 {
+              stack.push((a[i], path_with_segment(p, Value::number(i.to_double()))))
+            }
+          _ => ()
+        }
       }
-    Array(a) =>
-      for i in 0..<a.length() {
-        append_recurse_path_states(
-          a[i],
-          path_with_segment(path, Value::number(i.to_double())),
-          out,
-        )
-      }
-    _ => ()
+      None => ()
+    }
   }
 }
 
