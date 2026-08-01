@@ -307,8 +307,9 @@ function isMoonBitInt(value: unknown): value is number {
 function validateQueryAstNode(
   value: unknown,
   path: string,
-  seen: WeakSet<object> = new WeakSet<object>(),
+  ancestors: WeakSet<object> = new WeakSet<object>(),
   depth = 0,
+  validated: WeakSet<object> = new WeakSet<object>(),
 ): QueryAstImportError | null {
   if (!isRecord(value)) {
     return invalidAst(path, "Expected object");
@@ -316,10 +317,13 @@ function validateQueryAstNode(
   if (depth >= 256) {
     return invalidAst(path, "Maximum AST depth exceeded");
   }
-  if (seen.has(value)) {
+  if (validated.has(value)) {
+    return null;
+  }
+  if (ancestors.has(value)) {
     return invalidAst(path, "Cyclic AST object");
   }
-  seen.add(value);
+  ancestors.add(value);
   try {
     const kind = value.kind;
     if (typeof kind !== "string") {
@@ -333,7 +337,7 @@ function validateQueryAstNode(
       if (!hasExactKeys(value, expectedKeys)) {
         return invalidAst(path, "Unexpected fields");
       }
-      return validateQueryAstNode(value[fieldName], `${path}.${fieldName}`, seen, depth + 1);
+      return validateQueryAstNode(value[fieldName], `${path}.${fieldName}`, ancestors, depth + 1, validated);
     };
 
     const validateBinaryNode = (
@@ -347,13 +351,14 @@ function validateQueryAstNode(
       const leftError = validateQueryAstNode(
         value[leftField],
         `${path}.${leftField}`,
-        seen,
+        ancestors,
         depth + 1,
+        validated,
       );
       if (leftError !== null) {
         return leftError;
       }
-      return validateQueryAstNode(value[rightField], `${path}.${rightField}`, seen, depth + 1);
+      return validateQueryAstNode(value[rightField], `${path}.${rightField}`, ancestors, depth + 1, validated);
     };
 
     switch (kind) {
@@ -404,20 +409,21 @@ function validateQueryAstNode(
           return invalidAst(path, "Unexpected fields");
         }
         {
-          const condError = validateQueryAstNode(value.cond, `${path}.cond`, seen, depth + 1);
+          const condError = validateQueryAstNode(value.cond, `${path}.cond`, ancestors, depth + 1, validated);
           if (condError !== null) {
             return condError;
           }
           const thenError = validateQueryAstNode(
             value.thenBranch,
             `${path}.thenBranch`,
-            seen,
+            ancestors,
             depth + 1,
+            validated,
           );
           if (thenError !== null) {
             return thenError;
           }
-          return validateQueryAstNode(value.elseBranch, `${path}.elseBranch`, seen, depth + 1);
+          return validateQueryAstNode(value.elseBranch, `${path}.elseBranch`, ancestors, depth + 1, validated);
         }
       case "tryCatch":
         return validateBinaryNode("inner", "handler", ["kind", "inner", "handler"]);
@@ -432,7 +438,7 @@ function validateQueryAstNode(
           return invalidAst(`${path}.args`, "Expected array");
         }
         for (const [index, arg] of value.args.entries()) {
-          const argError = validateQueryAstNode(arg, `${path}.args[${index}]`, seen, depth + 1);
+          const argError = validateQueryAstNode(arg, `${path}.args[${index}]`, ancestors, depth + 1, validated);
           if (argError !== null) {
             return argError;
           }
@@ -442,7 +448,8 @@ function validateQueryAstNode(
         return invalidAst(`${path}.kind`, `Unsupported kind: ${kind}`);
     }
   } finally {
-    seen.delete(value);
+    ancestors.delete(value);
+    validated.add(value);
   }
 }
 
@@ -483,6 +490,7 @@ function snapshotAstValue(
   path: string,
   ancestors: WeakSet<object> = new WeakSet<object>(),
   depth = 0,
+  cache: Map<object, unknown> = new Map<object, unknown>(),
 ): AstSnapshotResult {
   if (value === null || typeof value !== "object") {
     return { ok: true, value };
@@ -492,6 +500,10 @@ function snapshotAstValue(
   }
   if (ancestors.has(value)) {
     return { ok: false, error: invalidAst(path, "Cyclic AST object") };
+  }
+  const cached = cache.get(value);
+  if (cached !== undefined) {
+    return { ok: true, value: cached };
   }
   const prototype = Object.getPrototypeOf(value);
   if (!Array.isArray(value) && prototype !== Object.prototype && prototype !== null) {
@@ -519,12 +531,13 @@ function snapshotAstValue(
         if (descriptor === undefined || !descriptor.enumerable || !("value" in descriptor)) {
           return { ok: false, error: invalidAst(`${path}[${index}]`, "Expected data value") };
         }
-        const child = snapshotAstValue(descriptor.value, `${path}[${index}]`, ancestors, depth + 1);
+        const child = snapshotAstValue(descriptor.value, `${path}[${index}]`, ancestors, depth + 1, cache);
         if (!child.ok) {
           return child;
         }
         clone.push(child.value);
       }
+      cache.set(value, clone);
       return { ok: true, value: clone };
     }
     const clone: Record<string, unknown> = {};
@@ -536,7 +549,7 @@ function snapshotAstValue(
       if (descriptor === undefined || !descriptor.enumerable || !("value" in descriptor)) {
         return { ok: false, error: invalidAst(`${path}.${key}`, "Expected data value") };
       }
-      const child = snapshotAstValue(descriptor.value, `${path}.${key}`, ancestors, depth + 1);
+      const child = snapshotAstValue(descriptor.value, `${path}.${key}`, ancestors, depth + 1, cache);
       if (!child.ok) {
         return child;
       }
@@ -547,6 +560,7 @@ function snapshotAstValue(
         writable: true,
       });
     }
+    cache.set(value, clone);
     return { ok: true, value: clone };
   } finally {
     ancestors.delete(value);
