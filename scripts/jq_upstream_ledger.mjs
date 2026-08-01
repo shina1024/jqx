@@ -293,6 +293,7 @@ function runDiffSnapshot(casesPath) {
       cwd: repoRoot,
       encoding: "utf8",
       stdio: "inherit",
+      timeout: 300_000,
       env: {
         ...process.env,
         CI: process.env.CI ?? "true",

@@ -139,12 +139,42 @@ function resolveNativeJqxBinary(profile) {
   throw new Error("jqx native executable not found under _build/native/{release,debug}/build/cmd");
 }
 
+function minimalSubprocessEnv() {
+  const env = {};
+  const passthrough = [
+    "PATH",
+    "Path",
+    "PATHEXT",
+    "HOME",
+    "USERPROFILE",
+    "HOMEDRIVE",
+    "HOMEPATH",
+    "TEMP",
+    "TMP",
+    "TMPDIR",
+    "SystemRoot",
+    "SystemDrive",
+    "COMSPEC",
+    "LANG",
+    "LC_ALL",
+    "LC_CTYPE",
+    "TZ",
+  ];
+  for (const key of passthrough) {
+    if (process.env[key] !== undefined) {
+      env[key] = process.env[key];
+    }
+  }
+  return env;
+}
+
 function runCommand(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: repoRoot,
     encoding: "utf8",
     input: options.input ?? undefined,
-    env: options.env ?? process.env,
+    env: options.env ?? minimalSubprocessEnv(),
+    timeout: options.timeout ?? 60_000,
   });
   return {
     status: result.status ?? 1,

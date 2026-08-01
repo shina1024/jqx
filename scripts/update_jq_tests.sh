@@ -8,6 +8,17 @@ FORCE_SYNC="${FORCE_SYNC:-false}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 DEST_DIR="${DEST_DIR:-${REPO_ROOT}/third_party/jq-tests}"
+
+# Resolve DEST_DIR and verify it stays under REPO_ROOT before any destructive operation.
+RESOLVED_DEST="$(cd "$(dirname "${DEST_DIR}")" 2>/dev/null && pwd)/$(basename "${DEST_DIR}")" || RESOLVED_DEST="${DEST_DIR}"
+case "${RESOLVED_DEST}" in
+  "${REPO_ROOT}"/*) ;;
+  *)
+    echo "error: DEST_DIR must resolve under the repository root (${REPO_ROOT}), got: ${RESOLVED_DEST}" >&2
+    exit 1
+    ;;
+esac
+
 TMP_DIR="$(mktemp -d -t jq-tests-sync-XXXXXX)"
 
 cleanup() {

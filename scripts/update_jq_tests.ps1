@@ -27,6 +27,11 @@ if ($Destination -eq "") {
   $Destination = "third_party\jq-tests"
 }
 $destinationPath = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $Destination))
+
+# Security: verify the resolved destination stays under the repository root before any destructive operation.
+if (-not $destinationPath.StartsWith($repoRoot + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) {
+  throw "Destination must resolve under the repository root ($repoRoot), got: $destinationPath"
+}
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("jq-tests-sync-" + [Guid]::NewGuid().ToString("N"))
 
 try {
