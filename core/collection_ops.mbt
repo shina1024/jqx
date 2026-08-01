@@ -543,18 +543,37 @@ fn find_string_indices(haystack : String, pattern : String) -> Array[Int] {
   if pattern_chars.length() > source_chars.length() {
     return []
   }
-  let out = []
-  let last_start = source_chars.length() - pattern_chars.length()
-  for start in 0..<(last_start + 1) {
-    let mut matched = true
-    for i in 0..<pattern_chars.length() {
-      if source_chars[start + i] != pattern_chars[i] {
-        matched = false
-        break
-      }
+  let prefix = [0]
+  let mut prefix_index = 1
+  let mut prefix_length = 0
+  while prefix_index < pattern_chars.length() {
+    if pattern_chars[prefix_index] == pattern_chars[prefix_length] {
+      prefix_length += 1
+      prefix.push(prefix_length)
+      prefix_index += 1
+    } else if prefix_length > 0 {
+      prefix_length = prefix[prefix_length - 1]
+    } else {
+      prefix.push(0)
+      prefix_index += 1
     }
-    if matched {
-      out.push(start)
+  }
+  let out = []
+  let mut source_index = 0
+  let mut pattern_index = 0
+  while source_index < source_chars.length() {
+    if source_chars[source_index] == pattern_chars[pattern_index] {
+      if pattern_index == pattern_chars.length() - 1 {
+        out.push(source_index - pattern_chars.length() + 1)
+        pattern_index = prefix[pattern_index]
+      } else {
+        pattern_index += 1
+      }
+      source_index += 1
+    } else if pattern_index > 0 {
+      pattern_index = prefix[pattern_index - 1]
+    } else {
+      source_index += 1
     }
   }
   out
