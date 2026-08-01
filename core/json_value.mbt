@@ -295,41 +295,139 @@ pub fn Value::object_from_entries(entries : Array[(String, Value)]) -> Value {
 }
 
 ///|
+priv enum FromJsonWork {
+  FConvert(Json)
+  FCollectArray(Int)
+  FCollectObject(Array[String])
+}
+
+///|
 pub fn Value::from_json(input : Json) -> Value {
-  match input {
-    Null => Value::null()
-    True => Value::boolean(true)
-    False => Value::boolean(false)
-    Number(n, repr~) => Value::number(n, repr?)
-    String(s) => Value::string(s)
-    Array(values) => Value::array(values.map(value => Value::from_json(value)))
-    Object(obj) => {
-      let entries = []
-      for key, value in obj {
-        entries.push((key, Value::from_json(value)))
+  let work : Array[FromJsonWork] = [FConvert(input)]
+  let results : Array[Value] = []
+  while work.length() > 0 {
+    match work.pop() {
+      Some(FConvert(json)) =>
+        match json {
+          Null => results.push(Value::null())
+          True => results.push(Value::boolean(true))
+          False => results.push(Value::boolean(false))
+          Number(n, repr~) => results.push(Value::number(n, repr?))
+          String(s) => results.push(Value::string(s))
+          Array(values) => {
+            work.push(FCollectArray(values.length()))
+            for i = values.length() - 1; i >= 0; i = i - 1 {
+              work.push(FConvert(values[i]))
+            }
+          }
+          Object(obj) => {
+            let keys = []
+            let vals = []
+            for key, value in obj {
+              keys.push(key)
+              vals.push(value)
+            }
+            work.push(FCollectObject(keys))
+            for i = vals.length() - 1; i >= 0; i = i - 1 {
+              work.push(FConvert(vals[i]))
+            }
+          }
+        }
+      Some(FCollectArray(n)) => {
+        let start = results.length() - n
+        let items = []
+        for i in start..<results.length() {
+          items.push(results[i])
+        }
+        while results.length() > start {
+          let _ = results.pop()
+        }
+        results.push(Value::array(items))
       }
-      Value::object_from_entries(entries)
+      Some(FCollectObject(keys)) => {
+        let n = keys.length()
+        let start = results.length() - n
+        let entries = []
+        for i in 0..<n {
+          entries.push((keys[i], results[start + i]))
+        }
+        while results.length() > start {
+          let _ = results.pop()
+        }
+        results.push(Value::object_from_entries(entries))
+      }
+      None => ()
     }
   }
+  results[0]
+}
+
+///|
+priv enum ToJsonWork {
+  TConvert(Value)
+  TCollectArray(Int)
+  TCollectObject(Array[String])
 }
 
 ///|
 pub fn Value::to_json(self : Value) -> Json {
-  match self {
-    JNull => null
-    JTrue => Json::boolean(true)
-    JFalse => Json::boolean(false)
-    Number(n, repr) => Json::number(n, repr?)
-    String(s) => Json::string(s)
-    Array(values) => Json::array(values.map(value => Value::to_json(value)))
-    Object(obj) => {
-      let out = Map([])
-      for kv in obj.iter() {
-        out[kv.0] = Value::to_json(kv.1)
+  let work : Array[ToJsonWork] = [TConvert(self)]
+  let results : Array[Json] = []
+  while work.length() > 0 {
+    match work.pop() {
+      Some(TConvert(value)) =>
+        match value {
+          JNull => results.push(null)
+          JTrue => results.push(Json::boolean(true))
+          JFalse => results.push(Json::boolean(false))
+          Number(n, repr) => results.push(Json::number(n, repr?))
+          String(s) => results.push(Json::string(s))
+          Array(values) => {
+            work.push(TCollectArray(values.length()))
+            for i = values.length() - 1; i >= 0; i = i - 1 {
+              work.push(TConvert(values[i]))
+            }
+          }
+          Object(obj) => {
+            let keys = []
+            let vals = []
+            for kv in obj.iter() {
+              keys.push(kv.0)
+              vals.push(kv.1)
+            }
+            work.push(TCollectObject(keys))
+            for i = vals.length() - 1; i >= 0; i = i - 1 {
+              work.push(TConvert(vals[i]))
+            }
+          }
+        }
+      Some(TCollectArray(n)) => {
+        let start = results.length() - n
+        let items = []
+        for i in start..<results.length() {
+          items.push(results[i])
+        }
+        while results.length() > start {
+          let _ = results.pop()
+        }
+        results.push(Json::array(items))
       }
-      Json::object(out)
+      Some(TCollectObject(keys)) => {
+        let n = keys.length()
+        let start = results.length() - n
+        let out = Map([])
+        for i in 0..<n {
+          out[keys[i]] = results[start + i]
+        }
+        while results.length() > start {
+          let _ = results.pop()
+        }
+        results.push(Json::object(out))
+      }
+      None => ()
     }
   }
+  results[0]
 }
 
 ///|
