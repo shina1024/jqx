@@ -18,7 +18,7 @@ export default defineConfig({
     entry: {
       index: "src/index.ts",
     },
-    format: ["esm", "cjs"],
+    format: ["esm"],
     deps: {
       neverBundle: isExternalModule,
     },
@@ -30,14 +30,14 @@ export default defineConfig({
       oxc: true,
       tsconfig: "tsconfig.build.json",
     },
-    outputOptions(_, format) {
+    outputOptions() {
       return {
-        chunkFileNames: format === "cjs" ? "chunks/[name]-[hash].cjs" : "chunks/[name]-[hash].js",
+        chunkFileNames: "chunks/[name]-[hash].js",
         exports: "named",
       };
     },
-    outExtensions({ format }) {
-      return { js: format === "cjs" ? ".cjs" : ".js" };
+    outExtensions() {
+      return { js: ".js" };
     },
   },
 });

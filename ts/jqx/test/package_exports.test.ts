@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { test } from "vite-plus/test";
 
 const packageJson = JSON.parse(
@@ -36,6 +36,13 @@ test("package export map points at built artifact files", () => {
       );
     }
   }
+});
+
+test("ESM package build does not ship CommonJS chunks", () => {
+  const commonJsChunks = readdirSync(new URL("../dist/chunks/", import.meta.url)).filter((entry) =>
+    entry.endsWith(".cjs"),
+  );
+  assert.deepEqual(commonJsChunks, [], "ESM-only packages must not ship .cjs chunks");
 });
 
 test("package-name ESM imports resolve root and bind entrypoints", async () => {
