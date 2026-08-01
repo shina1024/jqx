@@ -159,7 +159,12 @@ fn setpath_on_input_at(
     JNull =>
       match key {
         String(name) => {
-          let updated = setpath_on_input_at(Value::null(), path, next_offset, value)
+          let updated = setpath_on_input_at(
+            Value::null(),
+            path,
+            next_offset,
+            value,
+          )
           Value::object_from_entries([(name, updated)])
         }
         Number(n, _) => {
@@ -635,7 +640,9 @@ fn append_recurse_path_states(
           }
           Array(a) =>
             for i = a.length() - 1; i >= 0; i = i - 1 {
-              stack.push((a[i], path_with_segment(p, Value::number(i.to_double()))))
+              stack.push(
+                (a[i], path_with_segment(p, Value::number(i.to_double()))),
+              )
             }
           _ => ()
         }
