@@ -728,12 +728,22 @@ fn FilterCursor::parse_identifier_or_call(
 }
 
 ///|
+fn filter_max_nesting_depth() -> Int {
+  10000
+}
+
+///|
 fn FilterCursor::parse_paren_expr(
   ctx : FilterCursor,
 ) -> Filter raise FilterError {
+  ctx.nesting_depth += 1
+  if ctx.nesting_depth > filter_max_nesting_depth() {
+    ctx.raise_diagnostic_at(ctx.offset, "Filter nesting too deep")
+  }
   ctx.expect_char('(')
   let inner = ctx.parse_scoped()
   ctx.expect_char(')')
+  ctx.nesting_depth -= 1
   inner
 }
 

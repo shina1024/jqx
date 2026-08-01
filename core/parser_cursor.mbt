@@ -5,6 +5,7 @@ priv struct FilterCursor {
   end_offset : Int
   mut gensym : Int
   compile_context : CompileContext
+  mut nesting_depth : Int
 }
 
 ///|
@@ -37,7 +38,7 @@ fn FilterCursor::make_with_compile_context(
   input : StringView,
   compile_context : CompileContext,
 ) -> FilterCursor {
-  { offset: 0, input, end_offset: input.length(), gensym: 0, compile_context }
+  { offset: 0, input, end_offset: input.length(), gensym: 0, compile_context, nesting_depth: 0 }
 }
 
 ///|

@@ -103,11 +103,21 @@ fn module_candidate_relative_paths(module_name : String) -> Array[String] {
 }
 
 ///|
+fn module_path_is_unc(path : String) -> Bool {
+  path.length() >= 2 &&
+  module_path_is_separator(path.unsafe_get(0).to_int().unsafe_to_char()) &&
+  module_path_is_separator(path.unsafe_get(1).to_int().unsafe_to_char())
+}
+
+///|
 fn module_candidate_paths(
   module_name : String,
   search_dirs : Array[String],
 ) -> Array[String] {
   let out = []
+  if module_path_is_unc(module_name) {
+    return out
+  }
   let rel_paths = module_candidate_relative_paths(module_name)
   if module_path_is_absolute(module_name) {
     for rel in rel_paths {
