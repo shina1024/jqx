@@ -89,6 +89,17 @@ test "compile first diagnostic respects binding scopes" {
 }
 
 ///|
+test "compile first diagnostic handles long flat filters" {
+  let mut filter = Filter::identity()
+  for _ in 0..<20000 {
+    filter = Filter::pipe(filter, Filter::identity())
+  }
+  guard has_no_compile_diagnostic(compile_first_diagnostic(filter, [], [])) else {
+    fail("expected long flat filter diagnostic traversal to complete")
+  }
+}
+
+///|
 test "compile signatures and offsets helpers" {
   let defs : Array[(String, Array[String], Filter)] = [
     ("f", [], Filter::identity()),
