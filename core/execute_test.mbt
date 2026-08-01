@@ -1083,6 +1083,29 @@ test "execute recursion builtins minimal compatibility" {
 }
 
 ///|
+test "execute walk handles deeply nested values" {
+  let mut deep = Value::null()
+  for _ in 0..<20000 {
+    deep = Value::array([deep])
+  }
+  let outputs = must_execute(compile("walk(.)"), deep)
+  guard outputs.length() == 1 else {
+    fail("expected walk to return one deeply nested value")
+  }
+}
+
+///|
+test "execute user-defined recursion returns a depth error" {
+  guard (try execute(compile("def f: f; f"), Value::null()) catch {
+    err => err.to_string() == "Function call depth exceeded"
+  } noraise {
+    _ => false
+  }) else {
+    fail("expected recursive function call depth error")
+  }
+}
+
+///|
 test "execute fromjson errors" {
   guard (try execute(compile("fromjson"), must_parse("1")) catch {
     err => err.to_string() == "number (1) only strings can be parsed"

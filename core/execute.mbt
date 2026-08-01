@@ -225,7 +225,13 @@ priv struct RuntimeContext {
   mut current_definitions : RuntimeDefinition?
   mut current_filter_closures : RuntimeFilterClosure?
   mut next_filter_closure_id : Int
+  mut call_depth : Int
   regex_compile_cache : Map[String, CompiledRegexPattern]
+}
+
+///|
+fn runtime_max_call_depth() -> Int {
+  64
 }
 
 ///|
@@ -234,6 +240,7 @@ fn RuntimeContext::make() -> RuntimeContext {
     current_definitions: None,
     current_filter_closures: None,
     next_filter_closure_id: 0,
+    call_depth: 0,
     regex_compile_cache: Map([]),
   }
 }
@@ -492,6 +499,10 @@ fn execute_runtime_def_call(
   input : Value,
   env : Map[String, Value],
 ) -> Array[Value] raise EvalError {
+  if runtime.call_depth >= runtime_max_call_depth() {
+    raise TypeError("Function call depth exceeded")
+  }
+  runtime.call_depth += 1
   let closure_args = []
   let closure_seeds = []
   for i in 0..<def_.params.length() {
@@ -529,12 +540,14 @@ fn execute_runtime_def_call(
   )
   try execute_with_runtime(runtime, expanded, input, env) catch {
     err => {
+      runtime.call_depth -= 1
       runtime.current_definitions = previous_definitions
       runtime.current_filter_closures = prev_closures
       raise err
     }
   } noraise {
     values => {
+      runtime.call_depth -= 1
       runtime.current_definitions = previous_definitions
       runtime.current_filter_closures = prev_closures
       values

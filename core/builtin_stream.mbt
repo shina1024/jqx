@@ -206,6 +206,21 @@ fn filter_has_truthy_output(
 }
 
 ///|
+priv enum LoopWork {
+  WhileEvaluate(Value)
+  WhileEmit(Value)
+  UntilEvaluate(Value)
+  UntilOutcome(Value, Bool)
+}
+
+///|
+priv enum WalkWork {
+  Visit(Value)
+  ApplyArray(Int)
+  ApplyObject(Array[String])
+}
+
+///|
 fn append_while_outputs(
   runtime : RuntimeContext,
   value : Value,
@@ -214,12 +229,26 @@ fn append_while_outputs(
   env : Map[String, Value],
   out : Array[Value],
 ) -> Unit raise EvalError {
-  for cond_out in execute_with_runtime(runtime, cond, value, env) {
-    if is_truthy(cond_out) {
-      out.push(value)
-      for next in execute_with_runtime(runtime, update, value, env) {
-        append_while_outputs(runtime, next, cond, update, env, out)
+  let stack : Array[LoopWork] = [WhileEvaluate(value)]
+  while stack.length() > 0 {
+    match stack.pop() {
+      None => ()
+      Some(WhileEvaluate(current)) => {
+        let cond_outputs = execute_with_runtime(runtime, cond, current, env)
+        for i = cond_outputs.length() - 1; i >= 0; i = i - 1 {
+          if is_truthy(cond_outputs[i]) {
+            stack.push(WhileEmit(current))
+          }
+        }
       }
+      Some(WhileEmit(current)) => {
+        out.push(current)
+        let next_values = execute_with_runtime(runtime, update, current, env)
+        for i = next_values.length() - 1; i >= 0; i = i - 1 {
+          stack.push(WhileEvaluate(next_values[i]))
+        }
+      }
+      Some(UntilEvaluate(_)) | Some(UntilOutcome(_, _)) => ()
     }
   }
 }
@@ -233,13 +262,24 @@ fn append_until_outputs(
   env : Map[String, Value],
   out : Array[Value],
 ) -> Unit raise EvalError {
-  for cond_out in execute_with_runtime(runtime, cond, value, env) {
-    if is_truthy(cond_out) {
-      out.push(value)
-    } else {
-      for next in execute_with_runtime(runtime, update, value, env) {
-        append_until_outputs(runtime, next, cond, update, env, out)
+  let stack : Array[LoopWork] = [UntilEvaluate(value)]
+  while stack.length() > 0 {
+    match stack.pop() {
+      None => ()
+      Some(UntilEvaluate(current)) => {
+        let cond_outputs = execute_with_runtime(runtime, cond, current, env)
+        for i = cond_outputs.length() - 1; i >= 0; i = i - 1 {
+          stack.push(UntilOutcome(current, is_truthy(cond_outputs[i])))
+        }
       }
+      Some(UntilOutcome(current, true)) => out.push(current)
+      Some(UntilOutcome(current, false)) => {
+        let next_values = execute_with_runtime(runtime, update, current, env)
+        for i = next_values.length() - 1; i >= 0; i = i - 1 {
+          stack.push(UntilEvaluate(next_values[i]))
+        }
+      }
+      Some(WhileEvaluate(_)) | Some(WhileEmit(_)) => ()
     }
   }
 }
@@ -272,34 +312,83 @@ fn walk_transform(
   transform : Filter,
   env : Map[String, Value],
 ) -> Array[Value] raise EvalError {
-  let descended = match value {
-    Array(items) => {
-      let out = []
-      for item in items {
-        let mapped = walk_transform(runtime, item, transform, env)
-        // Keep current evaluator simplification: update-style child transforms
-        // use only the first produced output, and drop empty outputs.
-        if mapped.length() > 0 {
-          out.push(mapped[0])
+  let work : Array[WalkWork] = [Visit(value)]
+  let results : Array[Array[Value]] = []
+  while work.length() > 0 {
+    match work.pop() {
+      None => ()
+      Some(Visit(current)) =>
+        match current {
+          Array(items) => {
+            work.push(ApplyArray(items.length()))
+            for i = items.length() - 1; i >= 0; i = i - 1 {
+              work.push(Visit(items[i]))
+            }
+          }
+          Object(obj) => {
+            let entries = object_entries_sorted(obj)
+            let keys = []
+            let values = []
+            for entry in entries {
+              keys.push(entry.0)
+              values.push(entry.1)
+            }
+            work.push(ApplyObject(keys))
+            for i = values.length() - 1; i >= 0; i = i - 1 {
+              work.push(Visit(values[i]))
+            }
+          }
+          _ =>
+            results.push(execute_with_runtime(runtime, transform, current, env))
         }
-      }
-      Value::array(out)
-    }
-    Object(obj) => {
-      let out = Map([])
-      let out_order = []
-      for kv in object_entries_sorted(obj) {
-        let mapped = walk_transform(runtime, kv.1, transform, env)
-        if mapped.length() > 0 {
-          out_order.push(kv.0)
-          out[kv.0] = mapped[0]
+      Some(ApplyArray(length)) => {
+        let child_results = []
+        for _ in 0..<length {
+          match results.pop() {
+            Some(mapped) => child_results.push(mapped)
+            None => ()
+          }
         }
+        let descended = []
+        for i = length - 1; i >= 0; i = i - 1 {
+          let mapped = child_results[i]
+          if mapped.length() > 0 {
+            descended.push(mapped[0])
+          }
+        }
+        results.push(
+          execute_with_runtime(runtime, transform, Value::array(descended), env),
+        )
       }
-      Value::object_with_order(out, out_order)
+      Some(ApplyObject(keys)) => {
+        let child_results = []
+        for _ in 0..<keys.length() {
+          match results.pop() {
+            Some(mapped) => child_results.push(mapped)
+            None => ()
+          }
+        }
+        let out = Map([])
+        let out_order = []
+        for i in 0..<keys.length() {
+          let mapped = child_results[keys.length() - i - 1]
+          if mapped.length() > 0 {
+            out_order.push(keys[i])
+            out[keys[i]] = mapped[0]
+          }
+        }
+        results.push(
+          execute_with_runtime(
+            runtime,
+            transform,
+            Value::object_with_order(out, out_order),
+            env,
+          ),
+        )
+      }
     }
-    _ => value
   }
-  execute_with_runtime(runtime, transform, descended, env)
+  results[0]
 }
 
 ///|
