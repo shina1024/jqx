@@ -50,7 +50,7 @@
     "@shina1024/jqx-adapter-core": "workspace:^"
   },
   "devDependencies": {
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.2.0",
     "yup": "^1.7.1"
   },
   "peerDependencies": {
