@@ -1,6 +1,6 @@
 name = "shina1024/jqx"
 
-version = "0.4.1"
+version = "0.4.2"
 
 readme = "README.mbt.md"
 
