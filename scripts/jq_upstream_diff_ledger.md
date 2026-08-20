@@ -3,8 +3,8 @@
 - maintained cases: `scripts/jq_compat_cases.json`
 - upstream cases: `scripts/jq_compat_cases.upstream.json`
 - upstream diff snapshot: `scripts/jq_upstream_failures.snapshot.json`
-- upstream commit (HEAD): `2d410d6d86be7f685ad28e5cffac0248aa47664c`
-- upstream commit (current): `603db3f57741d217ba651e61086b550a72148b83`
+- upstream commit (HEAD): `603db3f57741d217ba651e61086b550a72148b83`
+- upstream commit (current): `4bb50d772bd35666dcd3ae460f2ddfae3864e16c`
 
 ## Corpus Status
 
@@ -33,8 +33,8 @@
 
 - upstream cases old/new: 883 -> 883
 - upstream cases added/removed/changed: 0 / 0 / 0
-- upstream differences old/new: 5 -> 3
-- upstream differences new/resolved/changed: 0 / 2 / 0
+- upstream differences old/new: 3 -> 3
+- upstream differences new/resolved/changed: 0 / 0 / 0
 
 ## New Upstream Differences
 
@@ -42,8 +42,7 @@
 
 ## Resolved Upstream Differences
 
-- upstream-jq-test-l1847
-- upstream-optional-test-l9
+- none
 
 ## Upstream Difference Behavior Changes
 
