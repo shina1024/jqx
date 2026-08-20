@@ -784,21 +784,11 @@ fn path_eval_runtime_def_no_args(
   let previous_definitions = runtime.current_definitions
   runtime.current_definitions = Some(def_)
   let saved_env = path_bind_runtime_def_env(env, def_.env)
-  try
-    path_filter_state_with_bindings(runtime, def_.body, state, env, bindings)
-  catch {
-    err => {
-      path_restore_runtime_def_env(env, saved_env)
-      runtime.current_definitions = previous_definitions
-      raise err
-    }
-  } noraise {
-    states => {
-      path_restore_runtime_def_env(env, saved_env)
-      runtime.current_definitions = previous_definitions
-      states
-    }
+  defer {
+    path_restore_runtime_def_env(env, saved_env)
+    runtime.current_definitions = previous_definitions
   }
+  path_filter_state_with_bindings(runtime, def_.body, state, env, bindings)
 }
 
 ///|
@@ -855,19 +845,13 @@ fn path_filter_state_with_bindings(
       for v in values {
         let previous_env = env_bind_temp(env, name, v.value)
         let previous_binding = path_binding_bind_temp(bindings, name, v)
-        let body_states = try
-          path_filter_state_with_bindings(runtime, body, state, env, bindings)
-        catch {
-          err => {
+        let body_states = {
+          defer {
             env_restore_temp(env, name, previous_env)
             path_binding_restore_temp(bindings, name, previous_binding)
-            raise err
           }
-        } noraise {
-          states => states
+          path_filter_state_with_bindings(runtime, body, state, env, bindings)
         }
-        env_restore_temp(env, name, previous_env)
-        path_binding_restore_temp(bindings, name, previous_binding)
         for body_state in body_states {
           out.push(body_state)
         }

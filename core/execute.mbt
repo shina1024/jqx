@@ -41,7 +41,7 @@ fn eval_error_to_message(err : EvalError) -> String {
   match err {
     BreakSignal(name, _) => "break $" + name
     Partial(_, _, message) => message
-    _ => err.to_string()
+    _ => Show::to_string(err)
   }
 }
 
@@ -194,7 +194,7 @@ fn parse_fromjson_string(s : String) -> Value raise EvalError {
       match fromjson_fallback_token(s) {
         Some(v) => v
         None =>
-          raise TypeError(err.to_string() + " (while parsing '" + s + "')")
+          raise TypeError(Show::to_string(err) + " (while parsing '" + s + "')")
       }
   } noraise {
     j => j
@@ -469,26 +469,16 @@ fn execute_runtime_filter_closure(
   let prev_closures = runtime.current_filter_closures
   runtime.current_definitions = closure.definitions
   runtime.current_filter_closures = closure.closures
-  try
-    execute_with_runtime(
-      runtime,
-      closure.arg,
-      input,
-      clone_runtime_env(closure.env),
-    )
-  catch {
-    err => {
-      runtime.current_definitions = previous_definitions
-      runtime.current_filter_closures = prev_closures
-      raise err
-    }
-  } noraise {
-    values => {
-      runtime.current_definitions = previous_definitions
-      runtime.current_filter_closures = prev_closures
-      values
-    }
+  defer {
+    runtime.current_definitions = previous_definitions
+    runtime.current_filter_closures = prev_closures
   }
+  execute_with_runtime(
+    runtime,
+    closure.arg,
+    input,
+    clone_runtime_env(closure.env),
+  )
 }
 
 ///|
@@ -538,21 +528,12 @@ fn execute_runtime_def_call(
     runtime.current_filter_closures,
     closure_seeds,
   )
-  try execute_with_runtime(runtime, expanded, input, env) catch {
-    err => {
-      runtime.call_depth -= 1
-      runtime.current_definitions = previous_definitions
-      runtime.current_filter_closures = prev_closures
-      raise err
-    }
-  } noraise {
-    values => {
-      runtime.call_depth -= 1
-      runtime.current_definitions = previous_definitions
-      runtime.current_filter_closures = prev_closures
-      values
-    }
+  defer {
+    runtime.call_depth -= 1
+    runtime.current_definitions = previous_definitions
+    runtime.current_filter_closures = prev_closures
   }
+  execute_with_runtime(runtime, expanded, input, env)
 }
 
 ///|
@@ -592,17 +573,10 @@ fn execute_with_runtime(
         lowered_definitions,
         env,
       )
-      try execute_with_runtime(runtime, body, input, env) catch {
-        err => {
-          runtime.current_definitions = previous_definitions
-          raise err
-        }
-      } noraise {
-        values => {
-          runtime.current_definitions = previous_definitions
-          values
-        }
+      defer {
+        runtime.current_definitions = previous_definitions
       }
+      execute_with_runtime(runtime, body, input, env)
     }
     Literal(v) => [v]
     Field(name) =>
@@ -705,17 +679,10 @@ fn execute_with_runtime(
       let values = execute_with_runtime(runtime, value, input, env)
       for v in values {
         let previous = env_bind_temp(env, name, v)
-        let body_values = try
+        let body_values = {
+          defer env_restore_temp(env, name, previous)
           execute_with_runtime(runtime, body, input, env)
-        catch {
-          err => {
-            env_restore_temp(env, name, previous)
-            raise err
-          }
-        } noraise {
-          values => values
         }
-        env_restore_temp(env, name, previous)
         for v2 in body_values {
           out.push(v2)
         }
@@ -780,7 +747,8 @@ fn execute_with_runtime(
       let items = execute_with_runtime(runtime, source, input, env)
       for item in items {
         let previous = env_bind_temp(env, name, item)
-        let next_accs = try {
+        let next_accs = {
+          defer env_restore_temp(env, name, previous)
           let next_accs = []
           for acc in accs {
             for v in execute_with_runtime(runtime, update, acc, env) {
@@ -788,15 +756,7 @@ fn execute_with_runtime(
             }
           }
           next_accs
-        } catch {
-          err => {
-            env_restore_temp(env, name, previous)
-            raise err
-          }
-        } noraise {
-          values => values
         }
-        env_restore_temp(env, name, previous)
         accs = next_accs
       }
       accs
@@ -809,7 +769,8 @@ fn execute_with_runtime(
         let mut states = [seed]
         for item in items {
           let previous = env_bind_temp(env, name, item)
-          let next_states = try {
+          let next_states = {
+            defer env_restore_temp(env, name, previous)
             let next_states = []
             for acc in states {
               let update_values = try
@@ -834,15 +795,7 @@ fn execute_with_runtime(
               append_json_values(out, extract_values)
             }
             next_states
-          } catch {
-            err => {
-              env_restore_temp(env, name, previous)
-              raise err
-            }
-          } noraise {
-            values => values
           }
-          env_restore_temp(env, name, previous)
           states = next_states
         }
       }

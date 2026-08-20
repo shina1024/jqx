@@ -181,12 +181,8 @@ fn raise_parse_error_end_from_offset(
   start : Int,
 ) -> Int raise @lib.ParseError {
   let piece = text.view(start_offset=start).to_owned()
-  try {
-    ignore(@lib.parse(piece))
-    return start
-  } catch {
-    err => raise err
-  }
+  ignore(@lib.parse(piece))
+  return start
 }
 
 ///|
