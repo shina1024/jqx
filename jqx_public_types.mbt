@@ -28,7 +28,7 @@ pub suberror JsonParseError {
 ///|
 pub impl Show for JsonParseError with fn output(self, logger) {
   match self {
-    InvalidChar({ line, column }, c) =>
+    InvalidChar({ line, column, }, c) =>
       logger
       ..write_string("Invalid character ")
       ..write_string(Repr(c).to_string())
@@ -38,25 +38,25 @@ pub impl Show for JsonParseError with fn output(self, logger) {
       .write_object(column)
     InvalidEof => logger.write_string("Unexpected end of file")
     DepthLimitExceeded => logger.write_string("Exceeds depth limit for parsing")
-    InvalidNumericLiteral({ line, column }) =>
+    InvalidNumericLiteral({ line, column, }) =>
       logger
       ..write_string("Invalid numeric literal at line ")
       ..write_object(line)
       ..write_string(", column ")
       .write_object(column)
-    InvalidNumericLiteralAtEof({ line, column }) =>
+    InvalidNumericLiteralAtEof({ line, column, }) =>
       logger
       ..write_string("Invalid numeric literal at EOF at line ")
       ..write_object(line)
       ..write_string(", column ")
       .write_object(column)
-    InvalidStringLiteral({ line, column }) =>
+    InvalidStringLiteral({ line, column, }) =>
       logger
       ..write_string("Invalid string literal; expected \", but got ' at line ")
       ..write_object(line)
       ..write_string(", column ")
       .write_object(column)
-    InvalidStringLiteralAtEof({ line, column }) =>
+    InvalidStringLiteralAtEof({ line, column, }) =>
       logger
       ..write_string(
         "Invalid string literal; expected \", but got ' at EOF at line ",
@@ -78,7 +78,7 @@ pub suberror CompileError {
 ///|
 pub impl Show for CompileError with fn output(self, logger) {
   match self {
-    InvalidChar({ line, column }, c) =>
+    InvalidChar({ line, column, }, c) =>
       logger
       ..write_string("Invalid character ")
       ..write_string(Repr(c).to_string())
@@ -87,7 +87,7 @@ pub impl Show for CompileError with fn output(self, logger) {
       ..write_string(", column ")
       .write_object(column)
     InvalidEof => logger.write_string("Unexpected end of file")
-    InvalidNumber({ line, column }, s) =>
+    InvalidNumber({ line, column, }, s) =>
       logger
       ..write_string("Invalid number ")
       ..write_string(s)
@@ -194,7 +194,7 @@ fn compiled_json_text_run_error_from_core(
 
 ///|
 fn position_from_core(input : @core.Position) -> Position {
-  { line: input.line, column: input.column }
+  { line: input.line, column: input.column, }
 }
 
 ///|

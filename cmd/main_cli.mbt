@@ -86,7 +86,7 @@ fn execute_cli(
       }
       match result.1 {
         Some(msg) =>
-          return { stderr_lines: render_error_lines(msg), exit_code: Some(5) }
+          return { stderr_lines: render_error_lines(msg), exit_code: Some(5), }
         None => ()
       }
     }
@@ -95,10 +95,10 @@ fn execute_cli(
     } else {
       None
     }
-    { stderr_lines: [], exit_code }
+    { stderr_lines: [], exit_code, }
   } catch {
     err =>
-      { stderr_lines: render_error_lines(err.to_string()), exit_code: Some(5) }
+      { stderr_lines: render_error_lines(err.to_string()), exit_code: Some(5), }
   }
 }
 

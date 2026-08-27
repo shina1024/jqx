@@ -16,7 +16,7 @@ pub suberror FilterError {
 ///|
 pub impl Show for FilterError with fn output(self, logger) {
   match self {
-    InvalidChar({ line, column }, c) =>
+    InvalidChar({ line, column, }, c) =>
       logger
       ..write_string("Invalid character ")
       ..write_string(Repr(c).to_string())
@@ -25,7 +25,7 @@ pub impl Show for FilterError with fn output(self, logger) {
       ..write_string(", column ")
       .write_object(column)
     InvalidEof => logger.write_string("Unexpected end of file")
-    InvalidNumber({ line, column }, s) =>
+    InvalidNumber({ line, column, }, s) =>
       logger
       ..write_string("Invalid number ")
       ..write_string(s)

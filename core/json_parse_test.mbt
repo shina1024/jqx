@@ -82,7 +82,7 @@ test "parse non-finite number tokens" {
     "{\"a\":null,\"b\":null,\"c\":1.7976931348623157e+308,\"d\":-1.7976931348623157e+308}",
   )
   guard (try parse("NaN10") catch {
-    InvalidNumericLiteralAtEof({ line: 1, column: 5 }) => true
+    InvalidNumericLiteralAtEof({ line: 1, column: 5, }) => true
     _ => false
   } noraise {
     _ => false

@@ -34,7 +34,7 @@ fn jqx_error(
   column? : Int = -1,
   offset? : Int = -1,
 ) -> JqxError {
-  { code, message, line, column, offset }
+  { code, message, line, column, offset, }
 }
 
 ///|
@@ -68,7 +68,7 @@ fn offset_from_line_column(input : String, line : Int, column : Int) -> Int {
 ///|
 fn parse_error_to_jqx_error(input : String, err : @core.ParseError) -> JqxError {
   match err {
-    InvalidChar({ line, column }, _) =>
+    InvalidChar({ line, column, }, _) =>
       jqx_error(
         "parse_invalid_char",
         err.to_string(),
@@ -79,7 +79,7 @@ fn parse_error_to_jqx_error(input : String, err : @core.ParseError) -> JqxError 
     InvalidEof => jqx_error("parse_invalid_eof", err.to_string())
     DepthLimitExceeded =>
       jqx_error("parse_depth_limit_exceeded", err.to_string())
-    InvalidNumericLiteral({ line, column }) =>
+    InvalidNumericLiteral({ line, column, }) =>
       jqx_error(
         "parse_invalid_numeric_literal",
         err.to_string(),
@@ -87,7 +87,7 @@ fn parse_error_to_jqx_error(input : String, err : @core.ParseError) -> JqxError 
         column~,
         offset=offset_from_line_column(input, line, column),
       )
-    InvalidNumericLiteralAtEof({ line, column }) =>
+    InvalidNumericLiteralAtEof({ line, column, }) =>
       jqx_error(
         "parse_invalid_numeric_literal_at_eof",
         err.to_string(),
@@ -95,7 +95,7 @@ fn parse_error_to_jqx_error(input : String, err : @core.ParseError) -> JqxError 
         column~,
         offset=offset_from_line_column(input, line, column),
       )
-    InvalidStringLiteral({ line, column }) =>
+    InvalidStringLiteral({ line, column, }) =>
       jqx_error(
         "parse_invalid_string_literal",
         err.to_string(),
@@ -103,7 +103,7 @@ fn parse_error_to_jqx_error(input : String, err : @core.ParseError) -> JqxError 
         column~,
         offset=offset_from_line_column(input, line, column),
       )
-    InvalidStringLiteralAtEof({ line, column }) =>
+    InvalidStringLiteralAtEof({ line, column, }) =>
       jqx_error(
         "parse_invalid_string_literal_at_eof",
         err.to_string(),
@@ -120,7 +120,7 @@ fn filter_error_to_jqx_error(
   err : @core.FilterError,
 ) -> JqxError {
   match err {
-    InvalidChar({ line, column }, _) =>
+    InvalidChar({ line, column, }, _) =>
       jqx_error(
         "filter_invalid_char",
         err.to_string(),
@@ -129,7 +129,7 @@ fn filter_error_to_jqx_error(
         offset=offset_from_line_column(input, line, column),
       )
     InvalidEof => jqx_error("filter_invalid_eof", err.to_string())
-    InvalidNumber({ line, column }, _) =>
+    InvalidNumber({ line, column, }, _) =>
       jqx_error(
         "filter_invalid_number",
         err.to_string(),

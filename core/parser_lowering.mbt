@@ -22,10 +22,10 @@ priv struct CompileContext {
 }
 
 ///|
-let module_source_state : ModuleSourceState = { sources: Map([]) }
+let module_source_state : ModuleSourceState = { sources: Map([]), }
 
 ///|
-let module_search_path_state : ModuleSearchPathState = { search_paths: [] }
+let module_search_path_state : ModuleSearchPathState = { search_paths: [], }
 
 ///|
 pub fn clear_module_sources() -> Unit {
@@ -316,7 +316,7 @@ fn FilterCursor::parse_as_pattern(
             Some(_) => ctx.invalid_char()
             None => raise InvalidEof
           }
-          entries.push({ key, bindings })
+          entries.push({ key, bindings, })
           ctx.skip_ws()
           match ctx.peek_char() {
             Some(',') => ctx.read_char() |> ignore

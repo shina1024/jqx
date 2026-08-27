@@ -353,7 +353,7 @@ fn regex_find_native_next_match(
     Some(result) =>
       match result.group(0) {
         None => None
-        Some((start, end_)) => Some({ start, end_, result })
+        Some((start, end_)) => Some({ start, end_, result, })
       }
   }
 }
@@ -374,7 +374,7 @@ fn regex_find_top_level_lookahead_match(
           None => return None
           Some((inner_start, _)) =>
             if inner_start == current_start {
-              return Some({ start: current_start, end_: current_start, result })
+              return Some({ start: current_start, end_: current_start, result, })
             } else if inner_start > current_start {
               current_start = inner_start
               continue
