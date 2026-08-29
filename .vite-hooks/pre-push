@@ -1,0 +1,8 @@
+moon fmt --check
+moon check -d --warn-list +73
+moon test
+pnpm --dir ts/adapter-core typecheck
+pnpm --dir ts/zod-adapter typecheck
+pnpm --dir ts/yup-adapter typecheck
+pnpm --dir ts/valibot-adapter typecheck
+pnpm --dir ts/jqx typecheck

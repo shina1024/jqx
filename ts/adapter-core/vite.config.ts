@@ -5,6 +5,7 @@ function isExternalModule(id: string): boolean {
 }
 
 export default defineConfig({
+  fmt: {},
   lint: {
     options: {
       typeAware: true,

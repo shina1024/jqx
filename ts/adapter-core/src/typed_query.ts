@@ -337,7 +337,13 @@ function validateQueryAstNode(
       if (!hasExactKeys(value, expectedKeys)) {
         return invalidAst(path, "Unexpected fields");
       }
-      return validateQueryAstNode(value[fieldName], `${path}.${fieldName}`, ancestors, depth + 1, validated);
+      return validateQueryAstNode(
+        value[fieldName],
+        `${path}.${fieldName}`,
+        ancestors,
+        depth + 1,
+        validated,
+      );
     };
 
     const validateBinaryNode = (
@@ -358,7 +364,13 @@ function validateQueryAstNode(
       if (leftError !== null) {
         return leftError;
       }
-      return validateQueryAstNode(value[rightField], `${path}.${rightField}`, ancestors, depth + 1, validated);
+      return validateQueryAstNode(
+        value[rightField],
+        `${path}.${rightField}`,
+        ancestors,
+        depth + 1,
+        validated,
+      );
     };
 
     switch (kind) {
@@ -409,7 +421,13 @@ function validateQueryAstNode(
           return invalidAst(path, "Unexpected fields");
         }
         {
-          const condError = validateQueryAstNode(value.cond, `${path}.cond`, ancestors, depth + 1, validated);
+          const condError = validateQueryAstNode(
+            value.cond,
+            `${path}.cond`,
+            ancestors,
+            depth + 1,
+            validated,
+          );
           if (condError !== null) {
             return condError;
           }
@@ -423,7 +441,13 @@ function validateQueryAstNode(
           if (thenError !== null) {
             return thenError;
           }
-          return validateQueryAstNode(value.elseBranch, `${path}.elseBranch`, ancestors, depth + 1, validated);
+          return validateQueryAstNode(
+            value.elseBranch,
+            `${path}.elseBranch`,
+            ancestors,
+            depth + 1,
+            validated,
+          );
         }
       case "tryCatch":
         return validateBinaryNode("inner", "handler", ["kind", "inner", "handler"]);
@@ -438,7 +462,13 @@ function validateQueryAstNode(
           return invalidAst(`${path}.args`, "Expected array");
         }
         for (const [index, arg] of value.args.entries()) {
-          const argError = validateQueryAstNode(arg, `${path}.args[${index}]`, ancestors, depth + 1, validated);
+          const argError = validateQueryAstNode(
+            arg,
+            `${path}.args[${index}]`,
+            ancestors,
+            depth + 1,
+            validated,
+          );
           if (argError !== null) {
             return argError;
           }
@@ -531,7 +561,13 @@ function snapshotAstValue(
         if (descriptor === undefined || !descriptor.enumerable || !("value" in descriptor)) {
           return { ok: false, error: invalidAst(`${path}[${index}]`, "Expected data value") };
         }
-        const child = snapshotAstValue(descriptor.value, `${path}[${index}]`, ancestors, depth + 1, cache);
+        const child = snapshotAstValue(
+          descriptor.value,
+          `${path}[${index}]`,
+          ancestors,
+          depth + 1,
+          cache,
+        );
         if (!child.ok) {
           return child;
         }
@@ -549,7 +585,13 @@ function snapshotAstValue(
       if (descriptor === undefined || !descriptor.enumerable || !("value" in descriptor)) {
         return { ok: false, error: invalidAst(`${path}.${key}`, "Expected data value") };
       }
-      const child = snapshotAstValue(descriptor.value, `${path}.${key}`, ancestors, depth + 1, cache);
+      const child = snapshotAstValue(
+        descriptor.value,
+        `${path}.${key}`,
+        ancestors,
+        depth + 1,
+        cache,
+      );
       if (!child.ok) {
         return child;
       }

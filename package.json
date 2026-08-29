@@ -1,6 +1,9 @@
 {
   "name": "jqx-workspace",
   "private": true,
+  "scripts": {
+    "prepare": "vp config"
+  },
   "devDependencies": {
     "vite-plus": "0.3.0"
   }

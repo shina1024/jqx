@@ -24,11 +24,7 @@ test("root export map stays runtime-only", () => {
 test("package export map points at built artifact files", () => {
   for (const [subpath, conditions] of Object.entries(packageJson.exports)) {
     for (const target of [conditions.import, conditions.types]) {
-      assert.equal(
-        typeof target,
-        "string",
-        `Expected ${subpath} to declare import/types targets`,
-      );
+      assert.equal(typeof target, "string", `Expected ${subpath} to declare import/types targets`);
       assert.equal(
         existsSync(new URL(`..\\${target}`.replaceAll("\\", "/"), import.meta.url)),
         true,
