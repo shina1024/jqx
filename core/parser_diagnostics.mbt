@@ -38,7 +38,7 @@ fn compile_first_diagnostic(
   vars : Array[String],
   labels : Array[String],
 ) -> CompileDiagnostic? {
-  let stack : Array[CompileDiagnosticFrame] = [{ filter, vars, labels }]
+  let stack : Array[CompileDiagnosticFrame] = [{ filter, vars, labels, }]
   while stack.length() > 0 {
     match stack.pop() {
       None => ()
@@ -70,7 +70,7 @@ fn compile_first_diagnostic(
               return Some(UndefinedLabel(name))
             }
           Scope(defs, body) => {
-            stack.push({ filter: body, vars: frame.vars, labels: frame.labels })
+            stack.push({ filter: body, vars: frame.vars, labels: frame.labels, })
             let def_frames : Array[CompileDiagnosticFrame] = []
             for def_ in defs {
               let def_vars = frame.vars.copy()
@@ -103,8 +103,12 @@ fn compile_first_diagnostic(
           | Div(left, right)
           | Mod(left, right)
           | Fallback(left, right) => {
-            stack.push({ filter: right, vars: frame.vars, labels: frame.labels })
-            stack.push({ filter: left, vars: frame.vars, labels: frame.labels })
+            stack.push({
+              filter: right,
+              vars: frame.vars,
+              labels: frame.labels,
+            })
+            stack.push({ filter: left, vars: frame.vars, labels: frame.labels, })
           }
           Array(items) =>
             for i = items.length() - 1; i >= 0; i = i - 1 {
@@ -133,23 +137,35 @@ fn compile_first_diagnostic(
           As(value, name, body) => {
             let body_vars = frame.vars.copy()
             body_vars.push(name)
-            stack.push({ filter: body, vars: body_vars, labels: frame.labels })
-            stack.push({ filter: value, vars: frame.vars, labels: frame.labels })
+            stack.push({ filter: body, vars: body_vars, labels: frame.labels, })
+            stack.push({
+              filter: value,
+              vars: frame.vars,
+              labels: frame.labels,
+            })
           }
           Label(name, body) => {
             let body_labels = frame.labels.copy()
             body_labels.push(name)
-            stack.push({ filter: body, vars: frame.vars, labels: body_labels })
+            stack.push({ filter: body, vars: frame.vars, labels: body_labels, })
           }
           Try(inner) =>
-            stack.push({ filter: inner, vars: frame.vars, labels: frame.labels })
+            stack.push({
+              filter: inner,
+              vars: frame.vars,
+              labels: frame.labels,
+            })
           TryCatch(inner, handler) => {
             stack.push({
               filter: handler,
               vars: frame.vars,
               labels: frame.labels,
             })
-            stack.push({ filter: inner, vars: frame.vars, labels: frame.labels })
+            stack.push({
+              filter: inner,
+              vars: frame.vars,
+              labels: frame.labels,
+            })
           }
           Reduce(source, name, init, update) => {
             let update_vars = frame.vars.copy()
@@ -159,7 +175,7 @@ fn compile_first_diagnostic(
               vars: update_vars,
               labels: frame.labels,
             })
-            stack.push({ filter: init, vars: frame.vars, labels: frame.labels })
+            stack.push({ filter: init, vars: frame.vars, labels: frame.labels, })
             stack.push({
               filter: source,
               vars: frame.vars,
@@ -179,7 +195,7 @@ fn compile_first_diagnostic(
               vars: update_vars,
               labels: frame.labels,
             })
-            stack.push({ filter: init, vars: frame.vars, labels: frame.labels })
+            stack.push({ filter: init, vars: frame.vars, labels: frame.labels, })
             stack.push({
               filter: source,
               vars: frame.vars,
@@ -187,7 +203,11 @@ fn compile_first_diagnostic(
             })
           }
           Not(inner) =>
-            stack.push({ filter: inner, vars: frame.vars, labels: frame.labels })
+            stack.push({
+              filter: inner,
+              vars: frame.vars,
+              labels: frame.labels,
+            })
           IfElse(cond, then_branch, else_branch) => {
             stack.push({
               filter: else_branch,
@@ -199,7 +219,7 @@ fn compile_first_diagnostic(
               vars: frame.vars,
               labels: frame.labels,
             })
-            stack.push({ filter: cond, vars: frame.vars, labels: frame.labels })
+            stack.push({ filter: cond, vars: frame.vars, labels: frame.labels, })
           }
         }
     }
@@ -244,7 +264,7 @@ fn compile_first_unresolved_local_call(
   all_signatures : Array[(String, Int)],
 ) -> (String, Int)? {
   let stack : Array[UnresolvedCallFrame] = [
-    { filter, visible_signatures, all_signatures },
+    { filter, visible_signatures, all_signatures, },
   ]
   while stack.length() > 0 {
     match stack.pop() {

@@ -210,7 +210,7 @@ fn Parser::quantifier_opt(
           raise ctx.error_at(rest0, HINT_UNSUPPORTED_POSSESSIVE_QUANTIFIER)
         _ => (rest, Greedy)
       }
-      (rest, Some({ min, max, mode }))
+      (rest, Some({ min, max, mode, }))
     }
     None => (rest, None)
   }
@@ -376,7 +376,7 @@ fn Parser::parse_group_continue(
   if ctx.depth >= MAX_GROUP_DEPTH {
     raise ctx.error_at(rest, HINT_GROUP_NESTING_TOO_DEEP)
   }
-  let inner_ctx = { ..ctx, depth: ctx.depth + 1 }
+  let inner_ctx = { ..ctx, depth: ctx.depth + 1, }
   let (rest, pat) = Parser::disjunction(rest, ctx=inner_ctx)
   match rest {
     [')', .. rest] => (rest, pat)

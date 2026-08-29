@@ -78,7 +78,7 @@ fn SymbolMap::finalize_sparse(
   self.each_intervals(lb, ub, (lo, hi) => {
     let symbol = repr.length()
     repr.push(lo)
-    entries.push({ lo, hi, symbol })
+    entries.push({ lo, hi, symbol, })
   })
   (
     SparseTable(ReadOnlyArray::from_array(entries)),

@@ -181,7 +181,7 @@ fn offset_to_position(input : StringView, offset : Int) -> Position {
       column += 1
     }
   }
-  return { line, column }
+  return { line, column, }
 }
 
 ///|

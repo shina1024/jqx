@@ -142,7 +142,7 @@ fn load_module_source_from_filesystem(
   for path in candidates {
     match module_source_read_file(path) {
       Some(source) =>
-        return Some({ source, directory: module_path_parent(path) })
+        return Some({ source, directory: module_path_parent(path), })
       None => ()
     }
   }

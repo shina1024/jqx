@@ -11,7 +11,7 @@ pub struct Query[I, O] {
 
 ///|
 fn[I, O] query_of_filter(filter : @core.Filter) -> Query[I, O] {
-  { filter, _input: None, _output: None }
+  { filter, _input: None, _output: None, }
 }
 
 ///|

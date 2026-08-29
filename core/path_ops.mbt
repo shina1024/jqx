@@ -435,7 +435,7 @@ fn path_eval_state(
   path : Array[Value],
   valid : Bool,
 ) -> PathEvalState {
-  { value, path, valid }
+  { value, path, valid, }
 }
 
 ///|
@@ -755,7 +755,7 @@ fn path_bind_runtime_def_env(
   for binding in def_env {
     if !binding.0.has_prefix("__jqx_as_") {
       let previous = env_bind_temp(env, binding.0, binding.1)
-      saved.push({ name: binding.0, previous })
+      saved.push({ name: binding.0, previous, })
     }
   }
   saved

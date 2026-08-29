@@ -95,4 +95,3 @@ pub fn[I, O] Query::to_filter(Self[I, O]) -> @core.Filter
 // Type aliases
 
 // Traits
-
