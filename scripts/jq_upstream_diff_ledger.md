@@ -3,8 +3,8 @@
 - maintained cases: `scripts/jq_compat_cases.json`
 - upstream cases: `scripts/jq_compat_cases.upstream.json`
 - upstream diff snapshot: `scripts/jq_upstream_failures.snapshot.json`
-- upstream commit (HEAD): `4bb50d772bd35666dcd3ae460f2ddfae3864e16c`
-- upstream commit (current): `41b8edfe5437fcd25a072081c05f9f770f9e9b85`
+- upstream commit (HEAD): `41b8edfe5437fcd25a072081c05f9f770f9e9b85`
+- upstream commit (current): `9d241e277204b83c4a7ddc7d733e5c72f99ef500`
 
 ## Corpus Status
 
