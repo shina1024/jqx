@@ -1,9 +1,12 @@
 import {
-  "moonbitlang/core/debug",
   "moonbitlang/core/env",
   "moonbitlang/core/string",
   "shina1024/jqx/core" @lib,
 }
+
+import {
+  "moonbitlang/core/debug",
+} for "wbtest"
 
 pkgtype(kind: "executable")
 
