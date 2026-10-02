@@ -28,7 +28,7 @@ export default defineConfig({
     clean: true,
     report: false,
     dts: {
-      oxc: true,
+      generator: "oxc",
       entry: ["src/index.ts", "src/typed_query.ts"],
       tsconfig: "tsconfig.build.json",
     },
