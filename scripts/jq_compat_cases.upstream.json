@@ -3578,15 +3578,7 @@
     "source_file": "jq.test",
     "source_line": 1847,
     "source_kind": "runtime",
-    "source_expected_count": 5,
-    "compat_status": "temporary_exception",
-    "compat_platforms": [
-      "win32"
-    ],
-    "compat_ledger_id": "jq-1.8.2-windows-strftime-encoding",
-    "compat_reason": "jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names",
-    "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output",
-    "compat_stale_policy": "allow"
+    "source_expected_count": 5
   },
   {
     "name": "upstream-jq-test-l1855",
@@ -3622,7 +3614,15 @@
     "source_file": "jq.test",
     "source_line": 1867,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [
+      "win32"
+    ],
+    "compat_ledger_id": "jq-1.8.2-windows-strftime-encoding",
+    "compat_reason": "jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names",
+    "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output",
+    "compat_stale_policy": "allow"
   },
   {
     "name": "upstream-jq-test-l1871",
@@ -4991,7 +4991,13 @@
     "source_file": "jq.test",
     "source_line": 2583,
     "source_kind": "runtime",
-    "source_expected_count": 2
+    "source_expected_count": 2,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [],
+    "compat_ledger_id": "jq-1.8.2-reduce-init-backtracking",
+    "compat_reason": "jq 1.8.2 loses reduce input when backtracking over multiple initializer outputs; jqx preserves input as required by the vendored fixture and upstream fix df24981307658868759faaea76b817cc62dd6be0 (#3633)",
+    "compat_removal_condition": "latest jq release preserves reduce input across initializer backtracking and matches this fixture, incorporating upstream fix df24981307658868759faaea76b817cc62dd6be0",
+    "compat_stale_policy": "fail"
   },
   {
     "name": "upstream-jq-test-l2589",
@@ -5476,7 +5482,13 @@
     "source_file": "optional.test",
     "source_line": 14,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [],
+    "compat_ledger_id": "jq-1.8.2-negative-gmtime",
+    "compat_reason": "jq 1.8.2 truncates rather than floors negative fractional timestamps; jqx matches upstream fix 6aeafff056a988c20672ac1359b2beea13fb9315 (#3634). Windows release artifacts additionally misreport pre-epoch weekdays, which the upstream fixture marks unsupported on mingw/WIN32",
+    "compat_removal_condition": "latest jq release artifact on the target platform matches the fixture, including floored seconds and correct pre-epoch weekday; remove or re-scope the exception when the fractional fix lands but Windows remains unsupported",
+    "compat_stale_policy": "fail"
   },
   {
     "name": "upstream-optional-test-l18",
@@ -5485,7 +5497,13 @@
     "source_file": "optional.test",
     "source_line": 18,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [],
+    "compat_ledger_id": "jq-1.8.2-negative-gmtime",
+    "compat_reason": "jq 1.8.2 negative fractional gmtime results are not monotonic; jqx matches the sorted-date fixture added by upstream fix 6aeafff056a988c20672ac1359b2beea13fb9315 (#3634), with pre-epoch timestamps also unsupported by the Windows release artifact",
+    "compat_removal_condition": "latest jq release artifact on the target platform produces monotonic gmtime results for the fixture; remove or re-scope the exception when the fractional fix lands but Windows remains unsupported",
+    "compat_stale_policy": "fail"
   },
   {
     "name": "upstream-onig-test-l2",
