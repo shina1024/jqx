@@ -28,7 +28,7 @@ export default defineConfig({
     clean: true,
     report: false,
     dts: {
-      oxc: true,
+      generator: "oxc",
       tsconfig: "tsconfig.build.json",
     },
     outputOptions() {
