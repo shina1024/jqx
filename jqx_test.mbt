@@ -2,6 +2,9 @@
 // Source under test: jqx.mbt, jqx_public_types.mbt
 
 ///|
+using @jqx {compile, parse_json, run, run_json_text}
+
+///|
 fn nested_json_array_text(depth : Int, leaf : String) -> String {
   let buf = StringBuilder()
   for _ in 0..<depth {

@@ -1,5 +1,8 @@
 ///|
 /// Source under test: `core/module_source_fs.mbt`, `core/parser_lowering.mbt`
+using @core {clear_module_search_paths, set_module_search_paths}
+
+///|
 test "execute import/include filesystem module resolution" {
   clear_module_sources()
   clear_module_search_paths()

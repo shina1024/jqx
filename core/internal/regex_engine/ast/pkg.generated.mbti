@@ -58,12 +58,14 @@ pub enum Assertion {
   EndOfWord
   NotWordBoundary
 } derive(@debug.Debug)
+pub fn Assertion::to_repr(Self) -> @debug.Repr
 
 pub struct Pattern {
   desc : PatternDesc
   nullable : Bool
 }
 pub fn Pattern::is_anchored(Self) -> Bool
+pub fn Pattern::to_repr(Self) -> @debug.Repr
 pub impl @debug.Debug for Pattern
 
 pub enum PatternDesc {
@@ -75,12 +77,14 @@ pub enum PatternDesc {
   Capture(name~ : String?, Pattern)
   Assertion(Assertion)
 } derive(@debug.Debug)
+pub fn PatternDesc::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Quantifier {
   min : Int
   max : Int?
   mode : @shared_types.QuantifierMode
 } derive(@debug.Debug)
+pub fn Quantifier::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 

@@ -2,6 +2,9 @@
 // Source under test: core/internal/regex_parser/parser.mbt
 
 ///|
+using @regex_parser {parse}
+
+///|
 fn test_ascii_profile() -> @re.Profile {
   let valid = @re.RecharSet::char_range(0, 0x7F)
   let word = @re.RecharSet::char_range('a', 'z') +

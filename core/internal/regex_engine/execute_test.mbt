@@ -2,6 +2,16 @@
 // Source under test: core/internal/regex_engine/execute.mbt
 
 ///|
+using @regex_engine {
+  type Category,
+  type Profile,
+  type RecharSet,
+  type Regex,
+  char,
+  compile,
+}
+
+///|
 fn test_ascii_profile() -> Profile {
   let valid = RecharSet::char_range(0, 0x7f)
   let word = RecharSet::char_range('a', 'z') +

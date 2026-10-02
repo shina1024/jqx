@@ -57,6 +57,11 @@ pub suberror EvalError {
   BreakSignal(String, Array[Value])
   Partial(Array[Value], Value, String)
 } derive(Eq, @debug.Debug)
+pub fn EvalError::equal(Self, Self) -> Bool
+pub fn EvalError::not_equal(Self, Self) -> Bool
+pub fn EvalError::output(Self, &Logger) -> Unit
+pub fn EvalError::to_repr(Self) -> @debug.Repr
+pub fn EvalError::to_string(Self) -> String
 pub impl Show for EvalError
 
 pub suberror FilterError {
@@ -65,6 +70,11 @@ pub suberror FilterError {
   InvalidNumber(Position, String)
   Diagnostics(Array[String])
 } derive(Eq, @debug.Debug)
+pub fn FilterError::equal(Self, Self) -> Bool
+pub fn FilterError::not_equal(Self, Self) -> Bool
+pub fn FilterError::output(Self, &Logger) -> Unit
+pub fn FilterError::to_repr(Self) -> @debug.Repr
+pub fn FilterError::to_string(Self) -> String
 pub impl Show for FilterError
 
 pub suberror ParseError {
@@ -76,6 +86,11 @@ pub suberror ParseError {
   InvalidStringLiteral(Position)
   InvalidStringLiteralAtEof(Position)
 } derive(Eq, @debug.Debug)
+pub fn ParseError::equal(Self, Self) -> Bool
+pub fn ParseError::not_equal(Self, Self) -> Bool
+pub fn ParseError::output(Self, &Logger) -> Unit
+pub fn ParseError::to_repr(Self) -> @debug.Repr
+pub fn ParseError::to_string(Self) -> String
 pub impl Show for ParseError
 
 pub suberror RunError {
@@ -83,6 +98,11 @@ pub suberror RunError {
   Filter(FilterError)
   Eval(EvalError)
 } derive(Eq, @debug.Debug)
+pub fn RunError::equal(Self, Self) -> Bool
+pub fn RunError::not_equal(Self, Self) -> Bool
+pub fn RunError::output(Self, &Logger) -> Unit
+pub fn RunError::to_repr(Self) -> @debug.Repr
+pub fn RunError::to_string(Self) -> String
 pub impl Show for RunError
 
 // Types and methods
@@ -141,6 +161,7 @@ pub fn Filter::comma(Self, Self) -> Self
 pub fn Filter::div(Self, Self) -> Self
 pub fn Filter::empty() -> Self
 pub fn Filter::eq(Self, Self) -> Self
+pub fn Filter::equal(Self, Self) -> Bool
 pub fn Filter::fallback(Self, Self) -> Self
 pub fn Filter::field(String) -> Self
 pub fn Filter::field_opt(String) -> Self
@@ -161,7 +182,9 @@ pub fn Filter::mod_(Self, Self) -> Self
 pub fn Filter::mul(Self, Self) -> Self
 pub fn Filter::neq(Self, Self) -> Self
 pub fn Filter::not(Self) -> Self
+pub fn Filter::not_equal(Self, Self) -> Bool
 pub fn Filter::or_(Self, Self) -> Self
+pub fn Filter::output(Self, &Logger) -> Unit
 pub fn Filter::pipe(Self, Self) -> Self
 pub fn Filter::recurse() -> Self
 pub fn Filter::reduce(Self, String, Self, Self) -> Self
@@ -169,6 +192,8 @@ pub fn Filter::scope(Array[(String, Array[String], Self)], Self) -> Self
 pub fn Filter::slice(Int?, Int?) -> Self
 pub fn Filter::slice_opt(Int?, Int?) -> Self
 pub fn Filter::sub(Self, Self) -> Self
+pub fn Filter::to_repr(Self) -> @debug.Repr
+pub fn Filter::to_string(Self) -> String
 pub fn Filter::try_(Self) -> Self
 pub fn Filter::try_catch(Self, Self) -> Self
 pub fn Filter::var_(String) -> Self
@@ -176,11 +201,15 @@ pub impl Show for Filter
 
 type JsonObject derive(@debug.Debug)
 pub fn JsonObject::iter(Self) -> Array[(String, Value)]
+pub fn JsonObject::to_repr(Self) -> @debug.Repr
 
 pub struct Position {
   line : Int
   column : Int
 } derive(Eq, @debug.Debug)
+pub fn Position::equal(Self, Self) -> Bool
+pub fn Position::not_equal(Self, Self) -> Bool
+pub fn Position::to_repr(Self) -> @debug.Repr
 
 pub enum Value {
   JNull
@@ -193,15 +222,20 @@ pub enum Value {
 } derive(@debug.Debug)
 pub fn Value::array(Array[Self]) -> Self
 pub fn Value::boolean(Bool) -> Self
+pub fn Value::equal(Self, Self) -> Bool
 pub fn Value::from_json(Json) -> Self
+pub fn Value::not_equal(Self, Self) -> Bool
 pub fn Value::null() -> Self
 pub fn Value::number(Double, repr? : String) -> Self
 pub fn Value::object(Map[String, Self]) -> Self
 pub fn Value::object_from_entries(Array[(String, Self)]) -> Self
+pub fn Value::output(Self, &Logger) -> Unit
 pub fn Value::string(String) -> Self
 pub fn Value::to_json(Self) -> Json
 pub fn Value::to_json_string(Self) -> String
 pub fn Value::to_json_string_pretty(Self) -> String
+pub fn Value::to_repr(Self) -> @debug.Repr
+pub fn Value::to_string(Self) -> String
 pub fn Value::write_json_chunks(Self, Bool, (String) -> Unit) -> Unit
 pub impl Eq for Value
 pub impl Show for Value

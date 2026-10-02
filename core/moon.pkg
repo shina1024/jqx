@@ -2,7 +2,6 @@ import {
   "moonbitlang/core/debug",
   "moonbitlang/core/double",
   "moonbitlang/core/env",
-  "moonbitlang/core/json",
   "moonbitlang/core/math",
   "moonbitlang/core/string",
   "shina1024/jqx/core/internal/regex_engine",
