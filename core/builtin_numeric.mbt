@@ -687,12 +687,17 @@ fn dispatch_numeric_builtin(
         }
         let out = []
         for start_value in starts {
-          let start = call_require_number("range", start_value)
           for end_value in ends {
-            let end = call_require_number("range", end_value)
             for step_value in steps {
-              let step = call_require_number("range", step_value)
-              append_range_outputs(out, start, end, step)
+              if args.length() == 3 {
+                append_stepped_range_outputs(
+                  out, start_value, end_value, step_value,
+                )
+              } else {
+                let start = range_bound_number(start_value)
+                let end = range_bound_number(end_value)
+                append_range_outputs(out, start, end, 1.0)
+              }
             }
           }
         }

@@ -109,6 +109,7 @@ jobs:
         run: |
           bash ./scripts/jq_upstream_import.sh
           git diff --exit-code -- scripts/jq_compat_cases.upstream.json
+          node --test scripts/jq_upstream_import.test.mjs
 
       - name: Differential Smoke (jq)
         if: runner.os == 'Linux'
