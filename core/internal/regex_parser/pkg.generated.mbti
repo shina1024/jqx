@@ -12,6 +12,9 @@ pub fn parse(profile~ : @shared_types.Profile, mode~ : Mode, StringView) -> @ast
 
 // Errors
 type ParserError derive(@debug.Debug)
+pub fn ParserError::output(Self, &Logger) -> Unit
+pub fn ParserError::to_repr(Self) -> @debug.Repr
+pub fn ParserError::to_string(Self) -> String
 pub impl Show for ParserError
 
 // Types and methods

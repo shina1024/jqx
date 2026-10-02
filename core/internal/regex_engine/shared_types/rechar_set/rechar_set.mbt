@@ -320,9 +320,15 @@ pub fn RecharSet::from_sorted_array(
 }
 
 ///|
+pub extend RecharSet with Add::{add}
+
+///|
 pub impl Add for RecharSet with fn add(self, other) {
   RecharSet::union(self, other)
 }
+
+///|
+pub extend RecharSet with Sub::{sub}
 
 ///|
 pub impl Sub for RecharSet with fn sub(self, other) {
@@ -330,9 +336,15 @@ pub impl Sub for RecharSet with fn sub(self, other) {
 }
 
 ///|
+pub extend RecharSet with BitAnd::{land}
+
+///|
 pub impl BitAnd for RecharSet with fn land(self, other) {
   RecharSet::intersection(self, other)
 }
+
+///|
+pub extend RecharSet with @debug.Debug::{to_repr}
 
 ///|
 pub impl @debug.Debug for RecharSet with fn to_repr(self) {

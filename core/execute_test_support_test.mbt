@@ -4,6 +4,21 @@
 // Shared test helper for execute-related test files.
 
 ///|
+using @core {
+  type Filter,
+  type Value,
+  clear_module_sources,
+  compile,
+  execute,
+  parse,
+  register_module_source,
+  run_compiled_json_text,
+  run_compiled_values,
+  run_json_text,
+  run_values,
+}
+
+///|
 pub fn must_parse(input : String) -> Value raise Failure {
   parse(input) catch {
     err => fail("parse failed: " + err.to_string())

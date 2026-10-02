@@ -19,12 +19,20 @@ pub suberror CompileError {
   InvalidNumber(Position, String)
   Diagnostics(Array[String])
 } derive(Eq)
+pub fn CompileError::equal(Self, Self) -> Bool
+pub fn CompileError::not_equal(Self, Self) -> Bool
+pub fn CompileError::output(Self, &Logger) -> Unit
+pub fn CompileError::to_string(Self) -> String
 pub impl Show for CompileError
 
 pub suberror CompiledJsonTextRunError {
   JsonParse(JsonParseError)
   Runtime(RuntimeError)
 } derive(Eq)
+pub fn CompiledJsonTextRunError::equal(Self, Self) -> Bool
+pub fn CompiledJsonTextRunError::not_equal(Self, Self) -> Bool
+pub fn CompiledJsonTextRunError::output(Self, &Logger) -> Unit
+pub fn CompiledJsonTextRunError::to_string(Self) -> String
 pub impl Show for CompiledJsonTextRunError
 
 pub suberror JsonParseError {
@@ -36,6 +44,10 @@ pub suberror JsonParseError {
   InvalidStringLiteral(Position)
   InvalidStringLiteralAtEof(Position)
 } derive(Eq)
+pub fn JsonParseError::equal(Self, Self) -> Bool
+pub fn JsonParseError::not_equal(Self, Self) -> Bool
+pub fn JsonParseError::output(Self, &Logger) -> Unit
+pub fn JsonParseError::to_string(Self) -> String
 pub impl Show for JsonParseError
 
 pub suberror JsonTextRunError {
@@ -43,12 +55,20 @@ pub suberror JsonTextRunError {
   Compile(CompileError)
   Runtime(RuntimeError)
 } derive(Eq)
+pub fn JsonTextRunError::equal(Self, Self) -> Bool
+pub fn JsonTextRunError::not_equal(Self, Self) -> Bool
+pub fn JsonTextRunError::output(Self, &Logger) -> Unit
+pub fn JsonTextRunError::to_string(Self) -> String
 pub impl Show for JsonTextRunError
 
 pub suberror RunError {
   Compile(CompileError)
   Runtime(RuntimeError)
 } derive(Eq)
+pub fn RunError::equal(Self, Self) -> Bool
+pub fn RunError::not_equal(Self, Self) -> Bool
+pub fn RunError::output(Self, &Logger) -> Unit
+pub fn RunError::to_string(Self) -> String
 pub impl Show for RunError
 
 pub suberror RuntimeError {
@@ -59,6 +79,10 @@ pub suberror RuntimeError {
   BreakSignal(String, Array[Json])
   Partial(Array[Json], Json, String)
 } derive(Eq)
+pub fn RuntimeError::equal(Self, Self) -> Bool
+pub fn RuntimeError::not_equal(Self, Self) -> Bool
+pub fn RuntimeError::output(Self, &Logger) -> Unit
+pub fn RuntimeError::to_string(Self) -> String
 pub impl Show for RuntimeError
 
 // Types and methods
@@ -72,6 +96,10 @@ pub struct Position {
   line : Int
   column : Int
 } derive(Eq)
+pub fn Position::equal(Self, Self) -> Bool
+pub fn Position::not_equal(Self, Self) -> Bool
+pub fn Position::output(Self, &Logger) -> Unit
+pub fn Position::to_string(Self) -> String
 pub impl Show for Position
 
 // Type aliases

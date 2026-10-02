@@ -2,6 +2,42 @@
 // Source under test: js/jqx_js.mbt
 
 ///|
+using @js {
+  type Query,
+  add,
+  and_,
+  call,
+  comma,
+  compile,
+  eq,
+  execute,
+  fallback,
+  field,
+  gt,
+  identity,
+  if_else,
+  is_valid_json,
+  iter,
+  literal,
+  lt,
+  map,
+  not_,
+  parse_json,
+  pipe,
+  query,
+  query_json_text,
+  run_compiled_json_text,
+  run_compiled_values,
+  run_json_text,
+  run_values,
+  select,
+  try_catch,
+  try_compile,
+  try_execute,
+  try_parse_json,
+}
+
+///|
 fn nested_json_array_text(depth : Int, leaf : String) -> String {
   let buf = StringBuilder()
   for _ in 0..<depth {
