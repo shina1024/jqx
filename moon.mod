@@ -11,23 +11,3 @@ license = "Apache-2.0"
 keywords = [ "jq", "json", "query", "filter", "moonbit" ]
 
 description = "jq-compatible JSON processor written in MoonBit with a CLI and TypeScript bindings"
-
-options(
-  exclude: [
-    "_build",
-    "_bundle_tmp",
-    "_bundle_wasmgc",
-    "target",
-    "AGENTS.md",
-    ".vite-hooks",
-    "package.json",
-    "pnpm-lock.yaml",
-    "pnpm-workspace.yaml",
-    "scripts",
-    "third_party",
-    "ts",
-    "vite.config.ts",
-    "**/*_test.mbt",
-    "**/*_wbtest.mbt",
-  ],
-)
