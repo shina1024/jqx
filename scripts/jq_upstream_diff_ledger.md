@@ -4,7 +4,7 @@
 - upstream cases: `scripts/jq_compat_cases.upstream.json`
 - upstream diff snapshot: `scripts/jq_upstream_failures.snapshot.json`
 - upstream commit (HEAD): `9a75bb0d4318bb6f6509635d89319ff40ee9ecac`
-- upstream commit (current): `9a75bb0d4318bb6f6509635d89319ff40ee9ecac`
+- upstream commit (current): `f13c1effbf7322e42afcc999d7e3d1509d3f38c9`
 
 ## Corpus Status
 
@@ -35,35 +35,26 @@
 ## Upstream Drift Summary
 
 - upstream cases old/new: 896 -> 896
-- upstream cases added/removed/changed: 0 / 0 / 5
-- upstream differences old/new: 10 -> 8
-- upstream differences new/resolved/changed: 2 / 4 / 3
+- upstream cases added/removed/changed: 0 / 0 / 0
+- upstream differences old/new: 8 -> 6
+- upstream differences new/resolved/changed: 0 / 2 / 1
 
 ## New Upstream Differences
 
-- upstream-jq-test-l1867 (`temporary-exception`)
-- upstream-optional-test-l9 (`temporary-exception`)
+- none
 
 ## Resolved Upstream Differences
 
-- upstream-jq-test-l311
-- upstream-jq-test-l319
-- upstream-jq-test-l323
-- upstream-jq-test-l327
+- upstream-jq-test-l1867
+- upstream-optional-test-l9
 
 ## Upstream Difference Behavior Changes
 
-- upstream-jq-test-l2583 (`output-mismatch` -> `temporary-exception`)
-- upstream-optional-test-l14 (`output-mismatch` -> `temporary-exception`)
-- upstream-optional-test-l18 (`output-mismatch` -> `temporary-exception`)
+- upstream-optional-test-l14 (`temporary-exception` -> `temporary-exception`)
 
 ## Upstream Case Behavior Changes
 
-- upstream-jq-test-l1847: compat_status, compat_platforms, compat_ledger_id, compat_reason, compat_removal_condition, compat_stale_policy
-- upstream-jq-test-l1867: compat_status, compat_platforms, compat_ledger_id, compat_reason, compat_removal_condition, compat_stale_policy
-- upstream-jq-test-l2583: compat_status, compat_ledger_id, compat_reason, compat_removal_condition
-- upstream-optional-test-l14: compat_status, compat_ledger_id, compat_reason, compat_removal_condition
-- upstream-optional-test-l18: compat_status, compat_ledger_id, compat_reason, compat_removal_condition
+- none
 
 ## Added Upstream Cases
 
