@@ -5,6 +5,6 @@
     "prepare": "vp config"
   },
   "devDependencies": {
-    "vite-plus": "0.3.1"
+    "vite-plus": "1.0.0"
   }
 }
