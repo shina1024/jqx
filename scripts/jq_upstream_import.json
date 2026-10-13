@@ -12,8 +12,11 @@
   "include_compile_fail": true,
   "compile_fail_expect_error_mode": "strict",
   "default_case_fields": {},
-  "case_overrides": {
-    "upstream-jq-test-l1867": {
+  "case_overrides": [
+    {
+      "source_file": "jq.test",
+      "filter": "strftime(\"%A, %B %d, %Y\")",
+      "input": "1435677542.822351",
       "compat_status": "temporary_exception",
       "compat_platforms": [
         "win32"
@@ -23,7 +26,10 @@
       "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output",
       "compat_stale_policy": "allow"
     },
-    "upstream-optional-test-l9": {
+    {
+      "source_file": "optional.test",
+      "filter": "strftime(\"%A, %B %e, %Y\")",
+      "input": "1435677542.822351",
       "compat_status": "temporary_exception",
       "compat_platforms": [
         "win32"
@@ -33,7 +39,10 @@
       "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output",
       "compat_stale_policy": "allow"
     },
-    "upstream-jq-test-l2583": {
+    {
+      "source_file": "jq.test",
+      "filter": "[] | reduce .[] as $x (0, 1; .)",
+      "input": "null",
       "compat_status": "temporary_exception",
       "compat_platforms": [],
       "compat_ledger_id": "jq-1.8.2-reduce-init-backtracking",
@@ -41,7 +50,10 @@
       "compat_removal_condition": "latest jq release preserves reduce input across initializer backtracking and matches this fixture, incorporating upstream fix df24981307658868759faaea76b817cc62dd6be0",
       "compat_stale_policy": "fail"
     },
-    "upstream-optional-test-l14": {
+    {
+      "source_file": "optional.test",
+      "filter": "gmtime",
+      "input": "-1.25",
       "compat_status": "temporary_exception",
       "compat_platforms": [],
       "compat_ledger_id": "jq-1.8.2-negative-gmtime",
@@ -49,7 +61,10 @@
       "compat_removal_condition": "latest jq release artifact on the target platform matches the fixture, including floored seconds and correct pre-epoch weekday; remove or re-scope the exception when the fractional fix lands but Windows remains unsupported",
       "compat_stale_policy": "fail"
     },
-    "upstream-optional-test-l18": {
+    {
+      "source_file": "optional.test",
+      "filter": "map(gmtime) | . == sort",
+      "input": "[-1.5,-1,-0.5,0,0.5,1,1.5]",
       "compat_status": "temporary_exception",
       "compat_platforms": [],
       "compat_ledger_id": "jq-1.8.2-negative-gmtime",
@@ -57,7 +72,10 @@
       "compat_removal_condition": "latest jq release artifact on the target platform produces monotonic gmtime results for the fixture; remove or re-scope the exception when the fractional fix lands but Windows remains unsupported",
       "compat_stale_policy": "fail"
     },
-    "upstream-onig-test-l15": {
+    {
+      "source_file": "onig.test",
+      "filter": "[match(\"\"; \"g\") | .offset]",
+      "input": "\"aé€🚀b\"",
       "compat_status": "temporary_exception",
       "compat_platforms": [],
       "compat_ledger_id": "jq-onig-zero-width-multibyte-boundary",
@@ -65,7 +83,10 @@
       "compat_removal_condition": "jq release adopts char-boundary zero-width match semantics matching upstream fixture expectations",
       "compat_stale_policy": "fail"
     },
-    "upstream-onig-test-l19": {
+    {
+      "source_file": "onig.test",
+      "filter": "gsub(\"\"; \"-\")",
+      "input": "\"aé\"",
       "compat_status": "temporary_exception",
       "compat_platforms": [],
       "compat_ledger_id": "jq-onig-zero-width-multibyte-boundary",
@@ -73,7 +94,10 @@
       "compat_removal_condition": "jq release adopts char-boundary zero-width match semantics matching upstream fixture expectations",
       "compat_stale_policy": "fail"
     },
-    "upstream-onig-test-l23": {
+    {
+      "source_file": "onig.test",
+      "filter": "[splits(\"\")]",
+      "input": "\"aé\"",
       "compat_status": "temporary_exception",
       "compat_platforms": [],
       "compat_ledger_id": "jq-onig-zero-width-multibyte-boundary",
@@ -81,5 +105,5 @@
       "compat_removal_condition": "jq release adopts char-boundary zero-width match semantics matching upstream fixture expectations",
       "compat_stale_policy": "fail"
     }
-  }
+  ]
 }

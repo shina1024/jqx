@@ -155,20 +155,29 @@ function readCaseOverrides(config) {
   if (config.case_overrides == null) {
     return new Map();
   }
-  if (
-    typeof config.case_overrides !== "object" ||
-    Array.isArray(config.case_overrides)
-  ) {
-    throw new Error("case_overrides must be an object keyed by generated case name");
+  if (!Array.isArray(config.case_overrides)) {
+    throw new Error("case_overrides must be an array of source selectors");
   }
-  return new Map(
-    Object.entries(config.case_overrides).map(([name, patch]) => {
-      if (!patch || typeof patch !== "object" || Array.isArray(patch)) {
-        throw new Error(`case_overrides.${name} must be an object`);
-      }
-      return [name, patch];
-    }),
-  );
+  const overrides = new Map();
+  for (const [index, entry] of config.case_overrides.entries()) {
+    if (
+      !entry ||
+      typeof entry !== "object" ||
+      Array.isArray(entry) ||
+      typeof entry.source_file !== "string" ||
+      typeof entry.filter !== "string" ||
+      typeof entry.input !== "string"
+    ) {
+      throw new Error(`case_overrides[${index}] requires source_file, filter, and input strings`);
+    }
+    const { source_file, filter, input, ...patch } = entry;
+    const key = JSON.stringify([source_file, filter, input]);
+    if (overrides.has(key)) {
+      throw new Error(`duplicate case_override selector: ${key}`);
+    }
+    overrides.set(key, patch);
+  }
+  return overrides;
 }
 
 function main() {
@@ -246,18 +255,26 @@ function main() {
       testCase.jqx_args = ["--"];
     }
 
+    const overrideKey = JSON.stringify([
+      testCase.source_file,
+      testCase.filter,
+      testCase.input,
+    ]);
     applyObjectProperties(testCase, config.default_case_fields);
-    const caseOverride = caseOverrides.get(testCase.name);
+    const caseOverride = caseOverrides.get(overrideKey);
     if (caseOverride != null) {
+      if (appliedOverrides.has(overrideKey)) {
+        throw new Error(`case_override matches multiple cases: ${overrideKey}`);
+      }
       applyObjectProperties(testCase, caseOverride);
-      appliedOverrides.add(testCase.name);
+      appliedOverrides.add(overrideKey);
     }
     outputCases.push(testCase);
     statsEmitted += 1;
   }
 
   const unusedOverrides = [...caseOverrides.keys()].filter(
-    (name) => !appliedOverrides.has(name),
+    (key) => !appliedOverrides.has(key),
   );
   if (unusedOverrides.length > 0) {
     throw new Error(`unused case_overrides: ${unusedOverrides.join(", ")}`);
