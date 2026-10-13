@@ -283,15 +283,6 @@ fn fromdate_iso8601_json(input : Value) -> Value raise EvalError {
 }
 
 ///|
-fn floor_div_int(a : Int32, b : Int32) -> Int32 {
-  if a >= 0 {
-    a / b
-  } else {
-    -((-a + b - 1) / b)
-  }
-}
-
-///|
 fn positive_mod_int(a : Int32, m : Int32) -> Int32 {
   let r = a % m
   if r < 0 {
@@ -333,13 +324,16 @@ fn day_of_year_from_date(year : Int32, month : Int32, day : Int32) -> Int32 {
 fn epoch_seconds_to_datetime_components(
   seconds : Double,
 ) -> (Int32, Int32, Int32, Int32, Int32, Double, Int32, Int32) {
-  let whole = seconds.floor().to_int()
-  let frac = seconds - whole.to_double()
-  let days = floor_div_int(whole, 86400)
-  let seconds_of_day = whole - days * 86400
-  let hour = seconds_of_day / 3600
-  let minute = seconds_of_day % 3600 / 60
-  let second = (seconds_of_day % 60).to_double() + frac
+  // Seconds beyond 2038 exceed Int32 even though their day count still fits.
+  let days = (seconds / 86400.0).floor().to_int()
+  let seconds_of_day = seconds - days.to_double() * 86400.0
+  let hour = (seconds_of_day / 3600.0).floor().to_int()
+  let minute = ((seconds_of_day - hour.to_double() * 3600.0) / 60.0)
+    .floor()
+    .to_int()
+  let second = seconds_of_day -
+    hour.to_double() * 3600.0 -
+    minute.to_double() * 60.0
   let (year, month, day) = civil_from_days(days)
   let day_of_year = day_of_year_from_date(year, month, day)
   let day_of_week = positive_mod_int(days + 4, 7)
@@ -633,6 +627,19 @@ fn gmtime_json(input : Value) -> Value raise EvalError {
     }
     _ => raise TypeError("gmtime requires numeric inputs")
   }
+}
+
+///|
+fn todate_iso8601_json(input : Value) -> Value raise EvalError {
+  let (year, month, day, hour, minute, second, day_of_week, day_of_year) = datetime_input_to_format_components(
+    input, "strftime/1",
+  )
+  Value::string(
+    format_datetime_with_strftime_pattern(
+      "%Y-%m-%dT%H:%M:%SZ", year, month, day, hour, minute, second, day_of_week,
+      day_of_year,
+    ),
+  )
 }
 
 ///|

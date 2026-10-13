@@ -1415,6 +1415,42 @@
     "compat_status": "pass"
   },
   {
+    "name": "jq-1.8.2-todate-timestamp",
+    "filter": "todate",
+    "input": "1425599507",
+    "compat_status": "pass"
+  },
+  {
+    "name": "jq-1.8.2-todateiso8601-fractional-timestamp",
+    "filter": "todateiso8601",
+    "input": "1425599507.5",
+    "compat_status": "pass"
+  },
+  {
+    "name": "jq-1.8.2-todate-beyond-32bit-seconds",
+    "filter": "todate",
+    "input": "4102444800",
+    "compat_status": "pass"
+  },
+  {
+    "name": "jq-1.8.2-todate-datetime-array",
+    "filter": "todate",
+    "input": "[2015,2,5,23,51,47,4,63]",
+    "compat_status": "pass"
+  },
+  {
+    "name": "jq-1.8.2-fromdateiso8601-to-todate-leap-second",
+    "filter": "fromdateiso8601 | todate",
+    "input": "\"2015-06-30T23:59:60Z\"",
+    "compat_status": "pass"
+  },
+  {
+    "name": "jq-1.8.2-todate-invalid-type",
+    "filter": "try todate catch .",
+    "input": "null",
+    "compat_status": "pass"
+  },
+  {
     "name": "env-pager-null",
     "filter": "env.PAGER",
     "input": "null",

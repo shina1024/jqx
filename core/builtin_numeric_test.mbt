@@ -99,3 +99,43 @@ test "jq 1.8.2 fromdateiso8601 rejects unsupported inputs with jq errors" {
     "\"date \\\"bad\\\" does not match format \\\"%Y-%m-%dT%H:%M:%SZ\\\"\"",
   ])
 }
+
+///|
+test "jq 1.8.2 todate aliases format timestamps and parsed datetime arrays" {
+  @debug.assert_eq(must_run_json_text("todate", "1425599507"), [
+    "\"2015-03-05T23:51:47Z\"",
+  ])
+  @debug.assert_eq(must_run_json_text("todateiso8601", "1425599507.5"), [
+    "\"2015-03-05T23:51:47Z\"",
+  ])
+  @debug.assert_eq(must_run_json_text("todate", "4102444800"), [
+    "\"2100-01-01T00:00:00Z\"",
+  ])
+  @debug.assert_eq(must_run_json_text("todate", "-1"), [
+    "\"1969-12-31T23:59:59Z\"",
+  ])
+  @debug.assert_eq(must_run_json_text("todate", "[2015,2,5,23,51,47,4,63]"), [
+    "\"2015-03-05T23:51:47Z\"",
+  ])
+  @debug.assert_eq(
+    must_run_json_text("fromdateiso8601 | todate", "\"2015-06-30T23:59:60Z\""),
+    ["\"2015-07-01T00:00:00Z\""],
+  )
+}
+
+///|
+test "jq 1.8.2 todate aliases retain strftime input errors" {
+  @debug.assert_eq(must_run_json_text("try todate catch .", "null"), [
+    "\"strftime/1 requires parsed datetime inputs\"",
+  ])
+  @debug.assert_eq(must_run_json_text("try todateiso8601 catch .", "\"x\""), [
+    "\"strftime/1 requires parsed datetime inputs\"",
+  ])
+  @debug.assert_eq(
+    must_run_json_text(
+      "builtins | map(select(. == \"todate/0\" or . == \"todateiso8601/0\")) | sort",
+      "null",
+    ),
+    ["[\"todate/0\",\"todateiso8601/0\"]"],
+  )
+}

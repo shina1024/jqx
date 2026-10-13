@@ -14,9 +14,9 @@ fn builtin_list() -> Array[Value] {
     "round/0", "rtrim/0", "scan/1", "scan/2", "sin/0", "sort/0", "split/1", "split/2",
     "splits/1", "splits/2", "sqrt/0", "startswith/1", "strflocaltime/1", "strftime/1",
     "strptime/1", "sub/2", "sub/3", "test/1", "test/2", "to_entries/0", "toboolean/0",
-    "tojson/0", "tonumber/0", "tostream/0", "tostring/0", "utf8bytelength/0", "transpose/0",
-    "trim/0", "type/0", "unique/0", "until/2", "values/0", "walk/1", "while/2", "recurse/0",
-    "recurse/1", "recurse/2",
+    "todate/0", "todateiso8601/0", "tojson/0", "tonumber/0", "tostream/0", "tostring/0",
+    "utf8bytelength/0", "transpose/0", "trim/0", "type/0", "unique/0", "until/2",
+    "values/0", "walk/1", "while/2", "recurse/0", "recurse/1", "recurse/2",
   ]
   let out = []
   for name in names {
@@ -50,6 +50,7 @@ fn dispatch_nullary_builtin(
     "gmtime" => [gmtime_json(input)]
     "localtime" => [gmtime_json(input)]
     "mktime" => [mktime_json(input)]
+    "todate" | "todateiso8601" => [todate_iso8601_json(input)]
     "nan" => [Value::number(@double.infinity - @double.infinity)]
     "infinite" => [Value::number(@double.infinity)]
     "isnan" =>
