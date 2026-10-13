@@ -151,6 +151,138 @@ fn parse_rfc3339_utc_seconds(s : String) -> Double? {
 }
 
 ///|
+fn parse_date_digits(
+  s : String,
+  start : Int32,
+  max_digits : Int32,
+) -> (Int32, Int32)? {
+  let mut pos = start
+  let mut value = 0
+  while pos < s.length() && pos - start < max_digits {
+    let code = s.unsafe_get(pos).to_int()
+    if code < '0'.to_int() || code > '9'.to_int() {
+      break
+    }
+    value = value * 10 + code - '0'.to_int()
+    pos += 1
+  }
+  if pos == start {
+    None
+  } else {
+    Some((value, pos))
+  }
+}
+
+///|
+fn parse_date_separator(s : String, pos : Int32, separator : Char) -> Int32? {
+  if pos < s.length() && s.unsafe_get(pos).to_int() == separator.to_int() {
+    Some(pos + 1)
+  } else {
+    None
+  }
+}
+
+///|
+// jq 1.8.2 defines fromdateiso8601 as strptime("%Y-%m-%dT%H:%M:%SZ") | mktime.
+// Its strptime accepts one- or two-digit fields, calendar overflow up to day 31,
+// leap seconds, and a trailing whitespace-delimited suffix ignored by mktime.
+fn parse_jq_182_fromdate_seconds(s : String) -> Double? {
+  let (year, pos) = match parse_date_digits(s, 0, 4) {
+    Some(fields) => fields
+    None => return None
+  }
+  let pos = match parse_date_separator(s, pos, '-') {
+    Some(next) => next
+    None => return None
+  }
+  let (month, pos) = match parse_date_digits(s, pos, 2) {
+    Some(fields) => fields
+    None => return None
+  }
+  let pos = match parse_date_separator(s, pos, '-') {
+    Some(next) => next
+    None => return None
+  }
+  let (day, pos) = match parse_date_digits(s, pos, 2) {
+    Some(fields) => fields
+    None => return None
+  }
+  let pos = match parse_date_separator(s, pos, 'T') {
+    Some(next) => next
+    None => return None
+  }
+  let (hour, pos) = match parse_date_digits(s, pos, 2) {
+    Some(fields) => fields
+    None => return None
+  }
+  let pos = match parse_date_separator(s, pos, ':') {
+    Some(next) => next
+    None => return None
+  }
+  let (minute, pos) = match parse_date_digits(s, pos, 2) {
+    Some(fields) => fields
+    None => return None
+  }
+  let pos = match parse_date_separator(s, pos, ':') {
+    Some(next) => next
+    None => return None
+  }
+  let (second, pos) = match parse_date_digits(s, pos, 2) {
+    Some(fields) => fields
+    None => return None
+  }
+  let pos = match parse_date_separator(s, pos, 'Z') {
+    Some(next) => next
+    None => return None
+  }
+  if pos < s.length() {
+    let next = s.unsafe_get(pos).to_int()
+    if next != ' '.to_int() &&
+      next != '\t'.to_int() &&
+      next != '\n'.to_int() &&
+      next != '\r'.to_int() &&
+      next != '\u{000B}'.to_int() &&
+      next != '\u{000C}'.to_int() {
+      return None
+    }
+  }
+  if month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31 ||
+    hour > 23 ||
+    minute > 59 ||
+    second > 61 {
+    return None
+  }
+  Some(
+    datetime_components_to_epoch_seconds(
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      second.to_double(),
+    ),
+  )
+}
+
+///|
+fn fromdate_iso8601_json(input : Value) -> Value raise EvalError {
+  match input {
+    String(s) =>
+      match parse_jq_182_fromdate_seconds(s) {
+        Some(seconds) => json_number_value(seconds)
+        None =>
+          raise TypeError(
+            "date \"" + s + "\" does not match format \"%Y-%m-%dT%H:%M:%SZ\"",
+          )
+      }
+    _ => raise TypeError("strptime/1 requires string inputs and arguments")
+  }
+}
+
+///|
 fn floor_div_int(a : Int32, b : Int32) -> Int32 {
   if a >= 0 {
     a / b
@@ -644,21 +776,11 @@ fn dispatch_numeric_builtin(
         }
         Some(out)
       }
-    "fromdate" =>
+    "fromdate" | "fromdateiso8601" =>
       if args.length() != 0 {
-        raise UnknownFunction("fromdate")
+        raise UnknownFunction(name)
       } else {
-        match input {
-          String(s) =>
-            match parse_rfc3339_utc_seconds(s) {
-              Some(seconds) => Some([json_number_value(seconds)])
-              None =>
-                raise TypeError(
-                  "fromdate input must be RFC3339 UTC (YYYY-MM-DDTHH:MM:SSZ)",
-                )
-            }
-          _ => raise TypeError("fromdate input must be a string")
-        }
+        Some([fromdate_iso8601_json(input)])
       }
     "env" =>
       if args.length() != 0 {

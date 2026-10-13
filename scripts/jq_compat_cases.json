@@ -1367,6 +1367,54 @@
     "compat_status": "pass"
   },
   {
+    "name": "jq-1.8.2-fromdateiso8601-basic",
+    "filter": "fromdateiso8601",
+    "input": "\"2015-03-05T23:51:47Z\"",
+    "compat_status": "pass"
+  },
+  {
+    "name": "jq-1.8.2-fromdateiso8601-calendar-overflow",
+    "filter": "fromdateiso8601",
+    "input": "\"2015-02-30T00:00:00Z\"",
+    "compat_status": "pass"
+  },
+  {
+    "name": "jq-1.8.2-fromdateiso8601-leap-second",
+    "filter": "fromdateiso8601",
+    "input": "\"2015-03-05T23:51:60Z\"",
+    "compat_status": "pass"
+  },
+  {
+    "name": "jq-1.8.2-fromdateiso8601-short-fields",
+    "filter": "fromdateiso8601",
+    "input": "\"2015-3-5T3:1:7Z\"",
+    "compat_status": "pass"
+  },
+  {
+    "name": "jq-1.8.2-fromdateiso8601-trailing-suffix",
+    "filter": "fromdateiso8601",
+    "input": "\"2015-03-05T23:51:47Z trailing\"",
+    "compat_status": "pass"
+  },
+  {
+    "name": "jq-1.8.2-fromdateiso8601-invalid-offset",
+    "filter": "try fromdateiso8601 catch .",
+    "input": "\"2015-03-05T23:51:47+00:00\"",
+    "compat_status": "pass"
+  },
+  {
+    "name": "jq-1.8.2-fromdateiso8601-invalid-type",
+    "filter": "try fromdateiso8601 catch .",
+    "input": "null",
+    "compat_status": "pass"
+  },
+  {
+    "name": "jq-1.8.2-fromdateiso8601-listed",
+    "filter": "builtins | any(. == \"fromdateiso8601/0\")",
+    "input": "null",
+    "compat_status": "pass"
+  },
+  {
     "name": "env-pager-null",
     "filter": "env.PAGER",
     "input": "null",

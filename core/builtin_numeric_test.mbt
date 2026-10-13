@@ -54,3 +54,48 @@ test "gmtime floors negative fractional timestamps as fixed upstream does" {
     ["true"],
   )
 }
+
+///|
+test "jq 1.8.2 fromdateiso8601 parses UTC dates and normalizes calendar overflow" {
+  @debug.assert_eq(
+    must_run_json_text("fromdateiso8601", "\"2015-03-05T23:51:47Z\""),
+    ["1425599507"],
+  )
+  @debug.assert_eq(
+    must_run_json_text("fromdateiso8601", "\"2015-02-30T00:00:00Z\""),
+    ["1425254400"],
+  )
+  @debug.assert_eq(
+    must_run_json_text("fromdateiso8601", "\"2015-03-05T23:51:60Z\""),
+    ["1425599520"],
+  )
+  @debug.assert_eq(
+    must_run_json_text("fromdateiso8601", "\"2015-3-5T3:1:7Z\""),
+    ["1425524467"],
+  )
+  @debug.assert_eq(
+    must_run_json_text("fromdateiso8601", "\"2015-03-05T23:51:47Z trailing\""),
+    ["1425599507"],
+  )
+  @debug.assert_eq(must_run_json_text("fromdate", "\"2015-02-30T00:00:00Z\""), [
+    "1425254400",
+  ])
+}
+
+///|
+test "jq 1.8.2 fromdateiso8601 rejects unsupported inputs with jq errors" {
+  @debug.assert_eq(
+    must_run_json_text(
+      "try fromdateiso8601 catch .", "\"2015-03-05T23:51:47+00:00\"",
+    ),
+    [
+      "\"date \\\"2015-03-05T23:51:47+00:00\\\" does not match format \\\"%Y-%m-%dT%H:%M:%SZ\\\"\"",
+    ],
+  )
+  @debug.assert_eq(must_run_json_text("try fromdateiso8601 catch .", "null"), [
+    "\"strptime/1 requires string inputs and arguments\"",
+  ])
+  @debug.assert_eq(must_run_json_text("try fromdate catch .", "\"bad\""), [
+    "\"date \\\"bad\\\" does not match format \\\"%Y-%m-%dT%H:%M:%SZ\\\"\"",
+  ])
+}

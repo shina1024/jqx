@@ -6,15 +6,15 @@ fn builtin_list() -> Array[Value] {
     "ascii_upcase/0", "atan/0", "builtins/0", "capture/1", "capture/2", "combinations/0",
     "cos/0", "debug/0", "endswith/1", "env/0", "error/0", "error/1", "explode/0",
     "fabs/0", "first/0", "flatten/0", "floor/0", "from_entries/0", "fromdate/0",
-    "fromjson/0", "gmtime/0", "group_by/1", "gsub/2", "gsub/3", "implode/0", "infinite/0",
-    "input/0", "inside/1", "isfinite/0", "isinfinite/0", "isempty/0", "isnan/0",
-    "join/1", "keys/0", "last/0", "length/0", "localtime/0", "log2/0", "ltrim/0",
-    "map/1", "map_values/1", "match/1", "match/2", "max/0", "min/0", "mktime/0",
-    "modulemeta/0", "nan/0", "now/0", "paths/0", "pow/2", "reverse/0", "round/0",
-    "rtrim/0", "scan/1", "scan/2", "sin/0", "sort/0", "split/1", "split/2", "splits/1",
-    "splits/2", "sqrt/0", "startswith/1", "strflocaltime/1", "strftime/1", "strptime/1",
-    "sub/2", "sub/3", "test/1", "test/2", "to_entries/0", "toboolean/0", "tojson/0",
-    "tonumber/0", "tostream/0", "tostring/0", "utf8bytelength/0", "transpose/0",
+    "fromdateiso8601/0", "fromjson/0", "gmtime/0", "group_by/1", "gsub/2", "gsub/3",
+    "implode/0", "infinite/0", "input/0", "inside/1", "isfinite/0", "isinfinite/0",
+    "isempty/0", "isnan/0", "join/1", "keys/0", "last/0", "length/0", "localtime/0",
+    "log2/0", "ltrim/0", "map/1", "map_values/1", "match/1", "match/2", "max/0",
+    "min/0", "mktime/0", "modulemeta/0", "nan/0", "now/0", "paths/0", "pow/2", "reverse/0",
+    "round/0", "rtrim/0", "scan/1", "scan/2", "sin/0", "sort/0", "split/1", "split/2",
+    "splits/1", "splits/2", "sqrt/0", "startswith/1", "strflocaltime/1", "strftime/1",
+    "strptime/1", "sub/2", "sub/3", "test/1", "test/2", "to_entries/0", "toboolean/0",
+    "tojson/0", "tonumber/0", "tostream/0", "tostring/0", "utf8bytelength/0", "transpose/0",
     "trim/0", "type/0", "unique/0", "until/2", "values/0", "walk/1", "while/2", "recurse/0",
     "recurse/1", "recurse/2",
   ]
@@ -479,18 +479,7 @@ fn dispatch_nullary_builtin(
         Array(a) => [Value::string(implode_array(a))]
         _ => raise TypeError("implode input must be an array")
       }
-    "fromdate" =>
-      match input {
-        String(s) =>
-          match parse_rfc3339_utc_seconds(s) {
-            Some(seconds) => [json_number_value(seconds)]
-            None =>
-              raise TypeError(
-                "fromdate input must be RFC3339 UTC (YYYY-MM-DDTHH:MM:SSZ)",
-              )
-          }
-        _ => raise TypeError("fromdate input must be a string")
-      }
+    "fromdate" | "fromdateiso8601" => [fromdate_iso8601_json(input)]
     "reverse" =>
       match input {
         Array(a) => {
