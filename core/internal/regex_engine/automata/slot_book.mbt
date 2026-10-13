@@ -30,7 +30,7 @@
 /// - Initial capacity: 128 slots (4 integers)
 /// - Grows by powers of 2 when more slots are needed
 /// - Uses bitwise operations and count-trailing-zeros for efficient slot finding
-priv struct SlotBook(FixedArray[Int])
+priv struct SlotBook(FixedArray[Int32])
 
 ///|
 fn SlotBook::empty() -> SlotBook {
@@ -62,7 +62,7 @@ fn SlotBook::clear(self : SlotBook) -> Unit {
 }
 
 ///|
-fn next_pow_of_two(n : Int) -> Int {
+fn next_pow_of_two(n : Int32) -> Int32 {
   if n <= 1 {
     1
   } else {

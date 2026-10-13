@@ -20,10 +20,10 @@ pub enum Filter {
   Comma(Filter, Filter)
   Field(String)
   FieldOpt(String)
-  Index(Int)
-  IndexOpt(Int)
-  Slice(Int?, Int?)
-  SliceOpt(Int?, Int?)
+  Index(Int32)
+  IndexOpt(Int32)
+  Slice(Int32?, Int32?)
+  SliceOpt(Int32?, Int32?)
   Iter
   IterOpt
   Recurse
@@ -88,22 +88,22 @@ pub fn Filter::field_opt(name : String) -> Filter {
 }
 
 ///|
-pub fn Filter::index(i : Int) -> Filter {
+pub fn Filter::index(i : Int32) -> Filter {
   Index(i)
 }
 
 ///|
-pub fn Filter::index_opt(i : Int) -> Filter {
+pub fn Filter::index_opt(i : Int32) -> Filter {
   IndexOpt(i)
 }
 
 ///|
-pub fn Filter::slice(start : Int?, end : Int?) -> Filter {
+pub fn Filter::slice(start : Int32?, end : Int32?) -> Filter {
   Slice(start, end)
 }
 
 ///|
-pub fn Filter::slice_opt(start : Int?, end : Int?) -> Filter {
+pub fn Filter::slice_opt(start : Int32?, end : Int32?) -> Filter {
   SliceOpt(start, end)
 }
 

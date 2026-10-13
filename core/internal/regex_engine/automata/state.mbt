@@ -44,7 +44,7 @@ pub struct State {
   priv slot : Slot
   priv cat : @shared_types.Category
   priv desc : ThreadSet
-  priv hash : Int
+  priv hash : Int32
 }
 
 ///|

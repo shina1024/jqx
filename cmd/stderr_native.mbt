@@ -1,9 +1,9 @@
 ///|
 #borrow(bytes)
-extern "c" fn c_write_stderr(bytes : Bytes, len : Int) -> Int = "jqx_write_stderr"
+extern "c" fn c_write_stderr(bytes : Bytes, len : Int32) -> Int32 = "jqx_write_stderr"
 
 ///|
-fn append_utf8_bytes(out : Array[Byte], code : Int) -> Unit {
+fn append_utf8_bytes(out : Array[Byte], code : Int32) -> Unit {
   if code <= 0x7F {
     out.push(code.to_byte())
   } else if code <= 0x7FF {

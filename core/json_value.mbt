@@ -77,7 +77,7 @@ fn JsonObject::contains(self : JsonObject, key : String) -> Bool {
 }
 
 ///|
-fn JsonObject::length(self : JsonObject) -> Int {
+fn JsonObject::length(self : JsonObject) -> Int32 {
   self.map.length()
 }
 
@@ -297,7 +297,7 @@ pub fn Value::object_from_entries(entries : Array[(String, Value)]) -> Value {
 ///|
 priv enum FromJsonWork {
   FConvert(Json)
-  FCollectArray(Int)
+  FCollectArray(Int32)
   FCollectObject(Array[String])
 }
 
@@ -365,7 +365,7 @@ pub fn Value::from_json(input : Json) -> Value {
 ///|
 priv enum ToJsonWork {
   TConvert(Value)
-  TCollectArray(Int)
+  TCollectArray(Int32)
   TCollectObject(Array[String])
 }
 

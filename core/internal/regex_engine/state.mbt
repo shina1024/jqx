@@ -28,7 +28,7 @@ priv enum StateKind {
 }
 
 ///|
-fn State::new(desc : @automata.State, num_symbols : Int) -> State {
+fn State::new(desc : @automata.State, num_symbols : Int32) -> State {
   let is_break = match desc.status() {
     Match(_) | Failed => true
     Running => false
@@ -45,7 +45,7 @@ fn State::new(desc : @automata.State, num_symbols : Int) -> State {
     } else {
       FixedArray::make(num_symbols, pending_state)
     },
-    final_: @list.empty(),
+    final_: List([]),
   }
 }
 
@@ -54,13 +54,13 @@ let pending_state : State = {
   kind: Pending,
   desc: @automata.st_dummy,
   transitions: [],
-  final_: @list.empty(),
+  final_: List([]),
 }
 
 ///|
 fn find_state(
   table : @hashmap.HashMap[@automata.State, State],
-  num_symbols : Int,
+  num_symbols : Int32,
   desc : @automata.State,
 ) -> State {
   table.get_or_init(desc, () => State::new(desc, num_symbols))

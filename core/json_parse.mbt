@@ -1,15 +1,15 @@
 ///|
 priv struct ParseContext {
-  mut offset : Int
+  mut offset : Int32
   input : StringView
-  end_offset : Int
-  mut remaining_available_depth : Int
+  end_offset : Int32
+  mut remaining_available_depth : Int32
 }
 
 ///|
 fn ParseContext::make(
   input : StringView,
-  max_nesting_depth : Int,
+  max_nesting_depth : Int32,
 ) -> ParseContext {
   {
     offset: 0,
@@ -52,7 +52,7 @@ pub fn valid(input : StringView) -> Bool {
 ///|
 pub fn parse_json(
   input : StringView,
-  max_nesting_depth? : Int = 10000,
+  max_nesting_depth~ : Int32 = 10000,
 ) -> Json raise ParseError {
   Value::to_json(parse(input, max_nesting_depth~))
 }
@@ -60,7 +60,7 @@ pub fn parse_json(
 ///|
 pub fn parse(
   input : StringView,
-  max_nesting_depth? : Int = 10000,
+  max_nesting_depth~ : Int32 = 10000,
 ) -> Value raise ParseError {
   let ctx = ParseContext::make(input, max_nesting_depth)
   let val = ctx.parse_value()
@@ -170,7 +170,7 @@ fn ParseContext::parse_value(ctx : ParseContext) -> Value raise ParseError {
 }
 
 ///|
-fn offset_to_position(input : StringView, offset : Int) -> Position {
+fn offset_to_position(input : StringView, offset : Int32) -> Position {
   let mut line = 1
   let mut column = 1
   for i in 0..<offset {
@@ -187,7 +187,7 @@ fn offset_to_position(input : StringView, offset : Int) -> Position {
 ///|
 fn[T] ParseContext::invalid_char(
   ctx : ParseContext,
-  shift? : Int = 0,
+  shift~ : Int32 = 0,
 ) -> T raise ParseError {
   let offset = ctx.offset + shift
   let replacement_char : Char = '\u{fffd}'
@@ -228,12 +228,12 @@ fn ParseContext::peek_char(ctx : ParseContext) -> Char? {
 
 ///|
 fn is_ascii_alpha(c : Char) -> Bool {
-  c is ('a'..='z' | 'A'..='Z')
+  c is ('a'..<='z' | 'A'..<='Z')
 }
 
 ///|
 fn parse_ascii_downcase_char(c : Char) -> Char {
-  if c is ('A'..='Z') {
+  if c is ('A'..<='Z') {
     (c.to_int() + 32).unsafe_to_char()
   } else {
     c
@@ -252,12 +252,12 @@ fn parse_ascii_downcase_string(s : String) -> String {
 ///|
 fn ParseContext::lex_nonfinite_number(
   ctx : ParseContext,
-  start~ : Int,
+  start~ : Int32,
 ) -> Token raise ParseError {
   let mut ended_at_separator = false
   while ctx.offset < ctx.end_offset {
     match ctx.peek_char() {
-      Some(c) if is_ascii_alpha(c) || c is ('0'..='9') =>
+      Some(c) if is_ascii_alpha(c) || c is ('0'..<='9') =>
         ignore(ctx.read_char())
       Some(_) => {
         ended_at_separator = true
@@ -446,7 +446,7 @@ fn ParseContext::lex_value(
           return Number(n, repr.map(s => s.to_owned()))
         }
         Some(c2) => {
-          if c2 is ('1'..='9') {
+          if c2 is ('1'..<='9') {
             let (n, repr) = ctx.lex_decimal_integer(start=ctx.offset - 2)
             return Number(n, repr.map(s => s.to_owned()))
           } else if c2 is ('i' | 'I' | 'n' | 'N') {
@@ -460,7 +460,7 @@ fn ParseContext::lex_value(
       let (n, repr) = ctx.lex_zero(start=ctx.offset - 1)
       return Number(n, repr.map(s => s.to_owned()))
     }
-    Some('1'..='9') => {
+    Some('1'..<='9') => {
       let (n, repr) = ctx.lex_decimal_integer(start=ctx.offset - 1)
       return Number(n, repr.map(s => s.to_owned()))
     }
@@ -481,7 +481,7 @@ fn ParseContext::lex_value(
 fn ParseContext::lex_string(ctx : ParseContext) -> String raise ParseError {
   let buf = StringBuilder()
   let mut start = ctx.offset
-  fn flush(end : Int) {
+  fn flush(end : Int32) {
     if start > 0 && end > start {
       buf.write_view(ctx.input.view(start_offset=start, end_offset=end))
     }
@@ -571,8 +571,8 @@ fn[T] ParseContext::invalid_single_quoted_string(
 ///|
 fn ParseContext::lex_hex_digits(
   ctx : ParseContext,
-  n : Int,
-) -> Int raise ParseError {
+  n : Int32,
+) -> Int32 raise ParseError {
   let mut r = 0
   let mut digits_read = 0
   while digits_read < n {
@@ -603,7 +603,7 @@ fn ParseContext::lex_hex_digits(
 ///|
 fn ParseContext::lex_decimal_integer(
   ctx : ParseContext,
-  start~ : Int,
+  start~ : Int32,
 ) -> (Double, StringView?) raise ParseError {
   while ctx.offset < ctx.end_offset {
     match ctx.peek_char() {
@@ -630,7 +630,7 @@ fn ParseContext::lex_decimal_integer(
 ///|
 fn ParseContext::lex_decimal_point(
   ctx : ParseContext,
-  start~ : Int,
+  start~ : Int32,
 ) -> (Double, StringView?) raise ParseError {
   match ctx.read_char() {
     Some(c) =>
@@ -646,7 +646,7 @@ fn ParseContext::lex_decimal_point(
 ///|
 fn ParseContext::lex_decimal_fraction(
   ctx : ParseContext,
-  start~ : Int,
+  start~ : Int32,
 ) -> (Double, StringView?) raise ParseError {
   while ctx.offset < ctx.end_offset {
     match ctx.peek_char() {
@@ -669,7 +669,7 @@ fn ParseContext::lex_decimal_fraction(
 ///|
 fn ParseContext::lex_decimal_exponent(
   ctx : ParseContext,
-  start~ : Int,
+  start~ : Int32,
 ) -> (Double, StringView?) raise ParseError {
   match ctx.read_char() {
     Some('+') | Some('-') => return ctx.lex_decimal_exponent_sign(start~)
@@ -687,7 +687,7 @@ fn ParseContext::lex_decimal_exponent(
 ///|
 fn ParseContext::lex_decimal_exponent_sign(
   ctx : ParseContext,
-  start~ : Int,
+  start~ : Int32,
 ) -> (Double, StringView?) raise ParseError {
   match ctx.read_char() {
     Some(c) => {
@@ -704,7 +704,7 @@ fn ParseContext::lex_decimal_exponent_sign(
 ///|
 fn ParseContext::lex_decimal_exponent_integer(
   ctx : ParseContext,
-  start~ : Int,
+  start~ : Int32,
 ) -> (Double, StringView?) {
   while ctx.offset < ctx.end_offset {
     match ctx.peek_char() {
@@ -723,7 +723,7 @@ fn ParseContext::lex_decimal_exponent_integer(
 ///|
 fn ParseContext::lex_zero(
   ctx : ParseContext,
-  start~ : Int,
+  start~ : Int32,
 ) -> (Double, StringView?) raise ParseError {
   match ctx.read_char() {
     Some('.') => ctx.lex_decimal_point(start~)
@@ -741,7 +741,7 @@ fn ParseContext::lex_zero(
 }
 
 ///|
-fn number_literal_exponent_index(token : StringView) -> Int? {
+fn number_literal_exponent_index(token : StringView) -> Int32? {
   for i in 0..<token.length() {
     let ch = token.unsafe_get(i).to_int().unsafe_to_char()
     if ch == 'e' || ch == 'E' {
@@ -757,7 +757,7 @@ fn is_ascii_digit(ch : Char) -> Bool {
 }
 
 ///|
-fn number_literal_exponent_digit_count(token : StringView) -> Int? {
+fn number_literal_exponent_digit_count(token : StringView) -> Int32? {
   match number_literal_exponent_index(token) {
     Some(exp_index) => {
       let mut pos = exp_index + 1
@@ -813,7 +813,7 @@ fn number_literal_needs_exponent_normalization(token : StringView) -> Bool {
 }
 
 ///|
-fn number_literal_significant_digits(token : StringView) -> Int {
+fn number_literal_significant_digits(token : StringView) -> Int32 {
   let end = match number_literal_exponent_index(token) {
     Some(idx) => idx
     None => token.length()
@@ -973,8 +973,8 @@ fn number_literal_normalized_large_exponent_repr(token : StringView) -> String {
 ///|
 fn ParseContext::lex_number_end(
   ctx : ParseContext,
-  start : Int,
-  end : Int,
+  start : Int32,
+  end : Int32,
 ) -> (Double, StringView?) {
   let s = ctx.input.view(start_offset=start, end_offset=end)
   if !s.contains(".") && !s.contains("e") && !s.contains("E") {

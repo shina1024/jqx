@@ -37,10 +37,10 @@ fn format_finite_number_without_repr(n : Double) -> String {
 
 ///|
 priv enum JsonFormatFrame {
-  WriteJsonValue(Value, Int)
+  WriteJsonValue(Value, Int32)
   WriteJsonText(String)
   WriteEscapedString(String)
-  WriteIndent(Int)
+  WriteIndent(Int32)
 }
 
 ///|
@@ -52,7 +52,7 @@ pub fn Value::write_json_chunks(
   // jq 1.8.2 uses MAX_PRINT_DEPTH=10000 in src/jv_print.c and emits
   // "<skipped: too deep>" once printing recurses past that depth.
   let max_depth = 10000
-  fn write_indent(depth : Int) {
+  fn write_indent(depth : Int32) {
     write("\n")
     let spaces = "                                                                "
     let mut remaining = depth * 2
@@ -85,7 +85,7 @@ pub fn Value::write_json_chunks(
             let d2 = (code >> 8) & 0xF
             let d1 = (code >> 4) & 0xF
             let d0 = code & 0xF
-            fn hex(d : Int) -> Char {
+            fn hex(d : Int32) -> Char {
               if d < 10 {
                 (d + '0'.to_int()).unsafe_to_char()
               } else {

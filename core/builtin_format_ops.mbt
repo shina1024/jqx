@@ -129,7 +129,7 @@ fn format_tsv_row(input : Value) -> String raise EvalError {
 }
 
 ///|
-fn hex_upper_digit(d : Int) -> Char {
+fn hex_upper_digit(d : Int32) -> Char {
   if d < 10 {
     (d + '0'.to_int()).unsafe_to_char()
   } else {
@@ -138,7 +138,7 @@ fn hex_upper_digit(d : Int) -> Char {
 }
 
 ///|
-fn append_utf8_codepoint_bytes(out : Array[Int], code : Int) -> Unit {
+fn append_utf8_codepoint_bytes(out : Array[Int32], code : Int32) -> Unit {
   if code <= 0x7F {
     out.push(code)
   } else if code <= 0x7FF {
@@ -157,7 +157,7 @@ fn append_utf8_codepoint_bytes(out : Array[Int], code : Int) -> Unit {
 }
 
 ///|
-fn utf8_bytes_of_string(s : String) -> Array[Int] {
+fn utf8_bytes_of_string(s : String) -> Array[Int32] {
   let out = []
   for ch in s {
     append_utf8_codepoint_bytes(out, ch.to_int())
@@ -166,12 +166,12 @@ fn utf8_bytes_of_string(s : String) -> Array[Int] {
 }
 
 ///|
-fn is_utf8_continuation_byte(b : Int) -> Bool {
+fn is_utf8_continuation_byte(b : Int32) -> Bool {
   b >= 0x80 && b <= 0xBF
 }
 
 ///|
-fn utf8_decode_next_strict(bytes : Array[Int], i : Int) -> (Int, Int)? {
+fn utf8_decode_next_strict(bytes : Array[Int32], i : Int32) -> (Int32, Int32)? {
   guard i < bytes.length() else { return None }
   let b0 = bytes[i]
   if b0 <= 0x7F {
@@ -226,7 +226,7 @@ fn utf8_decode_next_strict(bytes : Array[Int], i : Int) -> (Int, Int)? {
 }
 
 ///|
-fn utf8_decode_bytes_strict(bytes : Array[Int]) -> String? {
+fn utf8_decode_bytes_strict(bytes : Array[Int32]) -> String? {
   let buf = StringBuilder()
   let mut i = 0
   while i < bytes.length() {
@@ -242,7 +242,7 @@ fn utf8_decode_bytes_strict(bytes : Array[Int]) -> String? {
 }
 
 ///|
-fn utf8_decode_bytes_lossy(bytes : Array[Int]) -> String {
+fn utf8_decode_bytes_lossy(bytes : Array[Int32]) -> String {
   let buf = StringBuilder()
   let mut i = 0
   while i < bytes.length() {
@@ -261,7 +261,7 @@ fn utf8_decode_bytes_lossy(bytes : Array[Int]) -> String {
 }
 
 ///|
-fn is_uri_unreserved_byte(b : Int) -> Bool {
+fn is_uri_unreserved_byte(b : Int32) -> Bool {
   (b >= 'A'.to_int() && b <= 'Z'.to_int()) ||
   (b >= 'a'.to_int() && b <= 'z'.to_int()) ||
   (b >= '0'.to_int() && b <= '9'.to_int()) ||
@@ -272,12 +272,12 @@ fn is_uri_unreserved_byte(b : Int) -> Bool {
 }
 
 ///|
-fn uri_hex_nibble(ch : Char) -> Int? {
-  if ch is ('0'..='9') {
+fn uri_hex_nibble(ch : Char) -> Int32? {
+  if ch is ('0'..<='9') {
     Some(ch.to_int() - '0'.to_int())
-  } else if ch is ('A'..='F') {
+  } else if ch is ('A'..<='F') {
     Some(ch.to_int() - 'A'.to_int() + 10)
-  } else if ch is ('a'..='f') {
+  } else if ch is ('a'..<='f') {
     Some(ch.to_int() - 'a'.to_int() + 10)
   } else {
     None
@@ -301,7 +301,10 @@ fn format_uri_encode(input : String) -> String {
 }
 
 ///|
-fn format_uri_decode_percent_run(input : String, start : Int) -> (String, Int)? {
+fn format_uri_decode_percent_run(
+  input : String,
+  start : Int32,
+) -> (String, Int32)? {
   let bytes = []
   let mut i = start
   while i < input.length() {
@@ -351,12 +354,12 @@ fn format_uri_decode(input : String) -> String? {
 }
 
 ///|
-fn base64_value_of_char(ch : Char) -> Int? {
-  if ch is ('A'..='Z') {
+fn base64_value_of_char(ch : Char) -> Int32? {
+  if ch is ('A'..<='Z') {
     Some(ch.to_int() - 'A'.to_int())
-  } else if ch is ('a'..='z') {
+  } else if ch is ('a'..<='z') {
     Some(ch.to_int() - 'a'.to_int() + 26)
-  } else if ch is ('0'..='9') {
+  } else if ch is ('0'..<='9') {
     Some(ch.to_int() - '0'.to_int() + 52)
   } else if ch == '+' {
     Some(62)
@@ -409,7 +412,7 @@ priv enum Base64DecodeError {
 ///|
 fn format_base64_decode(
   input : String,
-) -> Result[Array[Int], Base64DecodeError] {
+) -> Result[Array[Int32], Base64DecodeError] {
   let chars = []
   for ch in input {
     chars.push(ch)

@@ -1,6 +1,6 @@
 ///|
 #borrow(bytes)
-extern "c" fn c_write_stdout(bytes : Bytes, len : Int) -> Int = "jqx_write_stdout"
+extern "c" fn c_write_stdout(bytes : Bytes, len : Int32) -> Int32 = "jqx_write_stdout"
 
 ///|
 fn write_stdout_chunk(chunk : String) -> Unit {

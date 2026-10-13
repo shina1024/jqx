@@ -373,7 +373,7 @@ test "split error lines keeps trailing empty line" {
 ///|
 
 ///|
-fn exit_code_matches(actual : Int?, expected : Int?) -> Bool {
+fn exit_code_matches(actual : Int32?, expected : Int32?) -> Bool {
   match (actual, expected) {
     (None, None) => true
     (Some(actual), Some(expected)) => actual == expected

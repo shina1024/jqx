@@ -1,7 +1,7 @@
 ///|
 priv struct CliExecutionResult {
   stderr_lines : Array[String]
-  exit_code : Int?
+  exit_code : Int32?
 }
 
 ///|
@@ -164,7 +164,7 @@ fn format_error_message(msg : String) -> String {
 }
 
 ///|
-fn compute_exit_status(last_output : @lib.Value?) -> Int {
+fn compute_exit_status(last_output : @lib.Value?) -> Int32 {
   match last_output {
     None => 4
     Some(JFalse | JNull) => 1

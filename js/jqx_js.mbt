@@ -6,9 +6,9 @@
 pub struct JqxError {
   code : String
   message : String
-  line : Int
-  column : Int
-  offset : Int
+  line : Int32
+  column : Int32
+  offset : Int32
 } derive(Eq, Debug)
 
 ///|
@@ -30,15 +30,19 @@ pub impl Show for JqxError with fn output(self, logger) {
 fn jqx_error(
   code : String,
   message : String,
-  line? : Int = -1,
-  column? : Int = -1,
-  offset? : Int = -1,
+  line~ : Int32 = -1,
+  column~ : Int32 = -1,
+  offset~ : Int32 = -1,
 ) -> JqxError {
   { code, message, line, column, offset, }
 }
 
 ///|
-fn offset_from_line_column(input : String, line : Int, column : Int) -> Int {
+fn offset_from_line_column(
+  input : String,
+  line : Int32,
+  column : Int32,
+) -> Int32 {
   if line <= 0 || column <= 0 {
     return -1
   }
@@ -203,8 +207,8 @@ pub fn try_execute(
 ///|
 fn run_error_to_jqx_error(
   err : @core.RunError,
-  filter_input? : String = "",
-  json_input? : String = "",
+  filter_input~ : String = "",
+  json_input~ : String = "",
 ) -> JqxError {
   match err {
     Parse(parse_err) => parse_error_to_jqx_error(json_input, parse_err)

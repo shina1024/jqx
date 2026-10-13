@@ -112,7 +112,7 @@ fn FilterCursor::lower_bracket_keys_on_base(
 }
 
 ///|
-fn slice_start_index_from_filter(filter : Filter) -> Int? {
+fn slice_start_index_from_filter(filter : Filter) -> Int32? {
   match filter {
     Literal(Number(n, _)) =>
       if n == n && n != @double.infinity && n != @double.neg_infinity {
@@ -125,7 +125,7 @@ fn slice_start_index_from_filter(filter : Filter) -> Int? {
 }
 
 ///|
-fn slice_end_index_from_filter(filter : Filter) -> Int? {
+fn slice_end_index_from_filter(filter : Filter) -> Int32? {
   match filter {
     Literal(Number(n, _)) =>
       if n == n && n != @double.infinity && n != @double.neg_infinity {
@@ -358,7 +358,7 @@ fn FilterCursor::parse_dot_suffix(
       }
     }
     Some('\"') => Filter::field(ctx.parse_string_literal())
-    Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') =>
+    Some(c) if c is ('a'..<='z' | 'A'..<='Z' | '_') =>
       Filter::field(ctx.parse_identifier())
     Some('.') => {
       ctx.read_char() |> ignore
@@ -400,7 +400,7 @@ fn FilterCursor::parse_dot_expr(ctx : FilterCursor) -> Filter raise FilterError 
         current = Filter::pipe(current, first)
       }
     }
-    Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') => {
+    Some(c) if c is ('a'..<='z' | 'A'..<='Z' | '_') => {
       let first = ctx.parse_dot_suffix()
       if first is Identity {
         ()
@@ -557,7 +557,7 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
       let next = ctx.peek_char()
       ctx.offset = saved
       match next {
-        Some(c) if c is ('0'..='9') =>
+        Some(c) if c is ('0'..<='9') =>
           Filter::literal(ctx.parse_number_literal())
         _ => ctx.parse_dot_expr()
       }
@@ -670,8 +670,8 @@ fn FilterCursor::parse_primary(ctx : FilterCursor) -> Filter raise FilterError {
       } else {
         ctx.parse_identifier_or_call()
       }
-    Some('-') | Some('0'..='9') => Filter::literal(ctx.parse_number_literal())
-    Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') =>
+    Some('-') | Some('0'..<='9') => Filter::literal(ctx.parse_number_literal())
+    Some(c) if c is ('a'..<='z' | 'A'..<='Z' | '_') =>
       ctx.parse_identifier_or_call()
     Some(_) => ctx.invalid_char()
     None => raise InvalidEof
@@ -728,7 +728,7 @@ fn FilterCursor::parse_identifier_or_call(
 }
 
 ///|
-fn filter_max_nesting_depth() -> Int {
+fn filter_max_nesting_depth() -> Int32 {
   10000
 }
 
@@ -833,9 +833,9 @@ fn FilterCursor::parse_object_literal(
         let name = ctx.parse_identifier()
         (Filter::literal(Value::string(name)), Some(name))
       }
-      Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') =>
+      Some(c) if c is ('a'..<='z' | 'A'..<='Z' | '_') =>
         (Filter::literal(Value::string(ctx.parse_identifier())), None)
-      Some(c) if c is ('0'..='9' | '-') => {
+      Some(c) if c is ('0'..<='9' | '-') => {
         let suffix = filter_position_suffix(ctx.input, ctx.offset)
         ctx.raise_diagnostic([
           "syntax error, unexpected LITERAL " + suffix,

@@ -273,7 +273,10 @@ pub fn RecharSet::difference(self : RecharSet, other : RecharSet) -> RecharSet {
 }
 
 ///|
-pub fn RecharSet::offset_by(self : RecharSet, f : (Int) -> Int) -> RecharSet {
+pub fn RecharSet::offset_by(
+  self : RecharSet,
+  f : (Int32) -> Int32,
+) -> RecharSet {
   fn aux(t : Tree) -> Tree {
     match t {
       Empty => Empty

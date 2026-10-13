@@ -14,8 +14,8 @@
 
 ///|
 pub(all) struct Quantifier {
-  min : Int
-  max : Int?
+  min : Int32
+  max : Int32?
   mode : @shared_types.QuantifierMode
 } derive(Debug)
 

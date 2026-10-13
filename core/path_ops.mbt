@@ -58,7 +58,7 @@ fn normalize_setpath_arg(path : Value) -> Array[Value] raise EvalError {
 }
 
 ///|
-fn jq_path_max_depth() -> Int {
+fn jq_path_max_depth() -> Int32 {
   10000
 }
 
@@ -70,13 +70,13 @@ fn validate_path_depth(path : Array[Value]) -> Unit raise EvalError {
 }
 
 ///|
-fn setpath_max_expand_index() -> Int {
+fn setpath_max_expand_index() -> Int32 {
   // Native backend currently cannot materialize arrays beyond this length.
   134217727
 }
 
 ///|
-fn parse_setpath_array_index(n : Double) -> Int raise EvalError {
+fn parse_setpath_array_index(n : Double) -> Int32 raise EvalError {
   if n != n {
     raise TypeError("Cannot set array element at NaN index")
   } else if n == @double.infinity || n == @double.neg_infinity {
@@ -107,7 +107,7 @@ fn setpath_on_input(
 fn setpath_on_input_at(
   input : Value,
   path : Array[Value],
-  offset : Int,
+  offset : Int32,
   value : Value,
 ) -> Value raise EvalError {
   if offset >= path.length() {
@@ -188,10 +188,10 @@ fn setpath_on_input_at(
 
 ///|
 fn add_object_path_group(
-  groups : Map[String, Array[(Array[Value], Int)]],
+  groups : Map[String, Array[(Array[Value], Int32)]],
   key : String,
   path : Array[Value],
-  offset : Int,
+  offset : Int32,
 ) -> Unit {
   match groups.get(key) {
     Some(paths) => {
@@ -205,10 +205,10 @@ fn add_object_path_group(
 
 ///|
 fn add_array_path_group(
-  groups : Map[Int, Array[(Array[Value], Int)]],
-  key : Int,
+  groups : Map[Int32, Array[(Array[Value], Int32)]],
+  key : Int32,
   path : Array[Value],
-  offset : Int,
+  offset : Int32,
 ) -> Unit {
   match groups.get(key) {
     Some(paths) => {
@@ -221,7 +221,7 @@ fn add_array_path_group(
 }
 
 ///|
-fn has_empty_path_at(paths : Array[(Array[Value], Int)]) -> Bool {
+fn has_empty_path_at(paths : Array[(Array[Value], Int32)]) -> Bool {
   for p in paths {
     if p.1 >= p.0.length() {
       return true
@@ -258,14 +258,14 @@ fn delpaths_on_input(
   input : Value,
   paths : Array[Array[Value]],
 ) -> Value raise EvalError {
-  let offset_paths : Array[(Array[Value], Int)] = paths.map(p => (p, 0))
+  let offset_paths : Array[(Array[Value], Int32)] = paths.map(p => (p, 0))
   delpaths_on_input_at(input, offset_paths)
 }
 
 ///|
 fn delpaths_on_input_at(
   input : Value,
-  paths : Array[(Array[Value], Int)],
+  paths : Array[(Array[Value], Int32)],
 ) -> Value raise EvalError {
   if has_empty_path_at(paths) {
     return Value::null()
@@ -273,7 +273,7 @@ fn delpaths_on_input_at(
   match input {
     JNull => Value::null()
     Object(o) => {
-      let groups : Map[String, Array[(Array[Value], Int)]] = Map([])
+      let groups : Map[String, Array[(Array[Value], Int32)]] = Map([])
       for entry in paths {
         let path = entry.0
         let offset = entry.1
@@ -311,7 +311,7 @@ fn delpaths_on_input_at(
       Value::object_with_order(out, out_order)
     }
     Array(a) => {
-      let groups : Map[Int, Array[(Array[Value], Int)]] = Map([])
+      let groups : Map[Int32, Array[(Array[Value], Int32)]] = Map([])
       for entry in paths {
         let path = entry.0
         let offset = entry.1
@@ -508,7 +508,7 @@ fn path_field_state(
 ///|
 fn path_index_state(
   state : PathEvalState,
-  index : Int,
+  index : Int32,
   optional : Bool,
 ) -> Array[PathEvalState] raise EvalError {
   if !state.valid {
@@ -540,8 +540,8 @@ fn path_index_state(
 ///|
 fn path_slice_state(
   state : PathEvalState,
-  start : Int?,
-  end : Int?,
+  start : Int32?,
+  end : Int32?,
   optional : Bool,
 ) -> Array[PathEvalState] raise EvalError {
   if !state.valid {

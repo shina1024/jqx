@@ -2,7 +2,7 @@
 fn call_parse_non_negative_count(
   value : Value,
   negative_msg : String,
-) -> Int? raise EvalError {
+) -> Int32? raise EvalError {
   match value {
     Number(n, _) =>
       if n != n || n == @double.neg_infinity || n < 0.0 {
@@ -22,7 +22,7 @@ fn call_parse_non_negative_count(
 }
 
 ///|
-fn call_parse_nth_index(value : Value) -> Int? raise EvalError {
+fn call_parse_nth_index(value : Value) -> Int32? raise EvalError {
   match value {
     Number(n, _) =>
       if n != n || n == @double.neg_infinity || n < 0.0 {
@@ -39,7 +39,7 @@ fn call_parse_nth_index(value : Value) -> Int? raise EvalError {
 ///|
 fn append_combinations_recursive(
   groups : Array[Array[Value]],
-  depth : Int,
+  depth : Int32,
   current : Array[Value],
   out : Array[Value],
 ) -> Unit {
@@ -216,7 +216,7 @@ priv enum LoopWork {
 ///|
 priv enum WalkWork {
   Visit(Value)
-  ApplyArray(Int)
+  ApplyArray(Int32)
   ApplyObject(Array[String])
 }
 

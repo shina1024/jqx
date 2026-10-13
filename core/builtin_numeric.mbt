@@ -31,7 +31,7 @@ fn append_range_outputs(
 }
 
 ///|
-fn parse_decimal_digits(s : String, start : Int, count : Int) -> Int? {
+fn parse_decimal_digits(s : String, start : Int32, count : Int32) -> Int32? {
   if start < 0 || count < 0 || start + count > s.length() {
     return None
   }
@@ -47,12 +47,12 @@ fn parse_decimal_digits(s : String, start : Int, count : Int) -> Int? {
 }
 
 ///|
-fn is_leap_year(year : Int) -> Bool {
+fn is_leap_year(year : Int32) -> Bool {
   (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
 }
 
 ///|
-fn days_in_month(year : Int, month : Int) -> Int {
+fn days_in_month(year : Int32, month : Int32) -> Int32 {
   match month {
     1 => 31
     2 => if is_leap_year(year) { 29 } else { 28 }
@@ -71,7 +71,7 @@ fn days_in_month(year : Int, month : Int) -> Int {
 }
 
 ///|
-fn days_from_civil(year : Int, month : Int, day : Int) -> Int {
+fn days_from_civil(year : Int32, month : Int32, day : Int32) -> Int32 {
   let adjusted_year = if month <= 2 { year - 1 } else { year }
   let era = if adjusted_year >= 0 {
     adjusted_year / 400
@@ -151,7 +151,7 @@ fn parse_rfc3339_utc_seconds(s : String) -> Double? {
 }
 
 ///|
-fn floor_div_int(a : Int, b : Int) -> Int {
+fn floor_div_int(a : Int32, b : Int32) -> Int32 {
   if a >= 0 {
     a / b
   } else {
@@ -160,7 +160,7 @@ fn floor_div_int(a : Int, b : Int) -> Int {
 }
 
 ///|
-fn positive_mod_int(a : Int, m : Int) -> Int {
+fn positive_mod_int(a : Int32, m : Int32) -> Int32 {
   let r = a % m
   if r < 0 {
     r + m
@@ -170,7 +170,7 @@ fn positive_mod_int(a : Int, m : Int) -> Int {
 }
 
 ///|
-fn civil_from_days(z : Int) -> (Int, Int, Int) {
+fn civil_from_days(z : Int32) -> (Int32, Int32, Int32) {
   let shifted = z + 719468
   let era = if shifted >= 0 {
     shifted / 146097
@@ -193,14 +193,14 @@ fn civil_from_days(z : Int) -> (Int, Int, Int) {
 }
 
 ///|
-fn day_of_year_from_date(year : Int, month : Int, day : Int) -> Int {
+fn day_of_year_from_date(year : Int32, month : Int32, day : Int32) -> Int32 {
   days_from_civil(year, month, day) - days_from_civil(year, 1, 1)
 }
 
 ///|
 fn epoch_seconds_to_datetime_components(
   seconds : Double,
-) -> (Int, Int, Int, Int, Int, Double, Int, Int) {
+) -> (Int32, Int32, Int32, Int32, Int32, Double, Int32, Int32) {
   let whole = seconds.floor().to_int()
   let frac = seconds - whole.to_double()
   let days = floor_div_int(whole, 86400)
@@ -217,7 +217,7 @@ fn epoch_seconds_to_datetime_components(
 ///|
 fn datetime_component_number_required(
   a : Array[Value],
-  index : Int,
+  index : Int32,
   fn_name : String,
 ) -> Double raise EvalError {
   if index >= a.length() {
@@ -232,7 +232,7 @@ fn datetime_component_number_required(
 ///|
 fn datetime_component_number_default(
   a : Array[Value],
-  index : Int,
+  index : Int32,
   default_ : Double,
   fn_name : String,
 ) -> Double raise EvalError {
@@ -248,19 +248,19 @@ fn datetime_component_number_default(
 ///|
 fn datetime_component_int_required(
   a : Array[Value],
-  index : Int,
+  index : Int32,
   fn_name : String,
-) -> Int raise EvalError {
+) -> Int32 raise EvalError {
   datetime_component_number_required(a, index, fn_name).floor().to_int()
 }
 
 ///|
 fn datetime_component_int_default(
   a : Array[Value],
-  index : Int,
-  default_ : Int,
+  index : Int32,
+  default_ : Int32,
   fn_name : String,
-) -> Int raise EvalError {
+) -> Int32 raise EvalError {
   datetime_component_number_default(a, index, default_.to_double(), fn_name)
   .floor()
   .to_int()
@@ -270,7 +270,7 @@ fn datetime_component_int_default(
 fn parse_datetime_array_input(
   input : Value,
   fn_name : String,
-) -> (Int, Int, Int, Int, Int, Double) raise EvalError {
+) -> (Int32, Int32, Int32, Int32, Int32, Double) raise EvalError {
   match input {
     Array(a) => {
       if a.length() < 3 {
@@ -308,7 +308,7 @@ fn parse_datetime_array_input(
 fn datetime_input_to_format_components(
   input : Value,
   fn_name : String,
-) -> (Int, Int, Int, Int, Int, Double, Int, Int) raise EvalError {
+) -> (Int32, Int32, Int32, Int32, Int32, Double, Int32, Int32) raise EvalError {
   match input {
     Number(seconds, _) => epoch_seconds_to_datetime_components(seconds)
     Array(_) => {
@@ -326,11 +326,11 @@ fn datetime_input_to_format_components(
 
 ///|
 fn datetime_components_to_epoch_seconds(
-  year : Int,
-  month : Int,
-  day : Int,
-  hour : Int,
-  minute : Int,
+  year : Int32,
+  month : Int32,
+  day : Int32,
+  hour : Int32,
+  minute : Int32,
   second : Double,
 ) -> Double {
   let days = days_from_civil(year, month, day).to_double()
@@ -342,14 +342,14 @@ fn datetime_components_to_epoch_seconds(
 
 ///|
 fn datetime_components_to_json_array(
-  year : Int,
-  month : Int,
-  day : Int,
-  hour : Int,
-  minute : Int,
+  year : Int32,
+  month : Int32,
+  day : Int32,
+  hour : Int32,
+  minute : Int32,
   second : Double,
-  day_of_week : Int,
-  day_of_year : Int,
+  day_of_week : Int32,
+  day_of_year : Int32,
 ) -> Value {
   Value::array([
     json_number_value(year.to_double()),
@@ -364,7 +364,7 @@ fn datetime_components_to_json_array(
 }
 
 ///|
-fn weekday_name_english(day_of_week : Int) -> String {
+fn weekday_name_english(day_of_week : Int32) -> String {
   match positive_mod_int(day_of_week, 7) {
     0 => "Sunday"
     1 => "Monday"
@@ -377,7 +377,7 @@ fn weekday_name_english(day_of_week : Int) -> String {
 }
 
 ///|
-fn month_name_english(month : Int) -> String {
+fn month_name_english(month : Int32) -> String {
   match month {
     1 => "January"
     2 => "February"
@@ -395,7 +395,7 @@ fn month_name_english(month : Int) -> String {
 }
 
 ///|
-fn format_two_digits_zero(n : Int) -> String {
+fn format_two_digits_zero(n : Int32) -> String {
   if n < 10 {
     "0" + n.to_string()
   } else {
@@ -404,7 +404,7 @@ fn format_two_digits_zero(n : Int) -> String {
 }
 
 ///|
-fn format_two_digits_space(n : Int) -> String {
+fn format_two_digits_space(n : Int32) -> String {
   if n < 10 {
     " " + n.to_string()
   } else {
@@ -415,14 +415,14 @@ fn format_two_digits_space(n : Int) -> String {
 ///|
 fn format_datetime_with_strftime_pattern(
   pattern : String,
-  year : Int,
-  month : Int,
-  day : Int,
-  hour : Int,
-  minute : Int,
+  year : Int32,
+  month : Int32,
+  day : Int32,
+  hour : Int32,
+  minute : Int32,
   second : Double,
-  day_of_week : Int,
-  day_of_year : Int,
+  day_of_week : Int32,
+  day_of_year : Int32,
 ) -> String {
   let second_int = second.floor().to_int()
   let sb = StringBuilder()
@@ -478,7 +478,7 @@ fn format_datetime_with_strftime_pattern(
 fn strptime_utc_fixed_format(
   input : String,
   pattern : String,
-) -> (Int, Int, Int, Int, Int, Double, Int, Int)? {
+) -> (Int32, Int32, Int32, Int32, Int32, Double, Int32, Int32)? {
   if pattern != "%Y-%m-%dT%H:%M:%SZ" {
     return None
   }

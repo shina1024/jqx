@@ -27,15 +27,15 @@ fn read_stdin_all_internal() -> String {
 }
 
 ///|
-extern "c" fn getchar() -> Int = "getchar"
+extern "c" fn getchar() -> Int32 = "getchar"
 
 ///|
-fn utf8_is_continuation_byte(b : Int) -> Bool {
+fn utf8_is_continuation_byte(b : Int32) -> Bool {
   b >= 0x80 && b <= 0xBF
 }
 
 ///|
-fn utf8_decode_next_strict(bytes : Array[Int], i : Int) -> (Int, Int)? {
+fn utf8_decode_next_strict(bytes : Array[Int32], i : Int32) -> (Int32, Int32)? {
   guard i < bytes.length() else { return None }
   let b0 = bytes[i]
   if b0 <= 0x7F {

@@ -6,7 +6,7 @@ fn FilterCursor::parse_unary(ctx : FilterCursor) -> Filter raise FilterError {
       let saved = ctx.offset
       ctx.read_char() |> ignore
       match ctx.peek_char() {
-        Some(c) if c is ('0'..='9') => {
+        Some(c) if c is ('0'..<='9') => {
           ctx.offset = saved
           ctx.parse_primary()
         }
@@ -108,7 +108,7 @@ fn FilterCursor::parse_add(ctx : FilterCursor) -> Filter raise FilterError {
 ///|
 fn FilterCursor::parse_pipe_no_comma(
   ctx : FilterCursor,
-  allow_as? : Bool = true,
+  allow_as~ : Bool = true,
 ) -> Filter raise FilterError {
   let mut left = ctx.parse_fallback(allow_as~)
   let mut parsing = true
@@ -227,7 +227,7 @@ fn FilterCursor::parse_pipe_no_comma(
 ///|
 fn FilterCursor::parse_comma_tight(
   ctx : FilterCursor,
-  allow_as? : Bool = true,
+  allow_as~ : Bool = true,
 ) -> Filter raise FilterError {
   let mut left = ctx.parse_fallback(allow_as~)
   let mut parsing = true
@@ -252,7 +252,7 @@ fn FilterCursor::parse_comma_tight(
 ///|
 fn FilterCursor::parse_pipe(
   ctx : FilterCursor,
-  allow_as? : Bool = true,
+  allow_as~ : Bool = true,
 ) -> Filter raise FilterError {
   let mut left = ctx.parse_comma_tight(allow_as~)
   let mut parsing = true
@@ -371,7 +371,7 @@ fn FilterCursor::parse_pipe(
 ///|
 fn FilterCursor::parse_pipe_scoped(
   ctx : FilterCursor,
-  allow_as? : Bool = true,
+  allow_as~ : Bool = true,
 ) -> Filter raise FilterError {
   let defs = ctx.parse_definition_prefix()
   let raw_filter = ctx.parse_pipe_no_comma(allow_as~)
@@ -457,7 +457,7 @@ fn FilterCursor::try_parse_update_assign_op(
 ///|
 fn FilterCursor::parse_update(
   ctx : FilterCursor,
-  allow_as? : Bool = true,
+  allow_as~ : Bool = true,
 ) -> Filter raise FilterError {
   let left = ctx.parse_or(allow_as~)
   match ctx.try_parse_update_assign_op() {
@@ -472,7 +472,7 @@ fn FilterCursor::parse_update(
 ///|
 fn FilterCursor::parse_compare(
   ctx : FilterCursor,
-  allow_as? : Bool = true,
+  allow_as~ : Bool = true,
 ) -> Filter raise FilterError {
   allow_as |> ignore
   let mut left = ctx.parse_add()
@@ -543,7 +543,7 @@ fn FilterCursor::parse_compare(
 ///|
 fn FilterCursor::parse_and(
   ctx : FilterCursor,
-  allow_as? : Bool = true,
+  allow_as~ : Bool = true,
 ) -> Filter raise FilterError {
   let mut left = ctx.parse_compare(allow_as~)
   ctx.skip_ws()
@@ -558,7 +558,7 @@ fn FilterCursor::parse_and(
 ///|
 fn FilterCursor::parse_or(
   ctx : FilterCursor,
-  allow_as? : Bool = true,
+  allow_as~ : Bool = true,
 ) -> Filter raise FilterError {
   let mut left = ctx.parse_and(allow_as~)
   ctx.skip_ws()
@@ -573,7 +573,7 @@ fn FilterCursor::parse_or(
 ///|
 fn FilterCursor::parse_fallback(
   ctx : FilterCursor,
-  allow_as? : Bool = true,
+  allow_as~ : Bool = true,
 ) -> Filter raise FilterError {
   let mut left = ctx.parse_update(allow_as~)
   let mut parsing = true
@@ -630,7 +630,7 @@ fn FilterCursor::parse_fallback(
 ///|
 fn FilterCursor::parse_comma(
   ctx : FilterCursor,
-  allow_as? : Bool = true,
+  allow_as~ : Bool = true,
 ) -> Filter raise FilterError {
   ctx.parse_pipe(allow_as~)
 }

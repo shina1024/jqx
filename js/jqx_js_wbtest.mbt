@@ -15,7 +15,7 @@ test "offset_from_line_column handles valid and invalid positions" {
 ///|
 fn expect_parse_error(
   input : String,
-  max_nesting_depth? : Int = 10000,
+  max_nesting_depth~ : Int32 = 10000,
 ) -> @core.ParseError {
   try @core.parse(input, max_nesting_depth~) catch {
     err => err

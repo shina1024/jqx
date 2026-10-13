@@ -22,7 +22,7 @@ fn call_parse_regex_flags(
 fn call_parse_regex_flags_with_options(
   name : String,
   value : Value,
-  append_global? : Bool = false,
+  append_global~ : Bool = false,
 ) -> String raise EvalError {
   let base = match value {
     JNull => ""

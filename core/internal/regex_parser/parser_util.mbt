@@ -13,14 +13,14 @@
 // limitations under the License.
 
 ///|
-fn hex2i(hex : StringView) -> Int {
+fn hex2i(hex : StringView) -> Int32 {
   let mut value = 0
   for c in hex {
     value = value * 16
     match c {
-      '0'..='9' => value = value + (c.to_int() - '0'.to_int())
-      'a'..='f' => value = value + (c.to_int() - 'a'.to_int() + 10)
-      'A'..='F' => value = value + (c.to_int() - 'A'.to_int() + 10)
+      '0'..<='9' => value = value + (c.to_int() - '0'.to_int())
+      'a'..<='f' => value = value + (c.to_int() - 'a'.to_int() + 10)
+      'A'..<='F' => value = value + (c.to_int() - 'A'.to_int() + 10)
       _ => panic()
     }
   }

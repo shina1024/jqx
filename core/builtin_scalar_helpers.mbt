@@ -58,7 +58,7 @@ fn builtin_has_outer_trim_ws(s : String) -> Bool {
 }
 
 ///|
-fn builtin_utf8_byte_length(s : String) -> Int {
+fn builtin_utf8_byte_length(s : String) -> Int32 {
   let mut total = 0
   for ch in s {
     let code = ch.to_int()

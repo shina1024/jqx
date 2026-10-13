@@ -59,7 +59,7 @@ fn parse_json_stream_values(
 }
 
 ///|
-fn skip_ascii_ws_offset(text : String, start : Int) -> Int {
+fn skip_ascii_ws_offset(text : String, start : Int32) -> Int32 {
   let mut i = start
   while i < text.length() {
     let ch = text.unsafe_get(i).to_int().unsafe_to_char()
@@ -80,8 +80,8 @@ fn is_scalar_boundary(ch : Char) -> Bool {
 ///|
 fn parse_json_value_end(
   text : String,
-  start : Int,
-) -> Int raise @lib.ParseError {
+  start : Int32,
+) -> Int32 raise @lib.ParseError {
   let first = text.unsafe_get(start).to_int().unsafe_to_char()
   match first {
     '{' | '[' => parse_structured_value_end(text, start)
@@ -93,8 +93,8 @@ fn parse_json_value_end(
 ///|
 fn parse_structured_value_end(
   text : String,
-  start : Int,
-) -> Int raise @lib.ParseError {
+  start : Int32,
+) -> Int32 raise @lib.ParseError {
   let stack = []
   let mut i = start
   let mut in_string = false
@@ -135,8 +135,8 @@ fn parse_structured_value_end(
 ///|
 fn parse_string_value_end(
   text : String,
-  start : Int,
-) -> Int raise @lib.ParseError {
+  start : Int32,
+) -> Int32 raise @lib.ParseError {
   let mut i = start + 1
   let mut escaped = false
   while i < text.length() {
@@ -154,7 +154,7 @@ fn parse_string_value_end(
 }
 
 ///|
-fn parse_scalar_value_end(text : String, start : Int) -> Int {
+fn parse_scalar_value_end(text : String, start : Int32) -> Int32 {
   let mut i = start
   while i < text.length() {
     let ch = text.unsafe_get(i).to_int().unsafe_to_char()
@@ -169,8 +169,8 @@ fn parse_scalar_value_end(text : String, start : Int) -> Int {
 ///|
 fn parse_json_piece(
   text : String,
-  start_offset : Int,
-  end_ : Int,
+  start_offset : Int32,
+  end_ : Int32,
 ) -> @lib.Value raise @lib.ParseError {
   @lib.parse(text.view(start_offset~, end_offset=end_).to_owned())
 }
@@ -178,8 +178,8 @@ fn parse_json_piece(
 ///|
 fn raise_parse_error_end_from_offset(
   text : String,
-  start : Int,
-) -> Int raise @lib.ParseError {
+  start : Int32,
+) -> Int32 raise @lib.ParseError {
   let piece = text.view(start_offset=start).to_owned()
   ignore(@lib.parse(piece))
   return start

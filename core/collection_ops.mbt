@@ -29,7 +29,7 @@ fn flatten_array_full(a : Array[Value]) -> Array[Value] {
 }
 
 ///|
-fn flatten_array_depth(a : Array[Value], depth : Int) -> Array[Value] {
+fn flatten_array_depth(a : Array[Value], depth : Int32) -> Array[Value] {
   if depth <= 0 {
     a
   } else {
@@ -90,7 +90,7 @@ fn flatten_with_depth(input : Value, depth : Value) -> Value raise EvalError {
 }
 
 ///|
-fn transpose_row_length(row : Value) -> Int raise EvalError {
+fn transpose_row_length(row : Value) -> Int32 raise EvalError {
   match row {
     Array(a) => a.length()
     Object(o) => o.length()
@@ -103,7 +103,7 @@ fn transpose_row_length(row : Value) -> Int raise EvalError {
 }
 
 ///|
-fn transpose_row_index(row : Value, i : Int) -> Value raise EvalError {
+fn transpose_row_index(row : Value, i : Int32) -> Value raise EvalError {
   match row {
     Array(a) => if i >= 0 && i < a.length() { a[i] } else { Value::null() }
     JNull => Value::null()
@@ -229,7 +229,7 @@ fn from_entries_json(input : Value) -> Value raise EvalError {
 }
 
 ///|
-fn json_sort_rank(j : Value) -> Int {
+fn json_sort_rank(j : Value) -> Int32 {
   match j {
     JNull => 0
     JFalse => 1
@@ -243,12 +243,12 @@ fn json_sort_rank(j : Value) -> Int {
 
 ///|
 priv enum JsonCompareTask {
-  CompareValues(Value, Value, Int)
-  CompareLengths(Int, Int)
+  CompareValues(Value, Value, Int32)
+  CompareLengths(Int32, Int32)
 }
 
 ///|
-fn compare_json(a : Value, b : Value) -> Int raise EvalError {
+fn compare_json(a : Value, b : Value) -> Int32 raise EvalError {
   let pending : Array[JsonCompareTask] = [CompareValues(a, b, 0)]
   while pending.length() > 0 {
     match pending.pop().unwrap() {
@@ -510,7 +510,10 @@ fn sort_keyed_pairs(
 }
 
 ///|
-fn bsearch_json_array(a : Array[Value], needle : Value) -> Int raise EvalError {
+fn bsearch_json_array(
+  a : Array[Value],
+  needle : Value,
+) -> Int32 raise EvalError {
   let mut lo = 0
   let mut hi = a.length()
   while lo < hi {
@@ -528,7 +531,7 @@ fn bsearch_json_array(a : Array[Value], needle : Value) -> Int raise EvalError {
 }
 
 ///|
-fn find_string_indices(haystack : String, pattern : String) -> Array[Int] {
+fn find_string_indices(haystack : String, pattern : String) -> Array[Int32] {
   let source_chars = []
   for ch in haystack {
     source_chars.push(ch)
@@ -583,7 +586,7 @@ fn find_string_indices(haystack : String, pattern : String) -> Array[Int] {
 fn find_array_indices(
   haystack : Array[Value],
   pattern : Value,
-) -> Array[Int] raise EvalError {
+) -> Array[Int32] raise EvalError {
   match pattern {
     Array(needle) => {
       let n = needle.length()

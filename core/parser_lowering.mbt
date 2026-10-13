@@ -185,7 +185,7 @@ fn object_key_diagnostic_prefix_from_filter(filter : Filter) -> String? {
 fn FilterCursor::require_constant_object_metadata(
   ctx : FilterCursor,
   metadata : Filter,
-  metadata_offset : Int,
+  metadata_offset : Int32,
 ) -> Unit raise FilterError {
   match filter_constant_json_for_diagnostics(metadata) {
     Some(Object(_)) => ()
@@ -302,7 +302,7 @@ fn FilterCursor::parse_as_pattern(
               ctx.expect_char(':')
               bindings.push(ctx.parse_as_pattern())
             }
-            Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') => {
+            Some(c) if c is ('a'..<='z' | 'A'..<='Z' | '_') => {
               let name = ctx.parse_identifier()
               key = Filter::literal(Value::string(name))
               ctx.skip_ws()
@@ -425,7 +425,9 @@ fn update_path_from_filter(filter : Filter) -> Array[Value]? {
 }
 
 ///|
-fn update_static_slice_target(filter : Filter) -> (Array[Value], Int?, Int?)? {
+fn update_static_slice_target(
+  filter : Filter,
+) -> (Array[Value], Int32?, Int32?)? {
   match filter {
     Pipe(base, Slice(start, end)) =>
       match update_path_from_filter(base) {
@@ -437,7 +439,7 @@ fn update_static_slice_target(filter : Filter) -> (Array[Value], Int?, Int?)? {
 }
 
 ///|
-fn update_slice_bound_filter(index : Int?) -> Filter {
+fn update_slice_bound_filter(index : Int32?) -> Filter {
   match index {
     Some(v) => Filter::literal(Value::number(v.to_double()))
     None => Filter::literal(Value::null())
@@ -810,7 +812,7 @@ fn FilterCursor::lower_update_assignment(
 fn find_filter_definition_arity(
   defs : Array[(String, Array[String], Filter)],
   name : String,
-  arity : Int,
+  arity : Int32,
 ) -> (Array[String], Filter)? {
   for i in 0..<defs.length() {
     let idx = defs.length() - 1 - i
@@ -1255,7 +1257,7 @@ fn FilterCursor::read_until_top_level_semicolon(
   let mut in_string = false
   let mut escaped = false
 
-  fn char_at_offset(offset : Int) -> Char? {
+  fn char_at_offset(offset : Int32) -> Char? {
     if offset < ctx.end_offset {
       Some(ctx.input.unsafe_get(offset).to_int().unsafe_to_char())
     } else {
@@ -1263,7 +1265,7 @@ fn FilterCursor::read_until_top_level_semicolon(
     }
   }
 
-  fn is_def_keyword_start(offset : Int) -> Bool {
+  fn is_def_keyword_start(offset : Int32) -> Bool {
     if offset + 2 >= ctx.end_offset {
       return false
     }
@@ -1454,9 +1456,9 @@ fn lookup_module_source(
 
 ///|
 fn module_signature_is_shadowed(
-  shadowed : Array[(String, Int)],
+  shadowed : Array[(String, Int32)],
   name : String,
-  arity : Int,
+  arity : Int32,
 ) -> Bool {
   for kv in shadowed {
     if kv.0 == name && kv.1 == arity {
@@ -1469,10 +1471,10 @@ fn module_signature_is_shadowed(
 ///|
 fn maybe_prefix_module_name(
   name : String,
-  arity : Int,
+  arity : Int32,
   module_defs : Array[(String, Array[String], Filter)],
   module_alias : String,
-  shadowed : Array[(String, Int)],
+  shadowed : Array[(String, Int32)],
 ) -> String {
   if module_signature_is_shadowed(shadowed, name, arity) {
     return name
@@ -1488,7 +1490,7 @@ fn prefix_module_filter_refs(
   filter : Filter,
   module_defs : Array[(String, Array[String], Filter)],
   module_alias : String,
-  shadowed : Array[(String, Int)],
+  shadowed : Array[(String, Int32)],
 ) -> Filter {
   match filter {
     Identity
@@ -1857,7 +1859,7 @@ fn FilterCursor::parse_module_prefix_with_stack(
 ///|
 fn FilterCursor::parse_scoped(
   ctx : FilterCursor,
-  allow_as? : Bool = true,
+  allow_as~ : Bool = true,
 ) -> Filter raise FilterError {
   ctx.parse_optional_module_declaration()
   let (module_defs, missing_module) = ctx.parse_module_prefix()

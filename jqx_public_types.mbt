@@ -1,7 +1,7 @@
 ///|
 pub struct Position {
-  line : Int
-  column : Int
+  line : Int32
+  column : Int32
 } derive(Eq)
 
 ///|

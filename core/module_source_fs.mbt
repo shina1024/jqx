@@ -32,7 +32,7 @@ fn module_path_is_absolute(path : String) -> Bool {
 }
 
 ///|
-fn module_path_last_separator(path : String) -> Int {
+fn module_path_last_separator(path : String) -> Int32 {
   let mut out = -1
   for i in 0..<path.length() {
     let ch = path.unsafe_get(i).to_int().unsafe_to_char()

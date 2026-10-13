@@ -1,23 +1,29 @@
 ///|
 #borrow(path)
-extern "c" fn module_source_file_size_ffi(path : Bytes, path_len : Int) -> Int = "jqx_read_file_size_ffi"
+extern "c" fn module_source_file_size_ffi(
+  path : Bytes,
+  path_len : Int32,
+) -> Int32 = "jqx_read_file_size_ffi"
 
 ///|
 #borrow(path, out)
 extern "c" fn module_source_file_read_ffi(
   path : Bytes,
-  path_len : Int,
+  path_len : Int32,
   out : Bytes,
-  out_len : Int,
-) -> Int = "jqx_read_file_into_ffi"
+  out_len : Int32,
+) -> Int32 = "jqx_read_file_into_ffi"
 
 ///|
-fn module_source_utf8_is_continuation_byte(b : Int) -> Bool {
+fn module_source_utf8_is_continuation_byte(b : Int32) -> Bool {
   b >= 0x80 && b <= 0xBF
 }
 
 ///|
-fn module_source_utf8_decode_next_strict(bytes : Bytes, i : Int) -> (Int, Int)? {
+fn module_source_utf8_decode_next_strict(
+  bytes : Bytes,
+  i : Int32,
+) -> (Int32, Int32)? {
   guard i < bytes.length() else { return None }
   let b0 = bytes[i].to_int()
   if b0 <= 0x7F {

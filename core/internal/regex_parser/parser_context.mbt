@@ -21,19 +21,19 @@ pub(all) enum Mode {
 ///|
 priv struct ParserContext {
   profile : Profile
-  base : Int
+  base : Int32
   ignore_case : Bool
   mode : Mode
-  depth : Int
+  depth : Int32
 }
 
 ///|
-const MAX_GROUP_DEPTH : Int = 64
+const MAX_GROUP_DEPTH : Int32 = 64
 
 ///|
 fn ParserContext::new(
   profile~ : Profile,
-  base~ : Int,
+  base~ : Int32,
   mode~ : Mode,
 ) -> ParserContext {
   { profile, base, ignore_case: false, mode, depth: 0, }
@@ -44,7 +44,7 @@ fn ParserContext::error_at(
   self : ParserContext,
   view : StringView,
   hint : String,
-  offset? : Int = 0,
+  offset~ : Int32 = 0,
 ) -> ParserError {
   ParserError(at=view.start_offset() - self.base + offset, hint~)
 }

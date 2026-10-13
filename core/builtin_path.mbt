@@ -1,8 +1,8 @@
 ///|
 fn call_parse_slice_index(
   value : Value,
-  end? : Bool = false,
-) -> Int? raise EvalError {
+  end~ : Bool = false,
+) -> Int32? raise EvalError {
   let int_min = -2147483647 - 1
   let int_max = 2147483647
   match value {

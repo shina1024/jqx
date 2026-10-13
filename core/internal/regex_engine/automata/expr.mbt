@@ -58,7 +58,7 @@ struct Expr {
 }
 
 ///|
-type ExprId = Int
+type ExprId = Int32
 
 ///|
 const EXPR_ID_EMPTY : ExprId = 0

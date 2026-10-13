@@ -50,7 +50,7 @@ fn decimal_split_exponent(raw : String) -> (String, Int64)? {
 }
 
 ///|
-fn decimal_parse_mantissa(mantissa : String) -> (Bool, String, Int)? {
+fn decimal_parse_mantissa(mantissa : String) -> (Bool, String, Int32)? {
   if mantissa.length() == 0 {
     return None
   }
@@ -114,7 +114,7 @@ fn decimal_parts_from_repr(raw : String) -> DecimalParts? {
 }
 
 ///|
-fn decimal_compare_parts(a : DecimalParts, b : DecimalParts) -> Int {
+fn decimal_compare_parts(a : DecimalParts, b : DecimalParts) -> Int32 {
   if a.significant == "0" && b.significant == "0" {
     return 0
   }
@@ -150,7 +150,7 @@ fn decimal_compare_parts(a : DecimalParts, b : DecimalParts) -> Int {
 }
 
 ///|
-fn decimal_compare_repr(a : String, b : String) -> Int? {
+fn decimal_compare_repr(a : String, b : String) -> Int32? {
   match (decimal_parts_from_repr(a), decimal_parts_from_repr(b)) {
     (Some(x), Some(y)) => Some(decimal_compare_parts(x, y))
     _ => None

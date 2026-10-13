@@ -32,7 +32,7 @@ pub fn field(name : String) -> Query[@core.Value, @core.Value] {
 }
 
 ///|
-pub fn index(i : Int) -> Query[@core.Value, @core.Value] {
+pub fn index(i : Int32) -> Query[@core.Value, @core.Value] {
   query_of_filter(
     @core.Filter::pipe(@core.Filter::identity(), @core.Filter::index(i)),
   )

@@ -220,7 +220,7 @@ fn Parser::quantifier_opt(
 fn Parser::quant_bound(
   digits : StringView,
   ctx~ : ParserContext,
-) -> Int raise ParserError {
+) -> Int32 raise ParserError {
   let mut value = 0
   for c in digits {
     let digit = c.to_int() - '0'.to_int()

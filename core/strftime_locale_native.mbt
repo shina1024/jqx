@@ -2,45 +2,45 @@
 #borrow(pattern)
 extern "c" fn strftime_locale_size_ffi(
   pattern : Bytes,
-  pattern_len : Int,
-  year : Int,
-  month : Int,
-  day : Int,
-  hour : Int,
-  minute : Int,
-  second : Int,
-  day_of_week : Int,
-  day_of_year : Int,
-) -> Int = "jqx_strftime_size_ffi"
+  pattern_len : Int32,
+  year : Int32,
+  month : Int32,
+  day : Int32,
+  hour : Int32,
+  minute : Int32,
+  second : Int32,
+  day_of_week : Int32,
+  day_of_year : Int32,
+) -> Int32 = "jqx_strftime_size_ffi"
 
 ///|
 #borrow(pattern, out)
 extern "c" fn strftime_locale_into_ffi(
   pattern : Bytes,
-  pattern_len : Int,
-  year : Int,
-  month : Int,
-  day : Int,
-  hour : Int,
-  minute : Int,
-  second : Int,
-  day_of_week : Int,
-  day_of_year : Int,
+  pattern_len : Int32,
+  year : Int32,
+  month : Int32,
+  day : Int32,
+  hour : Int32,
+  minute : Int32,
+  second : Int32,
+  day_of_week : Int32,
+  day_of_year : Int32,
   out : Bytes,
-  out_len : Int,
-) -> Int = "jqx_strftime_into_ffi"
+  out_len : Int32,
+) -> Int32 = "jqx_strftime_into_ffi"
 
 ///|
 fn strftime_locale_format(
   pattern : String,
-  year : Int,
-  month : Int,
-  day : Int,
-  hour : Int,
-  minute : Int,
-  second : Int,
-  day_of_week : Int,
-  day_of_year : Int,
+  year : Int32,
+  month : Int32,
+  day : Int32,
+  hour : Int32,
+  minute : Int32,
+  second : Int32,
+  day_of_week : Int32,
+  day_of_year : Int32,
 ) -> String? {
   let pattern_buf = Buffer(size_hint=pattern.length() * 4)
   pattern_buf.write_string_utf8(pattern)

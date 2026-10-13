@@ -260,7 +260,7 @@ fn enforce_pref(
 }
 
 ///|
-fn[T] iter(n : Int, f : (T) -> T, init : T) -> T {
+fn[T] iter(n : Int32, f : (T) -> T, init : T) -> T {
   let mut acc = init
   let mut i = 0
   while i < n {

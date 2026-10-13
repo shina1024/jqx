@@ -38,7 +38,7 @@ using @js {
 }
 
 ///|
-fn nested_json_array_text(depth : Int, leaf : String) -> String {
+fn nested_json_array_text(depth : Int32, leaf : String) -> String {
   let buf = StringBuilder()
   for _ in 0..<depth {
     buf.write_char('[')

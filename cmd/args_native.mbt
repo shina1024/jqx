@@ -1,19 +1,19 @@
 ///|
-extern "c" fn c_windows_utf8_argc() -> Int = "jqx_windows_utf8_argc"
+extern "c" fn c_windows_utf8_argc() -> Int32 = "jqx_windows_utf8_argc"
 
 ///|
-extern "c" fn c_windows_utf8_arg_len(index : Int) -> Int = "jqx_windows_utf8_arg_len"
+extern "c" fn c_windows_utf8_arg_len(index : Int32) -> Int32 = "jqx_windows_utf8_arg_len"
 
 ///|
 #borrow(out_ptr)
 extern "c" fn c_windows_utf8_arg_copy(
-  index : Int,
+  index : Int32,
   out_ptr : Bytes,
-  out_len : Int,
-) -> Int = "jqx_windows_utf8_arg_copy"
+  out_len : Int32,
+) -> Int32 = "jqx_windows_utf8_arg_copy"
 
 ///|
-fn utf8_decode_bytes_lossy_prefix(bytes : Bytes, len : Int) -> String {
+fn utf8_decode_bytes_lossy_prefix(bytes : Bytes, len : Int32) -> String {
   let ints = []
   for i in 0..<len {
     ints.push(bytes[i].to_int())

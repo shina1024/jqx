@@ -224,13 +224,13 @@ priv struct RuntimeFilterClosure {
 priv struct RuntimeContext {
   mut current_definitions : RuntimeDefinition?
   mut current_filter_closures : RuntimeFilterClosure?
-  mut next_filter_closure_id : Int
-  mut call_depth : Int
+  mut next_filter_closure_id : Int32
+  mut call_depth : Int32
   regex_compile_cache : Map[String, CompiledRegexPattern]
 }
 
 ///|
-fn runtime_max_call_depth() -> Int {
+fn runtime_max_call_depth() -> Int32 {
   64
 }
 
@@ -268,7 +268,7 @@ fn append_runtime_definitions(
 fn find_runtime_definition(
   scope : RuntimeDefinition?,
   name : String,
-  arity : Int,
+  arity : Int32,
 ) -> RuntimeDefinition? {
   match scope {
     Some(def_) =>
@@ -1025,7 +1025,7 @@ fn execute_prefix_with_runtime(
   filter : Filter,
   input : Value,
   env : Map[String, Value],
-  max_count : Int,
+  max_count : Int32,
 ) -> Array[Value] raise EvalError {
   if max_count <= 0 {
     return []
@@ -1159,7 +1159,7 @@ fn implode_array(a : Array[Value]) -> String raise EvalError {
 }
 
 ///|
-fn codepoint_or_replacement(code : Int) -> Char {
+fn codepoint_or_replacement(code : Int32) -> Char {
   if code < 0 || code > 0x10FFFF || (code >= 0xD800 && code <= 0xDFFF) {
     '\u{fffd}'
   } else {
@@ -1208,7 +1208,7 @@ fn join_item(v : Value) -> Value {
 }
 
 ///|
-fn clamp_slice_index(i : Int, len : Int) -> Int {
+fn clamp_slice_index(i : Int32, len : Int32) -> Int32 {
   if i < 0 {
     0
   } else if i > len {
@@ -1219,7 +1219,7 @@ fn clamp_slice_index(i : Int, len : Int) -> Int {
 }
 
 ///|
-fn normalize_slice_index(i : Int?, len : Int, default : Int) -> Int {
+fn normalize_slice_index(i : Int32?, len : Int32, default : Int32) -> Int32 {
   match i {
     Some(v) => {
       let idx = if v < 0 { len + v } else { v }
@@ -1232,8 +1232,8 @@ fn normalize_slice_index(i : Int?, len : Int, default : Int) -> Int {
 ///|
 fn execute_slice_array(
   a : Array[Value],
-  start : Int?,
-  end : Int?,
+  start : Int32?,
+  end : Int32?,
 ) -> Array[Value] {
   let len = a.length()
   let lo = normalize_slice_index(start, len, 0)
@@ -1252,8 +1252,8 @@ fn execute_slice_array(
 ///|
 fn set_slice_array(
   a : Array[Value],
-  start : Int?,
-  end : Int?,
+  start : Int32?,
+  end : Int32?,
   replacement : Array[Value],
 ) -> Array[Value] {
   let len = a.length()
@@ -1276,8 +1276,8 @@ fn set_slice_array(
 ///|
 fn set_slice_on_input(
   input : Value,
-  start : Int?,
-  end : Int?,
+  start : Int32?,
+  end : Int32?,
   value : Value,
 ) -> Value raise EvalError {
   match input {
@@ -1307,7 +1307,7 @@ fn set_slice_on_input(
 }
 
 ///|
-fn execute_slice_string(s : String, start : Int?, end : Int?) -> String {
+fn execute_slice_string(s : String, start : Int32?, end : Int32?) -> String {
   let len = s.length()
   let lo = normalize_slice_index(start, len, 0)
   let hi = normalize_slice_index(end, len, len)
@@ -1320,8 +1320,8 @@ fn execute_slice_string(s : String, start : Int?, end : Int?) -> String {
 
 ///|
 fn execute_slice(
-  start : Int?,
-  end : Int?,
+  start : Int32?,
+  end : Int32?,
   input : Value,
   optional~ : Bool,
 ) -> Array[Value] raise EvalError {

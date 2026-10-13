@@ -14,8 +14,8 @@ priv struct CompileDiagnosticFrame {
 ///|
 priv struct UnresolvedCallFrame {
   filter : Filter
-  visible_signatures : Array[(String, Int)]
-  all_signatures : Array[(String, Int)]
+  visible_signatures : Array[(String, Int32)]
+  all_signatures : Array[(String, Int32)]
 }
 
 ///|
@@ -228,15 +228,15 @@ fn compile_first_diagnostic(
 }
 
 ///|
-fn compile_find_token_offset(input : StringView, token : String) -> Int? {
+fn compile_find_token_offset(input : StringView, token : String) -> Int32? {
   input.to_owned().find(token)
 }
 
 ///|
 fn compile_has_signature(
-  signatures : Array[(String, Int)],
+  signatures : Array[(String, Int32)],
   name : String,
-  arity : Int,
+  arity : Int32,
 ) -> Bool {
   for sig in signatures {
     if sig.0 == name && sig.1 == arity {
@@ -249,7 +249,7 @@ fn compile_has_signature(
 ///|
 fn compile_scope_signatures(
   defs : Array[(String, Array[String], Filter)],
-) -> Array[(String, Int)] {
+) -> Array[(String, Int32)] {
   let out = []
   for def_ in defs {
     out.push((def_.0, def_.1.length()))
@@ -260,9 +260,9 @@ fn compile_scope_signatures(
 ///|
 fn compile_first_unresolved_local_call(
   filter : Filter,
-  visible_signatures : Array[(String, Int)],
-  all_signatures : Array[(String, Int)],
-) -> (String, Int)? {
+  visible_signatures : Array[(String, Int32)],
+  all_signatures : Array[(String, Int32)],
+) -> (String, Int32)? {
   let stack : Array[UnresolvedCallFrame] = [
     { filter, visible_signatures, all_signatures, },
   ]
@@ -476,7 +476,7 @@ fn compile_first_unresolved_local_call(
 ///|
 fn compile_first_forward_ref_in_scope(
   defs : Array[(String, Array[String], Filter)],
-) -> (String, Int)? {
+) -> (String, Int32)? {
   let all_signatures = compile_scope_signatures(defs)
   let visible_signatures = []
   for def_ in defs {

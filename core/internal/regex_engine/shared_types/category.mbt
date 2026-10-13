@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-pub struct Category(Int) derive(Eq, Hash)
+pub struct Category(Int32) derive(Eq, Hash)
 
 ///|
 pub fn Category::dummy() -> Category {

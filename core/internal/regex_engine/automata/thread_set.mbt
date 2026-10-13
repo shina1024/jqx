@@ -50,7 +50,7 @@ priv enum ThreadSet {
     l~ : ThreadSet,
     t~ : Thread,
     r~ : ThreadSet,
-    p~ : Int
+    p~ : Int32
   )
 }
 
@@ -101,7 +101,7 @@ fn ThreadSet::make_node(
   l : ThreadSet,
   t : Thread,
   r : ThreadSet,
-  p~ : Int,
+  p~ : Int32,
 ) -> ThreadSet {
   let i = ThreadSetNodeInfo::{
     no_match: !(t is End(_)) && l.no_match() && r.no_match(),
@@ -110,7 +110,7 @@ fn ThreadSet::make_node(
 }
 
 ///|
-fn thread_priority(t : Thread) -> Int {
+fn thread_priority(t : Thread) -> Int32 {
   Hash::hash(t) * 1664525 + 1013904223
 }
 

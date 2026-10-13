@@ -5,7 +5,7 @@
 priv struct CliRunResult {
   stdout_lines : Array[String]
   stderr_lines : Array[String]
-  exit_code : Int?
+  exit_code : Int32?
 }
 
 ///|

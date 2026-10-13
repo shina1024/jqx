@@ -7,7 +7,8 @@ let regex_combining_mark_hi = 0x036F
 ///|
 fn regex_is_word_char(ch : Char) -> Bool {
   match ch {
-    'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '\u{0300}'..='\u{036F}' => true
+    'a'..<='z' | 'A'..<='Z' | '0'..<='9' | '_' | '\u{0300}'..<='\u{036F}' =>
+      true
     _ => false
   }
 }
@@ -56,8 +57,8 @@ fn string_to_chars(s : String) -> Array[Char] {
 ///|
 fn chars_slice_to_string(
   chars : Array[Char],
-  start : Int,
-  end_ : Int,
+  start : Int32,
+  end_ : Int32,
 ) -> String {
   let buf = StringBuilder()
   for i in start..<end_ {
@@ -81,8 +82,8 @@ priv struct CompiledRegexPattern {
 
 ///|
 priv struct RegexMatchData {
-  start : Int
-  end_ : Int
+  start : Int32
+  end_ : Int32
   result : @regex_engine.MatchResult
 }
 
@@ -338,7 +339,7 @@ fn regex_compile_pattern(
 }
 
 ///|
-fn regex_slice_string(s : String, start : Int, end_ : Int) -> String {
+fn regex_slice_string(s : String, start : Int32, end_ : Int32) -> String {
   s.view(start_offset=start, end_offset=end_).to_owned()
 }
 
@@ -346,7 +347,7 @@ fn regex_slice_string(s : String, start : Int, end_ : Int) -> String {
 fn regex_find_native_next_match(
   regex : @regex_engine.Regex,
   input : String,
-  search_start : Int,
+  search_start : Int32,
 ) -> RegexMatchData? {
   match regex.execute(input[:], search_start) {
     None => None
@@ -362,7 +363,7 @@ fn regex_find_native_next_match(
 fn regex_find_top_level_lookahead_match(
   regex : @regex_engine.Regex,
   input : String,
-  search_start : Int,
+  search_start : Int32,
 ) -> RegexMatchData? {
   let len = input.length()
   let mut current_start = search_start
@@ -394,7 +395,7 @@ fn regex_find_top_level_lookahead_match(
 fn regex_find_next_match(
   compiled : CompiledRegexPattern,
   input : String,
-  search_start : Int,
+  search_start : Int32,
 ) -> RegexMatchData? {
   let len = input.length()
   let mut current_start = search_start
@@ -426,7 +427,7 @@ fn regex_find_next_match(
 fn regex_group_value_or_null(
   s : String,
   result : @regex_engine.MatchResult,
-  index : Int,
+  index : Int32,
 ) -> Value {
   match result.group(index) {
     Some((start, end_)) => Value::string(regex_slice_string(s, start, end_))
@@ -439,7 +440,7 @@ fn regex_capture_entry(
   s : String,
   result : @regex_engine.MatchResult,
   group_names : ReadOnlyArray[String?],
-  index : Int,
+  index : Int32,
 ) -> Value {
   let name_json = match group_names.get(index) {
     Some(Some(name)) => Value::string(name)
@@ -490,11 +491,11 @@ fn regex_named_capture_object(
 
 ///|
 fn regex_next_search_start(
-  current_start : Int,
-  match_start : Int,
-  match_end : Int,
-  input_len : Int,
-) -> Int? {
+  current_start : Int32,
+  match_start : Int32,
+  match_end : Int32,
+  input_len : Int32,
+) -> Int32? {
   if match_start == match_end {
     if match_start < input_len {
       Some(match_start + 1)

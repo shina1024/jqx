@@ -1,11 +1,11 @@
 ///|
 priv struct FilterCursor {
-  mut offset : Int
+  mut offset : Int32
   input : StringView
-  end_offset : Int
-  mut gensym : Int
+  end_offset : Int32
+  mut gensym : Int32
   compile_context : CompileContext
-  mut nesting_depth : Int
+  mut nesting_depth : Int32
 }
 
 ///|
@@ -49,7 +49,7 @@ fn FilterCursor::make_with_compile_context(
 }
 
 ///|
-fn filter_offset_to_position(input : StringView, offset : Int) -> Position {
+fn filter_offset_to_position(input : StringView, offset : Int32) -> Position {
   let mut line = 1
   let mut column = 1
   for i in 0..<offset {
@@ -64,7 +64,7 @@ fn filter_offset_to_position(input : StringView, offset : Int) -> Position {
 }
 
 ///|
-fn filter_position_suffix(input : StringView, offset : Int) -> String {
+fn filter_position_suffix(input : StringView, offset : Int32) -> String {
   let pos = filter_offset_to_position(input, offset)
   "at <top-level>, line " +
   pos.line.to_string() +
@@ -84,7 +84,7 @@ fn[T] FilterCursor::raise_diagnostic(
 ///|
 fn[T] FilterCursor::raise_diagnostic_at(
   ctx : FilterCursor,
-  offset : Int,
+  offset : Int32,
   prefix : String,
 ) -> T raise FilterError {
   ctx.raise_diagnostic([
@@ -95,7 +95,7 @@ fn[T] FilterCursor::raise_diagnostic_at(
 ///|
 fn[T] FilterCursor::raise_syntax_error_at(
   ctx : FilterCursor,
-  offset : Int,
+  offset : Int32,
   unexpected : String,
   expecting? : String,
 ) -> T raise FilterError {
@@ -109,7 +109,7 @@ fn[T] FilterCursor::raise_syntax_error_at(
 ///|
 fn[T] FilterCursor::raise_invalid_escape_at(
   ctx : FilterCursor,
-  backslash_offset : Int,
+  backslash_offset : Int32,
   escaped_char : Char,
 ) -> T raise FilterError {
   let snippet = "\"\\" + escaped_char.to_string() + "\""
@@ -122,7 +122,7 @@ fn[T] FilterCursor::raise_invalid_escape_at(
 ///|
 fn[T] FilterCursor::invalid_char(
   ctx : FilterCursor,
-  shift? : Int = 0,
+  shift~ : Int32 = 0,
 ) -> T raise FilterError {
   let offset = ctx.offset + shift
   let replacement_char : Char = '\u{fffd}'
@@ -153,7 +153,7 @@ fn FilterCursor::peek_char(ctx : FilterCursor) -> Char? {
 
 ///|
 fn is_ident_continue(c : Char) -> Bool {
-  c is ('a'..='z' | 'A'..='Z' | '_' | '0'..='9')
+  c is ('a'..<='z' | 'A'..<='Z' | '_' | '0'..<='9')
 }
 
 ///|
@@ -247,13 +247,13 @@ fn FilterCursor::parse_identifier(
   ctx.skip_ws()
   let start = ctx.offset
   match ctx.read_char() {
-    Some(c) if c is ('a'..='z' | 'A'..='Z' | '_') => ()
+    Some(c) if c is ('a'..<='z' | 'A'..<='Z' | '_') => ()
     Some(_) => ctx.invalid_char(shift=-1)
     None => raise InvalidEof
   }
   while ctx.offset < ctx.end_offset {
     match ctx.peek_char() {
-      Some(c) if c is ('a'..='z' | 'A'..='Z' | '_' | '0'..='9') =>
+      Some(c) if c is ('a'..<='z' | 'A'..<='Z' | '_' | '0'..<='9') =>
         ignore(ctx.read_char())
       _ => break
     }
@@ -285,18 +285,18 @@ fn FilterCursor::parse_qualified_identifier(
 }
 
 ///|
-fn FilterCursor::parse_int(ctx : FilterCursor) -> Int raise FilterError {
+fn FilterCursor::parse_int(ctx : FilterCursor) -> Int32 raise FilterError {
   ctx.skip_ws()
   let start = ctx.offset
   match ctx.read_char() {
     Some('-') => ()
-    Some(c) if c is ('0'..='9') => ()
+    Some(c) if c is ('0'..<='9') => ()
     Some(_) => ctx.invalid_char(shift=-1)
     None => raise InvalidEof
   }
   while ctx.offset < ctx.end_offset {
     match ctx.peek_char() {
-      Some(c) if c is ('0'..='9') => ignore(ctx.read_char())
+      Some(c) if c is ('0'..<='9') => ignore(ctx.read_char())
       _ => break
     }
   }
@@ -316,11 +316,11 @@ fn FilterCursor::parse_int(ctx : FilterCursor) -> Int raise FilterError {
 ///|
 fn FilterCursor::parse_optional_int(
   ctx : FilterCursor,
-) -> Int? raise FilterError {
+) -> Int32? raise FilterError {
   ctx.skip_ws()
   match ctx.peek_char() {
     Some('-') => Some(ctx.parse_int())
-    Some(c) => if c is ('0'..='9') { Some(ctx.parse_int()) } else { None }
+    Some(c) => if c is ('0'..<='9') { Some(ctx.parse_int()) } else { None }
     None => None
   }
 }
@@ -337,7 +337,7 @@ fn FilterCursor::parse_string_literal(
   }
   let buf = StringBuilder()
   let mut start = ctx.offset
-  fn flush(end : Int) {
+  fn flush(end : Int32) {
     if start > 0 && end > start {
       buf.write_view(ctx.input.view(start_offset=start, end_offset=end))
     }
@@ -557,8 +557,8 @@ fn filter_string_literal_value(filter : Filter) -> String? {
 ///|
 fn FilterCursor::parse_hex_digits(
   ctx : FilterCursor,
-  n : Int,
-) -> Int raise FilterError {
+  n : Int32,
+) -> Int32 raise FilterError {
   let mut r = 0
   let mut digits_read = 0
   while digits_read < n {
@@ -595,14 +595,14 @@ fn FilterCursor::parse_number_literal(
   match ctx.read_char() {
     Some('-') => ()
     Some('.') => ()
-    Some(c) if c is ('0'..='9') => ()
+    Some(c) if c is ('0'..<='9') => ()
     Some(_) => ctx.invalid_char(shift=-1)
     None => raise InvalidEof
   }
   let mut prev_is_exp_marker = false
   while ctx.offset < ctx.end_offset {
     match ctx.peek_char() {
-      Some(c) if c is ('0'..='9' | '.' | 'e' | 'E') => {
+      Some(c) if c is ('0'..<='9' | '.' | 'e' | 'E') => {
         ignore(ctx.read_char())
         prev_is_exp_marker = c == 'e' || c == 'E'
       }

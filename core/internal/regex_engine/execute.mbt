@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-struct MatchResult(Array[Int])
+struct MatchResult(Array[Int32])
 
 ///|
 const NULL_SYMBOL : Rechar = -1
@@ -32,7 +32,7 @@ fn category_from_symbol(
 }
 
 ///|
-pub fn MatchResult::group(self : MatchResult, index : Int) -> (Int, Int)? {
+pub fn MatchResult::group(self : MatchResult, index : Int32) -> (Int32, Int32)? {
   let start_pos = self.0.get(index * 2)
   guard start_pos is Some(start_pos) && start_pos >= 0 else { None }
   let end_pos = self.0.get(index * 2 + 1)
@@ -61,7 +61,7 @@ fn Regex::find_start_state(self : Regex, cat : Category) -> State {
 pub fn[T : Input] Regex::execute(
   self : Regex,
   input : T,
-  lastIndex : Int,
+  lastIndex : Int32,
 ) -> MatchResult? {
   if lastIndex < 0 || lastIndex > input.length() {
     return None

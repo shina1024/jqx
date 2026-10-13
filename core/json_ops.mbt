@@ -87,9 +87,9 @@ fn[T] contains_type_error(
 
 ///|
 priv enum ContainsTask {
-  CheckContains(Value, Value, Int)
-  ResumeArrayContains(Array[Value], Array[Value], Int, Int, Int)
-  ResumeObjectContains(JsonObject, Array[(String, Value)], Int, Int)
+  CheckContains(Value, Value, Int32)
+  ResumeArrayContains(Array[Value], Array[Value], Int32, Int32, Int32)
+  ResumeObjectContains(JsonObject, Array[(String, Value)], Int32, Int32)
 }
 
 ///|
@@ -321,7 +321,7 @@ fn execute_to_bool(
 }
 
 ///|
-fn compare_ok(op : String, cmp : Int) -> Bool {
+fn compare_ok(op : String, cmp : Int32) -> Bool {
   match op {
     "<" => cmp < 0
     "<=" => cmp <= 0
@@ -537,13 +537,13 @@ priv struct ObjectMergeState {
   merged : Map[String, Value]
   merged_order : Array[String]
   entries : Array[(String, Value)]
-  index : Int
-  depth : Int
+  index : Int32
+  depth : Int32
 }
 
 ///|
 priv enum ObjectMergeTask {
-  StartObjectMerge(JsonObject, JsonObject, Int)
+  StartObjectMerge(JsonObject, JsonObject, Int32)
   ProcessObjectMerge(ObjectMergeState)
   StoreMergedObject(ObjectMergeState, String)
 }

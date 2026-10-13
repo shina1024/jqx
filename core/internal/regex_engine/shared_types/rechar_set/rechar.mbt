@@ -13,4 +13,4 @@
 // limitations under the License.
 
 ///|
-pub type Rechar = Int
+pub type Rechar = Int32

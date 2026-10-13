@@ -14,8 +14,8 @@
 
 ///|
 pub trait Input {
-  fn length(Self) -> Int
-  fn get(Self, Int) -> Rechar
+  fn length(Self) -> Int32
+  fn get(Self, Int32) -> Rechar
 }
 
 ///|

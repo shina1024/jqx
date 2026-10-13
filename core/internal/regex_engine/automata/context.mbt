@@ -14,7 +14,7 @@
 
 ///|
 struct Context {
-  mut next_expr_id : Int
+  mut next_expr_id : Int32
   mut book : SlotBook
   mut book_dirty : Bool
 }
