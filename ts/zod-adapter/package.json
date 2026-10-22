@@ -50,8 +50,8 @@
     "@shina1024/jqx-adapter-core": "workspace:^"
   },
   "devDependencies": {
-    "@types/node": "^26.6.4",
-    "zod": "^4.6.5"
+    "@types/node": "^26.6.5",
+    "zod": "^4.6.7"
   },
   "peerDependencies": {
     "zod": "^4.0.0"
