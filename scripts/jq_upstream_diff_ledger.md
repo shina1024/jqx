@@ -11,11 +11,15 @@
 | Corpus | Total | Passing | Declared Temporary Exceptions | Broken | Stale Exception Metadata |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | maintained | 266 | 266 | 0 | 0 | 0 |
-| upstream | 934 | 922 | 8 | 4 | 0 |
+| upstream | 934 | 922 | 12 | 0 | 0 |
 
 ## Temporary Exceptions
 
+- [upstream; all platforms] upstream-jq-test-l1491 (`jq-1.8.2-error-fallback-operator`): jq 1.8.2 rejects the ?// token; jqx accepts it and returns the vendored upstream fixture's expected value 1; remove when latest jq release accepts error(0) ?// 1 and returns 1.
 - [upstream; win32] upstream-jq-test-l1906 (`jq-1.8.2-windows-strftime-encoding`): jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names; remove when jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output.
+- [upstream; all platforms] upstream-jq-test-l1952 (`jq-1.8.2-strftime-result-too-long`): jq 1.8.2 reports unknown system failure for an oversized format; jqx reports the vendored upstream fixture's expected strftime/1: result too long; remove when latest jq release reports strftime/1: result too long for this fixture.
+- [upstream; all platforms] upstream-jq-test-l1960 (`jq-1.8.2-strftime-result-too-long`): jq 1.8.2 reports unknown system failure for an oversized local format; jqx reports the vendored upstream fixture's expected strflocaltime/1: result too long; remove when latest jq release reports strflocaltime/1: result too long for this fixture.
+- [upstream; all platforms] upstream-jq-test-l2067 (`jq-1.8.2-fromdateiso8601-surrounding-whitespace`): jq 1.8.2 accepts surrounding whitespace; jqx rejects both forms as required by the vendored upstream fixture; remove when latest jq release rejects both surrounding-whitespace inputs and this fixture returns ["ERR","ERR"].
 - [upstream; all platforms] upstream-jq-test-l2743 (`jq-1.8.2-reduce-init-backtracking`): jq 1.8.2 loses reduce input when backtracking over multiple initializer outputs; jqx preserves input as required by the vendored fixture and upstream fix df24981307658868759faaea76b817cc62dd6be0 (#3633); remove when latest jq release preserves reduce input across initializer backtracking and matches this fixture, incorporating upstream fix df24981307658868759faaea76b817cc62dd6be0.
 - [upstream; all platforms] upstream-onig-test-l15 (`jq-onig-zero-width-multibyte-boundary`): jq's current release matches empty regex at byte boundaries inside multibyte characters; jqx implements the upstream fixture's intended char-boundary semantics (upstream comment: 'global zero-width matches must not land inside a multibyte character'); remove when jq release adopts char-boundary zero-width match semantics matching upstream fixture expectations.
 - [upstream; all platforms] upstream-onig-test-l19 (`jq-onig-zero-width-multibyte-boundary`): jq's current release matches empty regex at byte boundaries inside multibyte characters; jqx implements the upstream fixture's intended char-boundary semantics (upstream comment: 'global zero-width matches must not land inside a multibyte character'); remove when jq release adopts char-boundary zero-width match semantics matching upstream fixture expectations.
@@ -26,10 +30,7 @@
 
 ## Broken Cases
 
-- [upstream] upstream-jq-test-l1491 (`output-mismatch`)
-- [upstream] upstream-jq-test-l1952 (`output-mismatch`)
-- [upstream] upstream-jq-test-l1960 (`output-mismatch`)
-- [upstream] upstream-jq-test-l2067 (`output-mismatch`)
+- none
 
 ## Stale Exception Metadata
 
@@ -44,10 +45,10 @@
 
 ## New Upstream Differences
 
-- upstream-jq-test-l1491 (`output-mismatch`)
-- upstream-jq-test-l1952 (`output-mismatch`)
-- upstream-jq-test-l1960 (`output-mismatch`)
-- upstream-jq-test-l2067 (`output-mismatch`)
+- upstream-jq-test-l1491 (`temporary-exception`)
+- upstream-jq-test-l1952 (`temporary-exception`)
+- upstream-jq-test-l1960 (`temporary-exception`)
+- upstream-jq-test-l2067 (`temporary-exception`)
 - upstream-jq-test-l2743 (`temporary-exception`)
 - upstream-optional-test-l13 (`temporary-exception`)
 - upstream-optional-test-l9 (`temporary-exception`)

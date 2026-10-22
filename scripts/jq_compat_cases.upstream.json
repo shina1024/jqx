@@ -2822,7 +2822,13 @@
     "source_file": "jq.test",
     "source_line": 1491,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [],
+    "compat_ledger_id": "jq-1.8.2-error-fallback-operator",
+    "compat_reason": "jq 1.8.2 rejects the ?// token; jqx accepts it and returns the vendored upstream fixture's expected value 1",
+    "compat_removal_condition": "latest jq release accepts error(0) ?// 1 and returns 1",
+    "compat_stale_policy": "fail"
   },
   {
     "name": "upstream-jq-test-l1495",
@@ -3811,7 +3817,13 @@
     "source_file": "jq.test",
     "source_line": 1952,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [],
+    "compat_ledger_id": "jq-1.8.2-strftime-result-too-long",
+    "compat_reason": "jq 1.8.2 reports unknown system failure for an oversized format; jqx reports the vendored upstream fixture's expected strftime/1: result too long",
+    "compat_removal_condition": "latest jq release reports strftime/1: result too long for this fixture",
+    "compat_stale_policy": "fail"
   },
   {
     "name": "upstream-jq-test-l1956",
@@ -3829,7 +3841,13 @@
     "source_file": "jq.test",
     "source_line": 1960,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [],
+    "compat_ledger_id": "jq-1.8.2-strftime-result-too-long",
+    "compat_reason": "jq 1.8.2 reports unknown system failure for an oversized local format; jqx reports the vendored upstream fixture's expected strflocaltime/1: result too long",
+    "compat_removal_condition": "latest jq release reports strflocaltime/1: result too long for this fixture",
+    "compat_stale_policy": "fail"
   },
   {
     "name": "upstream-jq-test-l1964",
@@ -4018,7 +4036,13 @@
     "source_file": "jq.test",
     "source_line": 2067,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [],
+    "compat_ledger_id": "jq-1.8.2-fromdateiso8601-surrounding-whitespace",
+    "compat_reason": "jq 1.8.2 accepts surrounding whitespace; jqx rejects both forms as required by the vendored upstream fixture",
+    "compat_removal_condition": "latest jq release rejects both surrounding-whitespace inputs and this fixture returns [\"ERR\",\"ERR\"]",
+    "compat_stale_policy": "fail"
   },
   {
     "name": "upstream-jq-test-l2071",

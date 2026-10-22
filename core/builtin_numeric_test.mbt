@@ -101,6 +101,31 @@ test "jq 1.8.2 fromdateiso8601 rejects unsupported inputs with jq errors" {
 }
 
 ///|
+test "upstream fromdateiso8601 rejects surrounding whitespace" {
+  @debug.assert_eq(
+    must_run_json_text(
+      "[(\" 2015-03-05T23:51:47Z\", \"2015-03-05T23:51:47Z \") | try fromdateiso8601 catch \"ERR\"]",
+      "null",
+    ),
+    ["[\"ERR\",\"ERR\"]"],
+  )
+}
+
+///|
+test "upstream strftime reports an oversized formatted result" {
+  @debug.assert_eq(
+    must_run_json_text("try strftime(\"%Y\" * 50) catch .", "0"),
+    ["\"strftime/1: result too long\""],
+  )
+  @debug.assert_eq(
+    must_run_json_text(
+      "try strflocaltime(\"%Y\" * 50) catch .", "[2015,2,5,23,51,47,4,63]",
+    ),
+    ["\"strflocaltime/1: result too long\""],
+  )
+}
+
+///|
 test "jq 1.8.2 todate aliases format timestamps and parsed datetime arrays" {
   @debug.assert_eq(must_run_json_text("todate", "1425599507"), [
     "\"2015-03-05T23:51:47Z\"",

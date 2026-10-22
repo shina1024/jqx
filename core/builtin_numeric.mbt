@@ -235,14 +235,22 @@ fn parse_jq_182_fromdate_seconds(s : String) -> Double? {
     Some(next) => next
     None => return None
   }
+  // Keep jq 1.8.2's suffix behavior, but reject whitespace-only suffixes as upstream does.
   if pos < s.length() {
-    let next = s.unsafe_get(pos).to_int()
-    if next != ' '.to_int() &&
-      next != '\t'.to_int() &&
-      next != '\n'.to_int() &&
-      next != '\r'.to_int() &&
-      next != '\u{000B}'.to_int() &&
-      next != '\u{000C}'.to_int() {
+    let mut suffix_pos = pos
+    while suffix_pos < s.length() {
+      let next = s.unsafe_get(suffix_pos).to_int()
+      if next != ' '.to_int() &&
+        next != '\t'.to_int() &&
+        next != '\n'.to_int() &&
+        next != '\r'.to_int() &&
+        next != '\u{000B}'.to_int() &&
+        next != '\u{000C}'.to_int() {
+        break
+      }
+      suffix_pos += 1
+    }
+    if suffix_pos == pos || suffix_pos == s.length() {
       return None
     }
   }
@@ -541,6 +549,7 @@ fn format_two_digits_space(n : Int32) -> String {
 ///|
 fn format_datetime_with_strftime_pattern(
   pattern : String,
+  fn_name : String,
   year : Int32,
   month : Int32,
   day : Int32,
@@ -549,7 +558,7 @@ fn format_datetime_with_strftime_pattern(
   second : Double,
   day_of_week : Int32,
   day_of_year : Int32,
-) -> String {
+) -> String raise EvalError {
   let second_int = second.floor().to_int()
   let sb = StringBuilder()
   let mut fully_supported = true
@@ -587,7 +596,7 @@ fn format_datetime_with_strftime_pattern(
     i += 2
   }
   let fallback = sb.to_string()
-  if fully_supported {
+  let formatted = if fully_supported {
     fallback
   } else {
     match
@@ -598,6 +607,12 @@ fn format_datetime_with_strftime_pattern(
       None => fallback
     }
   }
+  // jq prepends one byte and allocates pattern UTF-8 bytes plus 101 bytes.
+  if builtin_utf8_byte_length(formatted) >=
+    builtin_utf8_byte_length(pattern) + 100 {
+    raise TypeError(fn_name + ": result too long")
+  }
+  formatted
 }
 
 ///|
@@ -636,8 +651,8 @@ fn todate_iso8601_json(input : Value) -> Value raise EvalError {
   )
   Value::string(
     format_datetime_with_strftime_pattern(
-      "%Y-%m-%dT%H:%M:%SZ", year, month, day, hour, minute, second, day_of_week,
-      day_of_year,
+      "%Y-%m-%dT%H:%M:%SZ", "strftime/1", year, month, day, hour, minute, second,
+      day_of_week, day_of_year,
     ),
   )
 }
@@ -711,7 +726,8 @@ fn dispatch_numeric_builtin(
           match format_value {
             String(pattern) => {
               let formatted = format_datetime_with_strftime_pattern(
-                pattern, year, month, day, hour, minute, second, day_of_week, day_of_year,
+                pattern, "strftime/1", year, month, day, hour, minute, second, day_of_week,
+                day_of_year,
               )
               out.push(Value::string(formatted))
             }
@@ -733,7 +749,8 @@ fn dispatch_numeric_builtin(
           match format_value {
             String(pattern) => {
               let formatted = format_datetime_with_strftime_pattern(
-                pattern, year, month, day, hour, minute, second, day_of_week, day_of_year,
+                pattern, "strflocaltime/1", year, month, day, hour, minute, second,
+                day_of_week, day_of_year,
               )
               out.push(Value::string(formatted))
             }
