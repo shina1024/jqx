@@ -31,7 +31,7 @@ pub fn identity() -> Query[@core.Value, @core.Value]
 
 pub fn if_else(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn index(Int) -> Query[@core.Value, @core.Value]
+pub fn index(Int32) -> Query[@core.Value, @core.Value]
 
 pub fn is_valid_json(String) -> Bool
 
@@ -79,9 +79,9 @@ pub fn try_parse_json(String) -> Result[@core.Value, JqxError]
 pub struct JqxError {
   code : String
   message : String
-  line : Int
-  column : Int
-  offset : Int
+  line : Int32
+  column : Int32
+  offset : Int32
 } derive(Eq, @debug.Debug)
 pub fn JqxError::equal(Self, Self) -> Bool
 pub fn JqxError::not_equal(Self, Self) -> Bool

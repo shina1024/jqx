@@ -313,9 +313,9 @@ function warmupJqx({ moonCommand, runner, profile }) {
       buildArgs.push("--release");
     }
     buildArgs.push("cmd");
-    const build = runCommand(moonCommand, buildArgs);
+    const build = runCommand(moonCommand, buildArgs, { timeout: 300_000 });
     if (build.status !== 0) {
-      throw new Error(`failed to build native jqx executable: ${cleanOutput(build.stderr || build.stdout)}`);
+      throw new Error(`failed to build native jqx executable: ${cleanOutput(build.stderr || build.stdout || String(build.error ?? ""))}`);
     }
     const jqxBinary = resolveNativeJqxBinary(profile);
     const warmup = runCommand(jqxBinary, [".", "null"]);

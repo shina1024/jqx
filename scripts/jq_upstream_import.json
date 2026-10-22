@@ -15,6 +15,50 @@
   "case_overrides": [
     {
       "source_file": "jq.test",
+      "filter": "error(0) ?// 1",
+      "input": "null",
+      "compat_status": "temporary_exception",
+      "compat_platforms": [],
+      "compat_ledger_id": "jq-1.8.2-error-fallback-operator",
+      "compat_reason": "jq 1.8.2 rejects the ?// token; jqx accepts it and returns the vendored upstream fixture's expected value 1",
+      "compat_removal_condition": "latest jq release accepts error(0) ?// 1 and returns 1",
+      "compat_stale_policy": "fail"
+    },
+    {
+      "source_file": "jq.test",
+      "filter": "try strftime(\"%c\" * 10) catch .",
+      "input": "0",
+      "compat_status": "temporary_exception",
+      "compat_platforms": [],
+      "compat_ledger_id": "jq-1.8.2-strftime-result-too-long",
+      "compat_reason": "jq 1.8.2 reports unknown system failure for an oversized format; jqx reports the vendored upstream fixture's expected strftime/1: result too long",
+      "compat_removal_condition": "latest jq release reports strftime/1: result too long for this fixture",
+      "compat_stale_policy": "fail"
+    },
+    {
+      "source_file": "jq.test",
+      "filter": "try strflocaltime(\"%c\" * 10) catch .",
+      "input": "[2015,2,5,23,51,47,4,63]",
+      "compat_status": "temporary_exception",
+      "compat_platforms": [],
+      "compat_ledger_id": "jq-1.8.2-strftime-result-too-long",
+      "compat_reason": "jq 1.8.2 reports unknown system failure for an oversized local format; jqx reports the vendored upstream fixture's expected strflocaltime/1: result too long",
+      "compat_removal_condition": "latest jq release reports strflocaltime/1: result too long for this fixture",
+      "compat_stale_policy": "fail"
+    },
+    {
+      "source_file": "jq.test",
+      "filter": "[(\" 2015-03-05T23:51:47Z\", \"2015-03-05T23:51:47Z \") | try fromdateiso8601 catch \"ERR\"]",
+      "input": "null",
+      "compat_status": "temporary_exception",
+      "compat_platforms": [],
+      "compat_ledger_id": "jq-1.8.2-fromdateiso8601-surrounding-whitespace",
+      "compat_reason": "jq 1.8.2 accepts surrounding whitespace; jqx rejects both forms as required by the vendored upstream fixture",
+      "compat_removal_condition": "latest jq release rejects both surrounding-whitespace inputs and this fixture returns [\"ERR\",\"ERR\"]",
+      "compat_stale_policy": "fail"
+    },
+    {
+      "source_file": "jq.test",
       "filter": "strftime(\"%A, %B %d, %Y\")",
       "input": "1435677542.822351",
       "compat_status": "temporary_exception",
