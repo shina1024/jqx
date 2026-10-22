@@ -22,21 +22,21 @@ pub fn execute_for_cli(Filter, Value) -> (Array[Value], String?)
 
 pub fn execute_json(Filter, Json) -> Array[Json] raise EvalError
 
-pub fn parse(StringView, max_nesting_depth? : Int) -> Value raise ParseError
+pub fn parse(StringView, max_nesting_depth? : Int32) -> Value raise ParseError
 
-pub fn parse_json(StringView, max_nesting_depth? : Int) -> Json raise ParseError
+pub fn parse_json(StringView, max_nesting_depth? : Int32) -> Json raise ParseError
 
 pub fn register_module_source(String, String) -> Unit
 
-pub fn run_compiled_json_text(Filter, StringView, max_nesting_depth? : Int) -> Array[String] raise RunError
+pub fn run_compiled_json_text(Filter, StringView, max_nesting_depth? : Int32) -> Array[String] raise RunError
 
-pub fn run_compiled_values(Filter, StringView, max_nesting_depth? : Int) -> Array[Value] raise RunError
+pub fn run_compiled_values(Filter, StringView, max_nesting_depth? : Int32) -> Array[Value] raise RunError
 
 pub fn run_json(StringView, Json) -> Array[Json] raise RunError
 
-pub fn run_json_text(StringView, StringView, max_nesting_depth? : Int) -> Array[String] raise RunError
+pub fn run_json_text(StringView, StringView, max_nesting_depth? : Int32) -> Array[String] raise RunError
 
-pub fn run_values(StringView, StringView, max_nesting_depth? : Int) -> Array[Value] raise RunError
+pub fn run_values(StringView, StringView, max_nesting_depth? : Int32) -> Array[Value] raise RunError
 
 pub fn set_module_search_paths(Array[String]) -> Unit
 
@@ -113,10 +113,10 @@ pub enum Filter {
   Comma(Filter, Filter)
   Field(String)
   FieldOpt(String)
-  Index(Int)
-  IndexOpt(Int)
-  Slice(Int?, Int?)
-  SliceOpt(Int?, Int?)
+  Index(Int32)
+  IndexOpt(Int32)
+  Slice(Int32?, Int32?)
+  SliceOpt(Int32?, Int32?)
   Iter
   IterOpt
   Recurse
@@ -170,8 +170,8 @@ pub fn Filter::gt(Self, Self) -> Self
 pub fn Filter::gte(Self, Self) -> Self
 pub fn Filter::identity() -> Self
 pub fn Filter::if_else(Self, Self, Self) -> Self
-pub fn Filter::index(Int) -> Self
-pub fn Filter::index_opt(Int) -> Self
+pub fn Filter::index(Int32) -> Self
+pub fn Filter::index_opt(Int32) -> Self
 pub fn Filter::iter() -> Self
 pub fn Filter::iter_opt() -> Self
 pub fn Filter::label(String, Self) -> Self
@@ -189,8 +189,8 @@ pub fn Filter::pipe(Self, Self) -> Self
 pub fn Filter::recurse() -> Self
 pub fn Filter::reduce(Self, String, Self, Self) -> Self
 pub fn Filter::scope(Array[(String, Array[String], Self)], Self) -> Self
-pub fn Filter::slice(Int?, Int?) -> Self
-pub fn Filter::slice_opt(Int?, Int?) -> Self
+pub fn Filter::slice(Int32?, Int32?) -> Self
+pub fn Filter::slice_opt(Int32?, Int32?) -> Self
 pub fn Filter::sub(Self, Self) -> Self
 pub fn Filter::to_repr(Self) -> @debug.Repr
 pub fn Filter::to_string(Self) -> String
@@ -204,8 +204,8 @@ pub fn JsonObject::iter(Self) -> Array[(String, Value)]
 pub fn JsonObject::to_repr(Self) -> @debug.Repr
 
 pub struct Position {
-  line : Int
-  column : Int
+  line : Int32
+  column : Int32
 } derive(Eq, @debug.Debug)
 pub fn Position::equal(Self, Self) -> Bool
 pub fn Position::not_equal(Self, Self) -> Bool

@@ -52,10 +52,10 @@ pub let start_of_word : @ast.Pattern
 
 // Types and methods
 type MatchResult
-pub fn MatchResult::group(Self, Int) -> (Int, Int)?
+pub fn MatchResult::group(Self, Int32) -> (Int32, Int32)?
 
 type Regex
-pub fn[T : Input] Regex::execute(Self, T, Int) -> MatchResult?
+pub fn[T : Input] Regex::execute(Self, T, Int32) -> MatchResult?
 pub fn Regex::group_names(Self) -> ReadOnlyArray[String?]
 
 // Type aliases
@@ -73,14 +73,14 @@ pub using @ast {type Quantifier}
 
 pub using @shared_types {type QuantifierMode}
 
-pub type Rechar = Int
+pub type Rechar = Int32
 
 pub using @rechar_set {type RecharSet}
 
 // Traits
 pub trait Input {
-  fn length(Self) -> Int
-  fn get(Self, Int) -> Int
+  fn length(Self) -> Int32
+  fn get(Self, Int32) -> Int32
 }
 pub impl Input for BytesView
 pub impl Input for StringView
