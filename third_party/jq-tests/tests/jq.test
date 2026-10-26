@@ -84,6 +84,11 @@ null
 "Zm/Ds2Jhcgo="
 "foóbar\n"
 
+# Invalid UTF-8 next to ASCII runs is still replaced
+map(@base64d)
+["YWJjZGVmZ2hpav9rbG1ub3A=", "YWJjZGVmZ2hpasOpa2xtbm9w5pel", "/2FiY2RlZmdoaWo=", "YWJjZGVmZ2hpauaX", "YWJjZGVmZ2hpau2ggHh5eg=="]
+["abcdefghij�klmnop","abcdefghijéklmnop日","�abcdefghij","abcdefghij�","abcdefghij�xyz"]
+
 @uri
 "\u03bc"
 "%CE%BC"
@@ -1883,6 +1888,24 @@ ascii_upcase
 "useful but not for é"
 "USEFUL BUT NOT FOR é"
 
+# Only A-Z and a-z change; the neighbouring bytes @ [ ` { and non-ASCII do not
+[ascii_downcase, ascii_upcase]
+"@AZ[`az{ ÀÉé ǅ 日本 😀 0123456789 THE QUICK brown fox JUMPS over"
+["@az[`az{ ÀÉé ǅ 日本 😀 0123456789 the quick brown fox jumps over","@AZ[`AZ{ ÀÉé ǅ 日本 😀 0123456789 THE QUICK BROWN FOX JUMPS OVER"]
+
+[ascii_downcase, ascii_upcase]
+""
+["",""]
+
+# An embedded NUL does not end the string
+[ascii_downcase, ascii_upcase]
+"A\u0000z"
+["a\u0000z","A\u0000Z"]
+
+[.[] | try ascii_downcase catch ., try ascii_upcase catch .]
+[null, ["A"]]
+["ascii_downcase input must be a string","ascii_upcase input must be a string","ascii_downcase input must be a string","ascii_upcase input must be a string"]
+
 bsearch(0,1,2,3,4)
 [1,2,3]
 -1
@@ -1964,6 +1987,15 @@ try strflocaltime("%c" * 10) catch .
 [strptime("%Y-%m-%dT%H:%M:%SZ")|(.,mktime)]
 "2015-03-05T23:51:47Z"
 [[2015,2,5,23,51,47,4,63],1425599507]
+
+# a format without a day of the month gives the first of the month
+[("2024-06" | strptime("%Y-%m")), ("2024" | strptime("%Y")) | ., todate]
+null
+[[2024,5,1,0,0,0,6,152],"2024-06-01T00:00:00Z",[2024,0,1,0,0,0,1,0],"2024-01-01T00:00:00Z"]
+
+"10:15" | strptime("%H:%M")
+null
+[1900,0,1,10,15,0,1,0]
 
 # Check day-of-week and day of year computations
 # (should trip an assert if this fails)
@@ -2437,6 +2469,11 @@ true
 [1E+1000,-1E+1000 | tojson] == if have_decnum then ["1E+1000","-1E+1000"] else ["1.7976931348623157e+308","-1.7976931348623157e+308"] end
 null
 true
+
+# Unary negation keeps the sign of zero
+[-0, -(-0), (.[] | -.)] | map(tojson)
+[0, -0]
+["-0","0","-0","0"]
 
 . |= try . catch .
 1

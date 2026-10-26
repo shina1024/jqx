@@ -1,6 +1,6 @@
 [
   {
-    "name": "upstream-jq-test-l1491",
+    "name": "upstream-jq-test-l1496",
     "category": "temporary-exception",
     "compat_status": "temporary_exception",
     "compat_ledger_id": "jq-1.8.2-error-fallback-operator",
@@ -17,7 +17,24 @@
     "jqx_stderr": ""
   },
   {
-    "name": "upstream-jq-test-l1952",
+    "name": "upstream-jq-test-l1905",
+    "category": "output-mismatch",
+    "compat_status": "pass",
+    "compat_ledger_id": "",
+    "compat_reason": "",
+    "compat_removal_condition": "",
+    "compat_stale_policy": "fail",
+    "jq_status": "0",
+    "jqx_status": "0",
+    "jq_out": "[\"explode input must be a string\",\"explode input must be a string\",\"explode input must be a string\",\"explode input must be a string\"]",
+    "jqx_out": "[\"ascii_downcase input must be a string\",\"ascii_upcase input must be a string\",\"ascii_downcase input must be a string\",\"ascii_upcase input must be a string\"]",
+    "jq_stdout": "[\"explode input must be a string\",\"explode input must be a string\",\"explode input must be a string\",\"explode input must be a string\"]",
+    "jq_stderr": "",
+    "jqx_stdout": "[\"ascii_downcase input must be a string\",\"ascii_upcase input must be a string\",\"ascii_downcase input must be a string\",\"ascii_upcase input must be a string\"]",
+    "jqx_stderr": ""
+  },
+  {
+    "name": "upstream-jq-test-l1975",
     "category": "temporary-exception",
     "compat_status": "temporary_exception",
     "compat_ledger_id": "jq-1.8.2-strftime-result-too-long",
@@ -34,7 +51,7 @@
     "jqx_stderr": ""
   },
   {
-    "name": "upstream-jq-test-l1960",
+    "name": "upstream-jq-test-l1983",
     "category": "temporary-exception",
     "compat_status": "temporary_exception",
     "compat_ledger_id": "jq-1.8.2-strftime-result-too-long",
@@ -51,7 +68,41 @@
     "jqx_stderr": ""
   },
   {
-    "name": "upstream-jq-test-l2067",
+    "name": "upstream-jq-test-l1992",
+    "category": "runtime-error-vs-jq-success",
+    "compat_status": "pass",
+    "compat_ledger_id": "",
+    "compat_reason": "",
+    "compat_removal_condition": "",
+    "compat_stale_policy": "fail",
+    "jq_status": "0",
+    "jqx_status": "5",
+    "jq_out": "[[2024,5,0,0,0,0,5,151],\"2024-05-31T00:00:00Z\",[2024,0,0,0,0,0,0,-1],\"2023-12-31T00:00:00Z\"]",
+    "jqx_out": "jqx: error: strptime/1 requires format \"%Y-%m-%dT%H:%M:%SZ\" and matching input",
+    "jq_stdout": "[[2024,5,0,0,0,0,5,151],\"2024-05-31T00:00:00Z\",[2024,0,0,0,0,0,0,-1],\"2023-12-31T00:00:00Z\"]",
+    "jq_stderr": "",
+    "jqx_stdout": "",
+    "jqx_stderr": "jqx: error: strptime/1 requires format \"%Y-%m-%dT%H:%M:%SZ\" and matching input"
+  },
+  {
+    "name": "upstream-jq-test-l1996",
+    "category": "runtime-error-vs-jq-success",
+    "compat_status": "pass",
+    "compat_ledger_id": "",
+    "compat_reason": "",
+    "compat_removal_condition": "",
+    "compat_stale_policy": "fail",
+    "jq_status": "0",
+    "jqx_status": "5",
+    "jq_out": "[1900,0,0,10,15,0,8,367]",
+    "jqx_out": "jqx: error: strptime/1 requires format \"%Y-%m-%dT%H:%M:%SZ\" and matching input",
+    "jq_stdout": "[1900,0,0,10,15,0,8,367]",
+    "jq_stderr": "",
+    "jqx_stdout": "",
+    "jqx_stderr": "jqx: error: strptime/1 requires format \"%Y-%m-%dT%H:%M:%SZ\" and matching input"
+  },
+  {
+    "name": "upstream-jq-test-l2099",
     "category": "temporary-exception",
     "compat_status": "temporary_exception",
     "compat_ledger_id": "jq-1.8.2-fromdateiso8601-surrounding-whitespace",
@@ -68,7 +119,24 @@
     "jqx_stderr": ""
   },
   {
-    "name": "upstream-jq-test-l2743",
+    "name": "upstream-jq-test-l2474",
+    "category": "output-mismatch",
+    "compat_status": "pass",
+    "compat_ledger_id": "",
+    "compat_reason": "",
+    "compat_removal_condition": "",
+    "compat_stale_policy": "fail",
+    "jq_status": "0",
+    "jqx_status": "0",
+    "jq_out": "[\"0\",\"0\",\"0\",\"0\"]",
+    "jqx_out": "[\"-0\",\"0\",\"0\",\"0\"]",
+    "jq_stdout": "[\"0\",\"0\",\"0\",\"0\"]",
+    "jq_stderr": "",
+    "jqx_stdout": "[\"-0\",\"0\",\"0\",\"0\"]",
+    "jqx_stderr": ""
+  },
+  {
+    "name": "upstream-jq-test-l2780",
     "category": "temporary-exception",
     "compat_status": "temporary_exception",
     "compat_ledger_id": "jq-1.8.2-reduce-init-backtracking",
@@ -82,6 +150,23 @@
     "jq_stdout": "0",
     "jq_stderr": "jq: error (at <stdin>:0): Cannot iterate over null (null)",
     "jqx_stdout": "0\n1",
+    "jqx_stderr": ""
+  },
+  {
+    "name": "upstream-jq-test-l88",
+    "category": "output-mismatch",
+    "compat_status": "pass",
+    "compat_ledger_id": "",
+    "compat_reason": "",
+    "compat_removal_condition": "",
+    "compat_stale_policy": "fail",
+    "jq_status": "0",
+    "jqx_status": "0",
+    "jq_out": "[\"abcdefghij�klmnop\",\"abcdefghijéklmnop日\",\"�abcdefghij\",\"abcdefghij�\",\"abcdefghij�xyz\"]",
+    "jqx_out": "[\"abcdefghij�klmnop\",\"abcdefghijéklmnop日\",\"�abcdefghij\",\"abcdefghij��\",\"abcdefghij���xyz\"]",
+    "jq_stdout": "[\"abcdefghij�klmnop\",\"abcdefghijéklmnop日\",\"�abcdefghij\",\"abcdefghij�\",\"abcdefghij�xyz\"]",
+    "jq_stderr": "",
+    "jqx_stdout": "[\"abcdefghij�klmnop\",\"abcdefghijéklmnop日\",\"�abcdefghij\",\"abcdefghij��\",\"abcdefghij���xyz\"]",
     "jqx_stderr": ""
   },
   {
