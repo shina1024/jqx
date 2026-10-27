@@ -253,7 +253,28 @@ fn utf8_decode_bytes_lossy(bytes : Array[Int32]) -> String {
       }
       None => {
         buf.write_char('\u{fffd}')
-        i += 1
+        // jq replaces a malformed sequence once, consuming its continuation
+        // bytes (or all remaining bytes when the sequence is truncated).
+        let first = bytes[i]
+        let width = if first >= 0xC2 && first <= 0xDF {
+          2
+        } else if first >= 0xE0 && first <= 0xEF {
+          3
+        } else if first >= 0xF0 && first <= 0xF4 {
+          4
+        } else {
+          1
+        }
+        if i + width > bytes.length() {
+          i = bytes.length()
+        } else {
+          let mut consumed = 1
+          while consumed < width &&
+                is_utf8_continuation_byte(bytes[i + consumed]) {
+            consumed += 1
+          }
+          i += consumed
+        }
       }
     }
   }

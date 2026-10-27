@@ -15,6 +15,50 @@
   "case_overrides": [
     {
       "source_file": "jq.test",
+      "filter": "[.[] | try ascii_downcase catch ., try ascii_upcase catch .]",
+      "input": "[null, [\"A\"]]",
+      "compat_status": "temporary_exception",
+      "compat_platforms": [],
+      "compat_ledger_id": "jq-1.8.2-ascii-case-errors",
+      "compat_reason": "jq 1.8.2 reports explode input must be a string; jqx preserves the function-specific errors required by upstream commit 864d769d888e49621849c8ad616d794f099e713f (#3689) and the vendored fixture, covered by execute ascii case conversion tests",
+      "compat_removal_condition": "latest jq release reports ascii_downcase and ascii_upcase input must be a string for this fixture, incorporating upstream commit 864d769d888e49621849c8ad616d794f099e713f",
+      "compat_stale_policy": "fail"
+    },
+    {
+      "source_file": "jq.test",
+      "filter": "[(\"2024-06\" | strptime(\"%Y-%m\")), (\"2024\" | strptime(\"%Y\")) | ., todate]",
+      "input": "null",
+      "compat_status": "temporary_exception",
+      "compat_platforms": [],
+      "compat_ledger_id": "jq-1.8.2-strptime-default-day",
+      "compat_reason": "jq 1.8.2 defaults a missing day to zero and converts to the previous month; jqx defaults to day one as required by upstream commit ac35c7dcbb991fa0f3c3196dd00ca479211e9847 (#3679) and the vendored fixture, covered by builtin_numeric tests",
+      "compat_removal_condition": "latest jq release defaults a missing day to one and returns June 1 and January 1 for this fixture, incorporating upstream commit ac35c7dcbb991fa0f3c3196dd00ca479211e9847",
+      "compat_stale_policy": "fail"
+    },
+    {
+      "source_file": "jq.test",
+      "filter": "\"10:15\" | strptime(\"%H:%M\")",
+      "input": "null",
+      "compat_status": "temporary_exception",
+      "compat_platforms": [],
+      "compat_ledger_id": "jq-1.8.2-strptime-default-day",
+      "compat_reason": "jq 1.8.2 leaves day zero and invalid weekday/year-day placeholders for a time-only format; jqx returns [1900,0,1,10,15,0,1,0] as required by upstream commit ac35c7dcbb991fa0f3c3196dd00ca479211e9847 (#3679) and the vendored fixture, covered by builtin_numeric tests",
+      "compat_removal_condition": "latest jq release returns [1900,0,1,10,15,0,1,0] for this fixture, incorporating upstream commit ac35c7dcbb991fa0f3c3196dd00ca479211e9847",
+      "compat_stale_policy": "fail"
+    },
+    {
+      "source_file": "jq.test",
+      "filter": "[-0, -(-0), (.[] | -.)] | map(tojson)",
+      "input": "[0, -0]",
+      "compat_status": "temporary_exception",
+      "compat_platforms": [],
+      "compat_ledger_id": "jq-1.8.2-negate-zero-sign",
+      "compat_reason": "jq 1.8.2 loses the sign when negating a decnum literal; jqx preserves the sign as required by upstream commit afa23a53cde43cbd7d6e5d91ae759e342d518de6 (#3662) and the vendored fixture, covered by execute unary negation keeps the sign of zero",
+      "compat_removal_condition": "latest jq release returns [\"-0\",\"0\",\"-0\",\"0\"] for this fixture, incorporating upstream commit afa23a53cde43cbd7d6e5d91ae759e342d518de6",
+      "compat_stale_policy": "fail"
+    },
+    {
+      "source_file": "jq.test",
       "filter": "error(0) ?// 1",
       "input": "null",
       "compat_status": "temporary_exception",

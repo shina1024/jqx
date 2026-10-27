@@ -56,7 +56,14 @@ fn json_number_negated_value(n : Double, repr : String?) -> Value {
         Some(next_repr) => Value::number(-n, repr=next_repr)
         None => Value::number(-n)
       }
-    None => Value::number(-n)
+    None =>
+      if n == 0.0 {
+        // Preserve the flipped sign even when Double::to_string prints zero.
+        let repr = if 1.0 / n == @double.infinity { "-0" } else { "0" }
+        Value::number(-n, repr~)
+      } else {
+        Value::number(-n)
+      }
   }
 }
 

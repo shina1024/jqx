@@ -946,6 +946,14 @@ test "execute format filter compatibility" {
     [Value::string("<>&'\"\t")],
   )
   @debug.assert_eq(
+    must_run_json_text(
+      "map(@base64d)", "[\"YWJjZGVmZ2hpav9rbG1ub3A=\",\"YWJjZGVmZ2hpasOpa2xtbm9w5pel\",\"/2FiY2RlZmdoaWo=\",\"YWJjZGVmZ2hpauaX\",\"YWJjZGVmZ2hpau2ggHh5eg==\"]",
+    ),
+    [
+      "[\"abcdefghij\u{fffd}klmnop\",\"abcdefghijéklmnop日\",\"\u{fffd}abcdefghij\",\"abcdefghij\u{fffd}\",\"abcdefghij\u{fffd}xyz\"]",
+    ],
+  )
+  @debug.assert_eq(
     must_execute(
       compile("@html \"<b>\\(.)</b>\""),
       must_parse("\"<script>hax</script>\""),
@@ -4077,6 +4085,28 @@ test "execute numeric/meta builtins errors" {
 }
 
 ///|
+test "execute unary negation keeps the sign of zero" {
+  // jq upstream #3662 fixes decnum negation; jq 1.8.2 loses the sign.
+  let outputs = must_execute(
+    compile("[-0, -(-0), (.[] | -.)] | map(tojson)"),
+    must_parse("[0, -0]"),
+  )
+  @debug.assert_eq(outputs, [must_parse("[\"-0\",\"0\",\"-0\",\"0\"]")])
+  @debug.assert_eq(
+    must_execute(
+      compile("map(-. | tojson)"),
+      must_parse("[0.00, -0.00, 9007199254740993]"),
+    ),
+    [must_parse("[\"-0.00\",\"0.00\",\"-9007199254740993\"]")],
+  )
+  let underflow = must_parse("[1e-1000, -1e-1000]")
+  @debug.assert_eq(
+    must_execute(compile("map(-(-.) | tojson)"), underflow),
+    must_execute(compile("map(tojson)"), underflow),
+  )
+}
+
+///|
 test "execute abs/fabs/isempty errors" {
   guard (try execute(compile("abs"), must_parse("null")) catch {
     err => err.to_string() == "null (null) cannot be negated"
@@ -4122,6 +4152,14 @@ test "execute ascii case compatibility" {
 
 ///|
 test "execute ascii case errors" {
+  @debug.assert_eq(
+    must_run_json_text(
+      "[.[] | try ascii_downcase catch ., try ascii_upcase catch .]", "[null, [\"A\"]]",
+    ),
+    [
+      "[\"ascii_downcase input must be a string\",\"ascii_upcase input must be a string\",\"ascii_downcase input must be a string\",\"ascii_upcase input must be a string\"]",
+    ],
+  )
   guard (try execute(compile("ascii_upcase"), must_parse("1")) catch {
     err => err.to_string() == "ascii_upcase input must be a string"
   } noraise {

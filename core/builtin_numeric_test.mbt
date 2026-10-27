@@ -56,6 +56,45 @@ test "gmtime floors negative fractional timestamps as fixed upstream does" {
 }
 
 ///|
+test "upstream strptime defaults missing date fields to January first 1900" {
+  // Upstream #3679; jq 1.8.2 defaults to day zero instead.
+  @debug.assert_eq(
+    must_run_json_text(
+      "[(\"2024-06\" | strptime(\"%Y-%m\")), (\"2024\" | strptime(\"%Y\")) | ., todate]",
+      "null",
+    ),
+    [
+      "[[2024,5,1,0,0,0,6,152],\"2024-06-01T00:00:00Z\",[2024,0,1,0,0,0,1,0],\"2024-01-01T00:00:00Z\"]",
+    ],
+  )
+  @debug.assert_eq(
+    must_run_json_text("\"10:15\" | strptime(\"%H:%M\")", "null"),
+    ["[1900,0,1,10,15,0,1,0]"],
+  )
+  @debug.assert_eq(
+    must_run_json_text("strptime(\"%Y-%m-%d\")", "\"1900-02-28\""),
+    ["[1900,1,28,0,0,0,3,58]"],
+  )
+  @debug.assert_eq(
+    must_run_json_text(
+      "[\"2024-13\",\"2024-\",\"2024-06x\"] | map(try strptime(\"%Y-%m\") catch \"ERR\")",
+      "null",
+    ),
+    ["[\"ERR\",\"ERR\",\"ERR\"]"],
+  )
+  @debug.assert_eq(
+    must_run_json_text(
+      "[\"24:15\",\"10:60\"] | map(try strptime(\"%H:%M\") catch \"ERR\")", "null",
+    ),
+    ["[\"ERR\",\"ERR\"]"],
+  )
+  @debug.assert_eq(
+    must_run_json_text("try strptime(\"%Y-%m\") catch .", "\"2024-13\""),
+    ["\"date \\\"2024-13\\\" does not match format \\\"%Y-%m\\\"\""],
+  )
+}
+
+///|
 test "jq 1.8.2 fromdateiso8601 parses UTC dates and normalizes calendar overflow" {
   @debug.assert_eq(
     must_run_json_text("fromdateiso8601", "\"2015-03-05T23:51:47Z\""),
