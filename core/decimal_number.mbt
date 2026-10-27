@@ -284,16 +284,8 @@ fn decimal_canonical_repr(raw : String) -> String? {
 fn decimal_negated_repr(raw : String) -> String? {
   match decimal_parts_from_repr(raw) {
     None => None
-    Some(d) =>
-      if d.significant == "0" {
-        if raw.has_prefix("-") {
-          decimal_canonical_repr(
-            raw.view(start_offset=1, end_offset=raw.length()).to_owned(),
-          )
-        } else {
-          decimal_canonical_repr(raw)
-        }
-      } else if raw.has_prefix("-") {
+    Some(_) =>
+      if raw.has_prefix("-") {
         decimal_canonical_repr(
           raw.view(start_offset=1, end_offset=raw.length()).to_owned(),
         )

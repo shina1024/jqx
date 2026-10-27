@@ -616,17 +616,78 @@ fn format_datetime_with_strftime_pattern(
 }
 
 ///|
-fn strptime_utc_fixed_format(
+fn strptime_utc_components(
   input : String,
   pattern : String,
 ) -> (Int32, Int32, Int32, Int32, Int32, Double, Int32, Int32)? {
-  if pattern != "%Y-%m-%dT%H:%M:%SZ" {
+  if pattern == "%Y-%m-%dT%H:%M:%SZ" {
+    return match parse_rfc3339_utc_seconds(input) {
+      Some(seconds) => Some(epoch_seconds_to_datetime_components(seconds))
+      None => None
+    }
+  }
+  // Upstream #3679 starts from January 1, 1900, including for time-only formats.
+  let fields = [1900, 1, 1, 0, 0, 0]
+  let mut pos = 0
+  let mut pattern_pos = 0
+  while pattern_pos < pattern.length() {
+    let ch = pattern.unsafe_get(pattern_pos).to_int().unsafe_to_char()
+    pattern_pos += 1
+    if ch != '%' {
+      pos = match parse_date_separator(input, pos, ch) {
+        Some(next) => next
+        None => return None
+      }
+      continue
+    }
+    guard pattern_pos < pattern.length() else { return None }
+    let directive = pattern.unsafe_get(pattern_pos).to_int().unsafe_to_char()
+    pattern_pos += 1
+    if directive == '%' {
+      pos = match parse_date_separator(input, pos, '%') {
+        Some(next) => next
+        None => return None
+      }
+      continue
+    }
+    let (field, width) = match directive {
+      'Y' => (0, 4)
+      'm' => (1, 2)
+      'd' => (2, 2)
+      'H' => (3, 2)
+      'M' => (4, 2)
+      'S' => (5, 2)
+      _ => return None
+    }
+    let (value, next) = match parse_date_digits(input, pos, width) {
+      Some(parsed) => parsed
+      None => return None
+    }
+    fields[field] = value
+    pos = next
+  }
+  guard pos == input.length() &&
+    fields[1] >= 1 &&
+    fields[1] <= 12 &&
+    fields[2] >= 1 &&
+    fields[2] <= days_in_month(fields[0], fields[1]) &&
+    fields[3] <= 23 &&
+    fields[4] <= 59 &&
+    fields[5] <= 59 else {
     return None
   }
-  match parse_rfc3339_utc_seconds(input) {
-    Some(seconds) => Some(epoch_seconds_to_datetime_components(seconds))
-    None => None
-  }
+  Some(
+    epoch_seconds_to_datetime_components(
+      datetime_components_to_epoch_seconds(
+        fields[0],
+        fields[1],
+        fields[2],
+        fields[3],
+        fields[4],
+        fields[5].to_double(),
+      ),
+    ),
+  )
 }
 
 ///|
@@ -772,7 +833,7 @@ fn dispatch_numeric_builtin(
         for format_value in formats {
           match format_value {
             String(pattern) =>
-              match strptime_utc_fixed_format(input_text, pattern) {
+              match strptime_utc_components(input_text, pattern) {
                 Some(
                   (
                     year,
@@ -792,7 +853,11 @@ fn dispatch_numeric_builtin(
                   )
                 None =>
                   raise TypeError(
-                    "strptime/1 requires format \"%Y-%m-%dT%H:%M:%SZ\" and matching input",
+                    "date \"" +
+                    input_text +
+                    "\" does not match format \"" +
+                    pattern +
+                    "\"",
                   )
               }
             _ => raise TypeError("strptime/1 requires a string format")
