@@ -55,6 +55,7 @@ test("case override follows a fixture when upstream inserts lines", () => {
       assert.equal(cases.length, 1);
       assert.equal(cases[0].compat_status, "temporary_exception");
       assert.equal(cases[0].source_line, comments === "" ? 1 : 3);
+      assert.deepEqual(cases[0].source_expected, ['"Thursday"']);
     }
   } finally {
     rmSync(directory, { recursive: true, force: true });

@@ -2837,7 +2837,10 @@
     "compat_ledger_id": "jq-1.8.2-error-fallback-operator",
     "compat_reason": "jq 1.8.2 rejects the ?// token; jqx accepts it and returns the vendored upstream fixture's expected value 1",
     "compat_removal_condition": "latest jq release accepts error(0) ?// 1 and returns 1",
-    "compat_stale_policy": "fail"
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "1"
+    ]
   },
   {
     "name": "upstream-jq-test-l1500",
@@ -3716,7 +3719,10 @@
     "compat_ledger_id": "jq-1.8.2-ascii-case-errors",
     "compat_reason": "jq 1.8.2 reports explode input must be a string; jqx preserves the function-specific errors required by upstream commit 864d769d888e49621849c8ad616d794f099e713f (#3689) and the vendored fixture, covered by execute ascii case conversion tests",
     "compat_removal_condition": "latest jq release reports ascii_downcase and ascii_upcase input must be a string for this fixture, incorporating upstream commit 864d769d888e49621849c8ad616d794f099e713f",
-    "compat_stale_policy": "fail"
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "[\"ascii_downcase input must be a string\",\"ascii_upcase input must be a string\",\"ascii_downcase input must be a string\",\"ascii_upcase input must be a string\"]"
+    ]
   },
   {
     "name": "upstream-jq-test-l1909",
@@ -3769,7 +3775,10 @@
     "compat_ledger_id": "jq-1.8.2-windows-strftime-encoding",
     "compat_reason": "jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names",
     "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output",
-    "compat_stale_policy": "allow"
+    "compat_stale_policy": "allow",
+    "source_expected": [
+      "\"Tuesday, June 30, 2015\""
+    ]
   },
   {
     "name": "upstream-jq-test-l1933",
@@ -3874,7 +3883,10 @@
     "compat_ledger_id": "jq-1.8.2-strftime-result-too-long",
     "compat_reason": "jq 1.8.2 reports unknown system failure for an oversized format; jqx reports the vendored upstream fixture's expected strftime/1: result too long",
     "compat_removal_condition": "latest jq release reports strftime/1: result too long for this fixture",
-    "compat_stale_policy": "fail"
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "\"strftime/1: result too long\""
+    ]
   },
   {
     "name": "upstream-jq-test-l1979",
@@ -3898,7 +3910,10 @@
     "compat_ledger_id": "jq-1.8.2-strftime-result-too-long",
     "compat_reason": "jq 1.8.2 reports unknown system failure for an oversized local format; jqx reports the vendored upstream fixture's expected strflocaltime/1: result too long",
     "compat_removal_condition": "latest jq release reports strflocaltime/1: result too long for this fixture",
-    "compat_stale_policy": "fail"
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "\"strflocaltime/1: result too long\""
+    ]
   },
   {
     "name": "upstream-jq-test-l1987",
@@ -3922,7 +3937,10 @@
     "compat_ledger_id": "jq-1.8.2-strptime-default-day",
     "compat_reason": "jq 1.8.2 defaults a missing day to zero and converts to the previous month; jqx defaults to day one as required by upstream commit ac35c7dcbb991fa0f3c3196dd00ca479211e9847 (#3679) and the vendored fixture, covered by builtin_numeric tests",
     "compat_removal_condition": "latest jq release defaults a missing day to one and returns June 1 and January 1 for this fixture, incorporating upstream commit ac35c7dcbb991fa0f3c3196dd00ca479211e9847",
-    "compat_stale_policy": "fail"
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "[[2024,5,1,0,0,0,6,152],\"2024-06-01T00:00:00Z\",[2024,0,1,0,0,0,1,0],\"2024-01-01T00:00:00Z\"]"
+    ]
   },
   {
     "name": "upstream-jq-test-l1996",
@@ -3937,7 +3955,10 @@
     "compat_ledger_id": "jq-1.8.2-strptime-default-day",
     "compat_reason": "jq 1.8.2 leaves day zero and invalid weekday/year-day placeholders for a time-only format; jqx returns [1900,0,1,10,15,0,1,0] as required by upstream commit ac35c7dcbb991fa0f3c3196dd00ca479211e9847 (#3679) and the vendored fixture, covered by builtin_numeric tests",
     "compat_removal_condition": "latest jq release returns [1900,0,1,10,15,0,1,0] for this fixture, incorporating upstream commit ac35c7dcbb991fa0f3c3196dd00ca479211e9847",
-    "compat_stale_policy": "fail"
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "[1900,0,1,10,15,0,1,0]"
+    ]
   },
   {
     "name": "upstream-jq-test-l2002",
@@ -4123,7 +4144,10 @@
     "compat_ledger_id": "jq-1.8.2-fromdateiso8601-surrounding-whitespace",
     "compat_reason": "jq 1.8.2 accepts surrounding whitespace; jqx rejects both forms as required by the vendored upstream fixture",
     "compat_removal_condition": "latest jq release rejects both surrounding-whitespace inputs and this fixture returns [\"ERR\",\"ERR\"]",
-    "compat_stale_policy": "fail"
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "[\"ERR\",\"ERR\"]"
+    ]
   },
   {
     "name": "upstream-jq-test-l2103",
@@ -4868,7 +4892,10 @@
     "compat_ledger_id": "jq-1.8.2-negate-zero-sign",
     "compat_reason": "jq 1.8.2 loses the sign when negating a decnum literal; jqx preserves the sign as required by upstream commit afa23a53cde43cbd7d6e5d91ae759e342d518de6 (#3662) and the vendored fixture, covered by execute unary negation keeps the sign of zero",
     "compat_removal_condition": "latest jq release returns [\"-0\",\"0\",\"-0\",\"0\"] for this fixture, incorporating upstream commit afa23a53cde43cbd7d6e5d91ae759e342d518de6",
-    "compat_stale_policy": "fail"
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "[\"-0\",\"0\",\"-0\",\"0\"]"
+    ]
   },
   {
     "name": "upstream-jq-test-l2478",
@@ -5432,7 +5459,11 @@
     "compat_ledger_id": "jq-1.8.2-reduce-init-backtracking",
     "compat_reason": "jq 1.8.2 loses reduce input when backtracking over multiple initializer outputs; jqx preserves input as required by the vendored fixture and upstream fix df24981307658868759faaea76b817cc62dd6be0 (#3633)",
     "compat_removal_condition": "latest jq release preserves reduce input across initializer backtracking and matches this fixture, incorporating upstream fix df24981307658868759faaea76b817cc62dd6be0",
-    "compat_stale_policy": "fail"
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "0",
+      "1"
+    ]
   },
   {
     "name": "upstream-jq-test-l2786",
@@ -5899,7 +5930,10 @@
     "compat_ledger_id": "jq-1.8.2-windows-strftime-encoding",
     "compat_reason": "jq 1.8.2 for Windows emits non-UTF-8 mojibake for localized strftime names in this release artifact; jqx emits UTF-8 English names",
     "compat_removal_condition": "jq Windows release artifacts emit stable UTF-8 strftime names or jqx intentionally adopts platform-locale encoded output",
-    "compat_stale_policy": "allow"
+    "compat_stale_policy": "allow",
+    "source_expected": [
+      "\"Tuesday, June 30, 2015\""
+    ]
   },
   {
     "name": "upstream-optional-test-l9",
@@ -5914,7 +5948,10 @@
     "compat_ledger_id": "jq-1.8.2-negative-gmtime",
     "compat_reason": "jq 1.8.2 truncates rather than floors negative fractional timestamps; jqx matches upstream fix 6aeafff056a988c20672ac1359b2beea13fb9315 (#3634). Windows release artifacts additionally misreport pre-epoch weekdays, which the upstream fixture marks unsupported on mingw/WIN32",
     "compat_removal_condition": "latest jq release artifact on the target platform matches the fixture, including floored seconds and correct pre-epoch weekday; remove or re-scope the exception when the fractional fix lands but Windows remains unsupported",
-    "compat_stale_policy": "fail"
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "[1969,11,31,23,59,58.75,3,364]"
+    ]
   },
   {
     "name": "upstream-optional-test-l13",
@@ -5929,7 +5966,10 @@
     "compat_ledger_id": "jq-1.8.2-negative-gmtime",
     "compat_reason": "jq 1.8.2 negative fractional gmtime results are not monotonic; jqx matches the sorted-date fixture added by upstream fix 6aeafff056a988c20672ac1359b2beea13fb9315 (#3634), with pre-epoch timestamps also unsupported by the Windows release artifact",
     "compat_removal_condition": "latest jq release artifact on the target platform produces monotonic gmtime results for the fixture; remove or re-scope the exception when the fractional fix lands but Windows remains unsupported",
-    "compat_stale_policy": "fail"
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "true"
+    ]
   },
   {
     "name": "upstream-onig-test-l2",
@@ -5971,7 +6011,10 @@
     "compat_ledger_id": "jq-onig-zero-width-multibyte-boundary",
     "compat_reason": "jq's current release matches empty regex at byte boundaries inside multibyte characters; jqx implements the upstream fixture's intended char-boundary semantics (upstream comment: 'global zero-width matches must not land inside a multibyte character')",
     "compat_removal_condition": "jq release adopts char-boundary zero-width match semantics matching upstream fixture expectations",
-    "compat_stale_policy": "fail"
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "[0,1,2,3,4,5]"
+    ]
   },
   {
     "name": "upstream-onig-test-l19",
@@ -5986,7 +6029,10 @@
     "compat_ledger_id": "jq-onig-zero-width-multibyte-boundary",
     "compat_reason": "jq's current release matches empty regex at byte boundaries inside multibyte characters; jqx implements the upstream fixture's intended char-boundary semantics (upstream comment: 'global zero-width matches must not land inside a multibyte character')",
     "compat_removal_condition": "jq release adopts char-boundary zero-width match semantics matching upstream fixture expectations",
-    "compat_stale_policy": "fail"
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "\"-a-é-\""
+    ]
   },
   {
     "name": "upstream-onig-test-l23",
@@ -6001,7 +6047,10 @@
     "compat_ledger_id": "jq-onig-zero-width-multibyte-boundary",
     "compat_reason": "jq's current release matches empty regex at byte boundaries inside multibyte characters; jqx implements the upstream fixture's intended char-boundary semantics (upstream comment: 'global zero-width matches must not land inside a multibyte character')",
     "compat_removal_condition": "jq release adopts char-boundary zero-width match semantics matching upstream fixture expectations",
-    "compat_stale_policy": "fail"
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "[\"\",\"a\",\"é\",\"\"]"
+    ]
   },
   {
     "name": "upstream-onig-test-l27",

@@ -369,6 +369,14 @@ function ensureValidMetadata(testCase) {
       `compat_stale_policy is only valid for temporary_exception case ${name}`,
     );
   }
+  if (
+    compatStatus === "temporary_exception" &&
+    testCase.source_kind === "runtime" &&
+    testCase.source_file != null &&
+    !Array.isArray(testCase.source_expected)
+  ) {
+    throw new Error(`upstream temporary exception ${name} must keep source_expected`);
+  }
 }
 
 function writeSnapshot(snapshotPath, records) {
@@ -451,6 +459,30 @@ function main() {
       const jqxStdout = cleanOutput(jqxRun.stdout);
       const jqxStderr = cleanOutput(jqxRun.stderr);
       const jqxClass = classifyRunOutput(jqxStdout, jqxStderr);
+      if (compatActive && sourceKind === "runtime" && testCase.source_expected != null) {
+        const sourceExpected = testCase.source_expected.join("\n");
+        if (
+          jqxRun.status !== 0 ||
+          jqxClass.valueText !== sourceExpected ||
+          jqxClass.debugText !== "" ||
+          jqxClass.errorText !== "" ||
+          jqxClass.stderrOtherText !== ""
+        ) {
+          failed += 1;
+          diffRecords.push({
+            name,
+            category: "upstream-fixture-mismatch",
+            compat_status: compatStatus,
+            compat_ledger_id: compatLedgerId,
+            source_expected: sourceExpected,
+            jqx_out: jqxClass.mergedText,
+          });
+          console.log(`[FAIL] ${name} (jqx differs from upstream fixture)`);
+          console.log(`  expected=${sourceExpected}`);
+          console.log(`  jqx=${jqxClass.mergedText}`);
+          continue;
+        }
+      }
       const expectedStatusesMatch =
         expectStatus == null ||
         (jqRun.status === expectStatus && jqxRun.status === expectStatus);

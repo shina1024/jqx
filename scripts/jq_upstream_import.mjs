@@ -269,6 +269,9 @@ function main() {
       applyObjectProperties(testCase, caseOverride);
       appliedOverrides.add(overrideKey);
     }
+    if (testCase.compat_status === "temporary_exception" && item.kind === "runtime") {
+      testCase.source_expected = [...item.expected];
+    }
     outputCases.push(testCase);
     statsEmitted += 1;
   }
