@@ -37,3 +37,13 @@ pub impl Input for StringView with fn length(self) {
 pub impl Input for StringView with fn get(self, index) {
   self[index].to_int()
 }
+
+///|
+pub impl Input for Array[Char] with fn length(self) {
+  self.length()
+}
+
+///|
+pub impl Input for Array[Char] with fn get(self, index) {
+  self[index].to_int()
+}

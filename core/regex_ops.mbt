@@ -339,17 +339,21 @@ fn regex_compile_pattern(
 }
 
 ///|
-fn regex_slice_string(s : String, start : Int32, end_ : Int32) -> String {
-  s.view(start_offset=start, end_offset=end_).to_owned()
+fn regex_slice_string(
+  chars : Array[Char],
+  start : Int32,
+  end_ : Int32,
+) -> String {
+  chars_slice_to_string(chars, start, end_)
 }
 
 ///|
 fn regex_find_native_next_match(
   regex : @regex_engine.Regex,
-  input : String,
+  input : Array[Char],
   search_start : Int32,
 ) -> RegexMatchData? {
-  match regex.execute(input[:], search_start) {
+  match regex.execute(input, search_start) {
     None => None
     Some(result) =>
       match result.group(0) {
@@ -362,13 +366,13 @@ fn regex_find_native_next_match(
 ///|
 fn regex_find_top_level_lookahead_match(
   regex : @regex_engine.Regex,
-  input : String,
+  input : Array[Char],
   search_start : Int32,
 ) -> RegexMatchData? {
   let len = input.length()
   let mut current_start = search_start
   while current_start <= len {
-    match regex.execute(input[:], current_start) {
+    match regex.execute(input, current_start) {
       None => return None
       Some(result) =>
         match result.group(0) {
@@ -394,7 +398,7 @@ fn regex_find_top_level_lookahead_match(
 ///|
 fn regex_find_next_match(
   compiled : CompiledRegexPattern,
-  input : String,
+  input : Array[Char],
   search_start : Int32,
 ) -> RegexMatchData? {
   let len = input.length()
@@ -425,7 +429,7 @@ fn regex_find_next_match(
 
 ///|
 fn regex_group_value_or_null(
-  s : String,
+  s : Array[Char],
   result : @regex_engine.MatchResult,
   index : Int32,
 ) -> Value {
@@ -437,7 +441,7 @@ fn regex_group_value_or_null(
 
 ///|
 fn regex_capture_entry(
-  s : String,
+  s : Array[Char],
   result : @regex_engine.MatchResult,
   group_names : ReadOnlyArray[String?],
   index : Int32,
@@ -475,7 +479,7 @@ fn regex_capture_entry(
 
 ///|
 fn regex_named_capture_object(
-  s : String,
+  s : Array[Char],
   result : @regex_engine.MatchResult,
   group_names : ReadOnlyArray[String?],
 ) -> Value {
@@ -514,22 +518,24 @@ fn regex_next_search_start(
 ///|
 fn regex_has_match(
   runtime : RuntimeContext,
-  s : String,
+  text : String,
   pattern : String,
   flags : String,
 ) -> Bool raise EvalError {
   let compiled = regex_compile_pattern(runtime, pattern, flags)
+  let s = string_to_chars(text)
   regex_find_next_match(compiled, s, 0) is Some(_)
 }
 
 ///|
 fn regex_scan_values(
   runtime : RuntimeContext,
-  s : String,
+  text : String,
   pattern : String,
   flags : String,
 ) -> Array[Value] raise EvalError {
   let compiled = regex_compile_pattern(runtime, pattern, flags)
+  let s = string_to_chars(text)
   let mut search_start = 0
   let len = s.length()
   let has_captures = compiled.group_names.length() > 1
@@ -566,11 +572,12 @@ fn regex_scan_values(
 ///|
 fn regex_split_tokens(
   runtime : RuntimeContext,
-  s : String,
+  text : String,
   pattern : String,
   flags : String,
 ) -> Array[Value] raise EvalError {
   let compiled = regex_compile_pattern(runtime, pattern, flags)
+  let s = string_to_chars(text)
   let mut search_start = 0
   let mut token_start = 0
   let len = s.length()
@@ -604,11 +611,12 @@ fn regex_split_tokens(
 ///|
 fn regex_match_objects(
   runtime : RuntimeContext,
-  s : String,
+  text : String,
   pattern : String,
   flags : String,
 ) -> Array[Value] raise EvalError {
   let compiled = regex_compile_pattern(runtime, pattern, flags)
+  let s = string_to_chars(text)
   let global = split_regex_flag_enabled(flags, 'g')
   let mut search_start = 0
   let len = s.length()
@@ -654,11 +662,12 @@ fn regex_match_objects(
 ///|
 fn regex_capture_objects(
   runtime : RuntimeContext,
-  s : String,
+  text : String,
   pattern : String,
   flags : String,
 ) -> Array[Value] raise EvalError {
   let compiled = regex_compile_pattern(runtime, pattern, flags)
+  let s = string_to_chars(text)
   let global = split_regex_flag_enabled(flags, 'g')
   let mut search_start = 0
   let len = s.length()
@@ -737,7 +746,7 @@ fn regex_join_chunks(chunks : Array[String]) -> String {
 ///|
 fn regex_substitute_values(
   runtime : RuntimeContext,
-  s : String,
+  text : String,
   pattern : String,
   replacement_filter : Filter,
   flags : String,
@@ -746,6 +755,7 @@ fn regex_substitute_values(
   replacement_error : String,
 ) -> Array[String] raise EvalError {
   let compiled = regex_compile_pattern(runtime, pattern, flags)
+  let s = string_to_chars(text)
   let len = s.length()
   let mut search_start = 0
   let mut token_start = 0

@@ -1,5 +1,5 @@
 ///|
-// Source under test: core/execute.mbt, core/json_ops.mbt, core/builtin_dispatch.mbt
+// Source under test: core/execute.mbt, core/json_ops.mbt, core/builtin_dispatch.mbt, core/regex_ops.mbt
 
 ///|
 test "execute identity" {
@@ -1491,6 +1491,40 @@ test "execute match regex compatibility" {
   @debug.assert_eq(
     must_execute(compile("[match(empty)]"), must_parse("\"ab\"")),
     [Value::array([])],
+  )
+}
+
+///|
+test "execute regex preserves supplementary Unicode scalar values" {
+  @debug.assert_eq(
+    must_execute(
+      compile("[match(\"\"; \"g\") | .offset]"),
+      must_parse("\"aé€🚀b\""),
+    ),
+    [must_parse("[0,1,2,3,4,5]")],
+  )
+  @debug.assert_eq(
+    must_execute(
+      compile("[match(\".\"; \"g\") | {offset, string}]"),
+      must_parse("\"a🚀b\""),
+    ),
+    [
+      must_parse(
+        "[{\"offset\":0,\"string\":\"a\"},{\"offset\":1,\"string\":\"🚀\"},{\"offset\":2,\"string\":\"b\"}]",
+      ),
+    ],
+  )
+  @debug.assert_eq(
+    must_execute(compile("[scan(\".\")]"), must_parse("\"a🚀b\"")),
+    [must_parse("[\"a\",\"🚀\",\"b\"]")],
+  )
+  @debug.assert_eq(
+    must_execute(compile("gsub(\"\"; \"-\")"), must_parse("\"🚀\"")),
+    [Value::string("-🚀-")],
+  )
+  @debug.assert_eq(
+    must_execute(compile("[splits(\"\")]"), must_parse("\"🚀\"")),
+    [must_parse("[\"\",\"🚀\",\"\"]")],
   )
 }
 
