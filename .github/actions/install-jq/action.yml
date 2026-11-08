@@ -45,7 +45,7 @@ runs:
         fi
 
         mkdir -p "$HOME/.local/bin"
-        curl -fsSL "${base_url}/${asset}" -o "$HOME/.local/bin/jq"
+        curl -fsSL --retry 4 --retry-delay 3 --retry-all-errors "${base_url}/${asset}" -o "$HOME/.local/bin/jq"
         chmod +x "$HOME/.local/bin/jq"
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
@@ -71,5 +71,5 @@ runs:
         $jqDir = Join-Path $HOME ".local\bin"
         New-Item -ItemType Directory -Force -Path $jqDir | Out-Null
         $jqPath = Join-Path $jqDir "jq.exe"
-        Invoke-WebRequest -Uri "$baseUrl/$asset" -OutFile $jqPath
+        Invoke-WebRequest -Uri "$baseUrl/$asset" -OutFile $jqPath -MaximumRetryCount 4 -RetryIntervalSec 3
         $jqDir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
