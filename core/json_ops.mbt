@@ -31,7 +31,7 @@ fn json_value_preview(s : String) -> String {
   if cut <= 0 {
     cut = max_preview
   }
-  s.view(start_offset=0, end_offset=cut).to_owned() + "..."
+  s.exact_view(start=0, end=cut).to_owned() + "..."
 }
 
 ///|

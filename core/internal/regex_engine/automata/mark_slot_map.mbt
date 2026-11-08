@@ -37,7 +37,8 @@
 /// - `add_mark`: Records that a mark was encountered (initially unassigned)
 /// - `assign_slot`: Assigns a slot to all previously unassigned marks
 /// - `get_slot`: Retrieves the slot associated with a mark
-struct MarkSlotMap(@immut/sorted_map.SortedMap[Mark, Slot]) derive(Eq, Hash)
+#derive(Eq, Hash)
+struct MarkSlotMap(@immut/sorted_map.SortedMap[Mark, Slot])
 
 ///|
 fn MarkSlotMap::empty() -> MarkSlotMap {

@@ -13,6 +13,7 @@
 /// This is intentionally small and can be extended later.
 
 ///|
+#derive(Eq, Debug)
 pub enum Filter {
   Identity
   Scope(Array[(String, Array[String], Filter)], Filter)
@@ -57,7 +58,7 @@ pub enum Filter {
   IfElse(Filter, Filter, Filter)
   Fallback(Filter, Filter)
   Empty
-} derive(Eq, Debug)
+}
 
 ///|
 pub impl Show for Filter with fn output(self, logger) {

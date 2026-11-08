@@ -11,6 +11,7 @@
 /// - Literal JSON values
 
 ///|
+#derive(Eq, Debug)
 pub suberror EvalError {
   TypeError(String)
   Thrown(Value)
@@ -18,7 +19,7 @@ pub suberror EvalError {
   UnknownVariable(String)
   BreakSignal(String, Array[Value])
   Partial(Array[Value], Value, String)
-} derive(Eq, Debug)
+}
 
 ///|
 pub impl Show for EvalError with fn output(self, logger) {
@@ -171,7 +172,7 @@ fn trim_ascii_ws(s : String) -> String {
         is_ascii_ws(s.unsafe_get(end - 1).to_int().unsafe_to_char()) {
     end -= 1
   }
-  s.view(start_offset=start, end_offset=end).to_owned()
+  s.exact_view(start~, end~).to_owned()
 }
 
 ///|
@@ -1096,19 +1097,15 @@ fn split_string(s : String, sep : String) -> Array[Value] {
   let mut start = 0
   let sep_len = sep.length()
   while start <= s.length() {
-    let rest = s.view(start_offset=start)
+    let rest = s.exact_view(start~)
     match rest.find(sep) {
       Some(i) => {
-        out.push(
-          Value::string(
-            s.view(start_offset=start, end_offset=start + i).to_owned(),
-          ),
-        )
+        out.push(Value::string(s.exact_view(start~, end=start + i).to_owned()))
         start = start + i + sep_len
         continue
       }
       None => {
-        out.push(Value::string(s.view(start_offset=start).to_owned()))
+        out.push(Value::string(s.exact_view(start~).to_owned()))
         return out
       }
     }
@@ -1314,7 +1311,7 @@ fn execute_slice_string(s : String, start : Int32?, end : Int32?) -> String {
   if hi <= lo {
     ""
   } else {
-    s.view(start_offset=lo, end_offset=hi).to_owned()
+    s.exact_view(start=lo, end=hi).to_owned()
   }
 }
 

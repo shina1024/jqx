@@ -135,7 +135,7 @@ fn dispatch_string_builtin(
             (String(h), String(n)) =>
               if h.has_prefix(n) {
                 out.push(
-                  Value::string(h.view(start_offset=n.length()).to_owned()),
+                  Value::string(h.exact_view(start=n.length()).to_owned()),
                 )
               } else {
                 out.push(Value::string(h))
@@ -159,14 +159,11 @@ fn dispatch_string_builtin(
               } else {
                 let mut trimmed = h
                 if trimmed.has_prefix(n) {
-                  trimmed = trimmed.view(start_offset=n.length()).to_owned()
+                  trimmed = trimmed.exact_view(start=n.length()).to_owned()
                 }
                 if trimmed.has_suffix(n) {
                   trimmed = trimmed
-                    .view(
-                      start_offset=0,
-                      end_offset=trimmed.length() - n.length(),
-                    )
+                    .exact_view(start=0, end=trimmed.length() - n.length())
                     .to_owned()
                 }
                 out.push(Value::string(trimmed))
@@ -191,7 +188,7 @@ fn dispatch_string_builtin(
                 out.push(
                   Value::string(
                     h
-                    .view(start_offset=0, end_offset=h.length() - n.length())
+                    .exact_view(start=0, end=h.length() - n.length())
                     .to_owned(),
                   ),
                 )

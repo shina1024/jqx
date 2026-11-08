@@ -78,9 +78,11 @@ pub fn comma(
 ///|
 pub fn call(
   name : String,
-  args : Array[Query[@core.Value, @core.Value]],
+  args : FixedArray[Query[@core.Value, @core.Value]],
 ) -> Query[@core.Value, @core.Value] {
-  query_of_filter(@core.Filter::call(name, args.map(q => q.filter)))
+  query_of_filter(
+    @core.Filter::call(name, args.iter().map(q => q.filter).to_array()),
+  )
 }
 
 ///|
@@ -176,8 +178,8 @@ pub fn try_catch(
 pub fn query(
   query : Query[@core.Value, @core.Value],
   input : @core.Value,
-) -> Result[Array[@core.Value], String] {
-  Ok(@core.execute(query.filter, input)) catch {
+) -> Result[FixedArray[@core.Value], String] {
+  Ok(FixedArray::from_iter(@core.execute(query.filter, input).iter())) catch {
     err => Err(err.to_string())
   }
 }
@@ -186,8 +188,12 @@ pub fn query(
 pub fn query_json_text(
   query : Query[@core.Value, @core.Value],
   input : String,
-) -> Result[Array[String], String] {
-  Ok(@core.run_compiled_json_text(query.filter, input)) catch {
+) -> Result[FixedArray[String], String] {
+  Ok(
+    FixedArray::from_iter(
+      @core.run_compiled_json_text(query.filter, input).iter(),
+    ),
+  ) catch {
     err => Err(err.to_string())
   }
 }

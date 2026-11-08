@@ -31,7 +31,8 @@
 ///    position is stored at that slot index in the `Positions` storage
 /// 3. After matching completes, captured substrings are extracted using
 ///    `MarkSlotMap` (mark → slot mapping) + `Positions` (slot → position values)
-pub struct Slot(Int32) derive(Eq, Hash)
+#derive(Eq, Hash)
+pub struct Slot(Int32)
 
 ///|
 /// Returns the special unassigned slot value (-1).

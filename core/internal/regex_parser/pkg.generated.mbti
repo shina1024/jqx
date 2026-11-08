@@ -11,7 +11,8 @@ import {
 pub fn parse(profile~ : @shared_types.Profile, mode~ : Mode, StringView) -> @ast.Pattern raise ParserError
 
 // Errors
-type ParserError derive(@debug.Debug)
+#derive(@debug.Debug)
+type ParserError
 pub fn ParserError::output(Self, &Logger) -> Unit
 pub fn ParserError::to_repr(Self) -> @debug.Repr
 pub fn ParserError::to_string(Self) -> String

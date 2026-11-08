@@ -26,7 +26,7 @@ fn is_compile_special_variable(name : String) -> Bool {
 ///|
 fn normalize_compile_param_name(param : String) -> String {
   if param.has_prefix("$") {
-    param.view(start_offset=1).to_owned()
+    param.exact_view(start=1).to_owned()
   } else {
     param
   }

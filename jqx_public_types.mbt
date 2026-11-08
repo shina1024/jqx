@@ -1,8 +1,9 @@
 ///|
+#derive(Eq)
 pub struct Position {
   line : Int32
   column : Int32
-} derive(Eq)
+}
 
 ///|
 pub impl Show for Position with fn output(self, logger) {
@@ -15,6 +16,7 @@ pub impl Show for Position with fn output(self, logger) {
 }
 
 ///|
+#derive(Eq)
 pub suberror JsonParseError {
   InvalidChar(Position, Char)
   InvalidEof
@@ -23,7 +25,7 @@ pub suberror JsonParseError {
   InvalidNumericLiteralAtEof(Position)
   InvalidStringLiteral(Position)
   InvalidStringLiteralAtEof(Position)
-} derive(Eq)
+}
 
 ///|
 pub impl Show for JsonParseError with fn output(self, logger) {
@@ -68,12 +70,13 @@ pub impl Show for JsonParseError with fn output(self, logger) {
 }
 
 ///|
+#derive(Eq)
 pub suberror CompileError {
   InvalidChar(Position, Char)
   InvalidEof
   InvalidNumber(Position, String)
   Diagnostics(Array[String])
-} derive(Eq)
+}
 
 ///|
 pub impl Show for CompileError with fn output(self, logger) {
@@ -106,6 +109,7 @@ pub impl Show for CompileError with fn output(self, logger) {
 }
 
 ///|
+#derive(Eq)
 pub suberror RuntimeError {
   TypeError(String)
   Thrown(Json)
@@ -113,7 +117,7 @@ pub suberror RuntimeError {
   UnknownVariable(String)
   BreakSignal(String, Array[Json])
   Partial(Array[Json], Json, String)
-} derive(Eq)
+}
 
 ///|
 pub impl Show for RuntimeError with fn output(self, logger) {
@@ -137,10 +141,11 @@ pub struct CompiledFilter {
 }
 
 ///|
+#derive(Eq)
 pub suberror RunError {
   Compile(CompileError)
   Runtime(RuntimeError)
-} derive(Eq)
+}
 
 ///|
 pub impl Show for RunError with fn output(self, logger) {
@@ -151,11 +156,12 @@ pub impl Show for RunError with fn output(self, logger) {
 }
 
 ///|
+#derive(Eq)
 pub suberror JsonTextRunError {
   JsonParse(JsonParseError)
   Compile(CompileError)
   Runtime(RuntimeError)
-} derive(Eq)
+}
 
 ///|
 pub impl Show for JsonTextRunError with fn output(self, logger) {
@@ -167,10 +173,11 @@ pub impl Show for JsonTextRunError with fn output(self, logger) {
 }
 
 ///|
+#derive(Eq)
 pub suberror CompiledJsonTextRunError {
   JsonParse(JsonParseError)
   Runtime(RuntimeError)
-} derive(Eq)
+}
 
 ///|
 pub impl Show for CompiledJsonTextRunError with fn output(self, logger) {

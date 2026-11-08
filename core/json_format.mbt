@@ -16,7 +16,7 @@ fn format_finite_number_without_repr(n : Double) -> String {
   }
   let negative = raw.has_prefix("-")
   let digits = if negative {
-    raw.view(start_offset=1, end_offset=raw.length()).to_owned()
+    raw.exact_view(start=1, end=raw.length()).to_owned()
   } else {
     raw
   }
@@ -61,7 +61,7 @@ pub fn Value::write_json_chunks(
       remaining -= spaces.length()
     }
     if remaining > 0 {
-      write(spaces.view(end_offset=remaining).to_owned())
+      write(spaces.exact_view(end=remaining).to_owned())
     }
   }
 

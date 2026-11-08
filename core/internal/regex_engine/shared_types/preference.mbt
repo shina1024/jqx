@@ -13,8 +13,9 @@
 // limitations under the License.
 
 ///|
+#derive(Eq, Hash, Debug)
 pub(all) enum Preference {
   Shortest
   Longest
   First
-} derive(Eq, Hash, Debug)
+}

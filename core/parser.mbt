@@ -6,12 +6,13 @@
 ///|
 
 ///|
+#derive(Eq, Debug)
 pub suberror FilterError {
   InvalidChar(Position, Char)
   InvalidEof
   InvalidNumber(Position, String)
   Diagnostics(Array[String])
-} derive(Eq, Debug)
+}
 
 ///|
 pub impl Show for FilterError with fn output(self, logger) {

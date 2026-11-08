@@ -1027,7 +1027,7 @@ fn def_param_is_value(param : String) -> Bool {
 ///|
 fn def_param_name(param : String) -> String {
   if def_param_is_value(param) {
-    param.view(start_offset=1).to_owned()
+    param.exact_view(start=1).to_owned()
   } else {
     param
   }
@@ -1332,7 +1332,7 @@ fn FilterCursor::read_until_top_level_semicolon(
                   nested_def_depth -= 1
                 } else {
                   let end = ctx.offset - 1
-                  return ctx.input.view(start_offset=start, end_offset=end)
+                  return ctx.input.exact_view(start~, end~)
                 }
               }
             _ => ()
@@ -1760,7 +1760,7 @@ fn FilterCursor::load_module_definitions(
         None => search_dirs
       }
       let module_ctx = FilterCursor::make_with_compile_context(
-        source.view(),
+        source.exact_view(),
         ctx.compile_context,
       )
       module_ctx.parse_optional_module_declaration()

@@ -19,7 +19,7 @@ fn decimal_trim_leading_zeros(s : String) -> String {
   if i >= s.length() {
     "0"
   } else {
-    s.view(start_offset=i, end_offset=s.length()).to_owned()
+    s.exact_view(start=i, end=s.length()).to_owned()
   }
 }
 
@@ -36,9 +36,9 @@ fn decimal_split_exponent(raw : String) -> (String, Int64)? {
   if exp_index < 0 {
     Some((raw, 0))
   } else {
-    let mantissa = raw.view(start_offset=0, end_offset=exp_index).to_owned()
+    let mantissa = raw.exact_view(start=0, end=exp_index).to_owned()
     let exp_part = raw
-      .view(start_offset=exp_index + 1, end_offset=raw.length())
+      .exact_view(start=exp_index + 1, end=raw.length())
       .to_owned()
     let exp = try @string.parse_int64(exp_part) catch {
       _ => return None
@@ -195,12 +195,12 @@ fn decimal_normalize_plain(
   b.write_string(sign)
   if digits.length() > scale {
     b.write_string(
-      digits.view(start_offset=0, end_offset=digits.length() - scale).to_owned(),
+      digits.exact_view(start=0, end=digits.length() - scale).to_owned(),
     )
     b.write_char('.')
     b.write_string(
       digits
-      .view(start_offset=digits.length() - scale, end_offset=digits.length())
+      .exact_view(start=digits.length() - scale, end=digits.length())
       .to_owned(),
     )
   } else {
@@ -225,9 +225,7 @@ fn decimal_normalize_scientific(
   if significant.length() > 1 {
     b.write_char('.')
     b.write_string(
-      significant
-      .view(start_offset=1, end_offset=significant.length())
-      .to_owned(),
+      significant.exact_view(start=1, end=significant.length()).to_owned(),
     )
   }
   if exponent >= 0L {
@@ -262,7 +260,7 @@ fn decimal_canonical_repr(raw : String) -> String? {
               Some("0")
             } else {
               let significant = digits_raw
-                .view(start_offset=leading, end_offset=digits_raw.length())
+                .exact_view(start=leading, end=digits_raw.length())
                 .to_owned()
               let adjusted_exponent = Int64::from_int(significant.length()) -
                 Int64::from_int(frac_len) +
@@ -287,7 +285,7 @@ fn decimal_negated_repr(raw : String) -> String? {
     Some(_) =>
       if raw.has_prefix("-") {
         decimal_canonical_repr(
-          raw.view(start_offset=1, end_offset=raw.length()).to_owned(),
+          raw.exact_view(start=1, end=raw.length()).to_owned(),
         )
       } else {
         decimal_canonical_repr("-" + raw)
@@ -298,7 +296,7 @@ fn decimal_negated_repr(raw : String) -> String? {
 ///|
 fn decimal_abs_repr(raw : String) -> String? {
   if raw.has_prefix("-") {
-    let rest = raw.view(start_offset=1, end_offset=raw.length()).to_owned()
+    let rest = raw.exact_view(start=1, end=raw.length()).to_owned()
     match decimal_parts_from_repr(raw) {
       Some(parts) =>
         if parts.significant == "0" {

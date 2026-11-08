@@ -13,13 +13,15 @@
 // limitations under the License.
 
 ///|
+#derive(Debug)
 pub(all) struct Quantifier {
   min : Int32
   max : Int32?
   mode : @shared_types.QuantifierMode
-} derive(Debug)
+}
 
 ///|
+#derive(Debug)
 pub enum Assertion {
   StartOfInput
   EndOfInput
@@ -28,7 +30,7 @@ pub enum Assertion {
   StartOfWord
   EndOfWord
   NotWordBoundary
-} derive(Debug)
+}
 
 ///|
 pub struct Pattern {
@@ -42,6 +44,7 @@ pub impl Debug for Pattern with fn to_repr(self) {
 }
 
 ///|
+#derive(Debug)
 pub enum PatternDesc {
   Char(@shared_types.RecharSet)
   Sequence(ReadOnlyArray[Pattern])
@@ -50,7 +53,7 @@ pub enum PatternDesc {
   Preference(@shared_types.Preference, Pattern)
   Capture(name~ : String?, Pattern)
   Assertion(Assertion)
-} derive(Debug)
+}
 
 ///|
 pub fn Pattern::is_anchored(self : Pattern) -> Bool {

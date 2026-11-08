@@ -1,10 +1,12 @@
 ///|
+#derive(Eq, Debug)
 pub struct Position {
   line : Int32 // 1-based
   column : Int32 // 1-based
-} derive(Eq, Debug)
+}
 
 ///|
+#derive(Eq, Debug)
 pub suberror ParseError {
   InvalidChar(Position, Char)
   InvalidEof
@@ -13,7 +15,7 @@ pub suberror ParseError {
   InvalidNumericLiteralAtEof(Position)
   InvalidStringLiteral(Position)
   InvalidStringLiteralAtEof(Position)
-} derive(Eq, Debug)
+}
 
 ///|
 pub impl Show for ParseError with fn output(self, logger) {
@@ -58,11 +60,12 @@ pub impl Show for ParseError with fn output(self, logger) {
 }
 
 ///|
+#derive(Eq, Debug)
 pub suberror RunError {
   Parse(ParseError)
   Filter(FilterError)
   Eval(EvalError)
-} derive(Eq, Debug)
+}
 
 ///|
 pub impl Show for RunError with fn output(self, logger) {

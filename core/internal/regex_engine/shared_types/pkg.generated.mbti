@@ -11,7 +11,8 @@ import {
 // Errors
 
 // Types and methods
-pub struct Category(Int32) derive(Eq, Hash)
+#derive(Eq, Hash)
+pub struct Category(Int32)
 pub fn Category::add(Self, Self) -> Self
 pub fn Category::dummy() -> Self
 pub fn Category::equal(Self, Self) -> Bool
@@ -27,11 +28,12 @@ pub fn Category::not_word() -> Self
 pub fn Category::word() -> Self
 pub impl Add for Category
 
+#derive(Eq, Hash, @debug.Debug)
 pub(all) enum Preference {
   Shortest
   Longest
   First
-} derive(Eq, Hash, @debug.Debug)
+}
 pub fn Preference::equal(Self, Self) -> Bool
 pub fn Preference::hash(Self) -> Int32
 pub fn Preference::hash_combine(Self, Hasher) -> Unit
@@ -47,10 +49,11 @@ pub struct Profile {
 }
 pub fn Profile::new(valid~ : @rechar_set.RecharSet, word~ : @rechar_set.RecharSet, category~ : (Int32) -> Category) -> Self
 
+#derive(@debug.Debug)
 pub(all) enum QuantifierMode {
   Greedy
   NonGreedy
-} derive(@debug.Debug)
+}
 pub fn QuantifierMode::to_repr(Self) -> @debug.Repr
 
 // Type aliases

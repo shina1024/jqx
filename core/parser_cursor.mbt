@@ -258,7 +258,7 @@ fn FilterCursor::parse_identifier(
       _ => break
     }
   }
-  ctx.input.view(start_offset=start, end_offset=ctx.offset).to_owned()
+  ctx.input.exact_view(start~, end=ctx.offset).to_owned()
 }
 
 ///|
@@ -301,7 +301,7 @@ fn FilterCursor::parse_int(ctx : FilterCursor) -> Int32 raise FilterError {
     }
   }
   let end = ctx.offset
-  let s = ctx.input.view(start_offset=start, end_offset=end)
+  let s = ctx.input.exact_view(start~, end~)
   try @string.parse_int64(s) catch {
     _ =>
       raise InvalidNumber(
@@ -339,7 +339,7 @@ fn FilterCursor::parse_string_literal(
   let mut start = ctx.offset
   fn flush(end : Int32) {
     if start > 0 && end > start {
-      buf.write_view(ctx.input.view(start_offset=start, end_offset=end))
+      buf.write_view(ctx.input.exact_view(start~, end~))
     }
   }
 
@@ -617,12 +617,12 @@ fn FilterCursor::parse_number_literal(
     }
   }
   let end = ctx.offset
-  let s = ctx.input.view(start_offset=start, end_offset=end)
+  let s = ctx.input.exact_view(start~, end~)
   let s_str = s.to_owned()
   let starts_with_dot = s_str.length() > 0 &&
     s_str.unsafe_get(0).to_int().unsafe_to_char() == '.'
   let parse_input = if starts_with_dot { "0" + s_str } else { s_str }
-  try parse(parse_input.view()) catch {
+  try parse(parse_input.exact_view()) catch {
     _ => raise InvalidNumber(filter_offset_to_position(ctx.input, start), s_str)
   } noraise {
     Number(n, repr) =>

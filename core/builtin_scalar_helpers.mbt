@@ -6,7 +6,7 @@ fn builtin_ltrim_ascii_ws(s : String) -> String {
         builtin_is_trim_ws(s.unsafe_get(start).to_int().unsafe_to_char()) {
     start += 1
   }
-  s.view(start_offset=start, end_offset=end).to_owned()
+  s.exact_view(start~, end~).to_owned()
 }
 
 ///|
@@ -17,7 +17,7 @@ fn builtin_rtrim_ascii_ws(s : String) -> String {
         builtin_is_trim_ws(s.unsafe_get(end - 1).to_int().unsafe_to_char()) {
     end -= 1
   }
-  s.view(start_offset=start, end_offset=end).to_owned()
+  s.exact_view(start~, end~).to_owned()
 }
 
 ///|

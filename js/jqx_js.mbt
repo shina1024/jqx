@@ -1,15 +1,17 @@
 ///|
 /// Minimal JS/TS-facing API.
 /// Keep this surface area small for stability.
+/// Export FixedArray for output collections so JS callers receive native arrays.
 
 ///|
+#derive(Eq, Debug)
 pub struct JqxError {
   code : String
   message : String
   line : Int32
   column : Int32
   offset : Int32
-} derive(Eq, Debug)
+}
 
 ///|
 pub impl Show for JqxError with fn output(self, logger) {
@@ -190,16 +192,16 @@ pub fn try_compile(input : String) -> Result[@core.Filter, JqxError] {
 pub fn execute(
   filter : @core.Filter,
   input : @core.Value,
-) -> Array[@core.Value] raise @core.EvalError {
-  @core.execute(filter, input)
+) -> FixedArray[@core.Value] raise @core.EvalError {
+  FixedArray::from_iter(@core.execute(filter, input).iter())
 }
 
 ///|
 pub fn try_execute(
   filter : @core.Filter,
   input : @core.Value,
-) -> Result[Array[@core.Value], JqxError] {
-  Ok(@core.execute(filter, input)) catch {
+) -> Result[FixedArray[@core.Value], JqxError] {
+  Ok(FixedArray::from_iter(@core.execute(filter, input).iter())) catch {
     err => Err(eval_error_to_jqx_error(err))
   }
 }
@@ -223,8 +225,8 @@ fn run_error_to_jqx_error(
 pub fn run_compiled_json_text(
   filter : @core.Filter,
   input : String,
-) -> Result[Array[String], JqxError] {
-  Ok(@core.run_compiled_json_text(filter, input)) catch {
+) -> Result[FixedArray[String], JqxError] {
+  Ok(FixedArray::from_iter(@core.run_compiled_json_text(filter, input).iter())) catch {
     err => Err(run_error_to_jqx_error(err, json_input=input))
   }
 }
@@ -234,8 +236,8 @@ pub fn run_compiled_json_text(
 pub fn run_compiled_values(
   filter : @core.Filter,
   input : String,
-) -> Result[Array[@core.Value], JqxError] {
-  Ok(@core.run_compiled_values(filter, input)) catch {
+) -> Result[FixedArray[@core.Value], JqxError] {
+  Ok(FixedArray::from_iter(@core.run_compiled_values(filter, input).iter())) catch {
     err => Err(run_error_to_jqx_error(err, json_input=input))
   }
 }
@@ -246,8 +248,8 @@ pub fn run_compiled_values(
 pub fn run_json_text(
   filter : String,
   input : String,
-) -> Result[Array[String], JqxError] {
-  Ok(@core.run_json_text(filter, input)) catch {
+) -> Result[FixedArray[String], JqxError] {
+  Ok(FixedArray::from_iter(@core.run_json_text(filter, input).iter())) catch {
     err =>
       Err(run_error_to_jqx_error(err, filter_input=filter, json_input=input))
   }
@@ -259,8 +261,8 @@ pub fn run_json_text(
 pub fn run_values(
   filter : String,
   input : String,
-) -> Result[Array[@core.Value], JqxError] {
-  Ok(@core.run_values(filter, input)) catch {
+) -> Result[FixedArray[@core.Value], JqxError] {
+  Ok(FixedArray::from_iter(@core.run_values(filter, input).iter())) catch {
     err =>
       Err(run_error_to_jqx_error(err, filter_input=filter, json_input=input))
   }

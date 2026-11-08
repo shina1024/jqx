@@ -266,9 +266,7 @@ fn ParseContext::lex_nonfinite_number(
       None => break
     }
   }
-  let token = ctx.input
-    .view(start_offset=start, end_offset=ctx.offset)
-    .to_owned()
+  let token = ctx.input.exact_view(start~, end=ctx.offset).to_owned()
   match parse_ascii_downcase_string(token) {
     "inf" | "+inf" | "infinity" | "+infinity" => Number(@double.infinity, None)
     "-inf" | "-infinity" => Number(@double.neg_infinity, None)
@@ -483,7 +481,7 @@ fn ParseContext::lex_string(ctx : ParseContext) -> String raise ParseError {
   let mut start = ctx.offset
   fn flush(end : Int32) {
     if start > 0 && end > start {
-      buf.write_view(ctx.input.view(start_offset=start, end_offset=end))
+      buf.write_view(ctx.input.exact_view(start~, end~))
     }
   }
 
@@ -947,7 +945,7 @@ fn number_literal_normalized_large_exponent_repr(token : StringView) -> String {
     return "0E+0"
   }
   let trimmed = digits_raw
-    .view(start_offset=lead, end_offset=digits_raw.length())
+    .exact_view(start=lead, end=digits_raw.length())
     .to_owned()
   let mut end = trimmed.length()
   let mut exp_base = exp_value - frac_digits
@@ -955,15 +953,15 @@ fn number_literal_normalized_large_exponent_repr(token : StringView) -> String {
     end -= 1
     exp_base += 1
   }
-  let digits = trimmed.view(start_offset=0, end_offset=end).to_owned()
+  let digits = trimmed.exact_view(start=0, end~).to_owned()
   let exp_final = exp_base + digits.length() - 1
   let sign = if negative { "-" } else { "" }
   let mantissa = if digits.length() == 1 {
     digits
   } else {
-    digits.view(start_offset=0, end_offset=1).to_owned() +
+    digits.exact_view(start=0, end=1).to_owned() +
     "." +
-    digits.view(start_offset=1, end_offset=digits.length()).to_owned()
+    digits.exact_view(start=1, end=digits.length()).to_owned()
   }
   let exp_mark = if exp_final >= 0 { "+" } else { "-" }
   let exp_abs = if exp_final >= 0 { exp_final } else { -exp_final }
@@ -976,7 +974,7 @@ fn ParseContext::lex_number_end(
   start : Int32,
   end : Int32,
 ) -> (Double, StringView?) {
-  let s = ctx.input.view(start_offset=start, end_offset=end)
+  let s = ctx.input.exact_view(start~, end~)
   if !s.contains(".") && !s.contains("e") && !s.contains("E") {
     try @string.parse_int64(s) catch {
       _ =>

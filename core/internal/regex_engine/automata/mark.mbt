@@ -39,4 +39,5 @@
 ///
 /// Note: This encoding is an implementation detail of the core package.
 /// Other uses of the automaton could assign mark values differently.
-pub(all) struct Mark(Int32) derive(Eq, Hash, Compare)
+#derive(Eq, Hash, Compare)
+pub(all) struct Mark(Int32)

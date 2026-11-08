@@ -11,7 +11,7 @@ pub fn add(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> 
 
 pub fn and_(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn call(String, Array[Query[@core.Value, @core.Value]]) -> Query[@core.Value, @core.Value]
+pub fn call(String, FixedArray[Query[@core.Value, @core.Value]]) -> Query[@core.Value, @core.Value]
 
 pub fn comma(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
@@ -19,7 +19,7 @@ pub fn compile(String) -> @core.Filter raise @core.FilterError
 
 pub fn eq(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn execute(@core.Filter, @core.Value) -> Array[@core.Value] raise @core.EvalError
+pub fn execute(@core.Filter, @core.Value) -> FixedArray[@core.Value] raise @core.EvalError
 
 pub fn fallback(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
@@ -51,17 +51,17 @@ pub fn parse_json(String) -> @core.Value raise @core.ParseError
 
 pub fn pipe(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
-pub fn query(Query[@core.Value, @core.Value], @core.Value) -> Result[Array[@core.Value], String]
+pub fn query(Query[@core.Value, @core.Value], @core.Value) -> Result[FixedArray[@core.Value], String]
 
-pub fn query_json_text(Query[@core.Value, @core.Value], String) -> Result[Array[String], String]
+pub fn query_json_text(Query[@core.Value, @core.Value], String) -> Result[FixedArray[String], String]
 
-pub fn run_compiled_json_text(@core.Filter, String) -> Result[Array[String], JqxError]
+pub fn run_compiled_json_text(@core.Filter, String) -> Result[FixedArray[String], JqxError]
 
-pub fn run_compiled_values(@core.Filter, String) -> Result[Array[@core.Value], JqxError]
+pub fn run_compiled_values(@core.Filter, String) -> Result[FixedArray[@core.Value], JqxError]
 
-pub fn run_json_text(String, String) -> Result[Array[String], JqxError]
+pub fn run_json_text(String, String) -> Result[FixedArray[String], JqxError]
 
-pub fn run_values(String, String) -> Result[Array[@core.Value], JqxError]
+pub fn run_values(String, String) -> Result[FixedArray[@core.Value], JqxError]
 
 pub fn select(Query[@core.Value, @core.Value]) -> Query[@core.Value, @core.Value]
 
@@ -69,20 +69,21 @@ pub fn try_catch(Query[@core.Value, @core.Value], Query[@core.Value, @core.Value
 
 pub fn try_compile(String) -> Result[@core.Filter, JqxError]
 
-pub fn try_execute(@core.Filter, @core.Value) -> Result[Array[@core.Value], JqxError]
+pub fn try_execute(@core.Filter, @core.Value) -> Result[FixedArray[@core.Value], JqxError]
 
 pub fn try_parse_json(String) -> Result[@core.Value, JqxError]
 
 // Errors
 
 // Types and methods
+#derive(Eq, @debug.Debug)
 pub struct JqxError {
   code : String
   message : String
   line : Int32
   column : Int32
   offset : Int32
-} derive(Eq, @debug.Debug)
+}
 pub fn JqxError::equal(Self, Self) -> Bool
 pub fn JqxError::not_equal(Self, Self) -> Bool
 pub fn JqxError::output(Self, &Logger) -> Unit

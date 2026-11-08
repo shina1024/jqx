@@ -37,8 +37,9 @@
 ///    - May transition to `Seq` for sequences
 ///    - May reach `End` when matching succeeds
 /// 3. Threads are eliminated if they can't match the current input
+#derive(Eq, Hash)
 priv enum Thread {
   End(MarkSlotMap)
   Exp(MarkSlotMap, Expr)
   Seq(@shared_types.Preference, ThreadSet, Expr)
-} derive(Eq, Hash)
+}

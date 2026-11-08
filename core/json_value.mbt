@@ -1,4 +1,5 @@
 ///|
+#derive(Debug)
 pub enum Value {
   JNull
   JTrue
@@ -7,14 +8,15 @@ pub enum Value {
   String(String)
   Array(Array[Value])
   Object(JsonObject)
-} derive(Debug)
+}
 
 ///|
+#derive(Debug)
 struct JsonObject {
   map : Map[String, Value]
   key_order : Array[String]
   lex_key_order : Array[String]
-} derive(Debug)
+}
 
 ///|
 fn object_keys_in_order(
@@ -453,9 +455,9 @@ fn decimal_expand_positive_exponent(raw : String) -> String? {
   if exp_index < 0 {
     return None
   }
-  let mantissa = raw.view(start_offset=0, end_offset=exp_index).to_owned()
+  let mantissa = raw.exact_view(start=0, end=exp_index).to_owned()
   let exp_part = raw
-    .view(start_offset=exp_index + 1, end_offset=raw.length())
+    .exact_view(start=exp_index + 1, end=raw.length())
     .to_owned()
   let exp_value = try @string.parse_int64(exp_part) catch {
     _ => return None
@@ -492,9 +494,9 @@ fn decimal_expand_positive_exponent(raw : String) -> String? {
   }
   let int_end = if dot_index >= 0 { dot_index } else { mantissa.length() }
   let frac_start = if dot_index >= 0 { dot_index + 1 } else { int_end }
-  let int_part = mantissa.view(start_offset=pos, end_offset=int_end).to_owned()
+  let int_part = mantissa.exact_view(start=pos, end=int_end).to_owned()
   let frac_part = mantissa
-    .view(start_offset=frac_start, end_offset=mantissa.length())
+    .exact_view(start=frac_start, end=mantissa.length())
     .to_owned()
   let digits = int_part + frac_part
   if digits.length() == 0 {
@@ -517,17 +519,13 @@ fn decimal_expand_positive_exponent(raw : String) -> String? {
     let buf = StringBuilder()
     buf.write_string(sign)
     if integer_len > 0 {
-      buf.write_string(
-        digits.view(start_offset=0, end_offset=integer_len).to_owned(),
-      )
+      buf.write_string(digits.exact_view(start=0, end=integer_len).to_owned())
     } else {
       buf.write_char('0')
     }
     buf.write_char('.')
     buf.write_string(
-      digits
-      .view(start_offset=integer_len, end_offset=digits.length())
-      .to_owned(),
+      digits.exact_view(start=integer_len, end=digits.length()).to_owned(),
     )
     Some(buf.to_string())
   }
