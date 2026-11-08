@@ -10,13 +10,27 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Resolve jq release
+      id: release
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        JQ_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        if [ "$JQ_VERSION" = "latest" ]; then
+          tag="$(gh api repos/jqlang/jq/releases/latest --jq .tag_name)"
+        else
+          tag="jq-${JQ_VERSION#jq-}"
+        fi
+        echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
     - name: Install jq (Linux/macOS)
       if: runner.os != 'Windows'
       shell: bash
       run: |
         set -euo pipefail
 
-        version="${{ inputs.version }}"
         case "$RUNNER_OS" in
           Linux)
             asset="jq-linux-amd64"
@@ -37,12 +51,7 @@ runs:
             ;;
         esac
 
-        if [ "$version" = "latest" ]; then
-          base_url="https://github.com/jqlang/jq/releases/latest/download"
-        else
-          tag="${version#jq-}"
-          base_url="https://github.com/jqlang/jq/releases/download/jq-${tag}"
-        fi
+        base_url="https://github.com/jqlang/jq/releases/download/${{ steps.release.outputs.tag }}"
 
         mkdir -p "$HOME/.local/bin"
         curl -fsSL --retry 4 --retry-delay 3 --retry-all-errors "${base_url}/${asset}" -o "$HOME/.local/bin/jq"
@@ -53,7 +62,6 @@ runs:
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
-        $version = "${{ inputs.version }}"
         $arch = [System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture
         switch ($arch) {
           "X64" { $asset = "jq-windows-amd64.exe" }
@@ -61,12 +69,7 @@ runs:
           default { throw "Unsupported Windows architecture: $arch" }
         }
 
-        if ($version -eq "latest") {
-          $baseUrl = "https://github.com/jqlang/jq/releases/latest/download"
-        } else {
-          $tag = if ($version.StartsWith("jq-")) { $version } else { "jq-$version" }
-          $baseUrl = "https://github.com/jqlang/jq/releases/download/$tag"
-        }
+        $baseUrl = "https://github.com/jqlang/jq/releases/download/${{ steps.release.outputs.tag }}"
 
         $jqDir = Join-Path $HOME ".local\bin"
         New-Item -ItemType Directory -Force -Path $jqDir | Out-Null
