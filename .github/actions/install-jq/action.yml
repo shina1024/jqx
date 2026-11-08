@@ -28,6 +28,8 @@ runs:
     - name: Install jq (Linux/macOS)
       if: runner.os != 'Windows'
       shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         set -euo pipefail
 
@@ -51,16 +53,22 @@ runs:
             ;;
         esac
 
-        base_url="https://github.com/jqlang/jq/releases/download/${{ steps.release.outputs.tag }}"
-
         mkdir -p "$HOME/.local/bin"
-        curl -fsSL --retry 4 --retry-delay 3 --retry-all-errors "${base_url}/${asset}" -o "$HOME/.local/bin/jq"
+        for attempt in 1 2 3 4 5; do
+          if gh release download "${{ steps.release.outputs.tag }}" --repo jqlang/jq --pattern "$asset" --output "$HOME/.local/bin/jq" --clobber; then
+            break
+          fi
+          if [ "$attempt" -eq 5 ]; then exit 1; fi
+          sleep 3
+        done
         chmod +x "$HOME/.local/bin/jq"
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
     - name: Install jq (Windows)
       if: runner.os == 'Windows'
       shell: pwsh
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         $arch = [System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture
         switch ($arch) {
@@ -69,10 +77,13 @@ runs:
           default { throw "Unsupported Windows architecture: $arch" }
         }
 
-        $baseUrl = "https://github.com/jqlang/jq/releases/download/${{ steps.release.outputs.tag }}"
-
         $jqDir = Join-Path $HOME ".local\bin"
         New-Item -ItemType Directory -Force -Path $jqDir | Out-Null
         $jqPath = Join-Path $jqDir "jq.exe"
-        Invoke-WebRequest -Uri "$baseUrl/$asset" -OutFile $jqPath -MaximumRetryCount 4 -RetryIntervalSec 3
+        for ($attempt = 1; $attempt -le 5; $attempt++) {
+          gh release download "${{ steps.release.outputs.tag }}" --repo jqlang/jq --pattern $asset --output $jqPath --clobber
+          if ($LASTEXITCODE -eq 0) { break }
+          if ($attempt -eq 5) { throw "Failed to download jq after 5 attempts." }
+          Start-Sleep -Seconds 3
+        }
         $jqDir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
