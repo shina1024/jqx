@@ -89,6 +89,11 @@ map(@base64d)
 ["YWJjZGVmZ2hpav9rbG1ub3A=", "YWJjZGVmZ2hpasOpa2xtbm9w5pel", "/2FiY2RlZmdoaWo=", "YWJjZGVmZ2hpauaX", "YWJjZGVmZ2hpau2ggHh5eg=="]
 ["abcdefghij�klmnop","abcdefghijéklmnop日","�abcdefghij","abcdefghij�","abcdefghij�xyz"]
 
+# Truncated UTF-8 sequence keeps the characters after it
+map(@base64d)
+["8Fo=", "4mE=", "8J9a", "YfBaYg==", "8J+Y"]
+["�Z","�a","�Z","a�Zb","�"]
+
 @uri
 "\u03bc"
 "%CE%BC"
@@ -1996,6 +2001,14 @@ null
 "10:15" | strptime("%H:%M")
 null
 [1900,0,1,10,15,0,1,0]
+
+[-3,-2,-1,0,1 | gmtime | mktime]
+null
+[-3,-2,-1,0,1]
+
+[1970,0,0,23,59,59,0,0] | mktime
+null
+-1
 
 # Check day-of-week and day of year computations
 # (should trip an assert if this fails)
