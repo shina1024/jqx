@@ -50,7 +50,7 @@ priv enum ThreadSet {
     l~ : ThreadSet,
     t~ : Thread,
     r~ : ThreadSet,
-    p~ : Int32
+    p~ : Int32,
   )
 }
 
@@ -257,7 +257,7 @@ fn ThreadSet::assign_slot(desc : ThreadSet, slot : Slot) -> ThreadSet {
 fn ThreadSet::iter(self : ThreadSet) -> Iter[Thread] {
   let mut node = self
   let parents = []
-  Iter::new(() => {
+  Iter(() => {
     for current = node {
       match current {
         Node(t=thread, l=Empty, r=right, ..) => {
