@@ -452,7 +452,7 @@ fn update_dynamic_slice_target(filter : Filter) -> (Filter, Filter, Filter)? {
     As(
       base,
       base_tmp,
-      As(start_filter, start_tmp, As(end_filter, end_tmp, slice_access0))
+      As(start_filter, start_tmp, As(end_filter, end_tmp, slice_access0)),
     ) => {
       let slice_access = match slice_access0 {
         Try(inner) => inner

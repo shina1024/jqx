@@ -844,7 +844,7 @@ fn dispatch_numeric_builtin(
                     second,
                     day_of_week,
                     day_of_year,
-                  )
+                  ),
                 ) =>
                   out.push(
                     datetime_components_to_json_array(

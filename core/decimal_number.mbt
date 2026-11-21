@@ -106,7 +106,7 @@ fn decimal_parts_from_repr(raw : String) -> DecimalParts? {
           Some({
             negative: negative && !is_zero,
             significant,
-            exponent: exp - Int64::from_int(frac_len),
+            exponent: exp - frac_len.to_int64(),
           })
         }
       }
@@ -125,8 +125,8 @@ fn decimal_compare_parts(a : DecimalParts, b : DecimalParts) -> Int32 {
     return 1
   }
   let sign = if a.negative { -1 } else { 1 }
-  let a_adjusted = a.exponent + Int64::from_int(a.significant.length())
-  let b_adjusted = b.exponent + Int64::from_int(b.significant.length())
+  let a_adjusted = a.exponent + a.significant.length().to_int64()
+  let b_adjusted = b.exponent + b.significant.length().to_int64()
   if a_adjusted < b_adjusted {
     return -sign
   }
@@ -183,11 +183,11 @@ fn decimal_normalize_plain(
     return sign + digits
   }
   if scale64 < 0L {
-    let exponent = Int64::from_int(digits.length()) - scale64 - 1L
+    let exponent = digits.length().to_int64() - scale64 - 1L
     return decimal_normalize_scientific(sign, digits, exponent)
   }
   if scale64 > 10000L {
-    let exponent = Int64::from_int(digits.length()) - scale64 - 1L
+    let exponent = digits.length().to_int64() - scale64 - 1L
     return decimal_normalize_scientific(sign, digits, exponent)
   }
   let scale = scale64.to_int()
@@ -246,7 +246,7 @@ fn decimal_canonical_repr(raw : String) -> String? {
         None => None
         Some((negative, digits_raw, frac_len)) => {
           let sign = if negative { "-" } else { "" }
-          let scale = Int64::from_int(frac_len) - exp
+          let scale = frac_len.to_int64() - exp
           if scale >= 0L {
             Some(decimal_normalize_plain(sign, digits_raw, scale))
           } else {
@@ -262,8 +262,8 @@ fn decimal_canonical_repr(raw : String) -> String? {
               let significant = digits_raw
                 .exact_view(start=leading, end=digits_raw.length())
                 .to_owned()
-              let adjusted_exponent = Int64::from_int(significant.length()) -
-                Int64::from_int(frac_len) +
+              let adjusted_exponent = significant.length().to_int64() -
+                frac_len.to_int64() +
                 exp -
                 1L
               Some(
