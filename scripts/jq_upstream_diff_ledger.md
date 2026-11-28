@@ -11,7 +11,7 @@
 | Corpus | Total | Passing | Declared Temporary Exceptions | Broken | Stale Exception Metadata |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | maintained | 266 | 266 | 0 | 0 | 0 |
-| upstream | 949 | 931 | 16 | 2 | 0 |
+| upstream | 949 | 931 | 18 | 0 | 0 |
 
 ## Temporary Exceptions
 
@@ -22,6 +22,8 @@
 - [upstream; all platforms] upstream-jq-test-l1988 (`jq-1.8.2-strftime-result-too-long`): jq 1.8.2 reports unknown system failure for an oversized local format; jqx reports the vendored upstream fixture's expected strflocaltime/1: result too long; remove when latest jq release reports strflocaltime/1: result too long for this fixture.
 - [upstream; all platforms] upstream-jq-test-l1997 (`jq-1.8.2-strptime-default-day`): jq 1.8.2 defaults a missing day to zero and converts to the previous month; jqx defaults to day one as required by upstream commit ac35c7dcbb991fa0f3c3196dd00ca479211e9847 (#3679) and the vendored fixture, covered by builtin_numeric tests; remove when latest jq release defaults a missing day to one and returns June 1 and January 1 for this fixture, incorporating upstream commit ac35c7dcbb991fa0f3c3196dd00ca479211e9847.
 - [upstream; all platforms] upstream-jq-test-l2001 (`jq-1.8.2-strptime-default-day`): jq 1.8.2 leaves day zero and invalid weekday/year-day placeholders for a time-only format; jqx returns [1900,0,1,10,15,0,1,0] as required by upstream commit ac35c7dcbb991fa0f3c3196dd00ca479211e9847 (#3679) and the vendored fixture, covered by builtin_numeric tests; remove when latest jq release returns [1900,0,1,10,15,0,1,0] for this fixture, incorporating upstream commit ac35c7dcbb991fa0f3c3196dd00ca479211e9847.
+- [upstream; all platforms] upstream-jq-test-l2005 (`jq-1.8.2-mktime-pre-epoch`): jq 1.8.2 reports mktime not supported on this platform for timestamp -2 and invalid gmtime representation for -1; jqx round-trips both timestamps as required by upstream fix 5c001b18d7237cce1fdba63608732163f978dd23 (#3671); remove when latest jq release round-trips this fixture to [-3,-2,-1,0,1], incorporating upstream fix 5c001b18d7237cce1fdba63608732163f978dd23.
+- [upstream; all platforms] upstream-jq-test-l2009 (`jq-1.8.2-mktime-pre-epoch`): jq 1.8.2 reports invalid gmtime representation when the normalized timestamp is -1; jqx returns -1 as required by upstream fix 5c001b18d7237cce1fdba63608732163f978dd23 (#3671); remove when latest jq release normalizes day zero in this fixture and returns -1, incorporating upstream fix 5c001b18d7237cce1fdba63608732163f978dd23.
 - [upstream; all platforms] upstream-jq-test-l2112 (`jq-1.8.2-fromdateiso8601-surrounding-whitespace`): jq 1.8.2 accepts surrounding whitespace; jqx rejects both forms as required by the vendored upstream fixture; remove when latest jq release rejects both surrounding-whitespace inputs and this fixture returns ["ERR","ERR"].
 - [upstream; all platforms] upstream-jq-test-l2487 (`jq-1.8.2-negate-zero-sign`): jq 1.8.2 loses the sign when negating a decnum literal; jqx preserves the sign as required by upstream commit afa23a53cde43cbd7d6e5d91ae759e342d518de6 (#3662) and the vendored fixture, covered by execute unary negation keeps the sign of zero; remove when latest jq release returns ["-0","0","-0","0"] for this fixture, incorporating upstream commit afa23a53cde43cbd7d6e5d91ae759e342d518de6.
 - [upstream; all platforms] upstream-jq-test-l2793 (`jq-1.8.2-reduce-init-backtracking`): jq 1.8.2 loses reduce input when backtracking over multiple initializer outputs; jqx preserves input as required by the vendored fixture and upstream fix df24981307658868759faaea76b817cc62dd6be0 (#3633); remove when latest jq release preserves reduce input across initializer backtracking and matches this fixture, incorporating upstream fix df24981307658868759faaea76b817cc62dd6be0.
@@ -34,8 +36,7 @@
 
 ## Broken Cases
 
-- [upstream] upstream-jq-test-l2005 (`output-mismatch`)
-- [upstream] upstream-jq-test-l2009 (`output-mismatch`)
+- none
 
 ## Stale Exception Metadata
 
@@ -56,8 +57,8 @@
 - upstream-jq-test-l1988 (`temporary-exception`)
 - upstream-jq-test-l1997 (`temporary-exception`)
 - upstream-jq-test-l2001 (`temporary-exception`)
-- upstream-jq-test-l2005 (`output-mismatch`)
-- upstream-jq-test-l2009 (`output-mismatch`)
+- upstream-jq-test-l2005 (`temporary-exception`)
+- upstream-jq-test-l2009 (`temporary-exception`)
 - upstream-jq-test-l2112 (`temporary-exception`)
 - upstream-jq-test-l2487 (`temporary-exception`)
 - upstream-jq-test-l2793 (`temporary-exception`)

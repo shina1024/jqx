@@ -3976,7 +3976,16 @@
     "source_file": "jq.test",
     "source_line": 2005,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [],
+    "compat_ledger_id": "jq-1.8.2-mktime-pre-epoch",
+    "compat_reason": "jq 1.8.2 reports mktime not supported on this platform for timestamp -2 and invalid gmtime representation for -1; jqx round-trips both timestamps as required by upstream fix 5c001b18d7237cce1fdba63608732163f978dd23 (#3671)",
+    "compat_removal_condition": "latest jq release round-trips this fixture to [-3,-2,-1,0,1], incorporating upstream fix 5c001b18d7237cce1fdba63608732163f978dd23",
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "[-3,-2,-1,0,1]"
+    ]
   },
   {
     "name": "upstream-jq-test-l2009",
@@ -3985,7 +3994,16 @@
     "source_file": "jq.test",
     "source_line": 2009,
     "source_kind": "runtime",
-    "source_expected_count": 1
+    "source_expected_count": 1,
+    "compat_status": "temporary_exception",
+    "compat_platforms": [],
+    "compat_ledger_id": "jq-1.8.2-mktime-pre-epoch",
+    "compat_reason": "jq 1.8.2 reports invalid gmtime representation when the normalized timestamp is -1; jqx returns -1 as required by upstream fix 5c001b18d7237cce1fdba63608732163f978dd23 (#3671)",
+    "compat_removal_condition": "latest jq release normalizes day zero in this fixture and returns -1, incorporating upstream fix 5c001b18d7237cce1fdba63608732163f978dd23",
+    "compat_stale_policy": "fail",
+    "source_expected": [
+      "-1"
+    ]
   },
   {
     "name": "upstream-jq-test-l2015",
