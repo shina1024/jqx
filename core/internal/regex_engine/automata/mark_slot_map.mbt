@@ -42,12 +42,12 @@ struct MarkSlotMap(@immut/sorted_map.SortedMap[Mark, Slot])
 
 ///|
 fn MarkSlotMap::empty() -> MarkSlotMap {
-  MarkSlotMap(@immut/sorted_map.SortedMap::new())
+  MarkSlotMap(@immut/sorted_map.SortedMap::empty())
 }
 
 ///|
 fn MarkSlotMap::add_mark(self : MarkSlotMap, mark : Mark) -> MarkSlotMap {
-  MarkSlotMap(self.0.add(mark, Slot::unassigned()))
+  MarkSlotMap(self.0.insert(mark, Slot::unassigned()))
 }
 
 ///|

@@ -404,6 +404,7 @@ fn datetime_component_int_default(
 fn parse_datetime_array_input(
   input : Value,
   fn_name : String,
+  min_day~ : Int32 = 1,
 ) -> (Int32, Int32, Int32, Int32, Int32, Double) raise EvalError {
   match input {
     Array(a) => {
@@ -422,7 +423,7 @@ fn parse_datetime_array_input(
         raise TypeError(fn_name + " requires parsed datetime inputs")
       }
       let max_day = days_in_month(year, month)
-      if day < 1 || day > max_day {
+      if day < min_day || day > max_day {
         raise TypeError(fn_name + " requires parsed datetime inputs")
       }
       if hour < 0 || hour > 23 || minute < 0 || minute > 59 {
@@ -721,7 +722,9 @@ fn todate_iso8601_json(input : Value) -> Value raise EvalError {
 ///|
 fn mktime_json(input : Value) -> Value raise EvalError {
   let (year, month, day, hour, minute, second) = parse_datetime_array_input(
-    input, "mktime",
+    input,
+    "mktime",
+    min_day=0,
   )
   json_number_value(
     datetime_components_to_epoch_seconds(year, month, day, hour, minute, second),
