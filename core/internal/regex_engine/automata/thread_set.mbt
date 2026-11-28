@@ -224,12 +224,12 @@ fn ThreadSet::remove_duplicates(self : ThreadSet, next : Expr) -> ThreadSet {
       }
       Exp(marks, { def: Eps, .. }) =>
         if !seen.contains(next.id) {
-          seen.add(next.id)
+          seen.insert(next.id)
           result += ts_exp(marks, next)
         }
       Exp(_, { id, .. }) =>
         if !seen.contains(id) {
-          seen.add(id)
+          seen.insert(id)
           result += ts_one(thread)
         }
       Seq(pref, first, next) => {
