@@ -133,8 +133,9 @@ jobs:
 
       - name: Coverage Analyze (Linux)
         if: runner.os == 'Linux'
+        shell: bash
         run: |
-          moon coverage analyze | tee uncovered.log
+          moon coverage analyze -- -f caret | tee uncovered.log
 
       - name: Coverage Summary (Linux)
         if: runner.os == 'Linux' && always()

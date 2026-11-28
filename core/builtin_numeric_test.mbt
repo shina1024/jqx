@@ -56,6 +56,18 @@ test "gmtime floors negative fractional timestamps as fixed upstream does" {
 }
 
 ///|
+test "upstream mktime accepts timestamps immediately before the Unix epoch" {
+  @debug.assert_eq(
+    must_run_json_text("[-3,-2,-1,0,1 | gmtime | mktime]", "null"),
+    ["[-3,-2,-1,0,1]"],
+  )
+  @debug.assert_eq(
+    must_run_json_text("[1970,0,0,23,59,59,0,0] | mktime", "null"),
+    ["-1"],
+  )
+}
+
+///|
 test "upstream strptime defaults missing date fields to January first 1900" {
   // Upstream #3679; jq 1.8.2 defaults to day zero instead.
   @debug.assert_eq(
